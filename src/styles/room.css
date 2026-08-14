@@ -63,12 +63,7 @@
   border:2px solid var(--gold);object-fit:cover;background:#241A12;
   box-shadow:0 3px 10px rgba(0,0,0,.6);
 }
-#room .seat--empty .seat__av{
-  border:1.5px dashed rgba(198,154,60,.5);
-  background:rgba(0,0,0,.3);
-  display:flex;align-items:center;justify-content:center;
-  color:rgba(198,154,60,.55);font-size:17px;
-}
+#room .seat--empty .seat__av{opacity:.62}
 #room .seat__n{font-size:var(--fs,10.5px);line-height:1.2;color:var(--parchment);white-space:nowrap;max-width:66px;overflow:hidden;text-overflow:ellipsis}
 #room .seat--empty .seat__n{color:#7B6C50}
 #room .seat__b{
@@ -125,3 +120,12 @@
   background:linear-gradient(180deg,transparent,rgba(5,9,6,.55) 40%,rgba(4,7,5,.9))}
 #room .veil{position:absolute;inset:0;z-index:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(5,9,6,.86) 0%,rgba(6,10,7,.34) 22%,rgba(6,10,7,.28) 52%,rgba(5,8,6,.88) 72%,rgba(4,7,5,.96) 100%)}
+#room /* 아바타: 바깥은 놋쇠 틀, #room 안쪽은 얼굴 (두 겹 배경) */
+.seat__av{
+  background-repeat:no-repeat !important;
+  background-position:center center, center center !important;
+  background-size:100% 100%, 72% 72% !important;
+  background-color:transparent !important;
+  border:none !important;box-shadow:none !important;border-radius:50%;
+  display:block;flex:none;overflow:visible}
+#room .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}

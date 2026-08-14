@@ -82,3 +82,12 @@
 #draw .bt-main{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
   box-shadow:0 1px 0 rgba(227,198,124,.24) inset,0 5px 14px rgba(0,0,0,.5)}
 #draw .acts button:disabled{opacity:.36;box-shadow:none}
+#draw /* 아바타: 바깥은 놋쇠 틀, #draw 안쪽은 얼굴 (두 겹 배경) */
+.seat__av{
+  background-repeat:no-repeat !important;
+  background-position:center center, center center !important;
+  background-size:100% 100%, 72% 72% !important;
+  background-color:transparent !important;
+  border:none !important;box-shadow:none !important;border-radius:50%;
+  display:block;flex:none;overflow:visible}
+#draw .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}

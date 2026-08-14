@@ -94,3 +94,5 @@
 #entry .sub{animation-delay:.4s}
 #entry .hr{animation-delay:.5s}
 #entry .btn{animation:rise2 .6s ease both;animation-delay:.62s}
+#entry .hint{margin-top:10px;text-align:center;font-size:11.5px;color:#B7A683;line-height:1.6;min-height:19px}
+#entry .hint--err{color:#FF8A6B}

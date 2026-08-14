@@ -7,4 +7,5 @@ export const HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head
 export const HERO = {"02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp"};
 export const BACK = "assets/back.webp";
 export const BG = { entry: "assets/bg.webp", throne: "assets/throne.webp", table: "assets/tablebg.webp" };
+export const RINGS = {"avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp"};
 export const FRAMES = {"panel": "assets/fr_panel.webp", "row": "assets/fr_row.webp", "btn": "assets/fr_btn.webp", "btn_down": "assets/fr_btn_down.webp", "red": "assets/fr_red.webp", "red_down": "assets/fr_red_down.webp"};

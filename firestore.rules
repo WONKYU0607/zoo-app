@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* 계정. 자기 것만 읽고 쓴다.
+       점수는 올릴 수만 있고 한 판 폭까지만 허용한다.
+       나중에 서버로 옮기면 여기를 읽기 전용으로 바꾼다. */
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.score == 0;
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.score >= resource.data.score
+        && request.resource.data.score <= resource.data.score + 200;
+    }
+
+    /* 이름 선점. 비어 있거나 내가 가진 이름만 잡을 수 있다 */
+    match /names/{lower} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && (!exists(/databases/$(database)/documents/names/$(lower))
+            || resource.data.uid == request.auth.uid
+            || resource.data.uid == null);
+    }
+
+    match /leaderboard/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

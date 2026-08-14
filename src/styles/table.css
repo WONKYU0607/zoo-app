@@ -59,8 +59,17 @@
 #table /* JS가 아바타 기준으로 다시 잡는다 */
 .seat__av{width:var(--av,44px);height:var(--av,44px);border-radius:50%;object-fit:cover;
   border:2px solid rgba(198,154,60,.6);background:#241A12;box-shadow:0 3px 9px rgba(0,0,0,.6)}
-#table .seat--turn .seat__av{border-color:var(--gold-hi);box-shadow:0 0 0 3px rgba(227,198,124,.3),0 3px 9px rgba(0,0,0,.6)}
-#table .seat--pass .seat__av, #table .seat--pass .seat__n{opacity:.36}
+#table /* 자기 차례는 틀 바깥으로 붉은 빛이 돈다. 틀 그림은 가리지 않는다 */
+.seat--turn .seat__av{
+  animation:turnBeat 1.05s ease-in-out infinite;
+  border-radius:50%;
+}
+#table @keyframes turnBeat{
+  0%,100%{filter:drop-shadow(0 0 3px rgba(255,90,74,.9)) drop-shadow(0 0 7px rgba(255,90,74,.5))}
+  50%{filter:drop-shadow(0 0 8px rgba(255,90,74,1)) drop-shadow(0 0 18px rgba(255,90,74,.8))}
+}
+
+.seat--pass .seat__av, #table .seat--pass .seat__n{opacity:.36}
 #table .seat--out .seat__av{border-style:dashed;filter:grayscale(1) brightness(.7)}
 #table .seat--me .seat__av{border-color:#E3C67C;width:calc(var(--av,44px) + 4px);height:calc(var(--av,44px) + 4px)}
 #table .seat__n{font-size:var(--fs,10.5px);text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1.2;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
@@ -135,3 +144,12 @@
 #table .bt-play{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
   box-shadow:0 1px 0 rgba(227,198,124,.24) inset,0 5px 14px rgba(0,0,0,.5)}
 #table .acts button:disabled{opacity:.36;box-shadow:none}
+#table /* 아바타: 바깥은 놋쇠 틀, #table 안쪽은 얼굴 (두 겹 배경) */
+.seat__av{
+  background-repeat:no-repeat !important;
+  background-position:center center, center center !important;
+  background-size:100% 100%, 72% 72% !important;
+  background-color:transparent !important;
+  border:none !important;box-shadow:none !important;border-radius:50%;
+  display:block;flex:none;overflow:visible}
+#table .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}

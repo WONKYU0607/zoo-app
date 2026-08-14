@@ -15,8 +15,12 @@ export function mount(root){
     {key:"04", num:"4",  ko:"코끼리", en:"ELEPHANT"}
   ];
   const T = {
-    ko:{eyebrow:"ZOO PRESIDENT", wordmark:"동물의 왕국", sub:"계급 카드게임", start:"게임 시작"},
-    en:{eyebrow:"CARD CLASH", wordmark:"Zoo President", sub:"Climbing card game", start:"Start game"}
+    ko:{eyebrow:"ZOO PRESIDENT", wordmark:"동물의 왕국", sub:"계급 카드게임",
+        start:"구글로 시작하기", starting:"들어가는 중", enter:"게임 시작",
+        hintIn:"구글 계정으로 로그인합니다", hintErr:"로그인에 실패했습니다. 다시 시도해 주세요", hintNet:"인터넷 연결을 확인해 주세요"},
+    en:{eyebrow:"CARD CLASH", wordmark:"Zoo President", sub:"Climbing card game",
+        start:"Continue with Google", starting:"Signing in", enter:"Start game",
+        hintIn:"Sign in with your Google account", hintErr:"Sign-in failed. Please try again", hintNet:"Check your internet connection"}
   };
   let lang = window.__lang || "ko";
   
@@ -67,5 +71,45 @@ export function mount(root){
   });
   
   window.addEventListener("langchange", () => { lang = window.__lang; apply(); });
+  
+  /* ---------- 로그인 벽 ---------- */
+  let busy = false;
+  function paintEntry(){
+    const t = T[lang];
+    const a = window.ACCOUNT;
+    const b = document.getElementById("start");
+    const hint = document.getElementById("hint");
+    if (!b) return;
+    if (busy){ b.textContent = t.starting; b.disabled = true; hint.textContent = ""; return; }
+    b.disabled = false;
+    if (a && a.signedIn){
+      b.textContent = t.enter;
+      hint.textContent = a.name || "";
+      hint.className = "hint";
+    } else {
+      b.textContent = t.start;
+      if (hint.className !== "hint hint--err"){ hint.textContent = t.hintIn; }
+    }
+  }
+  document.getElementById("start").addEventListener("click", async e => {
+    const a = window.ACCOUNT;
+    if (a && a.signedIn) return;              /* 이미 로그인했으면 통과 */
+    e.stopImmediatePropagation();
+    const hint = document.getElementById("hint");
+    busy = true; paintEntry();
+    try {
+      await window.signInGoogle();
+      hint.className = "hint";
+    } catch(err){
+      hint.className = "hint hint--err";
+      hint.textContent = navigator.onLine ? T[lang].hintErr : T[lang].hintNet;
+      console.warn(err);
+    }
+    busy = false; paintEntry();
+  }, true);
+  window.addEventListener("accountready", paintEntry);
+  window.addEventListener("accountchange", paintEntry);
+  window.addEventListener("langchange", paintEntry);
+  paintEntry();
   
 }

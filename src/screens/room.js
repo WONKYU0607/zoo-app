@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { RINGS as A_RINGS } from "../lib/assets.js";
 import { HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/room.css";
 
@@ -62,7 +63,8 @@ export function mount(root){
     const W = b.width, H = b.height;
     const scale = Math.max(W / OV.iw, H / OV.ih);   /* 화면을 덮는 최소 배율 */
     const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = (cyPct == null ? (OV.cy * dh) : (cyPct / 100 * H));
+    /* 기본은 세로 가운데 정렬(cover 기본값). 예전 화면이 이 위치였다 */
+    const cy = (cyPct == null ? ((H - dh) / 2 + OV.cy * dh) : (cyPct / 100 * H));
     const ox = W / 2 - OV.cx * dw;
     const oy = cy - OV.cy * dh;
     sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
@@ -125,10 +127,11 @@ export function mount(root){
       el.style.setProperty("--av", (big ? 46 : 36) + "px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
       el.innerHTML = filled
-        ? '<img class="seat__av" src="' + HEADS[i % HEADS.length] + '" alt="">' +
+        ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i % HEADS.length] + ')"></span>' +
           '<span class="seat__n">' + (lang === "ko" ? PLAYERS_KO : PLAYERS_EN)[i] + '</span>' +
           (i === 0 && role === "host" ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
-        : '<div class="seat__av">+</div><span class="seat__n">' + L[lang].empty + '</span>';
+        : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
+          '<span class="seat__n">' + L[lang].empty + '</span>';
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");

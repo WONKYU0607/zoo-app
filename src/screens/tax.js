@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART_DECK as A_DECK, HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/tax.css";
 
@@ -103,7 +104,8 @@ export function mount(root){
     const W = b.width, H = b.height;
     const scale = Math.max(W / OV.iw, H / OV.ih);   /* 화면을 덮는 최소 배율 */
     const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = (cyPct == null ? (OV.cy * dh) : (cyPct / 100 * H));
+    /* 기본은 세로 가운데 정렬(cover 기본값). 예전 화면이 이 위치였다 */
+    const cy = (cyPct == null ? ((H - dh) / 2 + OV.cy * dh) : (cyPct / 100 * H));
     const ox = W / 2 - OV.cx * dw;
     const oy = cy - OV.cy * dh;
     sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
@@ -243,7 +245,7 @@ export function mount(root){
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.innerHTML =
         '<span class="seat__r' + (step >= 1 ? " on" : "") + '">' + rankLabel(r) + '</span>' +
-        '<img class="seat__av" src="' + HEADS[i] + '" alt="">' +
+        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i] + ')"></span>' +
         '<span class="seat__n">' + nameOf(i) + '</span>';
       box.appendChild(d);
     }

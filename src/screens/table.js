@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART as A_ART, HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/table.css";
 
@@ -137,7 +138,8 @@ export function mount(root){
     const W = b.width, H = b.height;
     const scale = Math.max(W / OV.iw, H / OV.ih);   /* 화면을 덮는 최소 배율 */
     const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = (cyPct == null ? (OV.cy * dh) : (cyPct / 100 * H));
+    /* 기본은 세로 가운데 정렬(cover 기본값). 예전 화면이 이 위치였다 */
+    const cy = (cyPct == null ? ((H - dh) / 2 + OV.cy * dh) : (cyPct / 100 * H));
     const ox = W / 2 - OV.cx * dw;
     const oy = cy - OV.cy * dh;
     sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
@@ -160,7 +162,7 @@ export function mount(root){
     const a = (Math.PI / 2) + (i * 2 * Math.PI / SEATS.length);
     const s = Math.sin(a);
     /* 이름표가 아래로 달려서, 아래쪽 자리는 그만큼 더 바깥으로 빼야 위와 대칭이 된다 */
-    const bias = s > 0.25 ? 3.4 * s : 0;
+    const bias = 0;   /* 아래쪽만 밀어내면 원에서 떨어져 보인다 */
     /* 눈으로 본 미세 보정 */
     const side = Math.abs(s) < 0.05;                    // 좌우 끝자리
     const nudge = s > 0.9 ? 9 : (side ? 4 : (s > 0.25 ? 2 : 0));
@@ -228,7 +230,7 @@ export function mount(root){
       const p = seatPos(i);
       const d = document.createElement("div");
       d.className = "seat" + (i === 0 ? " seat--me" : "") +
-        (turn === i && !busy ? " seat--turn" : "") +
+        (turn === i && SEATS[i].c > 0 ? " seat--turn" : "") +   /* 봇 차례에도 표시 */
         (s.s === "pass" ? " seat--pass" : "") + (s.c === 0 ? " seat--out" : "");
       d.style.left = p.x.toFixed(1) + "%"; d.style.top = p.y.toFixed(1) + "%";
       d.dataset.nudge = p.nudge || 0;
@@ -238,9 +240,9 @@ export function mount(root){
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];
-      const tag = s.c === 0 ? tg.tagOut : turn === i ? tg.tagTurn : s.s === "pass" ? tg.tagPass : "";
+      const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";   /* 차례는 테두리로 알린다 */
       d.innerHTML = (tag ? '<span class="seat__tag">' + tag + '</span>' : '') +
-        '<img class="seat__av" src="' + HEADS[i] + '" alt="">' +
+        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i] + ')"></span>' +
         '<span class="seat__n">' + (lang === "ko" ? ALL : ALL_EN)[i] + '</span>' +
         (i === 0 ? '' : fanHTML(s.c)) +
         '<span class="seat__c">' + T[lang].left(s.c) + '</span>';

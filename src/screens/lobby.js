@@ -125,4 +125,20 @@ export function mount(root){
   window.addEventListener("langchange", () => { lang = window.__lang; render(); });
   
   
+  function paintAcct(){
+    const a = window.ACCOUNT;
+    if (!a) return;
+    const t = document.getElementById("acctTier");
+    const s = document.getElementById("acctScore");
+    const k = document.getElementById("acctTick");
+    const n = document.getElementById("acctName");
+    if (n) n.textContent = a.name || "";
+    if (t) t.textContent = a.tier;
+    if (s) s.textContent = a.score.toLocaleString();
+    if (k) k.textContent = a.tickets;
+  }
+  window.addEventListener("accountready", paintAcct);
+  window.addEventListener("accountchange", paintAcct);
+  paintAcct();
+  
 }
