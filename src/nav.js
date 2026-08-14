@@ -185,8 +185,11 @@ export function initNav(){
       setTimeout(() => go("table"), 140);
     }
   });
-  /* 뒤로가기 */
+  /* 뒤로가기. 게임 도중에 나가면 완주 실패로 기록한다 */
   document.querySelectorAll("[data-back]").forEach(b =>
-    b.addEventListener("click", () => go(b.dataset.back)));
+    b.addEventListener("click", () => {
+      if (b.closest("#table") && window.__quitGame) window.__quitGame();
+      go(b.dataset.back);
+    }));
   
 }

@@ -25,7 +25,7 @@ export function mount(root){
          clrD:"2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다.",
          on:"켜져 있습니다.", off:"꺼져 있습니다.",
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
-         start:"시작하기", needFour:"4명이 모여야 시작합니다",
+         start:"시작하기", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 내일 다시 채워집니다",
          wait:"방장이 시작하기를 기다리는 중입니다" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
@@ -41,7 +41,7 @@ export function mount(root){
          clrD:"Playing a 2 clears the pile and you lead again.",
          on:"On.", off:"Off.",
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
-         start:"Start", needFour:"Four players are needed",
+         start:"Start", needFour:"Four players are needed", noTicket:"No tickets left. They refill tomorrow",
          wait:"Waiting for the host to start" }
   };
   let lang = window.__lang || "ko";
@@ -182,9 +182,23 @@ export function mount(root){
   window.addEventListener("optschange", draw);
   
   /* 시작을 누르는 순간의 실제 인원을 확정한다 (자리를 다 안 채우고 시작할 수 있음) */
-  document.getElementById("action").addEventListener("click", e => {
-    if (e.target.closest(".btn-primary") && window.__opts) window.__opts.seated = joined;
-  });
+  document.getElementById("action").addEventListener("click", async e => {
+    const b = e.target.closest(".btn-primary");
+    if (!b) return;
+    if (window.__opts) window.__opts.seated = joined;
+  
+    /* 티켓 한 장을 쓴다. 없으면 못 들어간다 */
+    if (window.spendTicket){
+      const ok = await window.spendTicket();
+      if (!ok){
+        e.stopImmediatePropagation();
+        const sm = document.getElementById("sum");
+        if (sm) sm.textContent = L[lang].noTicket;
+        return;
+      }
+    }
+    window.__scored = false;          /* 새 게임이므로 점수 보고를 다시 열어 둔다 */
+  }, true);
   
   document.querySelectorAll("#lang button").forEach(b => {
     b.addEventListener("click", () => {

@@ -60,6 +60,14 @@ export function mount(root){
       : (played + 1 > rounds ? t.subLast : t.subR(played, rounds - played));
     el("legend").innerHTML = '<span>' + t.colP + '</span><span>' + t.colG + ' · ' + t.colT + '</span>';
   
+    /* 마지막 판이면 계정에 한 번만 올린다 */
+    if (last && !window.__scored){
+      window.__scored = true;
+      const myRank = rows.indexOf(0);
+      const earned = score[0] || 0;
+      if (window.reportGame) window.reportGame(myRank, names.length, earned, false);
+    }
+  
     el("list").innerHTML = rows.map((seat, idx) => {
       const place = last ? idx : finish.indexOf(seat);
       const gained = Math.max(10, 100 - place * 10);

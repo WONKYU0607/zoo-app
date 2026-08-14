@@ -16,13 +16,17 @@ export const account = {
   loaded: false, signedIn: false,
 };
 
-export function tierOf(score){ return Math.floor(score / 1000); }
+export const TIER_STEP = 5000;
+export function tierOf(score){ return Math.floor(score / TIER_STEP); }
 export function winnersCount(n){ return Math.floor(n / 2); }
 
-/* 등수별 획득 점수. 절반 밖은 0 */
-export function scoreFor(rank, n){
+/* 계정에 올릴 점수.
+   게임 안에서 판마다 쌓은 누적 점수를 그대로 쓰되 상위 절반만 받는다.
+   완주하지 못하고 나간 사람은 절반만 받는다. */
+export function scoreFor(rank, n, earned, quit){
   if (rank >= winnersCount(n)) return 0;
-  return [100, 60, 40, 30][rank] ?? 20;
+  const s = Math.max(0, Math.round(earned || 0));
+  return quit ? Math.floor(s / 2) : s;
 }
 
 function today(){ return new Date().toISOString().slice(0, 10); }
@@ -132,10 +136,12 @@ export function watchAuth(){
   });
 }
 
-/* 판이 끝났을 때. rank 는 0부터 (0 이 1등) */
-export async function finishGame(rank, players){
-  const gained = scoreFor(rank, players);
-  if (!account.signedIn) return 0;
+/* 한 게임(정해진 판 수)이 끝났을 때.
+   rank 는 0부터 (0 이 1등), earned 는 게임 안에서 쌓은 누적 점수,
+   quit 는 완주하지 못하고 나갔는지 */
+export async function finishGame(rank, players, earned, quit){
+  const gained = scoreFor(rank, players, earned, quit);
+  if (!account.signedIn || gained <= 0) return gained;
   account.score += gained;
   account.games += 1;
   account.tier = tierOf(account.score);

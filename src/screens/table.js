@@ -403,6 +403,17 @@ export function mount(root){
     }
     return false;
   }
+  /* 게임 도중에 나가면 완주 실패로 기록한다 (점수 절반) */
+  function quitGame(){
+    if (window.__scored) return;
+    window.__scored = true;
+    const G = window.GAME || {};
+    const sc = G.score || [];
+    const order = sc.map((_, i) => i).sort((a, b) => (sc[b] || 0) - (sc[a] || 0));
+    if (window.reportGame) window.reportGame(order.indexOf(0), sc.length || SEATS.length, sc[0] || 0, true);
+  }
+  window.__quitGame = quitGame;
+  
   function endRound(){
     busy = true;
     syncGame();

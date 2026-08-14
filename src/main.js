@@ -1,7 +1,7 @@
 import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, account } from "./lib/account.js";
+import { watchAuth, signInGoogle, account, finishGame, useTicket } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -59,3 +59,14 @@ window.signInGoogle = signInGoogle;
 watchAuth().then(() => {
   window.dispatchEvent(new Event("accountready"));
 });
+
+/* 게임이 끝났을 때 계정에 점수를 올린다.
+   earned 는 게임 안에서 쌓은 누적 점수, quit 는 완주 실패 여부 */
+window.reportGame = (rank, players, earned, quit) => {
+  finishGame(rank, players, earned, quit)
+    .then(g => { if (g) console.log("획득", g); })
+    .catch(err => console.warn("점수 반영 실패", err));
+};
+
+/* 티켓 한 장. 없으면 false */
+window.spendTicket = () => useTicket();
