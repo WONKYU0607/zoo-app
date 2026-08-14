@@ -1,0 +1,46 @@
+#result{
+  --gold:#B08A34; --gold-hi:#E3C67C; --gold-dim:#7A5E24;
+  --parchment:#E9D5AC; --parchment-dim:#B8A47E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+#result, #result{height:100%}
+#result{background:radial-gradient(104% 46% at 50% 6%,rgba(122,34,38,.44),transparent 62%),#140E0A;
+  color:var(--parchment);font-family:"Gowun Dodum",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+#result button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+#result :focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+#result .screen{height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 16px) 18px calc(env(safe-area-inset-bottom) + 16px)}
+#result .lang{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:5;
+  display:flex;border:1px solid var(--gold-dim);border-radius:2px;overflow:hidden}
+#result .lang button{padding:4px 8px;font-size:10px;color:var(--parchment-dim)}
+#result .lang button[aria-pressed="true"]{color:#120C07;background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
+#result .head{text-align:center;margin-bottom:14px;flex:none}
+#result .head__k{font-family:"Noto Serif KR",serif;font-weight:600;font-size:11px;
+  letter-spacing:.3em;text-indent:.3em;color:var(--gold)}
+#result .head__t{font-family:"Gowun Batang",serif;font-weight:700;font-size:24px;margin-top:9px}
+#result .head__s{font-size:12.5px;color:var(--parchment-dim);margin-top:7px;line-height:1.6}
+#result .list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+#result .row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:3px;
+  border:1px solid #33261A;background:rgba(0,0,0,.26)}
+#result .row--me{border-color:var(--gold);background:rgba(176,138,52,.12)}
+#result .row--top{box-shadow:0 0 0 1px rgba(227,198,124,.35) inset}
+#result .row__p{font-family:"Noto Serif KR",serif;font-weight:900;font-size:15px;
+  width:26px;text-align:center;color:var(--gold-hi);flex:none}
+#result .row__av{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;
+  border:1px solid var(--gold-dim);background:#241A12}
+#result .row__n{font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#result .row__r{font-family:"Gowun Batang",serif;font-size:11.5px;color:#9C8C6E;flex:none}
+#result .row__g{font-family:"Noto Serif KR",serif;font-weight:700;font-size:12.5px;
+  color:var(--gold-hi);flex:none;min-width:42px;text-align:right}
+#result .row__t{font-family:"Noto Serif KR",serif;font-weight:900;font-size:15px;
+  flex:none;min-width:46px;text-align:right}
+#result .legend{display:flex;justify-content:space-between;padding:0 12px 6px;
+  font-size:10.5px;color:#7E7157;letter-spacing:.04em;flex:none}
+#result .acts{display:flex;gap:9px;margin-top:12px;flex:none}
+#result .acts button{flex:1;padding:15px;border-radius:2px;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;letter-spacing:.04em}
+#result .bt-main{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
+  box-shadow:0 1px 0 rgba(227,198,124,.24) inset,0 5px 14px rgba(0,0,0,.5)}
+#result .bt-ghost{border:1px solid var(--gold-dim);color:var(--parchment-dim)}
+#result .crown{font-size:30px;line-height:1;margin-bottom:2px}

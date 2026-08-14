@@ -1,0 +1,408 @@
+import { scoped } from "../lib/scoped.js";
+import { ART_DECK as A_DECK, HEADS as A_HEADS } from "../lib/assets.js";
+import "../styles/tax.css";
+
+export function mount(root){
+  const document = scoped(root);
+  
+  const ART = A_DECK, HEADS = A_HEADS;
+  const el = id => document.getElementById(id);
+  const isJ = c => c >= 13;
+  
+  const KO_N = ["사자","호랑이","불곰","코끼리","악어","여우","기린","멧돼지","원숭이","토끼","새","생쥐"];
+  const EN_N = ["LION","TIGER","BEAR","ELEPHANT","CROCODILE","FOX","GIRAFFE","BOAR","MONKEY","RABBIT","BIRD","MOUSE"];
+  const T = {
+    ko:{
+      steps:["등수 발표","패 나누기","혁명","세금","시작"],
+      dealH:"패 나누기", dealS:"80장을 골고루 나눕니다. 이 순간 카멜레온 두 장이 한 사람에게 몰리면 혁명이 열립니다.",
+      rankH:"이번 판의 등수", rankS:"지난 판에서 손을 턴 순서가 그대로 이번 판 등수가 됩니다.",
+      revH:"혁명", revNone:"카멜레온 두 장을 모두 쥔 사람이 없습니다.",
+      revMine:"카멜레온 두 장이 모두 손에 들어왔습니다. 혁명을 선언하면 이번 판 세금이 사라집니다.",
+      revOther:n=>n+"님이 카멜레온 두 장을 쥐고 혁명을 선언했습니다. 이번 판 세금은 없습니다.",
+      revGreatOther:n=>n+"님이 꼴등으로 대혁명을 선언했습니다. 세금이 사라지고 등수가 통째로 뒤집힙니다.",
+      revGreatMine:"꼴등인데 카멜레온 두 장을 모두 쥐었습니다. 대혁명을 선언하면 세금이 사라지고 계급이 통째로 뒤집힙니다.",
+      revGreatDone:"대혁명. 계급이 뒤집혔습니다.", revDone:"혁명. 이번 판 세금은 없습니다.",
+      taxH:"세금", taxSkip:"혁명으로 이번 판 세금은 걷지 않습니다.",
+      taxMineTop:n=>'꼴등 <b>'+n+'</b>님의 가장 좋은 카드 두 장을 가져옵니다. 대신 아무 카드나 두 장을 주세요.',
+      taxMineTop2:n=>'뒤에서 두 번째 <b>'+n+'</b>님과 한 장씩 바꿉니다. 줄 카드 한 장을 고르세요.',
+      taxMineBot:n=>'1등 <b>'+n+'</b>님이 내 가장 좋은 카드 두 장을 가져갑니다.',
+      taxMineBot2:n=>'2등 <b>'+n+'</b>님이 내 가장 좋은 카드 한 장을 가져갑니다.',
+      taxMid:"1등과 2등만 세금을 주고받습니다. 나는 해당 없습니다.",
+      give:n=>n+"장 주기", giveNeed:n=>"줄 카드 "+n+"장을 고르세요",
+      take:"가져옴", gave:"줌",
+      doneH:"준비 완료", doneS:n=>'<b>'+n+'</b>님이 첫 판을 시작합니다.',
+      declare:"혁명 선언", declareG:"대혁명 선언", skip:"넘기기",
+      next:"다음", back:"처음부터", start:"판 시작",
+      joker:"카멜레온"
+    },
+    en:{
+      steps:["Standings","Deal","Revolution","Tax","Start"],
+      dealH:"Dealing", dealS:"All 80 cards go out. If both chameleons land in one hand, a revolution opens up.",
+      rankH:"Standings for this round", rankS:"Last round's finishing order becomes this round's standing.",
+      revH:"Revolution", revNone:"Nobody holds both chameleons.",
+      revMine:"Both chameleons are in your hand. Declare a revolution and this round's tax is cancelled.",
+      revOther:n=>n+" holds both chameleons and declared a revolution. No tax this round.",
+      revGreatOther:n=>n+" declared a great revolution from last place. Tax is cancelled and every standing reverses.",
+      revGreatMine:"You are last and hold both chameleons. A great revolution cancels tax and reverses every rank.",
+      revGreatDone:"Great revolution. Every rank is reversed.", revDone:"Revolution. No tax this round.",
+      taxH:"Tax", taxSkip:"The revolution cancels tax for this round.",
+      taxMineTop:n=>'You take the two best cards from <b>'+n+'</b>, last place. Hand back any two.',
+      taxMineTop2:n=>'You swap one card with <b>'+n+'</b>, second from last. Pick one to give.',
+      taxMineBot:n=>'<b>'+n+'</b>, in first place, takes your two best cards.',
+      taxMineBot2:n=>'<b>'+n+'</b>, in second place, takes your best card.',
+      taxMid:"Only first and second trade. Nothing to do for you.",
+      give:n=>"Give "+n, giveNeed:n=>"Pick "+n+" to give",
+      take:"taken", gave:"given",
+      doneH:"Ready", doneS:n=>'<b>'+n+'</b> leads the first trick.',
+      declare:"Declare", declareG:"Declare great revolution", skip:"Skip",
+      next:"Next", back:"Restart", start:"Start round",
+      joker:"CHAMELEON"
+    }
+  };
+  let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
+  let N = 6;   /* 인원. 선언 없이 쓰고 있어서 모듈에서 막혔다 */
+  let ranks = [];
+  let wasGreat = false;   /* 선언 시점의 대혁명 여부 (뒤집은 뒤엔 다시 계산하면 틀린다) */
+  const G = () => (window.GAME = window.GAME || {});
+  const holds = () => G().hold || [];
+  const myHand = () => holds()[0] || [];
+  
+  const nameOf = i => ((lang === "ko" ? G().names : G().namesEn) || G().names || [])[i] || "";
+  
+  
+  const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
+  function cardHTML(n, w){
+    if (isJ(n)) return '<div class="card" style="--w:' + w + 'px">' +
+      '<div class="card__band"></div><div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
+      '<div class="card__band"></div></div>';
+    return '<div class="card" style="--w:' + w + 'px">' +
+      '<div class="card__band"><span class="card__num">' + n + '</span>' +
+      '<span class="card__num">' + n + '</span></div>' +
+      '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
+      '<div class="card__band"><span class="card__num">' + n + '</span>' +
+      '<span class="card__num">' + n + '</span></div></div>';
+  }
+  
+  /* 등수 → 자리, 자리 → 등수 */
+  function order(){ return reversed ? ranks.slice().reverse() : ranks; }
+  function rankOf(seat){ return order().indexOf(seat); }
+  /* 계급 호칭 = 덱 순서. 위에서부터 사자·호랑이·…, 아래에서부터 생쥐·새·… */
+  function ordEn(n){
+    const s = ["th","st","nd","rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+  function rankLabel(r){ return lang === "ko" ? (r + 1) + "등" : ordEn(r + 1); }
+  
+  
+  /* 배경 그림 속 초록 타원의 실제 화면 좌표(cover 기준) */
+  const OV = {iw: 853, ih: 1844, cx: 0.4994, cy: 0.4415, rx: 0.4250, ry: 0.1720};
+  function ovalRect(W, H){
+    const s = Math.max(W / OV.iw, H / OV.ih);
+    const dw = OV.iw * s, dh = OV.ih * s;
+    const ox = (W - dw) / 2, oy = (H - dh) / 2;
+    return {cx: (ox + OV.cx * dw) / W * 100, cy: (oy + OV.cy * dh) / H * 100,
+            rx: (OV.rx * dw) / W * 100,      ry: (OV.ry * dh) / H * 100};
+  }
+  let RING = {cx: 49, cy: 44, rx: 33, ry: 13.5};
+  function syncRing(){
+    const sec = window.document.getElementById("tax");
+    const b = sec ? sec.getBoundingClientRect() : {width: 390, height: 844};
+    RING = ovalRect(b.width, b.height);
+    const m = el("mid");
+    if (m){ m.style.left = RING.cx + "%"; m.style.top = RING.cy + "%"; }
+  }
+  function seatPos(i){
+    const a = (Math.PI / 2) + (i * 2 * Math.PI / N);
+    const s = Math.sin(a);
+    /* 이름표가 아래로 달려서, 아래쪽 자리는 그만큼 더 바깥으로 빼야 위와 대칭이 된다 */
+    const bias = s > 0.25 ? 3.4 * s : 0;
+    return {x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias};
+  }
+  
+  /* from/to: 자리 번호, -1이면 가운데 */
+  function flyCard(from, to, card, delay, faceDown){
+    const a = from < 0 ? {x:50,y:50} : seatPos(from);
+    const b = to   < 0 ? {x:50,y:50} : seatPos(to);
+    const d = document.createElement("div");
+    d.className = "fly";
+    d.style.left = a.x + "%"; d.style.top = a.y + "%";
+    d.style.transform = "translate(-50%,-50%) scale(.7)";
+    d.style.opacity = 0;
+    d.innerHTML = faceDown ? backHTML(32) : cardHTML(card, 32);
+    el("fx").appendChild(d);
+    setTimeout(() => {
+      d.style.opacity = 1;
+      d.style.left = b.x + "%"; d.style.top = b.y + "%";
+      d.style.transform = "translate(-50%,-50%) scale(1) rotate(" + (Math.random()*20-10).toFixed(0) + "deg)";
+    }, delay + 20);
+    setTimeout(() => { d.style.opacity = 0; }, delay + 620);
+    setTimeout(() => d.remove(), delay + 950);
+  }
+  function backHTML(w){
+    return '<div class="card" style="--w:' + w + 'px;padding:2px"><div class="card__art" style="border-width:1px">' +
+      '<img src="' + ART.back + '" alt=""></div></div>';
+  }
+  function clearFx(){ el("fx").innerHTML = ""; }
+  
+  function dealAll(){
+    const d = [];
+    for (let n = 1; n <= 12; n++) for (let i = 0; i < n; i++) d.push(n);
+    d.push(13, 14);
+    for (let i = d.length - 1; i > 0; i--){
+      const k = Math.floor(Math.random() * (i + 1));
+      [d[i], d[k]] = [d[k], d[i]];
+    }
+    const hands = Array.from({length: N}, () => []);
+    d.forEach((c, i) => hands[i % N].push(c));
+    hands.forEach(x => x.sort((a, b) => a - b));
+    G().hold = hands;
+    const w = hands.findIndex(x => x.filter(c => c >= 13).length === 2);
+    revSeat = w < 0 ? null : w;
+  }
+  
+  /* 세금을 실제 손패에 적용 */
+  function applyTax(myGive){
+    const hh = holds(), o = order();
+    [[o[0], o[N-1], 2], [o[1], o[N-2], 1]].forEach(([hi, lo, k]) => {
+      const best = hh[lo].slice().sort((a, b) => a - b).slice(0, k);
+      best.forEach(c => hh[lo].splice(hh[lo].indexOf(c), 1));
+      const give = hi === 0 ? myGive.slice(0, k)
+                            : hh[hi].slice().sort((a, b) => b - a).slice(0, k);
+      give.forEach(c => hh[hi].splice(hh[hi].indexOf(c), 1));
+      hh[hi].push(...best); hh[lo].push(...give);
+      hh[hi].sort((a, b) => a - b); hh[lo].sort((a, b) => a - b);
+    });
+  }
+  
+  /* 새 패 나눠 주기 */
+  function runDeal(){
+    clearFx();
+    for (let round = 0; round < 3; round++)
+      for (let i = 0; i < N; i++)
+        flyCard(-1, i, 0, (round * 6 + i) * 55, true);
+  }
+  
+  /* 세금 주고받기 */
+  function runTax(){
+    window.__myGive = window.__myGive || [];
+    clearFx();
+    const o = order(), n = N;
+    const pairs = [[o[0], o[n-1], 2], [o[1], o[n-2], 1]];
+    let t = 0;
+    pairs.forEach(([hi, lo, k]) => {
+      /* 내가 낀 교환만 앞면. 남들끼리 주고받는 건 원래 안 보이는 정보라 뒷면 */
+      const mine = hi === 0 || lo === 0;
+      const best = holds()[lo].slice().sort((a, b) => a - b).slice(0, k);
+      for (let j = 0; j < k; j++){ flyCard(lo, hi, best[j], t, !mine); t += 150; }
+      for (let j = 0; j < k; j++){
+        flyCard(hi, lo, hi === 0 ? window.__myGive[j] : 12, t, !mine); t += 150;
+      }
+    });
+  }
+  
+  
+  
+  /* 자리 상자가 아니라 '아바타의 중심'이 타원 위에 오도록 보정하고,
+     화면이나 아래 UI를 넘으면 그만큼 안으로 당긴다 */
+  function anchorSeats(box, limitBottom){
+    const root = window.document.documentElement;
+    const W = (window.document.getElementById("stage") || root).getBoundingClientRect();
+    box.querySelectorAll(".seat").forEach(s => {
+      const av = s.querySelector(".seat__av");
+      if (!av) return;
+      const dy = av.offsetTop + av.offsetHeight / 2;
+      s.style.transform = "translate(-50%," + (-dy) + "px)";
+      const r = s.getBoundingClientRect();
+      let ox = 0, oy = 0;
+      if (r.left < W.left + 3) ox = (W.left + 3) - r.left;
+      else if (r.right > W.right - 3) ox = (W.right - 3) - r.right;
+      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
+      if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
+    });
+  }
+  function renderSeats(){
+    syncRing();
+    const box = el("seats"); box.innerHTML = "";
+    for (let i = 0; i < N; i++){
+      const p = seatPos(i), r = rankOf(i), n = N;
+      const d = document.createElement("div");
+      d.className = "seat" + (i === 0 ? " seat--me" : "") +
+        (step >= 1 && r <= 1 ? " seat--top" : "") + (step >= 1 && r >= n - 2 ? " seat--bot" : "");
+      d.style.left = p.x.toFixed(1) + "%"; d.style.top = p.y.toFixed(1) + "%";
+      const big = N <= 6;
+      d.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
+      d.innerHTML =
+        '<span class="seat__r' + (step >= 1 ? " on" : "") + '">' + rankLabel(r) + '</span>' +
+        '<img class="seat__av" src="' + HEADS[i] + '" alt="">' +
+        '<span class="seat__n">' + nameOf(i) + '</span>';
+      box.appendChild(d);
+    }
+    const hn = el("hint");
+    anchorSeats(box, hn ? hn.getBoundingClientRect().top - 4 : 0);
+  }
+  
+  function renderHand(){
+    const h = el("hand"); h.innerHTML = "";
+    const hand = myHand(), w = 54, n = hand.length;
+    const step2 = n > 1 ? Math.min(40, (h.clientWidth - w) / (n - 1)) : 0;
+    const total = w + step2 * (n - 1);
+    const taken = takenIdx();
+    hand.forEach((c, i) => {
+      const s = document.createElement("div");
+      s.className = "slot" + (sel.includes(i) ? " slot--sel" : "") + (taken.includes(i) ? " slot--take" : "");
+      s.style.left = ((h.clientWidth - total) / 2 + i * step2) + "px";
+      s.style.zIndex = i;
+      s.innerHTML = cardHTML(c, w);
+      s.onclick = () => { if (!giveCount()) return;
+        const k = sel.indexOf(i);
+        if (k >= 0) sel.splice(k, 1);
+        else if (sel.length < giveCount()) sel.push(i);
+        draw(); };
+      h.appendChild(s);
+    });
+  }
+  
+  /* 내가 세금으로 몇 장을 줘야 하나 */
+  function giveCount(){
+    if (step !== 3 || taxSkipped()) return 0;
+    const r = rankOf(0), n = N;
+    return r === 0 ? 2 : r === 1 ? 1 : 0;
+  }
+  /* 내가 뺏기는 카드 (가장 좋은 = 숫자 작은 순) */
+  function takenIdx(){
+    if (step !== 3 || taxSkipped()) return [];
+    const r = rankOf(0), n = N;
+    const k = r === n - 1 ? 2 : r === n - 2 ? 1 : 0;
+    return myHand().map((c, i) => i).sort((a, b) => myHand()[a] - myHand()[b]).slice(0, k);
+  }
+  function taxSkipped(){ return revSeat !== null && declared; }
+  
+  function renderMid(){
+    const t = T[lang], m = el("mid"), r = rankOf(0), n = N, o = order();
+    let html = "";
+    if (step === 0){
+      html = '<div class="mid__h">' + t.rankH + '</div><div class="mid__s">' + t.rankS + '</div>';
+    } else if (step === 1){
+      html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + t.dealS + '</div>';
+    } else if (step === 2){
+      const great = revSeat !== null && rankOf(revSeat) === n - 1;
+      html = '<div class="mid__h">' + t.revH + '</div><div class="mid__s">' +
+        (revSeat === null ? t.revNone
+         : declared ? (wasGreat ? t.revGreatDone : t.revDone)
+         : revSeat === 0 ? (great ? t.revGreatMine : t.revMine)
+         : (great ? t.revGreatOther(nameOf(revSeat)) : t.revOther(nameOf(revSeat)))) + '</div>';
+      if (revSeat === 0 && !declared)
+        html += '<div class="flow rev"><div class="frow"><span class="frow__c">' +
+          cardHTML(13, 40) + cardHTML(14, 40) + '</span></div></div>';
+    } else if (step === 3){
+      html = '<div class="mid__h">' + t.taxH + '</div><div class="mid__s">' +
+        (taxSkipped() ? t.taxSkip
+         : r === 0 ? t.taxMineTop(nameOf(o[n-1]))
+         : r === 1 ? t.taxMineTop2(nameOf(o[n-2]))
+         : r === n-1 ? t.taxMineBot(nameOf(o[0]))
+         : r === n-2 ? t.taxMineBot2(nameOf(o[1]))
+         : t.taxMid) + '</div>';
+      if (!taxSkipped()){
+        /* 내가 받는 카드: 상대의 가장 좋은 카드 (실제 손패에서) */
+        const partner = r === 0 ? o[n-1] : r === 1 ? o[n-2] : null;
+        const inC = partner === null ? []
+          : holds()[partner].slice().sort((a, b) => a - b).slice(0, r === 0 ? 2 : 1);
+        const outC = takenIdx().map(i => myHand()[i]);
+        let rows = "";
+        if (inC.length) rows += '<div class="frow frow--in"><span class="frow__w">' +
+          nameOf(partner) + ' \u2192</span><span class="frow__c">' +
+          inC.map(c => cardHTML(c, 34)).join("") + '</span></div>';
+        if (outC.length) rows += '<div class="frow frow--out"><span class="frow__w">\u2192 ' +
+          nameOf(o[r === n-1 ? 0 : 1]) + '</span><span class="frow__c">' +
+          outC.map(c => cardHTML(c, 34)).join("") + '</span></div>';
+        if (sel.length) rows += '<div class="frow frow--out"><span class="frow__w">\u2192 ' +
+          nameOf(partner) + '</span><span class="frow__c">' +
+          sel.map(i => cardHTML(myHand()[i], 34)).join("") + '</span></div>';
+        if (rows) html += '<div class="flow">' + rows + '</div>';
+      }
+    } else {
+      html = '<div class="mid__h">' + t.doneH + '</div><div class="mid__s">' + t.doneS(nameOf(order()[0])) + '</div>';
+    }
+    m.innerHTML = html;
+  }
+  
+  function renderBottom(){
+    const t = T[lang], great = revSeat !== null && rankOf(revSeat) === N - 1;
+    el("step").textContent = (step + 1) + ". " + t.steps[step];
+    el("back").textContent = t.back;
+    const g = giveCount();
+    el("hint").innerHTML = step === 3 && g
+      ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
+      : "";
+    const b = el("next");
+    if (step === 2 && revSeat === 0 && !declared){
+      b.className = "bt-rev"; b.textContent = great ? t.declareG : t.declare; b.disabled = false;
+    } else {
+      b.className = "bt-main";
+      b.textContent = step === 4 ? t.start : step === 3 && g ? t.give(g) : t.next;
+      b.disabled = step === 3 && g > 0 && sel.length < g;
+    }
+  }
+  
+  function draw(){
+    renderSeats(); renderMid(); renderHand(); renderBottom();
+    const hn = el("hint");
+    anchorSeats(el("seats"), hn ? hn.getBoundingClientRect().top - 4 : 0);
+    if (step >= 1) window.__myRankIdx = rankOf(0);
+  }
+  
+  function boot(){
+    const g = G();
+    N = g.N || 6;
+    ranks = (g.finish && g.finish.length === N) ? g.finish.slice()
+          : Array.from({length: N}, (_, i) => i);
+    step = 0; sel = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
+    clearFx();
+    draw();
+  }
+  window.__bootTax = boot;
+  boot();
+  
+  el("next").onclick = () => {
+    const great = revSeat !== null && rankOf(revSeat) === N - 1;
+    if (step === 2 && revSeat !== null && !declared){
+      declared = true;
+      wasGreat = great;
+      if (great){
+        reversed = true;
+        el("flash").classList.remove("go"); void el("flash").offsetWidth; el("flash").classList.add("go");
+        draw();
+        document.querySelectorAll(".seat__r").forEach(x => x.classList.add("swap"));
+        setTimeout(() => document.querySelectorAll(".seat__r").forEach(x => x.classList.remove("swap")), 750);
+        return;
+      }
+      draw(); return;
+    }
+    if (step === 3 && !taxSkipped()){
+      window.__myGive = sel.map(i => myHand()[i]);
+      runTax();
+      applyTax(window.__myGive);
+      sel = [];
+    }
+    if (step < 4) step++;
+    if (step === 1){ dealAll(); }
+    draw();
+    if (step === 1) runDeal();
+    if (step === 4) G().order = order().slice();
+  };
+  el("back").onclick = () => { if (window.__toResult) window.__toResult(); };
+  
+  document.querySelectorAll("#lang button").forEach(b => {
+    b.addEventListener("click", () => {
+      lang = b.dataset.l;
+      document.documentElement.lang = lang;
+      document.querySelectorAll("#lang button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      draw();
+    });
+  });
+  window.addEventListener("resize", draw);
+  
+  window.addEventListener("langchange", () => { lang = window.__lang; draw(); });
+  
+}

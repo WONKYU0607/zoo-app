@@ -1,0 +1,84 @@
+#draw{
+  --card-ink:#3B2A12; --card-ink-2:#5A431C;
+  --gold:#B08A34; --gold-hi:#E3C67C; --gold-dim:#7A5E24;
+  --parchment:#E9D5AC; --parchment-dim:#B8A47E;
+  --p1:#D6C097; --p2:#C4AA7B; --p3:#AE9362;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+#draw, #draw{height:100%}
+#draw{background:#0B140F url(/assets/tablebg.webp) center/cover no-repeat;
+  color:var(--parchment);font-family:"Gowun Dodum",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+#draw button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+#draw :focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+#draw .screen{height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 12px)}
+#draw .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
+#draw .bar__t{font-family:"Gowun Batang",serif;font-weight:700;font-size:13.5px;color:#CFE0D4}
+#draw .lang{display:flex;border:1px solid var(--gold-dim);border-radius:2px;overflow:hidden}
+#draw .lang button{padding:4px 8px;font-size:10px;color:var(--parchment-dim)}
+#draw .lang button[aria-pressed="true"]{color:#120C07;background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
+#draw .ring{height:66%;flex:none;position:static;margin-top:4px}
+#draw .plane{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+#draw .pad{flex:1;min-height:0}
+#draw .felt{display:none}
+#draw .seat{--av:42px;--fs:10.5px;position:absolute;width:calc(var(--av,44px) + 32px);transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;z-index:6}
+#draw .seat__av{width:var(--av,44px);height:var(--av,44px);border-radius:50%;object-fit:cover;
+  border:2px solid rgba(198,154,60,.55);background:#241A12;box-shadow:0 3px 9px rgba(0,0,0,.6);
+  transition:border-color .3s ease}
+#draw .seat--me .seat__av{width:calc(var(--av,44px) + 4px);height:calc(var(--av,44px) + 4px);border-color:#E3C67C}
+#draw .seat--turn .seat__av{border-color:var(--gold-hi);box-shadow:0 0 0 3px rgba(227,198,124,.3),0 3px 9px rgba(0,0,0,.6)}
+#draw .seat--tie .seat__av{border-color:#E36C4C;box-shadow:0 0 0 3px rgba(227,108,76,.3)}
+#draw .seat__n{font-size:var(--fs,10.5px);line-height:1.2;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+#draw .seat__d{font-family:"Noto Serif KR",serif;font-weight:900;font-size:11px;
+  color:#120C07;background:linear-gradient(180deg,#E3C67C,#B08A34);
+  padding:1px 8px;border-radius:8px;line-height:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.6)}
+#draw .seat__r{font-family:"Gowun Batang",serif;font-weight:700;font-size:10.5px;
+  padding:1px 7px;border-radius:2px;white-space:nowrap;
+  background:rgba(10,16,12,.9);border:1px solid var(--gold-dim);color:var(--gold-hi);
+  opacity:0;transform:translateY(-4px);transition:opacity .35s ease,transform .35s ease}
+#draw .seat__r.on{opacity:1;transform:none}
+#draw /* 바닥에 깔린 뽑을 카드 */
+.deck{pointer-events:auto;position:absolute;left:49%;top:44%;transform:translate(-50%,-50%);
+  display:grid;grid-template-columns:repeat(var(--cols,4),var(--pw,44px));
+  gap:9px;justify-content:center;z-index:5;--pw:34px}
+#draw .pk{width:var(--pw,34px);aspect-ratio:200/390;perspective:600px;cursor:pointer;
+  transition:transform .3s ease,opacity .35s ease}
+#draw .pk__in{position:relative;width:100%;height:100%;transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.3,.8,.3,1)}
+#draw .pk.flip .pk__in{transform:rotateY(180deg)}
+#draw .pk__f{position:absolute;inset:0;backface-visibility:hidden;border-radius:4px;overflow:hidden;
+  box-shadow:0 5px 14px rgba(0,0,0,.6)}
+#draw .pk__f--b{background:#1A1410;border:1px solid rgba(198,154,60,.5)}
+#draw .pk__f--b img{width:100%;height:100%;object-fit:cover;display:block}
+#draw .pk__f--a{transform:rotateY(180deg)}
+#draw .pk:not(.taken):hover{transform:translateY(-6px)}
+#draw .pk.taken{cursor:default;opacity:.62}
+#draw .pk.gone{opacity:0;transform:scale(.86)}
+#draw .card{--w:52px;width:100%;height:100%;
+  border-radius:4px;padding:calc(var(--w) * .042);
+  background:radial-gradient(38% 22% at 16% 12%,rgba(140,106,52,.16),transparent 70%),
+    linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
+  display:flex;flex-direction:column}
+#draw .card__band{display:flex;align-items:center;justify-content:space-between;
+  padding:0 2px;height:calc(var(--w) * .2);color:var(--card-ink)}
+#draw .card__num{font-family:"Noto Serif KR",serif;font-weight:900;font-size:calc(var(--w) * .2);line-height:1}
+#draw .card__art{flex:1;min-height:0;border:1px solid var(--gold-dim);background:#1A1410;overflow:hidden}
+#draw .card__art img{width:100%;height:100%;object-fit:cover;display:block}
+#draw .mid{position:relative;z-index:2;margin:6px auto 0;width:min(300px,88%);text-align:center;flex:none}
+#draw .mid__h{font-family:"Gowun Batang",serif;font-weight:700;font-size:17px;margin-bottom:6px}
+#draw .mid__s{font-size:12.5px;color:#A9C0B0;line-height:1.7}
+#draw .mid__s b{color:var(--gold-hi);font-weight:400}
+#draw .cd{font-family:"Noto Serif KR",serif;font-weight:900;font-size:44px;color:#F0D18C;
+  margin-top:10px;line-height:1;text-shadow:0 3px 14px rgba(0,0,0,.8);animation:cdPop .35s ease}
+#draw @keyframes cdPop{from{opacity:0;transform:scale(.7)}}
+
+
+.acts{display:flex;gap:9px;margin-top:10px}
+#draw .acts button{flex:1;padding:15px;border-radius:2px;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;letter-spacing:.04em}
+#draw .bt-main{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
+  box-shadow:0 1px 0 rgba(227,198,124,.24) inset,0 5px 14px rgba(0,0,0,.5)}
+#draw .acts button:disabled{opacity:.36;box-shadow:none}

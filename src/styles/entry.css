@@ -1,0 +1,96 @@
+#entry{
+  --card-ink:#3B2A12; --card-ink-2:#5A431C;
+  --gold:#C79A3E; --gold-hi:#F0D18C; --gold-dim:#8A6A24;
+  --parchment:#F2E2BE; --parchment-dim:#C9B58C;
+  --p1:#D6C097; --p2:#C4AA7B; --p3:#AE9362;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+#entry, #entry{height:100%}
+#entry{background:#0B0803;color:var(--parchment);
+  font-family:"Gowun Dodum",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+#entry button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+#entry :focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+#entry /* ---------- 배경 ---------- */
+.bg{position:fixed;inset:0;overflow:hidden;z-index:0}
+#entry .bg__img{position:absolute;inset:-3%;background:url("/assets/bg.webp") center/cover no-repeat}
+#entry .bg__img{animation:drift 34s ease-in-out infinite alternate}
+#entry .bg__top{position:absolute;left:0;right:0;top:0;height:34%;
+  background:linear-gradient(180deg,rgba(6,4,2,.7),rgba(6,4,2,.28) 58%,transparent)}
+#entry .bg__bot{position:absolute;left:0;right:0;bottom:0;height:34%;
+  background:linear-gradient(180deg,transparent,rgba(8,5,2,.5) 52%,rgba(6,4,2,.88) 86%,#0B0803)}
+#entry /* ---------- 화면 ---------- */
+.screen{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 22px)}
+#entry .lang{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:16px;z-index:20;
+  display:flex;border:1px solid rgba(199,154,62,.66);border-radius:2px;overflow:hidden;
+  background:rgba(10,7,3,.5);backdrop-filter:blur(4px)}
+#entry .lang button{padding:6px 11px;font-size:11.5px;letter-spacing:.08em;color:var(--parchment-dim)}
+#entry .lang button[aria-pressed="true"]{color:#140D04;background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
+#entry .spacer{flex:1;min-height:0}
+#entry /* ---------- 아래 부채꼴 ---------- */
+.fan{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
+#entry .fan__in{position:absolute;left:63%;top:55%;transform:translate(-50%,-50%);width:0;height:0}
+#entry .fan .card{position:absolute;transform-origin:50% 168%;box-shadow:0 16px 32px rgba(0,0,0,.8)}
+#entry .fan .card[data-i="0"]{transform:rotate(-21deg);filter:brightness(.8) saturate(.94);z-index:1}
+#entry .fan .card[data-i="1"]{transform:rotate(-10.5deg);filter:brightness(.92);z-index:2}
+#entry .fan .card[data-i="2"]{transform:translateY(-10px) scale(1.07);z-index:5}
+#entry .fan .card[data-i="3"]{transform:rotate(10.5deg);filter:brightness(.92);z-index:4}
+#entry .fan .card[data-i="4"]{transform:rotate(21deg);filter:brightness(.8) saturate(.94);z-index:3}
+#entry .card{--w:80px;width:var(--w);aspect-ratio:200/390;flex:none;
+  border-radius:calc(var(--w) * .05);padding:calc(var(--w) * .042);
+  background:
+    radial-gradient(38% 22% at 16% 12%,rgba(140,106,52,.16),transparent 70%),
+    radial-gradient(44% 24% at 70% 92%,rgba(112,82,38,.18),transparent 74%),
+    repeating-linear-gradient(96deg,rgba(96,70,32,.045) 0 1px,transparent 1px 4px),
+    linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
+  box-shadow:inset 0 0 calc(var(--w) * .09) rgba(108,78,34,.34);
+  display:flex;flex-direction:column}
+#entry .card__band{display:flex;align-items:center;justify-content:space-between;
+  padding:0 calc(var(--w) * .016);height:calc(var(--w) * .208);color:var(--card-ink)}
+#entry .card__num{font-family:"Noto Serif KR",serif;font-weight:900;font-size:calc(var(--w) * .152);
+  line-height:1;min-width:calc(var(--w) * .145);text-align:center}
+#entry .card__name{font-family:"Noto Serif KR",serif;font-weight:700;font-size:calc(var(--w) * .086);
+  letter-spacing:.03em;white-space:nowrap;color:var(--card-ink-2)}
+#entry body[data-lang="en"] .card__name{font-size:calc(var(--w) * .073);letter-spacing:.01em}
+#entry .card.is-joker .card__band{justify-content:center}
+#entry .card__mark{font-family:"Noto Serif KR",serif;font-weight:600;font-size:calc(var(--w) * .072);
+  letter-spacing:.24em;text-indent:.24em;color:var(--card-ink-2)}
+#entry .card__art{flex:1;min-height:0;position:relative;
+  border:calc(var(--w) * .011) solid var(--gold-dim);background:#1A1410;overflow:hidden}
+#entry .card__art img{width:100%;height:100%;object-fit:cover;display:block}
+#entry .card__art::after{content:"";position:absolute;inset:0;
+  box-shadow:inset 0 0 0 calc(var(--w) * .011) rgba(240,209,140,.4)}
+#entry .plate{position:absolute;left:20px;right:20px;top:19.5%;z-index:3;
+  text-align:center;text-shadow:0 3px 16px rgba(0,0,0,.92),0 1px 4px rgba(0,0,0,.85)}
+#entry .plate::before{content:"";position:absolute;left:-14%;right:-14%;top:-34px;bottom:-26px;
+  z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(6,4,2,.72),rgba(6,4,2,.34) 58%,transparent 100%)}
+#entry .eyebrow{font-family:"Noto Serif KR",serif;font-weight:600;font-size:12.5px;
+  letter-spacing:.34em;text-indent:.34em;color:#E9BE63}
+#entry .wordmark{font-family:"Gowun Batang",serif;font-weight:700;
+  font-size:clamp(33px,9.4vw,42px);line-height:1.16;margin:13px 0 10px}
+#entry body[data-lang="en"] .wordmark{font-family:"Playfair Display",serif;font-size:clamp(35px,10vw,45px)}
+#entry .sub{font-size:14px;color:#DCC69C;letter-spacing:.06em}
+#entry .hr{height:1px;margin:17px 52px 0;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.7}
+#entry .btn{width:100%;padding:16px;border-radius:2px;
+  background:linear-gradient(180deg,#8A2A28,#4E1614);border:1px solid var(--gold);
+  color:var(--parchment);font-family:"Gowun Batang",serif;font-weight:700;
+  font-size:17px;letter-spacing:.08em;
+  box-shadow:0 1px 0 rgba(240,209,140,.3) inset,0 8px 24px rgba(0,0,0,.66)}
+#entry body[data-lang="en"] .btn{font-family:"Playfair Display",serif}
+#entry .btn:active{transform:translateY(1px)}
+#entry .fan .card{animation:deal .6s cubic-bezier(.2,.7,.3,1) both}
+#entry .fan .card[data-i="0"]{animation-delay:.5s}
+#entry .fan .card[data-i="4"]{animation-delay:.57s}
+#entry .fan .card[data-i="1"]{animation-delay:.64s}
+#entry .fan .card[data-i="3"]{animation-delay:.71s}
+#entry .fan .card[data-i="2"]{animation-delay:.8s}
+#entry @keyframes deal{from{opacity:0;transform:translateY(34px) rotate(0deg) scale(.9)}}
+
+  .plate>*{animation:rise2 .7s ease both}
+#entry .eyebrow{animation-delay:.15s}
+#entry .wordmark{animation-delay:.28s}
+#entry .sub{animation-delay:.4s}
+#entry .hr{animation-delay:.5s}
+#entry .btn{animation:rise2 .6s ease both;animation-delay:.62s}

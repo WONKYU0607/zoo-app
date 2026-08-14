@@ -1,0 +1,175 @@
+
+/* ================= 놋쇠 틀 ================= */
+:root{
+  --fr-panel:url(/assets/fr_panel.webp); --fr-row:url(/assets/fr_row.webp);
+  --fr-btn:url(/assets/fr_btn.webp); --fr-btn-down:url(/assets/fr_btn_down.webp);
+  --fr-red:url(/assets/fr_red.webp); --fr-red-down:url(/assets/fr_red_down.webp);
+}
+/* 버튼 */
+#lobby .btn-primary,#lobby .btn-second,
+#room .btn-primary,#room .waiting,
+#draw .bt-main,#tax .bt-main,#tax .bt-ghost,
+#table .acts button,#result .bt-main,#result .bt-ghost,
+#opts .opts__go,#cfg .cfg__row button{
+  border:13px solid transparent !important;
+  border-image:var(--fr-btn) 33 fill stretch !important;
+  border-image-width:13px !important;
+  background:none !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:6px 10px !important;
+  min-height:52px;
+  color:#E9D5AC !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.85);
+}
+#lobby .btn-primary:active,#lobby .btn-second:active,
+#room .btn-primary:active,#draw .bt-main:active,#tax .bt-main:active,
+#tax .bt-ghost:active,#table .acts button:active,#result .bt-main:active,
+#result .bt-ghost:active,#opts .opts__go:active{
+  border-image:var(--fr-btn-down) 33 fill stretch !important;
+  transform:translateY(1px);
+}
+/* 강조 버튼은 글씨를 더 밝게 */
+#lobby .btn-primary,#room .btn-primary,
+#draw .bt-main,#tax .bt-main,#result .bt-main,#opts .opts__go,
+#table #play{
+  color:#FBEFCE !important;
+  text-shadow:0 0 10px rgba(240,209,140,.34),0 1px 3px rgba(0,0,0,.9);
+}
+button:disabled{opacity:.42}
+
+/* 붉은 버튼 — 전용 판 이미지 */
+#entry #start,#table #play,#lobby #btQuick,#room #action .btn-primary{
+  border:13px solid transparent !important;
+  border-image:var(--fr-red) 46 fill stretch !important;
+  border-image-width:13px !important;
+  background:none !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:6px 10px !important;
+  min-height:52px;
+  color:#FBEFCE !important;
+  text-shadow:0 1px 4px rgba(0,0,0,.9);
+}
+#entry #start:active,#table #play:active,#lobby #btQuick:active,#room #action .btn-primary:active{
+  border-image:var(--fr-red-down) 46 fill stretch !important;
+  transform:translateY(1px);
+}
+
+/* 한 줄 틀 */
+#opts .mk__row,#room .roomno,#room .sum,#result .row,#cfg .cfg__row{
+  border:12px solid transparent !important;
+  border-image:var(--fr-row) 33 stretch !important;
+  border-image-width:12px !important;
+  background:rgba(6,10,7,.5) !important;
+  background-clip:padding-box !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+}
+#opts .mk__row{margin-bottom:2px !important;padding:2px 4px !important}
+#result .row{padding:2px 6px !important;gap:8px !important}
+#room .roomno{padding:2px 6px !important}
+#room .sum{padding:4px 8px !important}
+
+/* 큰 패널 */
+#opts .opts__p,#cfg .cfg__p,#lobby .sheet__panel{
+  border:26px solid transparent !important;
+  border-image:var(--fr-panel) 105 stretch !important;
+  border-image-width:26px !important;
+  background:linear-gradient(180deg,rgba(20,14,9,.97),rgba(10,7,4,.99)) !important;
+  background-clip:padding-box !important;
+  border-radius:0 !important;
+  margin:0 8px 8px !important;
+  padding:4px 6px !important;
+}
+#opts .opts__h,#cfg .cfg__h,#lobby .sheet__head{border-bottom:none !important;padding:6px 6px 8px !important}
+#opts .opts__b,#cfg .cfg__b{padding:2px 4px !important}
+#opts .opts__f{padding:8px 4px 4px !important}
+
+/* ---------- 폰 비율 틀 ---------- */
+#stage{position:fixed;inset:0;overflow:hidden;background:#0A0705}
+@media (min-width:560px){
+  html,body{background:#0A0705}
+  #stage{
+    inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);
+    height:min(100dvh,940px);
+    width:min(100vw,calc(min(100dvh,940px) / 2.08));
+    border-radius:16px;
+    box-shadow:0 0 0 1px rgba(198,154,62,.28),0 30px 80px rgba(0,0,0,.7);
+  }
+}
+#stage .bg,#stage .sheet,#stage #flash{position:absolute}
+/* 진입창 토글만 떠 있고 나머지 화면 토글은 제자리에 */
+#lobby .lang,#room .lang,#draw .lang,#tax .lang,#table .lang{position:static;top:auto;right:auto}
+
+/* ---------- 설정 버튼 ---------- */
+.cfgbtn{display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:30px;height:30px;border:1px solid rgba(198,154,62,.6);border-radius:3px;
+  background:rgba(10,7,3,.45);color:#D9C08A;cursor:pointer;padding:0}
+.cfgbtn:active{transform:translateY(1px)}
+#entry .cfgbtn{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:16px;z-index:20;
+  backdrop-filter:blur(4px)}
+
+/* ---------- 방 설정 창 ---------- */
+.opts{position:absolute;inset:0;z-index:55;visibility:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end}
+.opts.on{visibility:visible}
+.opts__v{position:absolute;inset:0;background:rgba(4,7,5,.78);opacity:0;transition:opacity .24s ease}
+.opts.on .opts__v{opacity:1}
+.opts__p{position:relative;background:linear-gradient(180deg,#1A130C,#0E0A06);
+  border-top:1px solid var(--gold,#B08A34);border-radius:12px 12px 0 0;
+  transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.opts.on .opts__p{transform:none}
+.opts__h{display:flex;align-items:center;justify-content:space-between;
+  padding:15px 18px 12px;border-bottom:1px solid #2E2417;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;color:#E9D5AC}
+.opts__x{font-size:21px;line-height:1;color:#B8A47E;background:none;border:none;cursor:pointer;padding:0 4px}
+.opts__b{padding:14px 18px 4px;max-height:56vh;overflow-y:auto}
+.opts__f{padding:10px 18px calc(env(safe-area-inset-bottom) + 16px)}
+.opts__go{width:100%;padding:14px;border-radius:2px;cursor:pointer;
+  background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold,#B08A34);
+  color:#E9D5AC;font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;letter-spacing:.06em}
+.mk__row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;border:1px solid #33261A;border-radius:3px;margin-bottom:7px;
+  background:rgba(0,0,0,.3)}
+.mk__t{font-size:13px;color:#E9D5AC}
+.mk__d{font-size:10.5px;color:#9C8C6E;margin-top:2px;line-height:1.45}
+.mk__st{display:flex;align-items:center;border:1px solid #7A5E24;border-radius:2px;overflow:hidden;flex:none}
+.mk__st button{width:30px;height:28px;font-size:17px;line-height:1;color:#B8A47E;background:none;border:none;cursor:pointer}
+.mk__st button:disabled{opacity:.32}
+.mk__st span{min-width:36px;text-align:center;font-family:"Noto Serif KR",serif;font-weight:900;font-size:14px;color:#E9D5AC}
+.mk__sw{width:42px;height:24px;border-radius:12px;border:1px solid #7A5E24;
+  background:rgba(0,0,0,.4);position:relative;flex:none;cursor:pointer}
+.mk__sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+  background:#7B6C50;transition:transform .18s ease,background .18s ease}
+.mk__sw[aria-checked="true"]{background:rgba(176,138,52,.3);border-color:#B08A34}
+.mk__sw[aria-checked="true"]::after{transform:translateX(18px);background:#E3C67C}
+
+/* ---------- 설정 창 ---------- */
+.cfg{position:absolute;inset:0;z-index:60;visibility:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end}
+.cfg.on{visibility:visible}
+.cfg__v{position:absolute;inset:0;background:rgba(4,7,5,.72);opacity:0;transition:opacity .24s ease}
+.cfg.on .cfg__v{opacity:1}
+.cfg__p{position:relative;background:linear-gradient(180deg,#1A130C,#0E0A06);
+  border-top:1px solid var(--gold,#B08A34);border-radius:12px 12px 0 0;
+  transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.3,1);
+  padding-bottom:calc(env(safe-area-inset-bottom) + 8px)}
+.cfg.on .cfg__p{transform:none}
+.cfg__h{display:flex;align-items:center;justify-content:space-between;
+  padding:15px 18px 12px;border-bottom:1px solid #2E2417;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;color:#E9D5AC}
+.cfg__x{font-size:21px;line-height:1;color:#B8A47E;background:none;border:none;cursor:pointer;padding:0 4px}
+.cfg__b{padding:16px 18px 22px}
+.cfg__l{font-size:11px;letter-spacing:.22em;color:#B08A34;margin-bottom:9px}
+.cfg__row{display:flex;gap:8px}
+.cfg__row button{flex:1;padding:13px;border:1px solid #4A3A1E;border-radius:3px;
+  background:rgba(0,0,0,.3);color:#C9B58C;font-size:14px;cursor:pointer}
+.cfg__row button[aria-pressed="true"]{color:#140D04;border-color:#E3C67C;
+  background:linear-gradient(180deg,#E3C67C,#B08A34)}
+.cfg__n{font-size:11.5px;color:#8E8064;line-height:1.6;margin-top:12px}
+.page{display:none}
+.page.is-on{display:block}
+#entry{position:absolute;inset:0;overflow:hidden}
+#lobby,#room,#draw,#tax,#table,#result{position:absolute;inset:0;z-index:30;overflow:hidden}
+.navback{font-size:19px;line-height:1;color:#B8A47E;padding:2px 6px;background:none;border:none;cursor:pointer}

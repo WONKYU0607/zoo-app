@@ -1,0 +1,8 @@
+{
+  "appId": "com.wonkyu.zoopresident",
+  "appName": "동물의 왕국",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

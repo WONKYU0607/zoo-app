@@ -1,0 +1,143 @@
+#lobby{
+  --ink:#140E0A;
+  --card-ink:#3B2A12;
+  --card-ink-2:#5A431C;
+  --gold:#B08A34;
+  --gold-hi:#E3C67C;
+  --gold-dim:#7A5E24;
+  --parchment:#E9D5AC;
+  --parchment-dim:#B8A47E;
+  --p1:#D6C097; --p2:#C4AA7B; --p3:#AE9362;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+#lobby, #lobby{height:100%}
+#lobby{
+  background:var(--ink) url(/assets/throne.webp) center/cover no-repeat;
+  color:var(--parchment);
+  font-family:"Gowun Dodum",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+#lobby button, #lobby input{font:inherit;color:inherit;background:none;border:none}
+#lobby button{cursor:pointer}
+#lobby :focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+#lobby .screen{position:relative;z-index:1;
+  height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 20px);
+}
+#lobby /* ---------- header ---------- */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+#lobby .mark{font-family:"Gowun Batang",serif;font-weight:700;font-size:17px;letter-spacing:.03em;
+  text-shadow:0 2px 6px rgba(0,0,0,.9);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lobby body[data-lang="en"] .mark{font-family:"Playfair Display",serif;font-size:16px}
+#lobby .lang{display:flex;flex:none;border:1px solid var(--gold-dim);border-radius:2px;overflow:hidden}
+#lobby .lang button{padding:5px 10px;font-size:11px;letter-spacing:.08em;color:var(--parchment-dim)}
+#lobby .lang button[aria-pressed="true"]{color:#120C07;background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
+#lobby /* ---------- body ---------- */
+.body{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:22px}
+#lobby .block__label{text-shadow:0 1px 4px rgba(0,0,0,.9);
+  font-family:"Noto Serif KR",serif;font-weight:600;
+  font-size:11px;letter-spacing:.28em;text-indent:.28em;color:var(--gold);
+  margin-bottom:9px;
+}
+#lobby .btn-primary{
+  width:100%;padding:17px;border-radius:2px;
+  background:linear-gradient(180deg,#7A2226,#4A1418);
+  border:1px solid var(--gold);
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:18px;letter-spacing:.08em;
+  box-shadow:0 1px 0 rgba(227,198,124,.26) inset,0 6px 18px rgba(0,0,0,.5);
+}
+#lobby .btn-second{
+  width:100%;padding:15px;border-radius:2px;
+  border:1px solid var(--gold);
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;letter-spacing:.06em;
+  color:var(--parchment);
+  background:rgba(176,138,52,.07);
+}
+#lobby body[data-lang="en"] .btn-primary, #lobby body[data-lang="en"] .btn-second{font-family:"Playfair Display",serif;letter-spacing:.08em}
+#lobby .btn-primary:active, #lobby .btn-second:active{transform:translateY(1px)}
+#lobby .hint{font-size:12px;color:#B0A283;text-shadow:0 1px 4px rgba(0,0,0,.95);margin-top:8px;line-height:1.65}
+#lobby .join{display:flex;gap:9px}
+#lobby .join input{
+  flex:1;min-width:0;padding:14px 15px;border-radius:2px;
+  border:1px solid var(--gold-dim);background:rgba(0,0,0,.34);
+  font-family:"Noto Serif KR",serif;font-weight:700;
+  font-size:20px;letter-spacing:.42em;text-align:center;color:var(--parchment);
+}
+#lobby .join input::placeholder{color:#6E6046;font-weight:600}
+#lobby .join button{
+  padding:0 20px;border-radius:2px;border:1px solid var(--gold-dim);
+  font-size:14px;letter-spacing:.05em;color:var(--parchment-dim);white-space:nowrap;
+}
+#lobby .btn-rules{
+  width:100%;padding:13px;border-radius:2px;border:1px solid var(--gold-dim);
+  font-size:14px;letter-spacing:.06em;color:var(--parchment-dim);
+}
+#lobby /* ---------- rules sheet ---------- */
+.sheet{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;visibility:hidden}
+#lobby .sheet.is-open{visibility:visible}
+#lobby .sheet__veil{position:absolute;inset:0;background:rgba(6,4,2,.72);opacity:0;transition:opacity .28s ease}
+#lobby .sheet.is-open .sheet__veil{opacity:1}
+#lobby .sheet__panel{
+  position:relative;max-height:90%;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#241811,#150E09);
+  border-top:1px solid var(--gold);border-radius:10px 10px 0 0;
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.3,1);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+#lobby .sheet.is-open .sheet__panel{transform:none}
+#lobby .sheet__head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;border-bottom:1px solid #33261A;
+}
+#lobby .sheet__title{font-family:"Gowun Batang",serif;font-weight:700;font-size:17px}
+#lobby body[data-lang="en"] .sheet__title{font-family:"Playfair Display",serif}
+#lobby .sheet__close{font-size:22px;line-height:1;color:var(--parchment-dim);padding:0 4px}
+#lobby .sheet__body{overflow-y:auto;padding:16px 20px 26px;-webkit-overflow-scrolling:touch}
+#lobby .lead{font-size:13.5px;line-height:1.75;color:#C9B792;margin-bottom:18px}
+#lobby .lead b{color:var(--gold-hi);font-weight:400}
+#lobby /* rank grid */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px 4px;margin-bottom:22px}
+#lobby .cell{display:flex;flex-direction:column;align-items:center;gap:5px}
+#lobby .cell__c{font-size:10px;color:#7C6C4E;line-height:1}
+#lobby /* mini card */
+.card{
+  --w:100%;
+  width:100%;
+  aspect-ratio:200/390;
+  border-radius:3px;
+  padding:2px;
+  background:
+    radial-gradient(38% 22% at 16% 12%,rgba(140,106,52,.16),transparent 70%),
+    radial-gradient(44% 24% at 70% 92%,rgba(112,82,38,.18),transparent 74%),
+    linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
+  box-shadow:0 2px 5px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;
+}
+#lobby .card__band{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1px;height:12px;color:var(--card-ink);
+}
+#lobby .card__num{font-family:"Noto Serif KR",serif;font-weight:900;font-size:8.5px;line-height:1}
+#lobby .card__name{
+  font-family:"Noto Serif KR",serif;font-weight:700;
+  font-size:7px;line-height:1;letter-spacing:-.01em;
+  color:var(--card-ink-2);white-space:nowrap;
+}
+#lobby body[data-lang="en"] .card__name{font-size:5.4px;letter-spacing:.01em}
+#lobby .card__art{
+  flex:1;min-height:0;position:relative;
+  border:1px solid var(--gold-dim);background:#1A1410;overflow:hidden;
+}
+#lobby .card__art img{width:100%;height:100%;object-fit:cover;display:block}
+#lobby /* rules text */
+.rule{margin-bottom:16px}
+#lobby .rule--joker{display:flex;gap:13px;align-items:flex-start}
+#lobby .rule--joker .jk{width:calc((100% - 20px) / 6);flex:none}
+#lobby .rule h3{font-family:"Gowun Batang",serif;font-weight:700;font-size:14px;color:var(--gold-hi);margin-bottom:5px}
+#lobby body[data-lang="en"] .rule h3{font-family:"Playfair Display",serif}
+#lobby .rule p{font-size:13px;line-height:1.75;color:#B7A683}
+#lobby .rule p b{color:var(--gold-hi);font-weight:400}
+#lobby .veil{position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,5,2,.3),rgba(8,5,2,.52) 42%,rgba(6,4,2,.78))}
