@@ -53,28 +53,36 @@ export function mount(root){
   let role = "host";
   
   
-  /* 배경 그림 속 초록 타원의 실제 화면 좌표(cover 기준) */
-  const OV = {iw: 853, ih: 1844, cx: 0.4994, cy: 0.4415, rx: 0.4250, ry: 0.1720};
-  function ovalRect(W, H){
-    const s = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * s, dh = OV.ih * s;
-    const ox = (W - dw) / 2, oy = (H - dh) / 2;
-    return {cx: (ox + OV.cx * dw) / W * 100, cy: (oy + OV.cy * dh) / H * 100,
-            rx: (OV.rx * dw) / W * 100,      ry: (OV.ry * dh) / H * 100};
+  /* 배경 그림 속 초록 타원.
+     cover 에 맡기면 브라우저가 어디에 놓는지 추측해야 해서 어긋난다.
+     크기와 위치를 직접 지정하고, 그 값에서 타원 좌표를 그대로 얻는다. */
+  const OV = {iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.4250, ry: 0.1420};
+  function placeTable(sec, cyPct){
+    const b = sec.getBoundingClientRect();
+    const W = b.width, H = b.height;
+    const scale = Math.max(W / OV.iw, H / OV.ih);   /* 화면을 덮는 최소 배율 */
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = (cyPct == null ? (OV.cy * dh) : (cyPct / 100 * H));
+    const ox = W / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {cx: (ox + OV.cx * dw) / W * 100, cy: cy / H * 100,
+            rx: (OV.rx * dw) / W * 100, ry: (OV.ry * dh) / H * 100};
   }
+  
   /* 타원 아래끝이 설정 칸 바로 위에 오도록 배경을 올리고, 자리를 그 테두리에 앉힌다 */
   function ringBox(){
     const sec = window.document.getElementById("room");
-    const b = sec ? sec.getBoundingClientRect() : {width: 390, height: 844, top: 0};
-    const W = b.width, H = b.height;
-    const o = ovalRect(W, H);
+    if (!sec) return RB;
+    const b = sec.getBoundingClientRect();
+    const H = b.height;
+    const base = placeTable(sec, null);            /* 우선 기본 위치로 재본다 */
     const ctrl = document.getElementById("sum");
     const limit = ctrl ? (ctrl.getBoundingClientRect().top - b.top - 22) : H * 0.72;
-    const ryPx = o.ry / 100 * H;
-    const wantCy = Math.min(o.cy / 100 * H, limit - ryPx);
-    const shift = Math.round(wantCy - o.cy / 100 * H);
-    if (sec) sec.style.backgroundPositionY = shift + "px";
-    return {cx: o.cx, cy: (wantCy / H) * 100, rx: o.rx, ry: o.ry};
+    const ryPx = base.ry / 100 * H;
+    const wantCy = Math.min(base.cy / 100 * H, limit - ryPx);
+    return placeTable(sec, (wantCy / H) * 100);    /* 필요하면 위로 올려 다시 놓는다 */
   }
   let RB = {cx: 49, cy: 34, rx: 35, ry: 11.5};
   

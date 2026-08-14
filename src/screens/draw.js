@@ -45,23 +45,32 @@ export function mount(root){
   let phase = "pick";                // pick | tie | done
   
   
-  /* 배경 그림 속 초록 타원의 실제 화면 좌표(cover 기준) */
-  const OV = {iw: 853, ih: 1844, cx: 0.4994, cy: 0.4415, rx: 0.4250, ry: 0.1720};
-  function ovalRect(W, H){
-    const s = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * s, dh = OV.ih * s;
-    const ox = (W - dw) / 2, oy = (H - dh) / 2;
-    return {cx: (ox + OV.cx * dw) / W * 100, cy: (oy + OV.cy * dh) / H * 100,
-            rx: (OV.rx * dw) / W * 100,      ry: (OV.ry * dh) / H * 100};
+  /* 배경 그림 속 초록 타원.
+     cover 에 맡기면 브라우저가 어디에 놓는지 추측해야 해서 어긋난다.
+     크기와 위치를 직접 지정하고, 그 값에서 타원 좌표를 그대로 얻는다. */
+  const OV = {iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.4250, ry: 0.1420};
+  function placeTable(sec, cyPct){
+    const b = sec.getBoundingClientRect();
+    const W = b.width, H = b.height;
+    const scale = Math.max(W / OV.iw, H / OV.ih);   /* 화면을 덮는 최소 배율 */
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = (cyPct == null ? (OV.cy * dh) : (cyPct / 100 * H));
+    const ox = W / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {cx: (ox + OV.cx * dw) / W * 100, cy: cy / H * 100,
+            rx: (OV.rx * dw) / W * 100, ry: (OV.ry * dh) / H * 100};
   }
-  let RING = {cx: 49, cy: 44, rx: 33, ry: 13.5};
+  let RING = {cx: 49, cy: 43, rx: 42.5, ry: 14.5};
   function syncRing(){
     const sec = window.document.getElementById("draw");
-    const b = sec ? sec.getBoundingClientRect() : {width: 390, height: 844};
-    RING = ovalRect(b.width, b.height);
+    if (!sec) return;
+    RING = placeTable(sec, null);
     const d = el("deck");
     if (d){ d.style.left = RING.cx + "%"; d.style.top = RING.cy + "%"; }
   }
+  
   function seatPos(i){
     const a = (Math.PI / 2) + (i * 2 * Math.PI / N);
     const s = Math.sin(a);

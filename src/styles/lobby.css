@@ -134,8 +134,9 @@
 #lobby /* rules text */
 .rule{margin-bottom:16px}
 #lobby .rule--joker{display:flex;gap:13px;align-items:flex-start}
-#lobby .rule--joker .jk{width:calc((100% - 20px) / 6);flex:none}
-#lobby .rule h3{font-family:"Gowun Batang",serif;font-weight:700;font-size:14px;color:var(--gold-hi);margin-bottom:5px}
+#lobby .rule--joker .jk{width:calc((100% - 20px) / 6 * 1.17);flex:none}
+#lobby /* 그리드 카드는 줄 높이에 맞춰 늘어나므로 높이를 맞춘다 */
+.rule h3{font-family:"Gowun Batang",serif;font-weight:700;font-size:14px;color:var(--gold-hi);margin-bottom:5px}
 #lobby body[data-lang="en"] .rule h3{font-family:"Playfair Display",serif}
 #lobby .rule p{font-size:13px;line-height:1.75;color:#B7A683}
 #lobby .rule p b{color:var(--gold-hi);font-weight:400}

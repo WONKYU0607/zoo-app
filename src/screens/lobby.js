@@ -96,7 +96,7 @@ export function mount(root){
         '<div class="card"><div class="card__band" style="justify-content:center">' +
         '<span class="card__name">' + t.joker[0] + '</span></div>' +
         '<div class="card__art"><img src="' + IMG.joker + '" alt=""></div>' +
-        '<div class="card__band"></div></div>' +
+        '<div class="card__band"><span class="card__num">&nbsp;</span></div></div>' +
       '</div>' +
       '<div><h3>' + t.joker[0] + '</h3><p>' + t.joker[1] + '</p></div></div>';
   
