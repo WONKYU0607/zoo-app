@@ -2,6 +2,7 @@ import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
 import { watchAuth, signInGoogle, account, finishGame, useTicket } from "./lib/account.js";
+import * as net from "./lib/online.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -70,3 +71,60 @@ window.reportGame = (rank, players, earned, quit) => {
 
 /* 티켓 한 장. 없으면 false */
 window.spendTicket = () => useTicket();
+
+/* ---------- 온라인 대전 연결 ---------- */
+import { app } from "./lib/firebase.js";
+
+let netReady = false;
+function ensureNet(){
+  if (netReady || !app) return netReady;
+  net.initOnline(app);
+  netReady = true;
+  return true;
+}
+
+/* 방 상태가 바뀌면 화면에 알린다 */
+function pushRoom(room){
+  if (!room) { window.__room = null; return; }
+  window.__room = {
+    cap: room.opts ? room.opts.cap : 6,
+    me: net.online.seat,
+    host: room.host,
+    phase: room.phase,
+    seats: room.seats || [],
+  };
+  window.__opts = Object.assign(window.__opts || {}, room.opts || {});
+  window.dispatchEvent(new Event("roomchange"));
+}
+
+async function guard(fn, label){
+  try { return await fn(); }
+  catch (e){
+    console.warn(label, e);
+    alert(label + ": " + (e.message || e));
+    return null;
+  }
+}
+
+/* 방 만들기 — 설정 창에서 확인을 누르면 실제 방을 만든다 */
+window.__createRoom = async () => {
+  if (!ensureNet()) return null;
+  const code = await guard(() => net.createRoom(window.__opts), "방을 만들지 못했습니다");
+  if (!code) return null;
+  net.online.onRoom = pushRoom;
+  pushRoom(net.online.room);
+  return code;
+};
+
+/* 번호로 들어가기 */
+window.__joinRoom = async code => {
+  if (!ensureNet()) return null;
+  const seat = await guard(() => net.joinRoom(String(code)), "들어갈 수 없습니다");
+  if (seat == null) return null;
+  net.online.onRoom = pushRoom;
+  pushRoom(net.online.room);
+  return seat;
+};
+
+window.__leaveRoom = () => { try { net.leaveRoom(); } catch(e){} window.__room = null; };
+window.__roomCode = () => net.online.code;

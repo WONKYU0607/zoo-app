@@ -89,8 +89,11 @@ export function initNav(){
   });
   document.getElementById("optGo").addEventListener("click", () => {
     document.getElementById("opts").classList.remove("on");
-    if (optMode === "create") setTimeout(() => go("room"), 80);
-    else window.dispatchEvent(new Event("optschange"));
+    if (optMode === "create"){
+      if (window.__createRoom){
+        window.__createRoom().then(code => { if (code) go("room"); });
+      } else setTimeout(() => go("room"), 80);
+    } else window.dispatchEvent(new Event("optschange"));
   });
   window.addEventListener("langchange", () => {
     if (document.getElementById("opts").classList.contains("on")) optRender();
@@ -134,9 +137,25 @@ export function initNav(){
   /* 로비 → 대기실 */
   /* 빠른 참가와 번호 참가는 남의 방에 들어가는 것이라 조건을 묻지 않는다.
      방 조건은 들어간 방을 따라간다 */
-  ["#lobby #btQuick", "#lobby #btJoin"].forEach(sel => {
-    const b = document.querySelector(sel);
-    if (b) b.addEventListener("click", () => go("room"));
+  /* 빠른 참가 — 지금은 방을 하나 만들고 봇으로 채운다 */
+  document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
+    if (window.__createRoom){
+      const code = await window.__createRoom();
+      if (!code) return;
+    }
+    go("room");
+  });
+  
+  /* 번호로 들어가기 */
+  document.querySelector("#lobby #btJoin").addEventListener("click", async () => {
+    const inp = document.querySelector("#lobby #code");
+    const code = (inp && (inp.value || inp.textContent) || "").replace(/[^0-9]/g, "");
+    if (code.length !== 4){ alert("네 자리 번호를 넣어 주세요"); return; }
+    if (window.__joinRoom){
+      const seat = await window.__joinRoom(code);
+      if (seat == null) return;
+    }
+    go("room");
   });
   /* 방 만들기는 설정을 먼저 받는다 */
   document.querySelector("#lobby #btNew").addEventListener("click", () => openOpts("create"));

@@ -25,7 +25,7 @@ export function mount(root){
          clrD:"2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다.",
          on:"켜져 있습니다.", off:"꺼져 있습니다.",
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
-         start:"시작하기", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 내일 다시 채워집니다",
+         copied:"복사됨", start:"시작하기", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 내일 다시 채워집니다",
          wait:"방장이 시작하기를 기다리는 중입니다" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
@@ -41,7 +41,7 @@ export function mount(root){
          clrD:"Playing a 2 clears the pile and you lead again.",
          on:"On.", off:"Off.",
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
-         start:"Start", needFour:"Four players are needed", noTicket:"No tickets left. They refill tomorrow",
+         copied:"Copied", start:"Start", needFour:"Four players are needed", noTicket:"No tickets left. They refill tomorrow",
          wait:"Waiting for the host to start" }
   };
   let lang = window.__lang || "ko";
@@ -206,6 +206,26 @@ export function mount(root){
   draw();
   window.addEventListener("resize", draw);
   window.addEventListener("optschange", draw);
+  window.addEventListener("roomchange", draw);
+  
+  /* 실제 방 번호를 보여준다 */
+  function paintCode(){
+    const el2 = document.getElementById("roomNo");
+    if (el2 && window.__roomCode) el2.textContent = window.__roomCode() || "----";
+  }
+  window.addEventListener("roomchange", paintCode);
+  paintCode();
+  
+  /* 번호 복사 */
+  const rcBtn = document.getElementById("rc");
+  if (rcBtn) rcBtn.addEventListener("click", () => {
+    const code = (window.__roomCode && window.__roomCode()) || "";
+    if (!code) return;
+    try { navigator.clipboard.writeText(code); } catch(e){}
+    const old = rcBtn.textContent;
+    rcBtn.textContent = L[lang].copied;
+    setTimeout(() => { rcBtn.textContent = old; }, 1200);
+  });
   
   /* 시작을 누르는 순간의 실제 인원을 확정한다 (자리를 다 안 채우고 시작할 수 있음) */
   document.getElementById("action").addEventListener("click", async e => {
