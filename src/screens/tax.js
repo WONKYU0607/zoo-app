@@ -61,7 +61,8 @@ export function mount(root){
     }
   };
   let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
-  let N = 6;   /* 인원. 선언 없이 쓰고 있어서 모듈에서 막혔다 */
+  let N = 6;
+  let online = false;   /* 인원. 선언 없이 쓰고 있어서 모듈에서 막혔다 */
   let ranks = [];
   let wasGreat = false;   /* 선언 시점의 대혁명 여부 (뒤집은 뒤엔 다시 계산하면 틀린다) */
   const G = () => (window.GAME = window.GAME || {});
@@ -173,6 +174,7 @@ export function mount(root){
   
   /* 세금을 실제 손패에 적용 */
   function applyTax(myGive){
+    if (online && window.__setTaxGive) window.__setTaxGive(myGive || null);
     const hh = holds(), o = order();
     [[o[0], o[N-1], 2], [o[1], o[N-2], 1]].forEach(([hi, lo, k]) => {
       const best = hh[lo].slice().sort((a, b) => a - b).slice(0, k);
@@ -364,6 +366,10 @@ export function mount(root){
   }
   
   function boot(){
+    /* 온라인이면 서버가 정산한다. 이 화면은 보여주기와 고르기만 맡는다 */
+    if (window.__net){
+      online = true;
+    }
     const g = G();
     N = g.N || 6;
     ranks = (g.finish && g.finish.length === N) ? g.finish.slice()

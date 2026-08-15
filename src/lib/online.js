@@ -140,6 +140,30 @@ async function settle(c, seat){
   return seat;
 }
 
+/* 판이 끝난 순서를 방에 적는다 */
+export async function reportFinish(c, order){
+  if (!c) return;
+  await set(ref(rtdb, `rooms/${c}/round/finish`), order || []);
+}
+
+/* 접속이 끊긴 사람을 나간 것으로 표시한다 (1분 뒤) */
+export async function markOff(c, seat){
+  if (!c) return;
+  await update(ref(rtdb, `rooms/${c}/seats/${seat}`), { off: true, left: true });
+}
+
+/* 살아 있음을 알린다. 30초마다 */
+let beat = null;
+export function startBeat(){
+  stopBeat();
+  const c = online.code;
+  if (!c) return;
+  const mark = () => { try { set(ref(rtdb, `rooms/${c}/live/${account.uid}`), Date.now()); } catch(e){} };
+  mark();
+  beat = setInterval(mark, 30000);
+}
+export function stopBeat(){ if (beat){ clearInterval(beat); beat = null; } }
+
 /* 봇 이름. 사람인 척 하므로 표시는 따로 하지 않는다 */
 const BOT_NAMES = ["태윤","서연","준호","민지","하은","지훈","예린","도윤","수아","현우",
                    "지아","서준","하린","시우","윤서","건우"];
@@ -204,6 +228,7 @@ async function watchRoom(c){
   await set(meRef, Date.now());
   onDisconnect(meRef).set(0);
 
+  startBeat();
   roomUnsub = onValue(rr, snap => {
     online.room = snap.val();
     if (online.room && online.onRoom) online.onRoom(online.room);
@@ -221,6 +246,7 @@ async function watchRoom(c){
 }
 
 export function stopWatch(){
+  stopBeat();
   [roomUnsub, moveUnsub, handUnsub].forEach(f => { try { f && f(); } catch(e){} });
   roomUnsub = moveUnsub = handUnsub = null;
 }

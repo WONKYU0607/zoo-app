@@ -228,6 +228,7 @@ export const settleRound = onCall(REGION, async req => {
   const seats = alive(room.seats || []);
   const r = room.round;
 
+  /* 앱이 적어 둔 완주 순서를 쓴다. 빠진 사람은 뒤에 붙인다 */
   const order = (r.finish || []).slice();
   seats.forEach((_, i) => { if (!order.includes(i)) order.push(i); });
 
@@ -236,7 +237,9 @@ export const settleRound = onCall(REGION, async req => {
   order.forEach((seat, rank) => { score[seat] += roundPoints(rank, seats.length); });
 
   const roundNo = (room.roundNo || 1) + 1;
-  const last = roundNo > (room.opts?.rounds || 5);
+  /* 남은 사람이 3명이면 이 판까지만, 2명 이하면 즉시 끝낸다 */
+  const humans = seats.length;
+  const last = roundNo > (room.opts?.rounds || 5) || humans <= 3;
 
   if (last){
     await rtdb().ref(`rooms/${code}`).update({ score, phase: "over", order });

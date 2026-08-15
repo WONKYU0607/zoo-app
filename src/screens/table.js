@@ -65,7 +65,30 @@ export function mount(root){
   let hand = SEATS[0].hold;
   let finish = [];                 // 이번 판에 손을 턴 순서 (자리 번호)
   
+  /* 온라인에서 서버가 준 값으로 판을 세운다 */
+  function bootOnline(){
+    const R = window.__room, G = window.GAME || {};
+    const n = G.N || 6;
+    SEATS = (G.names || []).slice(0, n).map((nm, i) => ({
+      n: nm, c: (R && R.round && R.round.counts ? R.round.counts[i] : 0), s: "", hold: []
+    }));
+    const me = G.mySeat || 0;
+    /* 내 자리가 화면 아래로 오도록 돌린다 */
+    if (me > 0){
+      SEATS = SEATS.slice(me).concat(SEATS.slice(0, me));
+    }
+    hand = (window.__hand || []).slice();
+    SEATS[0].hold = hand;
+    SEATS[0].c = hand.length;
+    turn = R && R.round ? ((R.round.turn - me + n) % n) : 0;
+    trick = []; finish = []; sel = []; busy = false; lastPlayer = null;
+    spread = false; animated = 0;
+    myGen++;
+    syncRing(); draw(); resetTimer();
+  }
+  
   function boot(fresh){
+    if (window.__net){ bootOnline(); return; }
     const G = window.GAME;
     const n = (G && G.N) || (window.__opts && (window.__opts.seated || window.__opts.cap)) || 6;
     if (fresh !== false || !G || !G.hold){
@@ -360,6 +383,26 @@ export function mount(root){
     setTimeout(() => { botGen = g; if (g === myGen) botTurn(); }, ms);
   }
   const TURN_SEC = 15;
+  /* 온라인: 남의 차례가 시간을 넘기면 다음 사람이 대신 패스를 적는다.
+     내가 다음 차례면 바로, 아니면 순서만큼 늦게 나선다. 앞사람이 적으면 취소된다. */
+  let watchId = null;
+  function watchDeadline(){
+    if (watchId){ clearTimeout(watchId); watchId = null; }
+    if (!window.__net) return;
+    const R = window.__room;
+    if (!R || !R.round || turn === 0) return;
+    const left = (R.round.deadline || 0) - Date.now();
+    const gap = ((turn - 0 + SEATS.length) % SEATS.length);   /* 내가 몇 번째 뒤인가 */
+    const wait = Math.max(0, left) + 800 + gap * 5000;        /* 받침: 5초씩 늦게 */
+    watchId = setTimeout(() => {
+      const R2 = window.__room;
+      if (!R2 || !R2.round) return;
+      if ((R2.round.deadline || 0) > Date.now()) return;      /* 그새 누가 뒀다 */
+      if (turn === 0 || busy) return;
+      submit(turn + ",p");                                    /* 대신 패스 */
+    }, wait);
+  }
+  
   function resetTimer(){
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
@@ -398,6 +441,14 @@ export function mount(root){
     const left = SEATS.map((s, i) => i).filter(i => SEATS[i].c > 0);
     if (left.length <= 1){
       if (left.length === 1) finish.push(left[0]);   // 마지막 한 명이 꼴등
+      if (window.__net){
+        /* 온라인 — 방장 기기가 서버에 정산을 맡긴다. 결과는 방 상태로 모두에게 온다 */
+        busy = true;
+        if (timerId) clearTimeout(timerId);
+        if (tickId) clearInterval(tickId);
+        if (window.__endRoundOnline) window.__endRoundOnline(finish.slice());
+        return true;
+      }
       endRound();
       return true;
     }
@@ -595,7 +646,7 @@ export function mount(root){
   /* 수를 적용한 뒤 다음으로 넘긴다 */
   function afterApply(){
     if (checkFinish()) return;
-    draw(); resetTimer();
+    draw(); resetTimer(); watchDeadline();
     if (turn !== 0 && !window.__net) laterBot(620);
   }
   
@@ -630,6 +681,13 @@ export function mount(root){
   });
   
   draw(); resetTimer();
+  /* 서버에서 내 손패가 오면 다시 그린다 */
+  window.addEventListener("handchange", () => {
+    if (!window.__net) return;
+    hand = (window.__hand || []).slice();
+    if (SEATS[0]){ SEATS[0].hold = hand; SEATS[0].c = hand.length; }
+    draw();
+  });
   window.addEventListener("resize", draw);
   
   window.addEventListener("langchange", () => { lang = window.__lang; draw(); });
