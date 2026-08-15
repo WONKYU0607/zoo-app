@@ -108,19 +108,42 @@ export function mount(root){
       if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  /* 온라인이면 실제 방의 자리를, 아니면 흉내 낸 자리를 쓴다 */
+  function seatList(){
+    const R = window.__room;
+    if (R && R.seats){
+      return R.seats.map((s, i) => s ? {
+        name: s.name || "",
+        me: i === R.me,
+        host: s.uid && s.uid === R.host,
+        off: Boolean(s.off),
+        left: Boolean(s.left),
+      } : null);
+    }
+    const KO = lang === "ko" ? PLAYERS_KO : PLAYERS_EN;
+    return Array.from({length: joined}, (_, i) => ({
+      name: KO[i], me: i === 0, host: i === 0 && role === "host", off: false, left: false,
+    }));
+  }
+  
   function renderSeats(){
     RB = ringBox();
     const box = document.getElementById("seats");
     box.innerHTML = "";
+    const list = seatList();
+    const R = window.__room;
+    if (R) cap = R.cap || cap;
     for (let i = 0; i < cap; i++){
       const a = (Math.PI / 2) + (i * 2 * Math.PI / cap);   // 아래에서 시계 방향
       const sy = Math.sin(a);
       const bias = sy > 0.25 ? 3.4 * sy : 0;   /* 아래쪽은 이름표만큼 더 바깥으로 */
       const left = RB.cx + Math.cos(a) * -RB.rx;
       const top  = RB.cy + sy * RB.ry + bias;
-      const filled = i < joined;
+      const p = list[i] || null;
+      const filled = Boolean(p);
       const el = document.createElement("div");
-      el.className = "seat" + (filled ? "" : " seat--empty") + (i === 0 ? " seat--me" : "");
+      el.className = "seat" + (filled ? "" : " seat--empty")
+        + (p && p.me ? " seat--me" : "") + (p && (p.off || p.left) ? " seat--off" : "");
       el.style.left = left.toFixed(2) + "%";
       el.style.top  = top.toFixed(2) + "%";
       const big = cap <= 6;
@@ -128,8 +151,9 @@ export function mount(root){
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
       el.innerHTML = filled
         ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i % HEADS.length] + ')"></span>' +
-          '<span class="seat__n">' + (lang === "ko" ? PLAYERS_KO : PLAYERS_EN)[i] + '</span>' +
-          (i === 0 && role === "host" ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
+          (p.off || p.left ? '<span class="seat__off"></span>' : '') +
+          '<span class="seat__n">' + p.name + '</span>' +
+          (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
         : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
           '<span class="seat__n">' + L[lang].empty + '</span>';
       box.appendChild(el);
@@ -144,7 +168,9 @@ export function mount(root){
     document.querySelector('#view [data-v="guest"]').textContent = t.guest;
     const fc = document.querySelector(".felt__c");
     if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
-    document.getElementById("feltN").textContent = t.count(joined, cap);
+    const R2 = window.__room;
+    const now = R2 && R2.seats ? R2.seats.filter(Boolean).length : joined;
+    document.getElementById("feltN").textContent = t.count(now, cap);
     document.getElementById("feltS").textContent =
       joined < 4 ? t.needMore : joined < cap ? t.canStart : t.full;
   }
@@ -219,6 +245,7 @@ export function mount(root){
   
   /* 사람이 한 명씩 들어오는 모습 */
   setInterval(() => {
+    if (window.__room) return;            /* 온라인에서는 실제 자리를 쓴다 */
     joined = joined < cap ? joined + 1 : 2;
     draw();
   }, 3400);
