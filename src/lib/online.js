@@ -221,6 +221,22 @@ function nextTurn(keep, passedArg){
 
 /* ---------- 서버 부르기 ---------- */
 
+/* 무엇이 잘못됐는지 알아보는 도구. 콘솔에서 __peek("9104") 처럼 쓴다 */
+export async function peek(code){
+  const out = { code: String(code), dbUrl: import.meta.env.VITE_FB_DB_URL || "(없음)" };
+  try {
+    const s1 = await get(ref(rtdb, `rooms/${code}`));
+    out.방있음 = s1.exists();
+    out.방내용 = s1.val();
+  } catch(e){ out.방읽기오류 = e.code || e.message; }
+  try {
+    const s2 = await get(ref(rtdb, "rooms"));
+    out.전체방목록 = s2.exists() ? Object.keys(s2.val()) : [];
+  } catch(e){ out.목록읽기오류 = e.code || e.message; }
+  console.log(out);
+  return out;
+}
+
 export const startRound  = (code)        => call("startRound")({ code });
 export const settleRound = (code, give)  => call("settleRound")({ code, give });
 export const botMoves    = (code)        => call("botMoves")({ code });

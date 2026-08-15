@@ -144,3 +144,4 @@ window.__joinRoom = async code => {
 
 window.__leaveRoom = () => { try { net.leaveRoom(); } catch(e){} window.__room = null; };
 window.__roomCode = () => net.online.code;
+window.__peek = code => { ensureNet(); return net.peek(code); };
