@@ -31,8 +31,13 @@ async function loadRoom(code){
   return snap.val();
 }
 
-/* 자리 배열에서 살아 있는 사람 (나간 사람 제외) */
-const alive = seats => seats.filter(s => s && !s.left);
+/* 자리 배열은 중간이 비어 있을 수 있다.
+   실제로 앉아 있는 사람만 순서대로 추린다. 자리 번호도 같이 들고 다닌다. */
+function alive(seats){
+  const out = [];
+  (seats || []).forEach((s, i) => { if (s && !s.left) out.push(Object.assign({}, s, {at: i})); });
+  return out;
+}
 
 /* 점수를 받는 등수까지 — 상위 절반 */
 const winners = n => Math.floor(n / 2);
@@ -55,7 +60,7 @@ export const startRound = onCall(REGION, async req => {
   const seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
   const hands = deal(live.length, seed);
 
-  /* 손패는 각자 것만 볼 수 있는 곳에 넣는다 */
+  /* 손패는 각자 것만 볼 수 있는 곳에 넣는다. 봇 손패도 여기 둔다 */
   const handWrites = {};
   live.forEach((s, i) => { handWrites[`hands/${code}/${s.uid}`] = hands[i]; });
 
@@ -68,6 +73,7 @@ export const startRound = onCall(REGION, async req => {
     ...handWrites,
     [`rooms/${code}/phase`]: "playing",
     [`rooms/${code}/seed`]: seed,
+    [`rooms/${code}/order`]: live.map(s => s.at),   /* 실제 자리 번호 순서 */
     [`rooms/${code}/round`]: {
       no: room.roundNo || 1,
       turn: lead < 0 ? 0 : lead,
@@ -129,7 +135,7 @@ export const botMoves = onCall(REGION, async req => {
   const room = await loadRoom(code);
   if (room.phase !== "playing") throw new HttpsError("failed-precondition", "진행 중이 아닙니다");
 
-  const seats = alive(room.seats || []);
+  const seats = alive(room.seats || []);   /* 앉아 있는 사람만, 순서대로 */
   const r = room.round;
   const made = [];
   let seq = r.seq || 0;

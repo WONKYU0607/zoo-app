@@ -101,7 +101,11 @@ function ensureNet(){
 
 /* 방 상태가 바뀌면 화면에 알린다 */
 function pushRoom(room){
-  if (!room) { window.__room = null; return; }
+  if (!room) { window.__room = null; botFillStop(); return; }
+  watchPhase(room);
+  if (room.phase === "waiting" && room.host === account.uid) botFillStart();
+  else botFillStop();
+  if (room.phase === "playing") watchBotTurn(room);
   window.__room = {
     cap: room.opts ? room.opts.cap : 6,
     me: net.online.seat,
@@ -145,3 +149,94 @@ window.__joinRoom = async code => {
 window.__leaveRoom = () => { try { net.leaveRoom(); } catch(e){} window.__room = null; };
 window.__roomCode = () => net.online.code;
 window.__peek = code => { ensureNet(); return net.peek(code); };
+
+/* 방장이 누르면 서버가 카드를 나눈다 */
+/* 봇 채우기 — 방장 화면에서 7초마다 한 명씩 */
+let botTimer = null;
+function botFillStart(){
+  if (botTimer) return;
+  botTimer = setInterval(async () => {
+    const R = net.online.room;
+    if (!R || R.phase !== "waiting" || R.host !== account.uid){ botFillStop(); return; }
+    try { await net.addBot(); } catch(e){ console.warn(e); }
+  }, 7000);
+}
+function botFillStop(){ if (botTimer){ clearInterval(botTimer); botTimer = null; } }
+window.__botFill = on => (on ? botFillStart() : botFillStop());
+
+window.__startRound = async () => {
+  const code = net.online.code;
+  if (!code) throw new Error("방이 없습니다");
+  await net.startRound(code);
+};
+
+/* 방 상태가 playing 으로 바뀌면 모두 함께 게임으로 들어간다 */
+let lastPhase = null;
+function watchPhase(room){
+  if (!room) { lastPhase = null; return; }
+  if (room.phase === lastPhase) return;
+  lastPhase = room.phase;
+  if (room.phase !== "playing") return;
+
+  /* 서버가 적어 둔 순서를 그대로 쓴다. 자리 배열에 구멍이 있어도 어긋나지 않는다 */
+  const order = room.order || (room.seats || []).map((s, i) => (s ? i : -1)).filter(i => i >= 0);
+  const seats = order.map(i => (room.seats || [])[i]).filter(Boolean);
+  const me = Math.max(0, order.indexOf(net.online.seat));
+
+  /* 게임 화면이 서버 값을 쓰도록 넘겨준다 */
+  window.GAME = {
+    N: seats.length,
+    roundNo: room.roundNo || 1,
+    names: seats.map(s => s.name || ""),
+    namesEn: seats.map(s => s.name || ""),
+    hold: null,
+    order: null,
+    finish: null,
+    score: room.score || seats.map(() => 0),
+    mySeat: me,
+  };
+  window.__opts = Object.assign(window.__opts || {}, room.opts || {}, { seated: seats.length });
+  window.__net = { send: mv => net.playMove(mv), seat: me };
+  window.__room = window.__room || {};
+  window.__room.round = room.round;
+
+  /* 내 손패가 오면 화면에 넘긴다 */
+  net.online.onHand = h => {
+    window.__hand = h || [];
+    window.dispatchEvent(new Event("handchange"));
+  };
+  window.__hand = net.online.hand || [];
+
+  /* 남의 수가 들어오면 화면에 적용한다. 내 자리 기준으로 돌려서 넘긴다 */
+  seenMove = 0;
+  net.online.onMove = (seq, mv) => {
+    if (seq <= seenMove) return;
+    seenMove = seq;
+    const a = String(mv).split(",");
+    const from = (Number(a[0]) - me + seats.length) % seats.length;
+    a[0] = String(from);
+    if (window.__applyMove) window.__applyMove(a.join(","));
+  };
+
+  watchBotTurn(room);
+  window.__goto && window.__goto("draw");
+}
+let seenMove = 0;
+
+/* 봇 차례가 오면 서버에 다음 수를 맡긴다.
+   방장 한 명만 부른다. 여럿이 부르면 같은 수가 두 번 적힌다. */
+let botBusy = false;
+async function watchBotTurn(room){
+  if (!room || room.phase !== "playing") return;
+  if (room.host !== account.uid) return;          /* 방장만 */
+  if (botBusy) return;
+  const r = room.round;
+  if (!r) return;
+  const seats = room.seats || [];
+  const cur = seats[r.turn];
+  if (!cur || !cur.bot) return;                    /* 사람 차례 */
+  botBusy = true;
+  try { await net.botMoves(net.online.code); }
+  catch(e){ console.warn("봇 수 실패", e); }
+  finally { setTimeout(() => { botBusy = false; }, 300); }
+}

@@ -140,6 +140,49 @@ async function settle(c, seat){
   return seat;
 }
 
+/* 봇 이름. 사람인 척 하므로 표시는 따로 하지 않는다 */
+const BOT_NAMES = ["태윤","서연","준호","민지","하은","지훈","예린","도윤","수아","현우",
+                   "지아","서준","하린","시우","윤서","건우"];
+
+/* 빈 자리에 봇을 하나 넣는다. 방장만 부른다 */
+export async function addBot(){
+  const c = online.code;
+  if (!c) return false;
+  const snap = await get(ref(rtdb, `rooms/${c}`));
+  if (!snap.exists()) return false;
+  const room = snap.val();
+  if (room.phase !== "waiting") return false;
+  if (room.host !== account.uid) return false;
+
+  const cap = (room.opts && room.opts.cap) || 6;
+  const seats = room.seats || [];
+  const filled = seatCount(room);
+  const bots = seats.filter(s => s && s.bot).length;
+  if (filled >= cap) return false;
+  if (bots >= Math.floor(cap / 2)) return false;      /* 봇은 정원의 절반까지 */
+
+  /* 안 쓰는 이름을 고른다 */
+  const used = seats.filter(Boolean).map(s => s.name);
+  const pool = BOT_NAMES.filter(n => !used.includes(n));
+  if (!pool.length) return false;
+  const name = pool[Math.floor(Math.random() * pool.length)];
+
+  /* 빈 자리 아무 데나 (몰아 앉히면 봇인 게 티가 난다) */
+  const empty = [];
+  for (let i = 0; i < cap; i++) if (!seats[i]) empty.push(i);
+  if (!empty.length) return false;
+  const at = empty[Math.floor(Math.random() * empty.length)];
+
+  try {
+    await set(ref(rtdb, `rooms/${c}/seats/${at}`), {
+      uid: "bot_" + c + "_" + at, name: name, tier: 0, bot: true,
+    });
+    await set(ref(rtdb, `rooms/${c}/score/${at}`), 0);
+    await set(ref(rtdb, `rooms/${c}/touchedAt`), Date.now());
+  } catch(e){ console.warn("봇 넣기 실패", e); return false; }
+  return true;
+}
+
 /* 실제로 앉아 있는 사람 수 (중간이 비어 있어도 정확하다) */
 export function seatCount(room){
   const s = (room && room.seats) || [];
