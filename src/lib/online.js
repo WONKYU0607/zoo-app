@@ -52,23 +52,24 @@ export async function createRoom(opts){
       online.code = c;
       online.seat = 0;
       await watchRoom(c);
+      console.log("방을 만들었습니다:", c);
       return c;
     }
   }
-  throw new Error("방 번호를 만들지 못했습니다");
+  throw new Error("방 번호를 만들지 못했습니다 (빈 번호 없음)");
 }
 
 /* ---------- 참가 ---------- */
 
 export async function joinRoom(c){
   const r = ref(rtdb, `rooms/${c}`);
-  let seat = -1;
+  let seat = -1, why = "";
   const res = await runTransaction(r, cur => {
-    if (cur === null) return;                       /* 없는 방 */
-    if (cur.phase !== "waiting") return;            /* 이미 시작 */
+    if (cur === null){ why = "그런 방이 없습니다 (" + c + ")"; return; }
+    if (cur.phase !== "waiting"){ why = "이미 시작한 방입니다"; return; }
     const seats = cur.seats || [];
-    if (seats.length >= cur.opts.cap) return;       /* 자리 참 */
-    if (seats.some(s => s && s.uid === account.uid)) return;
+    if (seats.length >= (cur.opts ? cur.opts.cap : 6)){ why = "자리가 찼습니다"; return; }
+    if (seats.some(s => s && s.uid === account.uid)){ why = "이미 들어와 있습니다"; return; }
     seat = seats.length;
     seats.push({ uid: account.uid, name: account.name, tier: account.tier });
     cur.seats = seats;
@@ -76,7 +77,7 @@ export async function joinRoom(c){
     cur.touchedAt = Date.now();
     return cur;
   });
-  if (!res.committed) throw new Error("들어갈 수 없습니다");
+  if (!res.committed) throw new Error(why || "들어갈 수 없습니다");
   online.code = c;
   online.seat = seat;
   await watchRoom(c);
