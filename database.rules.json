@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "moves": {
+          "$seq": {
+            ".validate": "!data.exists() && newData.isString() && newData.val().length < 24"
+          }
+        }
+      }
+    },
+    "hands": {
+      "$code": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      }
+    }
+  }
+}

@@ -30,10 +30,8 @@
 #tax .flash{position:absolute;inset:-20%;pointer-events:none;z-index:10;opacity:0;
   background:radial-gradient(closest-side,rgba(255,232,170,.75),rgba(227,198,124,.2) 46%,transparent 70%)}
 #tax .flash.go{animation:burst .85s ease-out}
-#tax @keyframes burst{0%{opacity:0;transform:scale(.5)}22%{opacity:1}100%{opacity:0;transform:scale(1.25)}}
-
-
-.seat{--av:44px;--fs:10.5px;position:absolute;width:calc(var(--av,44px) + 34px);
+@keyframes burst{0%{opacity:0;transform:scale(.5)}22%{opacity:1}100%{opacity:0;transform:scale(1.25)}}
+#tax .seat{--av:44px;--fs:10.5px;position:absolute;width:calc(var(--av,44px) + 34px);
   transform:translate(-50%,-50%);
   display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;z-index:6}
 #tax .seat__av{width:var(--av,44px);height:var(--av,44px);border-radius:50%;object-fit:cover;
@@ -51,9 +49,8 @@
 #tax .seat--bot .seat__r{color:#A9C0B0;border-color:#3E5548}
 #tax .seat__r{transition:opacity .3s ease,transform .3s ease}
 #tax .seat__r.swap{animation:swap .7s ease both}
-#tax @keyframes swap{0%{opacity:1}30%{opacity:0;transform:translateY(6px) scale(.8)}60%{opacity:0;transform:translateY(-6px) scale(.8)}100%{opacity:1;transform:none}}
-
-.mid{position:absolute;left:49%;top:44%;transform:translate(-50%,-50%);
+@keyframes swap{0%{opacity:1}30%{opacity:0;transform:translateY(6px) scale(.8)}60%{opacity:0;transform:translateY(-6px) scale(.8)}100%{opacity:1;transform:none}}
+#tax .mid{position:absolute;left:49%;top:44%;transform:translate(-50%,-50%);
   width:min(196px,52%);text-align:center;z-index:8}
 #tax .mid__h{font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;margin-bottom:6px}
 #tax .mid__s{font-size:11.5px;color:#A9C0B0;line-height:1.65}
@@ -67,9 +64,8 @@
 #tax .frow__c .card{animation:fly .4s cubic-bezier(.2,.8,.3,1) both}
 #tax .frow--in .frow__c .card{--fx:-70px}
 #tax .frow--out .frow__c .card{--fx:70px}
-#tax @keyframes fly{from{opacity:0;transform:translateX(var(--fx,0)) scale(.8)}}
-
-.rev{border-color:rgba(227,198,124,.8);box-shadow:0 0 30px rgba(227,198,124,.18)}
+@keyframes fly{from{opacity:0;transform:translateX(var(--fx,0)) scale(.8)}}
+#tax .rev{border-color:rgba(227,198,124,.8);box-shadow:0 0 30px rgba(227,198,124,.18)}
 #tax /* card */
 .card{--w:34px;width:var(--w);aspect-ratio:200/390;flex:none;
   border-radius:calc(var(--w) * .05);padding:calc(var(--w) * .042);

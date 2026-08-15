@@ -68,10 +68,14 @@ export function mount(root){
       if (window.reportGame) window.reportGame(myRank, names.length, earned, false);
     }
   
+    /* 점수를 받는 등수까지만 선을 긋는다 */
+    const cut = Math.floor(names.length / 2);
     el("list").innerHTML = rows.map((seat, idx) => {
       const place = last ? idx : finish.indexOf(seat);
-      const gained = Math.max(10, 100 - place * 10);
-      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + '">' +
+      const gained = place < cut ? 100 - place * 10 : 0;
+      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") +
+        (!last && idx === cut - 1 ? " row--cut" : "") +
+        (gained === 0 ? " row--none" : "") + '">' +
         '<span class="row__p">' + (idx + 1) + '</span>' +
         '<img class="row__av" src="' + HEADS[seat % HEADS.length] + '" alt="">' +
         '<span class="row__n">' + (names[seat] || "") + '</span>' +

@@ -90,13 +90,30 @@ button:disabled{opacity:.42}
 #stage{position:fixed;inset:0;overflow:hidden;background:#0A0705}
 @media (min-width:560px){
   html,body{background:#0A0705}
+  /* 넓은 화면에서는 양옆을 배경으로 채워 빈 공간이 의도된 것처럼 보이게 한다 */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-2;
+    background:#0A0705 url(/assets/tablebg.webp) center/cover no-repeat;
+    filter:blur(18px) saturate(.85) brightness(.68);
+    transform:scale(1.1);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;
+    background:radial-gradient(140% 90% at 50% 42%,rgba(0,0,0,.05),rgba(4,7,5,.62) 72%);
+  }
   #stage{
     inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);
-    height:min(100dvh,940px);
-    width:min(100vw,calc(min(100dvh,940px) / 2.08));
-    border-radius:16px;
-    box-shadow:0 0 0 1px rgba(198,154,62,.28),0 30px 80px rgba(0,0,0,.7);
+    height:100dvh;                                  /* 화면 높이를 꽉 채운다 */
+    width:min(100vw,calc(100dvh / 2.08));
+    border-radius:0;
+    box-shadow:0 0 0 1px rgba(198,154,62,.34),
+               0 0 0 6px rgba(10,7,5,.9),
+               0 24px 70px rgba(0,0,0,.75);
   }
+}
+@media (min-width:560px) and (min-height:1000px){
+  #stage{height:min(100dvh,1100px);width:min(100vw,calc(min(100dvh,1100px) / 2.08));
+    border-radius:14px}
 }
 #stage .bg,#stage .sheet,#stage #flash{position:absolute}
 /* 진입창 토글만 떠 있고 나머지 화면 토글은 제자리에 */

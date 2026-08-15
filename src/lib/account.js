@@ -21,10 +21,9 @@ export function tierOf(score){ return Math.floor(score / TIER_STEP); }
 export function winnersCount(n){ return Math.floor(n / 2); }
 
 /* 계정에 올릴 점수.
-   게임 안에서 판마다 쌓은 누적 점수를 그대로 쓰되 상위 절반만 받는다.
-   완주하지 못하고 나간 사람은 절반만 받는다. */
+   판마다 이미 상위 절반만 받았으므로 여기서는 합산한 값을 그대로 준다.
+   완주하지 못하고 나간 사람만 절반으로 깎는다. */
 export function scoreFor(rank, n, earned, quit){
-  if (rank >= winnersCount(n)) return 0;
   const s = Math.max(0, Math.round(earned || 0));
   return quit ? Math.floor(s / 2) : s;
 }

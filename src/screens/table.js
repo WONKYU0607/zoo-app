@@ -414,6 +414,67 @@ export function mount(root){
   }
   window.__quitGame = quitGame;
   
+  /* ---------- 한 수를 적용한다 ----------
+     내 수든 남의 수든 봇 수든 전부 이 길로 들어온다.
+     온라인에서 각자 화면이 어긋나지 않게 하는 핵심이다.
+     move 는 "자리,숫자,장수" 또는 "자리,p" */
+  function applyMove(str){
+    const a = String(str).split(",");
+    const seat = +a[0];
+    if (!SEATS[seat]) return false;
+  
+    if (a[1] === "p"){                       /* 패스 */
+      SEATS[seat].s = "pass";
+      afterMove(seat, null);
+      return true;
+    }
+  
+    const num = +a[1], count = +a[2];
+    const s = SEATS[seat];
+  
+    /* 손패에서 실제로 뺀다. 내 자리는 진짜 카드, 남의 자리는 장수만 맞춘다 */
+    let cards;
+    if (s.hold && s.hold.length){
+      cards = takeFrom(s.hold, num, count);
+      s.c = s.hold.length;
+    } else {
+      s.c = Math.max(0, s.c - count);
+      cards = Array(count).fill(num);
+    }
+    if (seat === 0) hand = SEATS[0].hold;
+  
+    trick.push({by: seat, num: num, count: count, cards: cards.slice().sort((x, y) => x - y)});
+    lastPlayer = seat;
+    if (s.c === 0 && !finish.includes(seat)) finish.push(seat);
+    afterMove(seat, num);
+    return true;
+  }
+  
+  /* 수를 적용한 뒤 차례를 옮긴다 */
+  function afterMove(seat, num){
+    /* 1번(과 2번 컷)은 바닥을 비우고 낸 사람이 다시 선 */
+    if (num != null && clearsPile(num)){
+      trick = []; spread = false; animated = 0;
+      SEATS.forEach(x => x.s = "");
+      if (SEATS[seat].c > 0){ turn = seat; return; }
+    }
+    /* 낼 수 있는 사람이 하나 이하면 바닥을 치우고 마지막에 낸 사람이 선.
+       바닥이 비어 있어도 정리해야 한다. 안 그러면 아무도 못 두고 판이 멈춘다 */
+    const still = SEATS.filter((x, i) => x.c > 0 && x.s !== "pass").length;
+    if (still <= 1){
+      const last = (lastPlayer != null && SEATS[lastPlayer] && SEATS[lastPlayer].c > 0)
+        ? lastPlayer : SEATS.findIndex(x => x.c > 0);
+      trick = []; spread = false; animated = 0;
+      SEATS.forEach(x => x.s = "");
+      if (last >= 0) turn = last;
+      return;
+    }
+    let g = 0, t = seat;
+    do { t = (t + 1) % SEATS.length; }
+    while ((SEATS[t].c === 0 || SEATS[t].s === "pass") && g++ < SEATS.length * 2);
+    turn = t;
+  }
+  
   function endRound(){
     busy = true;
     syncGame();
@@ -421,7 +482,11 @@ export function mount(root){
     G.finish = finish.slice();
     G.order = finish.slice();                       // 다음 판 순서 = 이번 판 등수
     G.score = G.score || SEATS.map(() => 0);
-    finish.forEach((seat, rank) => { G.score[seat] += Math.max(10, 100 - rank * 10); });
+    /* 판마다 상위 절반만 점수를 받는다. 6명이면 1·2·3등만 */
+    const win = Math.floor(SEATS.length / 2);
+    finish.forEach((seat, rank) => {
+      if (rank < win) G.score[seat] += 100 - rank * 10;
+    });
     draw();
     if (window.__onRoundEnd) setTimeout(window.__onRoundEnd, 900);
   }
@@ -466,7 +531,11 @@ export function mount(root){
         opts.push({num: n, count: same, useJok: 0, own: same});
       }
     }
-    if (!opts.length) return null;
+    if (!opts.length){
+      /* 손에 카멜레온만 남은 경우. 혼자 내면 13번으로 칠 수 있다 (선일 때만) */
+      if (!c && jok > 0) return {num: 13, count: 1, useJok: 1, own: 0};
+      return null;
+    }
   
     opts.forEach(o => {
       let s = o.num * 2;                          /* 약한 카드부터 */
@@ -489,25 +558,11 @@ export function mount(root){
   function botTurn(){
     /* 내 자리에서는 절대 자동으로 내지 않는다.
        판이 다시 시작되면 이전 판에서 예약된 호출이 남아 내 카드를 내던 버그가 있었다 */
-    if (turn === 0) { busy = false; draw(); resetTimer(); return; }
+    if (turn === 0){ busy = false; draw(); resetTimer(); return; }
     if (botGen !== myGen) return;          /* 지난 판에서 예약된 것 */
     busy = true;
-    const s = SEATS[turn], c = cur();
-    const pick = botPick(s.hold, c, turn);
-    if (pick){
-      const used = takeFrom(s.hold, pick.num, pick.count);
-      s.c = s.hold.length; lastPlayer = turn;
-      trick.push({by: turn, num: pick.num, count: pick.count, cards: used});
-      if (clearsPile(pick.num) && s.c > 0){
-        draw(); flash(T[lang].cleared);
-        setTimeout(() => { trick = []; spread = false; animated = 0;
-          SEATS.forEach(x => x.s = ""); busy = false; draw(); resetTimer();
-          if (turn !== 0) laterBot(800); }, 900);
-        return;
-      }
-    } else s.s = "pass";
-    draw();
-    setTimeout(advance, 620);
+    const s = SEATS[turn], pick = botPick(s.hold, cur(), turn);
+    submit(pick ? (turn + "," + pick.num + "," + pick.count) : (turn + ",p"));
   }
   
   /* 1번은 아무도 못 받으니 즉시 정리하고 낸 사람이 다시 선.
@@ -519,24 +574,39 @@ export function mount(root){
   el("play").onclick = () => {
     const list = sel.map(i => hand[i]); if (!legal(list)) return;
     const e = effective(list);
-    trick.push({by: 0, num: e, count: list.length, cards: list.slice().sort((a,b) => a-b)});
-    hand = hand.filter((_, i) => !sel.includes(i));
-    SEATS[0].hold = hand; SEATS[0].c = hand.length;
-    sel = []; lastPlayer = 0; busy = true; draw();
-    if (clearsPile(e) && SEATS[0].c > 0){
+    sel = []; busy = true;
+    submit(0 + "," + e + "," + list.length);
+  };
+  
+  /* 수를 내보낸다. 온라인이면 서버로, 아니면 바로 적용한다 */
+  function submit(mv){
+    if (window.__net && window.__net.send){ window.__net.send(mv); return; }
+    const cleared = clearsPile(+mv.split(",")[1]);
+    applyMove(mv);
+    draw();
+    if (cleared){
       flash(T[lang].cleared);
-      setTimeout(() => { trick = []; spread = false; animated = 0;
-        SEATS.forEach(s => s.s = ""); busy = false; draw(); resetTimer(); }, 900);
+      setTimeout(() => { busy = false; afterApply(); }, 900);
       return;
     }
-    setTimeout(advance, 620);
-  };
+    setTimeout(() => { busy = false; afterApply(); }, 620);
+  }
+  
+  /* 수를 적용한 뒤 다음으로 넘긴다 */
+  function afterApply(){
+    if (checkFinish()) return;
+    draw(); resetTimer();
+    if (turn !== 0 && !window.__net) laterBot(620);
+  }
+  
+  /* 밖에서 들어온 수 (온라인) */
+  window.__applyMove = mv => { applyMove(mv); draw(); if (checkFinish()) return; resetTimer(); };
   function doPass(auto){
     if (turn !== 0 || busy) return;
     if (timerId) clearTimeout(timerId);
-    sel = []; SEATS[0].s = "pass"; busy = true;
+    sel = []; busy = true;
     if (auto) flash(T[lang].autoPass, true);
-    draw(); setTimeout(advance, 500);
+    submit("0,p");
   }
   el("pass").onclick = () => doPass(false);
   

@@ -73,10 +73,8 @@
 #draw .mid__s b{color:var(--gold-hi);font-weight:400}
 #draw .cd{font-family:"Noto Serif KR",serif;font-weight:900;font-size:44px;color:#F0D18C;
   margin-top:10px;line-height:1;text-shadow:0 3px 14px rgba(0,0,0,.8);animation:cdPop .35s ease}
-#draw @keyframes cdPop{from{opacity:0;transform:scale(.7)}}
-
-
-.acts{display:flex;gap:9px;margin-top:10px}
+@keyframes cdPop{from{opacity:0;transform:scale(.7)}}
+#draw .acts{display:flex;gap:9px;margin-top:10px}
 #draw .acts button{flex:1;padding:15px;border-radius:2px;
   font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;letter-spacing:.04em}
 #draw .bt-main{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
