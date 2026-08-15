@@ -117,6 +117,7 @@ export function initNav(){
   });
   window.setLang(window.__lang);
   
+  window.__goto = id => go(id);
   function go(id){
     document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));
     document.getElementById(id).classList.add("is-on");

@@ -35,6 +35,7 @@ export async function createRoom(opts){
   for (let i = 0; i < 12; i++){
     const c = code4();
     const r = ref(rtdb, `rooms/${c}`);
+    await get(r);                               /* 서버 값을 먼저 받아 둔다 */
     const res = await runTransaction(r, cur => {
       if (cur !== null) return;                 /* 이미 쓰는 번호 */
       return {
@@ -51,6 +52,7 @@ export async function createRoom(opts){
     if (res.committed){
       online.code = c;
       online.seat = 0;
+      rememberRoom(c);
       await watchRoom(c);
       console.log("방을 만들었습니다:", c);
       return c;
@@ -61,8 +63,35 @@ export async function createRoom(opts){
 
 /* ---------- 참가 ---------- */
 
+const KEEP = "zk_room";
+export function rememberRoom(c){ try { localStorage.setItem(KEEP, c || ""); } catch(e){} }
+export function forgetRoom(){ try { localStorage.removeItem(KEEP); } catch(e){} }
+export function lastRoom(){ try { return localStorage.getItem(KEEP) || ""; } catch(e){ return ""; } }
+
+/* 새로고침 뒤 원래 방으로 돌아간다. 없으면 빈 값 */
+export async function rejoin(){
+  const c = lastRoom();
+  if (!c) return null;
+  const snap = await get(ref(rtdb, `rooms/${c}`));
+  if (!snap.exists()){ forgetRoom(); return null; }
+  const room = snap.val();
+  const seats = room.seats || [];
+  const seat = seats.findIndex(s => s && s.uid === account.uid);
+  if (seat < 0){ forgetRoom(); return null; }
+  online.code = c;
+  online.seat = seat;
+  await watchRoom(c);
+  return { code: c, seat: seat, phase: room.phase };
+}
+
 export async function joinRoom(c){
   const r = ref(rtdb, `rooms/${c}`);
+
+  /* 먼저 서버에서 방을 받아온다.
+     이걸 안 하면 아래 처리가 "아직 안 받아온 빈 값"을 보고 방이 없다고 판단해 버린다. */
+  const first = await get(r);
+  if (!first.exists()) throw new Error("그런 방이 없습니다 (" + c + ")");
+
   let seat = -1, why = "";
   const res = await runTransaction(r, cur => {
     if (cur === null){ why = "그런 방이 없습니다 (" + c + ")"; return; }
@@ -80,6 +109,7 @@ export async function joinRoom(c){
   if (!res.committed) throw new Error(why || "들어갈 수 없습니다");
   online.code = c;
   online.seat = seat;
+  rememberRoom(c);
   await watchRoom(c);
   return seat;
 }
@@ -204,6 +234,7 @@ export async function leaveRoom(){
   const seats = (online.room?.seats || []).slice();
   if (seats[online.seat]) seats[online.seat].left = true;
   await update(ref(rtdb, `rooms/${c}`), { seats, touchedAt: Date.now() });
+  forgetRoom();
   stopWatch();
   online.code = null; online.seat = -1; online.room = null;
 }

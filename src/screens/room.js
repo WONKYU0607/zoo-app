@@ -172,7 +172,7 @@ export function mount(root){
     const now = R2 && R2.seats ? R2.seats.filter(Boolean).length : joined;
     document.getElementById("feltN").textContent = t.count(now, cap);
     document.getElementById("feltS").textContent =
-      joined < 4 ? t.needMore : joined < cap ? t.canStart : t.full;
+      now < 4 ? t.needMore : now < cap ? t.canStart : t.full;
   }
   
   function syncOpts(){

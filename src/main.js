@@ -59,8 +59,20 @@ window.signInGoogle = signInGoogle;
 window.signInTest = signInTest;
 window.__isLocal = isLocal;
 
-watchAuth().then(() => {
+watchAuth().then(async () => {
   window.dispatchEvent(new Event("accountready"));
+  /* 새로고침했으면 있던 방으로 돌아간다 */
+  if (account.signedIn && app){
+    try {
+      net.initOnline(app); netReady = true;
+      const back = await net.rejoin();
+      if (back){
+        net.online.onRoom = pushRoom;
+        pushRoom(net.online.room);
+        window.__goto && window.__goto("room");
+      }
+    } catch(e){ console.warn("방 복귀 실패", e); }
+  }
 });
 
 /* 게임이 끝났을 때 계정에 점수를 올린다.
