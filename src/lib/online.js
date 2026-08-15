@@ -35,9 +35,10 @@ export async function createRoom(opts){
   for (let i = 0; i < 12; i++){
     const c = code4();
     const r = ref(rtdb, `rooms/${c}`);
-    await get(r);                               /* 서버 값을 먼저 받아 둔다 */
+    const cur0 = await get(r);
+    if (cur0.exists()) continue;                /* 이미 쓰는 번호 */
     const res = await runTransaction(r, cur => {
-      if (cur !== null) return;                 /* 이미 쓰는 번호 */
+      if (cur !== null) return;                 /* 그 사이에 남이 잡았다 */
       return {
         host: account.uid,
         phase: "waiting",
@@ -87,31 +88,41 @@ export async function rejoin(){
 export async function joinRoom(c){
   const r = ref(rtdb, `rooms/${c}`);
 
-  /* 먼저 서버에서 방을 받아온다.
-     이걸 안 하면 아래 처리가 "아직 안 받아온 빈 값"을 보고 방이 없다고 판단해 버린다. */
-  const first = await get(r);
-  if (!first.exists()) throw new Error("그런 방이 없습니다 (" + c + ")");
+  /* 트랜잭션은 서버 값을 받기 전에 한 번 빈 값으로 실행된다.
+     거기서 포기하면 서버 값을 볼 기회가 없어 항상 실패한다.
+     그래서 읽고 → 판단하고 → 자리만 따로 쓴다.
+     동시에 같은 자리를 노리는 경우는 자리 칸을 따로 잡아 막는다. */
+  const snap = await get(r);
+  if (!snap.exists()) throw new Error("그런 방이 없습니다 (" + c + ")");
+  const room = snap.val();
+  if (room.phase !== "waiting") throw new Error("이미 시작한 방입니다");
 
-  let seat = -1, why = "";
-  const res = await runTransaction(r, cur => {
-    if (cur === null){ why = "그런 방이 없습니다 (" + c + ")"; return; }
-    if (cur.phase !== "waiting"){ why = "이미 시작한 방입니다"; return; }
-    const seats = cur.seats || [];
-    if (seats.length >= (cur.opts ? cur.opts.cap : 6)){ why = "자리가 찼습니다"; return; }
-    if (seats.some(s => s && s.uid === account.uid)){ why = "이미 들어와 있습니다"; return; }
-    seat = seats.length;
-    seats.push({ uid: account.uid, name: account.name, tier: account.tier });
-    cur.seats = seats;
-    cur.score = (cur.score || []).concat(0);
-    cur.touchedAt = Date.now();
-    return cur;
-  });
-  if (!res.committed) throw new Error(why || "들어갈 수 없습니다");
-  online.code = c;
-  online.seat = seat;
-  rememberRoom(c);
-  await watchRoom(c);
-  return seat;
+  const seats = room.seats || [];
+  const cap = (room.opts && room.opts.cap) || 6;
+  const mine = seats.findIndex(s => s && s.uid === account.uid);
+  if (mine >= 0){                       /* 이미 들어와 있으면 그 자리로 */
+    online.code = c; online.seat = mine;
+    rememberRoom(c);
+    await watchRoom(c);
+    return mine;
+  }
+  if (seats.length >= cap) throw new Error("자리가 찼습니다");
+
+  /* 빈 자리를 하나씩 시도한다. 남이 먼저 잡았으면 다음 자리로 */
+  const me = { uid: account.uid, name: account.name, tier: account.tier };
+  for (let i = seats.length; i < cap; i++){
+    const slot = ref(rtdb, `rooms/${c}/seats/${i}`);
+    const res = await runTransaction(slot, cur => (cur ? undefined : me));
+    if (res.committed && res.snapshot.exists() &&
+        res.snapshot.val() && res.snapshot.val().uid === account.uid){
+      await update(r, { touchedAt: Date.now() });
+      online.code = c; online.seat = i;
+      rememberRoom(c);
+      await watchRoom(c);
+      return i;
+    }
+  }
+  throw new Error("자리가 찼습니다");
 }
 
 /* ---------- 지켜보기 ---------- */
