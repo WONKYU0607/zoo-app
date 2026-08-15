@@ -85,44 +85,67 @@ export async function rejoin(){
   return { code: c, seat: seat, phase: room.phase };
 }
 
+/* 방에 들어간다.
+   주의: runTransaction 은 서버 값을 받기 전에 빈 값으로 한 번 실행된다.
+   그 시점 판단으로 자리를 잡으면 남의 자리를 덮었다가 되돌리는 깜빡임이 생긴다.
+   그래서 자리 잡기는 트랜잭션이 아니라 "빈 자리에만 쓸 수 있다"는 규칙에 맡긴다. */
 export async function joinRoom(c){
   const r = ref(rtdb, `rooms/${c}`);
 
-  /* 트랜잭션은 서버 값을 받기 전에 한 번 빈 값으로 실행된다.
-     거기서 포기하면 서버 값을 볼 기회가 없어 항상 실패한다.
-     그래서 읽고 → 판단하고 → 자리만 따로 쓴다.
-     동시에 같은 자리를 노리는 경우는 자리 칸을 따로 잡아 막는다. */
   const snap = await get(r);
   if (!snap.exists()) throw new Error("그런 방이 없습니다 (" + c + ")");
   const room = snap.val();
   if (room.phase !== "waiting") throw new Error("이미 시작한 방입니다");
 
-  const seats = room.seats || [];
   const cap = (room.opts && room.opts.cap) || 6;
-  const mine = seats.findIndex(s => s && s.uid === account.uid);
-  if (mine >= 0){                       /* 이미 들어와 있으면 그 자리로 */
-    online.code = c; online.seat = mine;
-    rememberRoom(c);
-    await watchRoom(c);
-    return mine;
-  }
-  if (seats.length >= cap) throw new Error("자리가 찼습니다");
+  const seats = room.seats || [];
 
-  /* 빈 자리를 하나씩 시도한다. 남이 먼저 잡았으면 다음 자리로 */
+  /* 이미 들어와 있으면 그 자리로 돌아간다 */
+  const mine = seats.findIndex(s => s && s.uid === account.uid);
+  if (mine >= 0) return await settle(c, mine);
+
   const me = { uid: account.uid, name: account.name, tier: account.tier };
-  for (let i = seats.length; i < cap; i++){
-    const slot = ref(rtdb, `rooms/${c}/seats/${i}`);
-    const res = await runTransaction(slot, cur => (cur ? undefined : me));
-    if (res.committed && res.snapshot.exists() &&
-        res.snapshot.val() && res.snapshot.val().uid === account.uid){
-      await update(r, { touchedAt: Date.now() });
-      online.code = c; online.seat = i;
-      rememberRoom(c);
-      await watchRoom(c);
-      return i;
+
+  /* 앞에서부터 훑는다. 중간이 비어 있으면 그 자리를 쓴다 */
+  for (let i = 0; i < cap; i++){
+    if (seats[i]) continue;
+    try {
+      /* 규칙이 "빈 자리에만 쓸 수 있다"를 강제한다.
+         남이 먼저 잡았으면 여기서 권한 오류가 나고 다음 자리로 넘어간다 */
+      await set(ref(rtdb, `rooms/${c}/seats/${i}`), me);
+    } catch(e){ continue; }
+
+    /* 잡은 뒤 다시 확인한다. 그 사이에 게임이 시작됐을 수 있다 */
+    const after = await get(r);
+    const now = after.exists() ? after.val() : null;
+    const ok = now && now.seats && now.seats[i] && now.seats[i].uid === account.uid;
+    if (!ok) continue;                                  /* 못 잡았다 */
+    if (now.phase !== "waiting"){                       /* 그새 시작됐다 */
+      try { await set(ref(rtdb, `rooms/${c}/seats/${i}`), null); } catch(e){}
+      throw new Error("이미 시작한 방입니다");
     }
+    /* 점수 칸을 자리 번호에 맞춰 채운다 */
+    try { await set(ref(rtdb, `rooms/${c}/score/${i}`), 0); } catch(e){}
+    await update(r, { touchedAt: Date.now() });
+    return await settle(c, i);
   }
   throw new Error("자리가 찼습니다");
+}
+
+async function settle(c, seat){
+  online.code = c;
+  online.seat = seat;
+  rememberRoom(c);
+  await watchRoom(c);
+  return seat;
+}
+
+/* 실제로 앉아 있는 사람 수 (중간이 비어 있어도 정확하다) */
+export function seatCount(room){
+  const s = (room && room.seats) || [];
+  let n = 0;
+  for (let i = 0; i < s.length; i++) if (s[i] && !s[i].left) n++;
+  return n;
 }
 
 /* ---------- 지켜보기 ---------- */
@@ -157,6 +180,18 @@ async function watchRoom(c){
 export function stopWatch(){
   [roomUnsub, moveUnsub, handUnsub].forEach(f => { try { f && f(); } catch(e){} });
   roomUnsub = moveUnsub = handUnsub = null;
+}
+
+/* 화면이 만든 수 문자열을 그대로 서버 목록에 붙인다 ("자리,숫자,장수" 또는 "자리,p") */
+export async function playMove(mv){
+  const c = online.code;
+  if (!c) return false;
+  const seq = (online.room && online.room.round ? online.room.round.seq : 0) + 1;
+  const res = await runTransaction(ref(rtdb, `rooms/${c}/moves/${seq}`),
+                                   cur => (cur ? undefined : mv));
+  if (!res.committed) return false;
+  await update(ref(rtdb, `rooms/${c}/round`), { seq: seq });
+  return true;
 }
 
 /* ---------- 내 수를 적는다 ---------- */
@@ -256,11 +291,17 @@ export const finishGame  = (code)        => call("finishGame")({ code });
 /* ---------- 나가기 ---------- */
 
 export async function leaveRoom(){
-  const c = online.code;
+  const c = online.code, i = online.seat;
   if (!c) return;
-  const seats = (online.room?.seats || []).slice();
-  if (seats[online.seat]) seats[online.seat].left = true;
-  await update(ref(rtdb, `rooms/${c}`), { seats, touchedAt: Date.now() });
+  try {
+    /* 내 자리만 손댄다. 자리 배열을 통째로 쓰면 규칙이 막고 남의 자리도 건드리게 된다 */
+    if (i >= 0){
+      const waiting = online.room && online.room.phase === "waiting";
+      if (waiting) await set(ref(rtdb, `rooms/${c}/seats/${i}`), null);   /* 대기 중이면 자리를 비운다 */
+      else await update(ref(rtdb, `rooms/${c}/seats/${i}`), { left: true });
+    }
+    await set(ref(rtdb, `rooms/${c}/touchedAt`), Date.now());
+  } catch(e){ console.warn("나가기 실패", e); }
   forgetRoom();
   stopWatch();
   online.code = null; online.seat = -1; online.room = null;
