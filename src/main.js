@@ -77,7 +77,9 @@ import { app } from "./lib/firebase.js";
 
 let netReady = false;
 function ensureNet(){
-  if (netReady || !app) return netReady;
+  if (netReady) return true;
+  if (!app){ alert("서버 설정이 없습니다 (.env 확인)"); return false; }
+  if (!account.signedIn){ alert("로그인이 필요합니다"); return false; }
   net.initOnline(app);
   netReady = true;
   return true;
@@ -100,8 +102,8 @@ function pushRoom(room){
 async function guard(fn, label){
   try { return await fn(); }
   catch (e){
-    console.warn(label, e);
-    alert(label + ": " + (e.message || e));
+    console.error(label, e);
+    alert(label + " : " + (e && (e.code || e.message) || e));
     return null;
   }
 }

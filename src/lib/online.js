@@ -10,7 +10,8 @@ import { account } from "./account.js";
 
 let rtdb = null, fns = null;
 export function initOnline(app){
-  rtdb = getDatabase(app);
+  const url = import.meta.env.VITE_FB_DB_URL;
+  rtdb = url ? getDatabase(app, url) : getDatabase(app);
   fns = getFunctions(app, "asia-northeast3");
 }
 const call = name => httpsCallable(fns, name);

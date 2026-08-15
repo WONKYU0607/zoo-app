@@ -12,6 +12,7 @@ const cfg = {
   storageBucket:     import.meta.env.VITE_FB_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FB_SENDER_ID,
   appId:             import.meta.env.VITE_FB_APP_ID,
+  databaseURL:       import.meta.env.VITE_FB_DB_URL,   /* 지역이 달라 반드시 넣어야 한다 */
 };
 
 export const ready = Boolean(cfg.apiKey && cfg.projectId);

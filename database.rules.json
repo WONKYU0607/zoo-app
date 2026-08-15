@@ -3,12 +3,7 @@
     "rooms": {
       "$code": {
         ".read": "auth != null",
-        ".write": "auth != null",
-        "moves": {
-          "$seq": {
-            ".validate": "!data.exists() && newData.isString() && newData.val().length < 24"
-          }
-        }
+        ".write": "auth != null"
       }
     },
     "hands": {
