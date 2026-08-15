@@ -107,6 +107,33 @@ export function mount(root){
     }
     busy = false; paintEntry();
   }, true);
+  /* 시험용 로그인 — 내 컴퓨터에서만 */
+  const tb = document.getElementById("testin");
+  if (tb){
+    tb.addEventListener("click", async e => {
+      e.stopImmediatePropagation();
+      const nm = prompt("시험용 이름", "시험" + Math.floor(Math.random()*900+100));
+      if (nm === null) return;
+      busy = true; paintEntry();
+      try { await window.signInTest(nm); }
+      catch(err){
+        const hint = document.getElementById("hint");
+        hint.className = "hint hint--err";
+        hint.textContent = String(err && err.message || err).slice(0, 60);
+        console.warn(err);
+      }
+      busy = false; paintEntry();
+    }, true);
+  }
+  function showTest(){
+    if (!tb) return;
+    const a = window.ACCOUNT;
+    tb.hidden = !window.__isLocal || Boolean(a && a.signedIn);
+  }
+  window.addEventListener("accountready", showTest);
+  window.addEventListener("accountchange", showTest);
+  setTimeout(showTest, 300);
+  
   window.addEventListener("accountready", paintEntry);
   window.addEventListener("accountchange", paintEntry);
   window.addEventListener("langchange", paintEntry);

@@ -1,7 +1,7 @@
 import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, account, finishGame, useTicket } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInTest, isLocal, account, finishGame, useTicket } from "./lib/account.js";
 import * as net from "./lib/online.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
@@ -56,6 +56,8 @@ initNav();
 /* 로그인 벽 — 구글로 로그인해야 들어간다 */
 window.ACCOUNT = account;
 window.signInGoogle = signInGoogle;
+window.signInTest = signInTest;
+window.__isLocal = isLocal;
 
 watchAuth().then(() => {
   window.dispatchEvent(new Event("accountready"));

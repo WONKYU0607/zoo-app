@@ -6,7 +6,8 @@
    - 점수는 절대 깎이지 않는다. 상위 절반만 얻는다
    - 티어는 1000점 단위 숫자 */
 import { ready, auth, db } from "./firebase.js";
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signInAnonymously, signOut,
+         updateProfile, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, runTransaction,
          increment, serverTimestamp } from "firebase/firestore";
 
@@ -74,6 +75,19 @@ export async function changeName(wanted){
   }
   window.dispatchEvent(new Event("accountchange"));
   return want;
+}
+
+/* 혼자 시험할 때 쓰는 로그인. localhost 에서만 보인다.
+   구글 계정 없이 두 창을 서로 다른 사람으로 만들 수 있다. */
+export const isLocal = typeof location !== "undefined" &&
+  /^(localhost|127\.0\.0\.1|192\.168\.|10\.)/.test(location.hostname);
+
+export async function signInTest(name){
+  if (!ready) throw new Error("Firebase 설정이 없습니다");
+  const cred = await signInAnonymously(auth);
+  const want = (name || "").trim() || ("시험" + Math.floor(Math.random() * 900 + 100));
+  try { await updateProfile(cred.user, { displayName: want }); } catch(e){}
+  return loadProfile(Object.assign(cred.user, { displayName: want }));
 }
 
 export async function signInGoogle(){

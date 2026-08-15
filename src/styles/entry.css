@@ -97,3 +97,7 @@
 @keyframes rise2{from{opacity:0;transform:translateY(12px)}}
 #entry .hint{margin-top:10px;text-align:center;font-size:11.5px;color:#B7A683;line-height:1.6;min-height:19px}
 #entry .hint--err{color:#FF8A6B}
+#entry /* 내 컴퓨터에서만 보이는 시험용 버튼 */
+.testin{display:block;margin:10px auto 0;padding:7px 14px;
+  border:1px dashed rgba(198,154,62,.7);border-radius:3px;
+  background:rgba(0,0,0,.45);color:#C9B58C;font-size:11.5px;cursor:pointer}
