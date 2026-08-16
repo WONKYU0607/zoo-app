@@ -195,6 +195,10 @@ export const botMoves = onCall(REGION, async req => {
       made.push({ seq: ++seq, seat: turn, pass: true });
     }
 
+    /* 카드가 남은 사람이 하나뿐이면 이 판은 끝. 정산은 앱이 맡는다.
+       (없으면 마지막 봇의 손이 빌 때까지 계속 두고 전원 0장에서 무한 루프에 빠진다) */
+    if (counts.filter(c => c > 0).length <= 1) break;
+
     /* 남은 사람이 하나뿐이면 바닥을 치우고 마지막에 낸 사람이 다시 선 */
     const still = seats.filter((x, i) => counts[i] > 0 && !passed[i]).length;
     if (still <= 1 && trick){
@@ -338,11 +342,12 @@ export const finishGame = onCall(REGION, async req => {
   const gained = quit ? Math.floor(earned / 2) : earned;
 
   if (gained > 0){
-    await fs().doc(`users/${uid}`).update({
+    /* update 는 문서가 이미 있어야 한다. 계정 문서가 아직 없으면 NOT_FOUND 가 난다 */
+    await fs().doc(`users/${uid}`).set({
       score: FieldValue.increment(gained),
       games: FieldValue.increment(1),
       lastPlayed: FieldValue.serverTimestamp(),
-    });
+    }, { merge: true });
   }
   await rtdb().ref(`rooms/${code}/paid/${uid}`).set(true);
 

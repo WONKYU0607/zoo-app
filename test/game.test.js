@@ -28,7 +28,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 async function makeClient(tag){
   const app = initializeApp({
     apiKey: "demo", projectId: PROJECT,
-    databaseURL: "http://127.0.0.1:9000/?ns=" + PROJECT,
+    databaseURL: "http://127.0.0.1:9000/?ns=" + PROJECT + "-default-rtdb",
   }, tag);
   const auth = getAuth(app);
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
@@ -172,6 +172,19 @@ async function main(){
       try { await me.call("botMoves")({ code }); }
       catch (e){ step("봇 수", false, String(e.message || e)); break; }
       await wait(60);
+      /* 봇이 판을 끝냈을 수도 있다. 그때도 정산을 부른다 */
+      const rr = (await get(ref(me.db, `rooms/${code}/round`))).val() || {};
+      if ((rr.counts || []).filter(c => c > 0).length <= 1){
+        rounds++;
+        try {
+          const out = await me.call("settleRound")({ code, give: null });
+          const d = out.data || {};
+          step("판 " + rounds + " 정산", true,
+               d.over ? "게임 종료" : ("다음 판 " + d.roundNo));
+          if (d.over) break;
+        } catch (e){ step("판 " + rounds + " 정산", false, String(e.message || e)); break; }
+        await wait(100);
+      }
       continue;
     }
 
