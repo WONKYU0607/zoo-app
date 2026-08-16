@@ -69,6 +69,7 @@ export function mount(root){
   function bootOnline(){
     const R = window.__room, G = window.GAME || {};
     const n = G.N || 6;
+    if (!G.names || !G.names.length) return;      /* 아직 준비가 안 됐다 */
     SEATS = (G.names || []).slice(0, n).map((nm, i) => ({
       n: nm, c: (R && R.round && R.round.counts ? R.round.counts[i] : 0), s: "", hold: []
     }));
@@ -630,8 +631,14 @@ export function mount(root){
   };
   
   /* 수를 내보낸다. 온라인이면 서버로, 아니면 바로 적용한다 */
+  let unlockId = null;
   function submit(mv){
-    if (window.__net && window.__net.send){ window.__net.send(mv); return; }
+    if (window.__net && window.__net.send){
+      window.__net.send(mv);
+      if (unlockId) clearTimeout(unlockId);
+      unlockId = setTimeout(() => { busy = false; draw(); }, 6000);   /* 응답이 없으면 풀어 준다 */
+      return;
+    }
     const cleared = clearsPile(+mv.split(",")[1]);
     applyMove(mv);
     draw();
@@ -651,7 +658,14 @@ export function mount(root){
   }
   
   /* 밖에서 들어온 수 (온라인) */
-  window.__applyMove = mv => { applyMove(mv); draw(); if (checkFinish()) return; resetTimer(); };
+  window.__applyMove = mv => {
+    busy = false;                       /* 수가 반영됐으니 잠금을 푼다 */
+    applyMove(mv);
+    draw();
+    if (checkFinish()) return;
+    resetTimer();
+    watchDeadline();
+  };
   function doPass(auto){
     if (turn !== 0 || busy) return;
     if (timerId) clearTimeout(timerId);

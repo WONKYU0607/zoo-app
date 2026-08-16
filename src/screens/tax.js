@@ -400,6 +400,8 @@ export function mount(root){
   function autoNext(){
     if (autoId){ clearTimeout(autoId); autoId = null; }
     if (step >= 4) return;
+    const sec = window.document.getElementById("tax");
+    if (!sec || !sec.classList.contains("is-on")) return;   /* 안 보이는 화면은 건드리지 않는다 */
     let wait = 0;
     if (step === 0) wait = 2200;                       /* 등수 발표 */
     else if (step === 1) wait = 2600;                  /* 카드 나누기 */
@@ -408,6 +410,8 @@ export function mount(root){
     else if (step === 3) wait = 10000;                 /* 세금 — 10초 */
     if (!wait) return;
     autoId = setTimeout(() => {
+      const sec2 = window.document.getElementById("tax");
+      if (!sec2 || !sec2.classList.contains("is-on")) return;
       /* 세금에서 안 고르고 시간을 넘기면 가장 나쁜 카드를 자동으로 준다 */
       if (step === 3){
         const g = giveCount();

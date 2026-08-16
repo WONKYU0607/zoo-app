@@ -44,6 +44,7 @@ export function mount(root){
   let drawn = Array(N).fill(null);   // 자리별로 뽑은 카드
   let pool = [];                     // 바닥에 깔린 카드
   let takenK = [];                   // 이미 집어간 자리
+  let plan = null;                   // 온라인에서 자리별로 나올 숫자
   let waiting = [];                  // 아직 안 뽑은 자리 (순서대로)
   let phase = "pick";                // pick | tie | done
   
@@ -120,6 +121,24 @@ export function mount(root){
   function layout(players){
     const d = makeDeck();
     pool = d.slice(0, players.length);
+    plan = null;
+    if (online && typeof window.__leadSeat === "number"){
+      /* 서버가 정한 선이 가장 낮은 숫자를 갖도록 자리별 숫자를 미리 배정한다.
+         같은 숫자가 둘이면 누가 선인지 흐려지므로 서로 다른 숫자만 쓴다. */
+      const cand = [];
+      for (let v = 1; v <= 12; v++) cand.push(v);
+      for (let i = cand.length - 1; i > 0; i--){
+        const k2 = Math.floor(Math.random() * (i + 1));
+        const t = cand[i]; cand[i] = cand[k2]; cand[k2] = t;
+      }
+      const use = cand.slice(0, N).sort((a, b) => a - b);
+      const lead = window.__leadSeat;
+      plan = new Array(N).fill(0);
+      plan[lead] = use[0];
+      let j = 1;
+      for (let i = 0; i < N; i++) if (i !== lead) plan[i] = use[j++];
+      pool = plan.slice();          /* 바닥 카드도 같은 숫자들로 */
+    }
   
     waiting = players.slice();
     const deck = el("deck");
@@ -142,34 +161,35 @@ export function mount(root){
     });
   }
   
+  /* 뽑기 제한 시간. 안 뽑으면 자동으로 한 장 집는다 */
+  let pickTimer = null;
+  function armPickTimer(){
+    if (pickTimer){ clearTimeout(pickTimer); pickTimer = null; }
+    if (phase !== "pick") return;
+    if (waiting.indexOf(0) < 0) return;              /* 내가 이미 뽑았다 */
+    pickTimer = setTimeout(() => {
+      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
+      const free = el("deck").querySelectorAll('.pk:not(.taken)');
+      if (free.length) free[Math.floor(Math.random() * free.length)].click();
+    }, 12000);
+  }
+  
   function pick(seat, k){
     const w = el("deck").querySelector('.pk[data-k="' + k + '"]:not(.taken)');
     if (!w) return;
-    /* 온라인에서는 서버가 선을 이미 정했다.
-       화면에 보이는 숫자와 결과가 어긋나지 않도록, 가장 낮은 카드를 선 몫으로 예약한다.
-       - 선이 집으면 그 자리에 가장 낮은 카드를 놓는다
-       - 선이 아닌 사람이 가장 낮은 카드를 집으려 하면 다른 카드와 바꾼다 */
-    if (online && typeof window.__leadSeat === "number"){
-      const free = [];
-      for (let i = 0; i < pool.length; i++) if (!takenK.includes(i)) free.push(i);
-      let lo = free[0];
-      free.forEach(i => { if (pool[i] < pool[lo]) lo = i; });
-      if (seat === window.__leadSeat){
-        if (lo !== k){ const t = pool[k]; pool[k] = pool[lo]; pool[lo] = t; }
-      } else if (k === lo && free.length > 1){
-        const other = free.find(i => i !== lo);
-        const t = pool[k]; pool[k] = pool[other]; pool[other] = t;
-      }
-    }
     takenK.push(k);
-    drawn[seat] = pool[k];
+    /* 온라인이면 자리마다 나올 숫자를 미리 정해 뒀다.
+       카드는 뒤집혀 있어 어느 장을 집든 같으므로, 정해진 값을 그대로 보여준다.
+       뽑은 뒤에 숫자가 바뀌는 일이 없다. */
+    drawn[seat] = (online && plan) ? plan[seat] : pool[k];
     pickOrder.push(seat);
     waiting = waiting.filter(x => x !== seat);
     w.classList.add("flip", "taken");
     w.dataset.seat = seat;
     draw();
-    if (waiting.length) setTimeout(botPick, 900);
-    else setTimeout(settle, 1200);
+    if (pickTimer){ clearTimeout(pickTimer); pickTimer = null; }
+    if (waiting.length) setTimeout(botPick, 700);
+    else setTimeout(settle, 1000);
   }
   
   function botPick(){
@@ -285,7 +305,8 @@ export function mount(root){
   }
   
   function boot(){
-    /* 온라인이면 인원과 선을 서버 값에서 가져온다. 뽑기 연출은 그대로 보여준다 */
+    /* 온라인이면 인원과 선을 서버 값에서 가져온다. 뽑기 연출은 그대로 보여준다.
+       이 판단을 먼저 해야 인원이 잠깐 잘못 그려지지 않는다 */
     online = Boolean(window.__net);
     N = online ? ((window.GAME && window.GAME.N) || 6)
                : ((window.__opts && (window.__opts.seated || window.__opts.cap)) || 6);
@@ -303,7 +324,7 @@ export function mount(root){
     layout(Array.from({length: N}, (_, i) => i));
     draw();
   }
-  window.__bootDraw = boot;
+  window.__bootDraw = () => { boot(); armPickTimer(); };
   boot();
   
   document.querySelectorAll("#lang button").forEach(b => {

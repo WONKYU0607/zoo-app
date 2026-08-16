@@ -330,8 +330,13 @@ async function watchBotTurn(room){
   if (botBusy) return;
   const r = room.round;
   if (!r) return;
-  const seats = net.seatArray(room);
-  const cur = seats[r.turn];
+  /* r.turn 은 "몇 번째 차례"이고 자리 번호가 아니다.
+     8명 방에 5명이 흩어져 앉으면 둘이 다르다. order 로 바꿔서 봐야 한다. */
+  const capN = (room.opts && room.opts.cap) || 8;
+  const seats = net.seatArray(room, capN);
+  const ord = room.order || seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
+  const at = ord[r.turn];
+  const cur = seats[at];
   if (!cur || !cur.bot) return;                    /* 사람 차례 */
   botBusy = true;
   try { await net.botMoves(net.online.code); }
