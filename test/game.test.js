@@ -148,6 +148,9 @@ async function main(){
   } catch (e){ step("판 시작", false, String(e.message || e)); return done(); }
 
   /* 5. 한 판을 끝까지 진행 */
+  /* 손패는 앱과 똑같이 여기서만 들고 간다. hands 는 서버만 쓴다 */
+  let myHand = (await get(ref(me.db, `hands/${code}/${me.uid}`))).val() || [];
+  let seenRound = 1;
   let rounds = 0, guard = 0, lastSeq = -1, stuck = 0;
   while (guard++ < 400){
     const snap = await get(ref(me.db, `rooms/${code}`));
@@ -160,6 +163,12 @@ async function main(){
     const ord = room.order || seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
     const r = room.round;
     if (!r){ await wait(200); continue; }
+
+    /* 서버가 새 판을 나눴을 때만 손패를 다시 읽는다 */
+    if ((room.roundNo || 1) !== seenRound){
+      seenRound = room.roundNo || 1;
+      myHand = (await get(ref(me.db, `hands/${code}/${me.uid}`))).val() || [];
+    }
 
     if ((r.seq || 0) === lastSeq) stuck++; else { stuck = 0; lastSeq = r.seq || 0; }
     if (stuck > 25){ step("판 진행", false, "같은 자리에서 멈춤 (차례 " + r.turn + ")"); break; }
@@ -190,7 +199,7 @@ async function main(){
 
     /* 내 차례 */
     const myPos = ord.indexOf(seats.findIndex(s => s && s.uid === me.uid));
-    const hand = (await get(ref(me.db, `hands/${code}/${me.uid}`))).val() || [];
+    const hand = myHand;
     if (!hand.length){ await wait(120); continue; }
     const pick = pickMove(hand, r.trick);
     const seq = (r.seq || 0) + 1;
@@ -208,7 +217,7 @@ async function main(){
     if (pick){
       const t = takeFrom(hand, pick.num, pick.count);
       if (!t){ step("내 수", false, "뺄 수 없는 카드"); break; }
-      await set(ref(me.db, `hands/${code}/${me.uid}`), t.hand);
+      myHand = t.hand;
       counts[myPos] = t.hand.length;
       trick = { by: myPos, num: pick.num, count: pick.count };
       if (t.hand.length === 0 && !finish.includes(myPos)) finish.push(myPos);
