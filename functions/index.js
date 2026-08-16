@@ -31,11 +31,21 @@ async function loadRoom(code){
   return snap.val();
 }
 
-/* 자리 배열은 중간이 비어 있을 수 있다.
-   실제로 앉아 있는 사람만 순서대로 추린다. 자리 번호도 같이 들고 다닌다. */
-function alive(seats){
+/* 실시간 데이터베이스는 중간이 빈 배열을 객체({0:..,2:..})로 돌려준다.
+   항상 배열로 바꿔서 다룬다. */
+function seatArray(seats, cap){
+  const n = cap || 8;
+  const out = new Array(n).fill(null);
+  if (!seats) return out;
+  if (Array.isArray(seats)) seats.forEach((v, i) => { if (i < n) out[i] = v || null; });
+  else Object.keys(seats).forEach(k => { const i = Number(k); if (i >= 0 && i < n) out[i] = seats[k] || null; });
+  return out;
+}
+
+/* 실제로 앉아 있는 사람만 순서대로. 자리 번호도 같이 들고 다닌다 */
+function alive(seats, cap){
   const out = [];
-  (seats || []).forEach((s, i) => { if (s && !s.left) out.push(Object.assign({}, s, {at: i})); });
+  seatArray(seats, cap).forEach((s, i) => { if (s && !s.left) out.push(Object.assign({}, s, {at: i})); });
   return out;
 }
 
@@ -53,8 +63,8 @@ export const startRound = onCall(REGION, async req => {
   if (room.host !== uid) throw new HttpsError("permission-denied", "방장만 시작할 수 있습니다");
   if (room.phase === "playing") throw new HttpsError("failed-precondition", "이미 진행 중입니다");
 
-  const seats = room.seats || [];
-  const live = alive(seats);
+  const cap = (room.opts && room.opts.cap) || 8;
+  const live = alive(room.seats, cap);
   if (live.length < 4) throw new HttpsError("failed-precondition", "4명이 모여야 시작합니다");
 
   const seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
@@ -135,7 +145,7 @@ export const botMoves = onCall(REGION, async req => {
   const room = await loadRoom(code);
   if (room.phase !== "playing") throw new HttpsError("failed-precondition", "진행 중이 아닙니다");
 
-  const seats = alive(room.seats || []);   /* 앉아 있는 사람만, 순서대로 */
+  const seats = alive(room.seats, (room.opts && room.opts.cap) || 8);
   const r = room.round;
   const made = [];
   let seq = r.seq || 0;
@@ -225,7 +235,7 @@ export const settleRound = onCall(REGION, async req => {
   const uid = requireAuth(req);
   const { code, give } = req.data || {};      /* give: 1등이 꼴등에게 줄 카드 두 장 */
   const room = await loadRoom(code);
-  const seats = alive(room.seats || []);
+  const seats = alive(room.seats, (room.opts && room.opts.cap) || 8);
   const r = room.round;
 
   /* 앱이 적어 둔 완주 순서를 쓴다. 빠진 사람은 뒤에 붙인다 */
@@ -317,7 +327,7 @@ export const finishGame = onCall(REGION, async req => {
   const room = await loadRoom(code);
   if (room.phase !== "over") throw new HttpsError("failed-precondition", "아직 안 끝났습니다");
 
-  const seats = room.seats || [];
+  const seats = seatArray(room.seats, (room.opts && room.opts.cap) || 8);
   const score = room.score || [];
   const me = seats.findIndex(s => s && s.uid === uid);
   if (me < 0) throw new HttpsError("permission-denied", "이 방의 참가자가 아닙니다");

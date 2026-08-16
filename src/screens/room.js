@@ -25,7 +25,7 @@ export function mount(root){
          clrD:"2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다.",
          on:"켜져 있습니다.", off:"꺼져 있습니다.",
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
-         copied:"복사됨", start:"시작하기", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 내일 다시 채워집니다",
+         copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 내일 다시 채워집니다",
          wait:"방장이 시작하기를 기다리는 중입니다" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
@@ -41,7 +41,7 @@ export function mount(root){
          clrD:"Playing a 2 clears the pile and you lead again.",
          on:"On.", off:"Off.",
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
-         copied:"Copied", start:"Start", needFour:"Four players are needed", noTicket:"No tickets left. They refill tomorrow",
+         copied:"Copied", start:"Start", starting:"Dealing", needFour:"Four players are needed", noTicket:"No tickets left. They refill tomorrow",
          wait:"Waiting for the host to start" }
   };
   let lang = window.__lang || "ko";
@@ -109,10 +109,20 @@ export function mount(root){
     });
   }
   /* 온라인이면 실제 방의 자리를, 아니면 흉내 낸 자리를 쓴다 */
+  /* 자리 목록을 항상 배열로 만든다.
+     실시간 데이터베이스는 중간이 빈 배열을 객체로 돌려준다 */
+  function asArray(raw, n){
+    const out = new Array(n).fill(null);
+    if (!raw) return out;
+    if (Array.isArray(raw)) raw.forEach((v, i) => { if (i < n) out[i] = v || null; });
+    else Object.keys(raw).forEach(k => { const i = +k; if (i >= 0 && i < n) out[i] = raw[k] || null; });
+    return out;
+  }
+  
   function seatList(){
     const R = window.__room;
     if (R && R.seats){
-      return R.seats.map((s, i) => s ? {
+      return asArray(R.seats, R.cap || cap).map((s, i) => s ? {
         name: s.name || "",
         me: i === R.me,
         host: s.uid && s.uid === R.host,
@@ -169,7 +179,8 @@ export function mount(root){
     const fc = document.querySelector(".felt__c");
     if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
     const R2 = window.__room;
-    const now = R2 && R2.seats ? R2.seats.filter(Boolean).length : joined;
+    const now = R2 && R2.seats
+      ? asArray(R2.seats, R2.cap || cap).filter(s => s && !s.left).length : joined;
     document.getElementById("feltN").textContent = t.count(now, cap);
     document.getElementById("feltS").textContent =
       now < 4 ? t.needMore : now < cap ? t.canStart : t.full;
@@ -183,17 +194,22 @@ export function mount(root){
   }
   function renderControls(){
     const t = L[lang];
+    const R = window.__room;
+    const arr = R ? asArray(R.seats, R.cap || cap) : null;
+    const now = arr ? arr.filter(s => s && !s.left).length : joined;
+    const iamHost = R ? Boolean(arr && arr[R.me] && arr[R.me].uid === R.host)
+                      : (role === "host");
     const sm = document.getElementById("sum");
     sm.innerHTML =
       '<b>' + cap + '</b>' + t.sumP + ' \u00B7 <b>' + rounds + '</b>' + t.sumR +
       ' \u00B7 ' + t.sumT + ' ' + (taxOn ? t.on2 : t.off2) +
       ' \u00B7 ' + t.sumC + ' ' + (clear2 ? t.on2 : t.off2) +
-      (role === "host" ? '  <span style="color:#E3C67C">' + t.edit + '</span>' : '');
-    sm.disabled = role !== "host";
+      (iamHost ? '  <span style="color:#E3C67C">' + t.edit + '</span>' : '');
+    sm.disabled = !iamHost;
     const a = document.getElementById("action");
-    if (role === "host"){
-      a.innerHTML = '<button class="btn-primary" ' + (joined < 4 ? "disabled" : "") + '>' +
-        (joined < 4 ? t.needFour : t.start) + '</button>';
+    if (iamHost){
+      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + '>' +
+        (now < 4 ? t.needFour : t.start) + '</button>';
     } else {
       a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
     }
@@ -230,8 +246,8 @@ export function mount(root){
   /* 시작을 누르는 순간의 실제 인원을 확정한다 (자리를 다 안 채우고 시작할 수 있음) */
   document.getElementById("action").addEventListener("click", async e => {
     const b = e.target.closest(".btn-primary");
-    if (!b) return;
-    if (window.__opts) window.__opts.seated = joined;
+    if (!b || b.disabled) return;
+    const R = window.__room;
   
     /* 티켓 한 장을 쓴다. 없으면 못 들어간다 */
     if (window.spendTicket){
@@ -243,7 +259,21 @@ export function mount(root){
         return;
       }
     }
-    window.__scored = false;          /* 새 게임이므로 점수 보고를 다시 열어 둔다 */
+    window.__scored = false;
+  
+    if (R){
+      /* 온라인 — 서버가 카드를 나눈다. 모두는 방 상태를 보고 따라 들어간다 */
+      e.stopImmediatePropagation();
+      b.disabled = true;
+      b.textContent = L[lang].starting;
+      try { await window.__startRound(); }
+      catch(err){
+        b.disabled = false; b.textContent = L[lang].start;
+        alert("시작하지 못했습니다 : " + (err && (err.message || err.code) || err));
+      }
+      return;
+    }
+    if (window.__opts) window.__opts.seated = joined;   /* 봇전 */
   }, true);
   
   document.querySelectorAll("#lang button").forEach(b => {

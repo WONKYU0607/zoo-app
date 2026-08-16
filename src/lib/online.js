@@ -76,7 +76,7 @@ export async function rejoin(){
   const snap = await get(ref(rtdb, `rooms/${c}`));
   if (!snap.exists()){ forgetRoom(); return null; }
   const room = snap.val();
-  const seats = room.seats || [];
+  const seats = seatArray(room);
   const seat = seats.findIndex(s => s && s.uid === account.uid);
   if (seat < 0){ forgetRoom(); return null; }
   online.code = c;
@@ -98,7 +98,7 @@ export async function joinRoom(c){
   if (room.phase !== "waiting") throw new Error("이미 시작한 방입니다");
 
   const cap = (room.opts && room.opts.cap) || 6;
-  const seats = room.seats || [];
+  const seats = seatArray(room, cap);
 
   /* 이미 들어와 있으면 그 자리로 돌아간다 */
   const mine = seats.findIndex(s => s && s.uid === account.uid);
@@ -147,8 +147,8 @@ export async function saveOpts(c, opts){
   const snap = await get(ref(rtdb, `rooms/${c}`));
   if (!snap.exists()) return;
   const room = snap.val();
-  const seats = room.seats || [];
   const cap = opts.cap || 6;
+  const seats = seatArray(room, Math.max(cap, 8));
   /* 정원 밖으로 밀려난 자리와 넘치는 봇을 정리한다 */
   for (let i = seats.length - 1; i >= 0; i--){
     if (!seats[i]) continue;
@@ -203,8 +203,8 @@ export async function addBot(){
   if (room.host !== account.uid) return false;
 
   const cap = (room.opts && room.opts.cap) || 6;
-  const seats = room.seats || [];
-  const filled = seatCount(room);
+  const seats = seatArray(room, cap);
+  const filled = seatCount(room, cap);
   const bots = seats.filter(s => s && s.bot).length;
   if (filled >= cap) return false;
   if (bots >= Math.floor(cap / 2)) return false;      /* 봇은 정원의 절반까지 */
@@ -231,12 +231,21 @@ export async function addBot(){
   return true;
 }
 
+/* 자리 목록을 항상 배열로 만든다.
+   Firebase 는 중간이 빈 배열을 객체({0:..,2:..})로 돌려준다.
+   그대로 쓰면 map 이 없어서 화면이 멈춘다. */
+export function seatArray(room, cap){
+  const raw = (room && room.seats) || [];
+  const n = cap || (room && room.opts && room.opts.cap) || 8;
+  const out = new Array(n).fill(null);
+  if (Array.isArray(raw)) raw.forEach((v, i) => { if (i < n) out[i] = v || null; });
+  else Object.keys(raw).forEach(k => { const i = +k; if (i >= 0 && i < n) out[i] = raw[k] || null; });
+  return out;
+}
+
 /* 실제로 앉아 있는 사람 수 (중간이 비어 있어도 정확하다) */
-export function seatCount(room){
-  const s = (room && room.seats) || [];
-  let n = 0;
-  for (let i = 0; i < s.length; i++) if (s[i] && !s[i].left) n++;
-  return n;
+export function seatCount(room, cap){
+  return seatArray(room, cap).filter(s => s && !s.left).length;
 }
 
 /* ---------- 지켜보기 ---------- */

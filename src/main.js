@@ -107,12 +107,14 @@ function pushRoom(room){
   else botFillStop();
   if (room.phase === "playing") watchBotTurn(room);
   watchLeavers(room);
+  const cap = (room.opts && room.opts.cap) || 6;
   window.__room = {
-    cap: room.opts ? room.opts.cap : 6,
+    cap: cap,
     me: net.online.seat,
     host: room.host,
     phase: room.phase,
-    seats: room.seats || [],
+    round: room.round || null,
+    seats: net.seatArray(room, cap),        /* 항상 배열로 */
   };
   window.__opts = Object.assign(window.__opts || {}, room.opts || {});
   window.dispatchEvent(new Event("roomchange"));
@@ -173,7 +175,7 @@ function botFillStart(){
     const R = net.online.room;
     if (!R || R.phase !== "waiting" || R.host !== account.uid){ botFillStop(); return; }
     try { await net.addBot(); } catch(e){ console.warn(e); }
-  }, 7000);
+  }, 5000);
 }
 function botFillStop(){ if (botTimer){ clearInterval(botTimer); botTimer = null; } }
 window.__botFill = on => (on ? botFillStart() : botFillStop());
@@ -181,6 +183,9 @@ window.__botFill = on => (on ? botFillStart() : botFillStop());
 window.__startRound = async () => {
   const code = net.online.code;
   if (!code) throw new Error("방이 없습니다");
+  /* 버튼이 어떤 이유로든 눌렸을 때를 대비해 한 번 더 센다 */
+  const n = net.seatCount(net.online.room);
+  if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
   await net.startRound(code);
 };
 
@@ -207,8 +212,10 @@ function watchPhase(room){
   lastRound = rn;
 
   /* 서버가 적어 둔 순서를 그대로 쓴다. 자리 배열에 구멍이 있어도 어긋나지 않는다 */
-  const order = room.order || (room.seats || []).map((s, i) => (s ? i : -1)).filter(i => i >= 0);
-  const seats = order.map(i => (room.seats || [])[i]).filter(Boolean);
+  const capN = (room.opts && room.opts.cap) || 6;
+  const all = net.seatArray(room, capN);
+  const order = room.order || all.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
+  const seats = order.map(i => all[i]).filter(Boolean);
   const me = Math.max(0, order.indexOf(net.online.seat));
 
   /* 게임 화면이 서버 값을 쓰도록 넘겨준다 */
@@ -290,7 +297,7 @@ function watchLeavers(room){
   leaveTimer = setInterval(async () => {
     const R = net.online.room;
     if (!R) return;
-    const seats = R.seats || [];
+    const seats = net.seatArray(R);
     const live = R.live || {};
     /* 이 일을 맡을 사람: 방장, 없으면 가장 앞자리 사람 */
     let keeper = R.host;
@@ -323,7 +330,7 @@ async function watchBotTurn(room){
   if (botBusy) return;
   const r = room.round;
   if (!r) return;
-  const seats = room.seats || [];
+  const seats = net.seatArray(room);
   const cur = seats[r.turn];
   if (!cur || !cur.bot) return;                    /* 사람 차례 */
   botBusy = true;
