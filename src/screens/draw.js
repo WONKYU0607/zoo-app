@@ -35,6 +35,7 @@ export function mount(root){
          goIn:n=>"Starting in "+n, picking:"Choosing" }
   };
   let lang = window.__lang || "ko";
+  let online = false;
   let N = 6;
   const nameOf = i => (lang === "ko" ? NAMES_KO : NAMES_EN)[i];
   const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
@@ -42,6 +43,7 @@ export function mount(root){
   
   let drawn = Array(N).fill(null);   // 자리별로 뽑은 카드
   let pool = [];                     // 바닥에 깔린 카드
+  let takenK = [];                   // 이미 집어간 자리
   let waiting = [];                  // 아직 안 뽑은 자리 (순서대로)
   let phase = "pick";                // pick | tie | done
   
@@ -118,6 +120,7 @@ export function mount(root){
   function layout(players){
     const d = makeDeck();
     pool = d.slice(0, players.length);
+  
     waiting = players.slice();
     const deck = el("deck");
     deck.innerHTML = "";
@@ -142,6 +145,23 @@ export function mount(root){
   function pick(seat, k){
     const w = el("deck").querySelector('.pk[data-k="' + k + '"]:not(.taken)');
     if (!w) return;
+    /* 온라인에서는 서버가 선을 이미 정했다.
+       화면에 보이는 숫자와 결과가 어긋나지 않도록, 가장 낮은 카드를 선 몫으로 예약한다.
+       - 선이 집으면 그 자리에 가장 낮은 카드를 놓는다
+       - 선이 아닌 사람이 가장 낮은 카드를 집으려 하면 다른 카드와 바꾼다 */
+    if (online && typeof window.__leadSeat === "number"){
+      const free = [];
+      for (let i = 0; i < pool.length; i++) if (!takenK.includes(i)) free.push(i);
+      let lo = free[0];
+      free.forEach(i => { if (pool[i] < pool[lo]) lo = i; });
+      if (seat === window.__leadSeat){
+        if (lo !== k){ const t = pool[k]; pool[k] = pool[lo]; pool[lo] = t; }
+      } else if (k === lo && free.length > 1){
+        const other = free.find(i => i !== lo);
+        const t = pool[k]; pool[k] = pool[other]; pool[other] = t;
+      }
+    }
+    takenK.push(k);
     drawn[seat] = pool[k];
     pickOrder.push(seat);
     waiting = waiting.filter(x => x !== seat);
@@ -177,14 +197,13 @@ export function mount(root){
   }
   function settle(){
     phase = "done";
-    const w = winner();
+    const w = online && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
     window.GAME = window.GAME || {};
     window.GAME.N = N;
     window.GAME.roundNo = 1;
     window.GAME.score = Array(N).fill(0);
     window.GAME.order = Array.from({length: N}, (_, k) => (w + k) % N);  // 선부터 시계 방향
-    window.GAME.finish = null;
-    window.GAME.hold = null;
+    if (!online){ window.GAME.finish = null; window.GAME.hold = null; }
     draw();
     startCountdown();
   }
@@ -266,14 +285,20 @@ export function mount(root){
   }
   
   function boot(){
-    N = (window.__opts && (window.__opts.seated || window.__opts.cap)) || 6;
+    /* 온라인이면 인원과 선을 서버 값에서 가져온다. 뽑기 연출은 그대로 보여준다 */
+    online = Boolean(window.__net);
+    N = online ? ((window.GAME && window.GAME.N) || 6)
+               : ((window.__opts && (window.__opts.seated || window.__opts.cap)) || 6);
     if (cdId){ clearInterval(cdId); cdId = null; }
     cd = 5;
     drawn = Array(N).fill(null);
     pickOrder = [];
+    takenK = [];
     window.__roundNo = 1;
     window.__myRankIdx = null;
-    window.GAME = {N: N, roundNo: 1, score: Array(N).fill(0), order: null, finish: null, hold: null};
+    if (!online){
+      window.GAME = {N: N, roundNo: 1, score: Array(N).fill(0), order: null, finish: null, hold: null};
+    }
     phase = "pick";
     layout(Array.from({length: N}, (_, i) => i));
     draw();

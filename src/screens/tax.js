@@ -28,7 +28,7 @@ export function mount(root){
       taxMineTop2:n=>'뒤에서 두 번째 <b>'+n+'</b>님과 한 장씩 바꿉니다. 줄 카드 한 장을 고르세요.',
       taxMineBot:n=>'1등 <b>'+n+'</b>님이 내 가장 좋은 카드 두 장을 가져갑니다.',
       taxMineBot2:n=>'2등 <b>'+n+'</b>님이 내 가장 좋은 카드 한 장을 가져갑니다.',
-      taxMid:"1등과 2등만 세금을 주고받습니다. 나는 해당 없습니다.",
+      taxMid:"1등과 꼴등이 카드를 주고받습니다.",
       give:n=>n+"장 주기", giveNeed:n=>"줄 카드 "+n+"장을 고르세요",
       take:"가져옴", gave:"줌",
       doneH:"준비 완료", doneS:n=>'<b>'+n+'</b>님이 첫 판을 시작합니다.',
@@ -51,7 +51,7 @@ export function mount(root){
       taxMineTop2:n=>'You swap one card with <b>'+n+'</b>, second from last. Pick one to give.',
       taxMineBot:n=>'<b>'+n+'</b>, in first place, takes your two best cards.',
       taxMineBot2:n=>'<b>'+n+'</b>, in second place, takes your best card.',
-      taxMid:"Only first and second trade. Nothing to do for you.",
+      taxMid:"The top and bottom players exchange cards.",
       give:n=>"Give "+n, giveNeed:n=>"Pick "+n+" to give",
       take:"taken", gave:"given",
       doneH:"Ready", doneS:n=>'<b>'+n+'</b> leads the first trick.',
@@ -295,6 +295,7 @@ export function mount(root){
     const t = T[lang], m = el("mid"), r = rankOf(0), n = N, o = order();
     let html = "";
     if (step === 0){
+      /* 등수와 카드 나누기를 한 화면에서 보여준다 */
       html = '<div class="mid__h">' + t.rankH + '</div><div class="mid__s">' + t.rankS + '</div>';
     } else if (step === 1){
       html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + t.dealS + '</div>';
@@ -378,8 +379,50 @@ export function mount(root){
     clearFx();
     draw();
   }
-  window.__bootTax = boot;
+  window.__bootTax = () => { boot(); autoNext(); };
   boot();
+  autoNext();
+  
+  /* 볼 것이 없는 단계는 건너뛴다.
+     혁명은 실제로 열린 판에만, 세금은 내가 주고받을 때만 보여준다. */
+  function needStep(k){
+    if (k === 2) return revSeat !== null;              /* 혁명이 열렸을 때만 */
+    if (k === 3){
+      if (taxSkipped()) return false;                  /* 혁명으로 세금이 사라졌다 */
+      const r = rankOf(0), n = N;
+      return r === 0 || r === 1 || r === n - 1 || r === n - 2;   /* 내가 주고받을 때만 */
+    }
+    return true;
+  }
+  
+  /* 누를 것이 없는 단계는 저절로 넘어간다 */
+  var autoId = null;   /* 선언 전에 부르는 곳이 있어 var 로 둔다 */
+  function autoNext(){
+    if (autoId){ clearTimeout(autoId); autoId = null; }
+    if (step >= 4) return;
+    let wait = 0;
+    if (step === 0) wait = 2200;                       /* 등수 발표 */
+    else if (step === 1) wait = 2600;                  /* 카드 나누기 */
+    else if (step === 2 && revSeat !== 0) wait = 2600; /* 남의 혁명 */
+    else if (step === 2 && revSeat === 0) wait = 10000;/* 내 혁명 — 10초 안에 안 누르면 넘어감 */
+    else if (step === 3) wait = 10000;                 /* 세금 — 10초 */
+    if (!wait) return;
+    autoId = setTimeout(() => {
+      /* 세금에서 안 고르고 시간을 넘기면 가장 나쁜 카드를 자동으로 준다 */
+      if (step === 3){
+        const g = giveCount();
+        if (g > 0 && sel.length < g){
+          const mine = myHand();
+          const idx = mine.map((c, i) => i)
+            .sort((a, b) => (mine[b] >= 13 ? 99 : mine[b]) - (mine[a] >= 13 ? 99 : mine[a]));
+          sel = idx.slice(0, g);
+          draw();
+        }
+      }
+      const b = el("next");
+      if (b && !b.disabled) b.click();
+    }, wait);
+  }
   
   el("next").onclick = () => {
     const great = revSeat !== null && rankOf(revSeat) === N - 1;
@@ -403,10 +446,18 @@ export function mount(root){
       sel = [];
     }
     if (step < 4) step++;
+    while (step < 4 && !needStep(step)) step++;        /* 볼 것 없는 단계는 지나친다 */
     if (step === 1){ dealAll(); }
     draw();
     if (step === 1) runDeal();
-    if (step === 4) G().order = order().slice();
+    if (step === 4){
+      G().order = order().slice();
+      if (autoId){ clearTimeout(autoId); autoId = null; }
+      /* 마지막은 곧바로 다음 판으로 */
+      setTimeout(() => { if (window.__toTable) window.__toTable(); }, 400);
+      return;
+    }
+    autoNext();
   };
   el("back").onclick = () => { if (window.__toResult) window.__toResult(); };
   

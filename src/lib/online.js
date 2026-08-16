@@ -140,6 +140,30 @@ async function settle(c, seat){
   return seat;
 }
 
+/* 방 조건을 저장한다. 정원이 줄면 봇부터 뺀다 */
+export async function saveOpts(c, opts){
+  if (!c) return;
+  await set(ref(rtdb, `rooms/${c}/opts`), opts);
+  const snap = await get(ref(rtdb, `rooms/${c}`));
+  if (!snap.exists()) return;
+  const room = snap.val();
+  const seats = room.seats || [];
+  const cap = opts.cap || 6;
+  /* 정원 밖으로 밀려난 자리와 넘치는 봇을 정리한다 */
+  for (let i = seats.length - 1; i >= 0; i--){
+    if (!seats[i]) continue;
+    if (i >= cap){ try { await set(ref(rtdb, `rooms/${c}/seats/${i}`), null); } catch(e){} }
+  }
+  let n = 0;
+  for (let i = 0; i < cap; i++) if (seats[i]) n++;
+  for (let i = cap - 1; i >= 0 && n > cap; i--){
+    if (seats[i] && seats[i].bot){
+      try { await set(ref(rtdb, `rooms/${c}/seats/${i}`), null); n--; } catch(e){}
+    }
+  }
+  await set(ref(rtdb, `rooms/${c}/touchedAt`), Date.now());
+}
+
 /* 판이 끝난 순서를 방에 적는다 */
 export async function reportFinish(c, order){
   if (!c) return;

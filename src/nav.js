@@ -93,7 +93,10 @@ export function initNav(){
       if (window.__createRoom){
         window.__createRoom().then(code => { if (code) go("room"); });
       } else setTimeout(() => go("room"), 80);
-    } else window.dispatchEvent(new Event("optschange"));
+    } else {
+      window.dispatchEvent(new Event("optschange"));
+      if (window.__saveOpts) window.__saveOpts();     /* 방장이면 서버에도 쓴다 */
+    }
   });
   window.addEventListener("langchange", () => {
     if (document.getElementById("opts").classList.contains("on")) optRender();
@@ -118,6 +121,7 @@ export function initNav(){
   window.setLang(window.__lang);
   
   window.__goto = id => go(id);
+  window.__toTable = () => { window.__fresh = false; go("table"); };
   function go(id){
     document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));
     document.getElementById(id).classList.add("is-on");

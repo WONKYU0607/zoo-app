@@ -151,6 +151,16 @@ window.__leaveRoom = () => { try { net.leaveRoom(); } catch(e){} window.__room =
 window.__roomCode = () => net.online.code;
 window.__peek = code => { ensureNet(); return net.peek(code); };
 
+/* 방장이 방 조건을 바꾸면 서버에 쓴다. 안 그러면 나만 바뀌고 남은 모른다 */
+window.__saveOpts = async () => {
+  const R = net.online.room;
+  if (!R || R.host !== account.uid) return;
+  const o = window.__opts || {};
+  try { await net.saveOpts(net.online.code, {
+    cap: o.cap, rounds: o.rounds, tax: o.tax, clear2: o.clear2 }); }
+  catch(e){ console.warn("설정 저장 실패", e); }
+};
+
 /* 세금에서 1등이 고른 두 장을 서버에 넘긴다 */
 window.__setTaxGive = cards => { window.__taxGive = cards; };
 
@@ -235,6 +245,13 @@ function watchPhase(room){
     a[0] = String(from);
     if (window.__applyMove) window.__applyMove(a.join(","));
   };
+
+  /* 서버가 정한 선을 뽑기 화면이 연출로 보여준다 */
+  const lead = room.round ? room.round.lead : 0;
+  const n = seats.length;
+  window.__leadSeat = ((lead - me + n) % n);        /* 내 자리 기준으로 돌린 선 */
+  window.GAME.order = [];
+  for (let i = 0; i < n; i++) window.GAME.order.push((window.__leadSeat + i) % n);
 
   watchBotTurn(room);
   window.__goto && window.__goto("draw");
