@@ -123,12 +123,8 @@ export function initNav(){
   window.__goto = id => go(id);
   window.__toTable = () => { window.__fresh = false; go("table"); };
   function go(id){
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));
-    document.getElementById(id).classList.add("is-on");
-    window.scrollTo(0,0);
-    /* 숨겨져 있는 동안은 폭이 0이라 손패 위치가 어긋난다. 보이는 순간 다시 그린다 */
-    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-    /* 방 설정(인원 등)을 그 화면에 반영한다 */
+    /* 화면을 보이기 전에 먼저 세운다.
+       나중에 세우면 옛 내용이 한 번 보였다가 바뀐다 (인원이 8명이었다가 5명이 되는 현상) */
     if (id === "draw"  && window.__bootDraw)  window.__bootDraw();
     if (id === "table" && window.__bootTable){
       window.__bootTable(window.__fresh !== false);
@@ -136,6 +132,12 @@ export function initNav(){
     }
     if (id === "tax"   && window.__bootTax)   window.__bootTax();
     if (id === "result" && window.__bootResult) window.__bootResult();
+  
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));
+    document.getElementById(id).classList.add("is-on");
+    window.scrollTo(0,0);
+    /* 숨겨져 있는 동안은 폭이 0이라 손패 위치가 어긋난다. 보이는 순간 다시 그린다 */
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
   }
   document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
   

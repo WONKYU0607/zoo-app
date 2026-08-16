@@ -631,12 +631,29 @@ export function mount(root){
   };
   
   /* 수를 내보낸다. 온라인이면 서버로, 아니면 바로 적용한다 */
+  /* 지금 판 상태를 서버에 알릴 형태로 만든다 */
+  function roundState(){
+    return {
+      turn: turn,
+      counts: SEATS.map(s => s.c),
+      passed: SEATS.map(s => s.s === "pass"),
+      finish: finish.slice(),
+      trick: trick.length ? {by: trick[trick.length-1].by,
+                             num: trick[trick.length-1].num,
+                             count: trick[trick.length-1].count} : null,
+    };
+  }
+  
   let unlockId = null;
   function submit(mv){
     if (window.__net && window.__net.send){
-      window.__net.send(mv);
-      if (unlockId) clearTimeout(unlockId);
-      unlockId = setTimeout(() => { busy = false; draw(); }, 6000);   /* 응답이 없으면 풀어 준다 */
+      /* 먼저 내 화면에 반영해 차례를 계산한 뒤, 그 결과를 함께 보낸다 */
+      applyMove(mv);
+      draw();
+      window.__net.send(mv, roundState());
+      if (checkFinish()) return;
+      busy = false;
+      resetTimer(); watchDeadline();
       return;
     }
     const cleared = clearsPile(+mv.split(",")[1]);
@@ -659,7 +676,8 @@ export function mount(root){
   
   /* 밖에서 들어온 수 (온라인) */
   window.__applyMove = mv => {
-    busy = false;                       /* 수가 반영됐으니 잠금을 푼다 */
+    busy = false;
+    if (String(mv).split(",")[0] === "0") return;   /* 내 수는 이미 반영했다 */
     applyMove(mv);
     draw();
     if (checkFinish()) return;

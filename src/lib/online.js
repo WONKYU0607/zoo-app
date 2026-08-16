@@ -207,7 +207,7 @@ export async function addBot(){
   const filled = seatCount(room, cap);
   const bots = seats.filter(s => s && s.bot).length;
   if (filled >= cap) return false;
-  if (bots >= Math.floor(cap / 2)) return false;      /* 봇은 정원의 절반까지 */
+  /* 초기에는 빈자리를 다 채운다. 사람이 늘면 이 제한을 다시 둘 수 있다 */
 
   /* 안 쓰는 이름을 고른다 */
   const used = seats.filter(Boolean).map(s => s.name);
@@ -285,16 +285,30 @@ export function stopWatch(){
 }
 
 /* 화면이 만든 수 문자열을 그대로 서버 목록에 붙인다 ("자리,숫자,장수" 또는 "자리,p") */
-export async function playMove(mv){
+export async function playMove(mv, state){
   const c = online.code;
   if (!c) return false;
   const seq = (online.room && online.room.round ? online.room.round.seq : 0) + 1;
   const res = await runTransaction(ref(rtdb, `rooms/${c}/moves/${seq}`),
                                    cur => (cur ? undefined : mv));
   if (!res.committed) return false;
-  await update(ref(rtdb, `rooms/${c}/round`), { seq: seq });
+
+  /* 수만 적고 차례를 안 적으면 서버는 계속 처음 차례로 안다.
+     그러면 봇 차례가 왔는지 알 수 없어 게임이 멈춘다. */
+  const round = { seq: seq, deadline: Date.now() + 15000 };
+  if (state){
+    if (typeof state.turn === "number") round.turn = state.turn;
+    if (state.counts) round.counts = state.counts;
+    if (state.passed) round.passed = state.passed;
+    if (state.finish) round.finish = state.finish;
+    round.trick = state.trick || null;
+  }
+  await update(ref(rtdb, `rooms/${c}/round`), round);
   return true;
 }
+
+/* 내 손패를 서버에 맞춰 적는다 (규칙상 서버만 쓸 수 있으므로 지금은 화면용) */
+export function myHandNow(){ return online.hand; }
 
 /* ---------- 내 수를 적는다 ---------- */
 

@@ -1,7 +1,7 @@
 import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, signInTest, isLocal, account, finishGame, useTicket } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInTest, isLocal, account, finishGame, useTicket, ticketLeft } from "./lib/account.js";
 import * as net from "./lib/online.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
@@ -85,6 +85,7 @@ window.reportGame = (rank, players, earned, quit) => {
 
 /* 티켓 한 장. 없으면 false */
 window.spendTicket = () => useTicket();
+window.__ticketLeft = () => ticketLeft();
 
 /* ---------- 온라인 대전 연결 ---------- */
 import { app } from "./lib/firebase.js";
@@ -105,7 +106,8 @@ function pushRoom(room){
   watchPhase(room);
   if (room.phase === "waiting" && room.host === account.uid) botFillStart();
   else botFillStop();
-  if (room.phase === "playing") watchBotTurn(room);
+  if (room.phase === "playing"){ watchBotTurn(room); botWatchStart(); }
+  else botWatchStop();
   watchLeavers(room);
   const cap = (room.opts && room.opts.cap) || 6;
   window.__room = {
@@ -231,7 +233,26 @@ function watchPhase(room){
     mySeat: me,
   };
   window.__opts = Object.assign(window.__opts || {}, room.opts || {}, { seated: seats.length });
-  window.__net = { send: mv => net.playMove(mv), seat: me };
+  window.__net = {
+    seat: me,
+    /* 화면이 계산한 판 상태를 같이 보낸다.
+       자리 번호는 내 기준으로 돌아가 있으므로 서버 기준으로 되돌린다 */
+    send: (mv, st) => {
+      const nn = seats.length;
+      const back = v => ((v + me) % nn);
+      let out = null;
+      if (st){
+        out = { turn: back(st.turn), trick: null };
+        if (st.counts){ out.counts = new Array(nn);
+          st.counts.forEach((c, i) => { out.counts[back(i)] = c; }); }
+        if (st.passed){ out.passed = new Array(nn);
+          st.passed.forEach((v, i) => { out.passed[back(i)] = v; }); }
+        if (st.finish) out.finish = st.finish.map(back);
+        if (st.trick) out.trick = { by: back(st.trick.by), num: st.trick.num, count: st.trick.count };
+      }
+      return net.playMove(mv, out);
+    },
+  };
   window.__room = window.__room || {};
   window.__room.round = room.round;
 
@@ -323,7 +344,17 @@ function watchLeavers(room){
 
 /* 봇 차례가 오면 서버에 다음 수를 맡긴다.
    방장 한 명만 부른다. 여럿이 부르면 같은 수가 두 번 적힌다. */
-let botBusy = false;
+let botBusy = false, botTick = null;
+function botWatchStart(){
+  if (botTick) return;
+  botTick = setInterval(() => {
+    const R = net.online.room;
+    if (!R || R.phase !== "playing"){ botWatchStop(); return; }
+    watchBotTurn(R);
+  }, 2500);
+}
+function botWatchStop(){ if (botTick){ clearInterval(botTick); botTick = null; } }
+
 async function watchBotTurn(room){
   if (!room || room.phase !== "playing") return;
   if (room.host !== account.uid) return;          /* 방장만 */
@@ -339,7 +370,8 @@ async function watchBotTurn(room){
   const cur = seats[at];
   if (!cur || !cur.bot) return;                    /* 사람 차례 */
   botBusy = true;
+  console.log("봇 차례 → 서버에 맡김", cur.name, "(자리", at, ", 차례", r.turn, ")");
   try { await net.botMoves(net.online.code); }
-  catch(e){ console.warn("봇 수 실패", e); }
-  finally { setTimeout(() => { botBusy = false; }, 300); }
+  catch(e){ console.error("봇 수 실패", e && (e.code || e.message) || e); }
+  finally { setTimeout(() => { botBusy = false; }, 400); }
 }

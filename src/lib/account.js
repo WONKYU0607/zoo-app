@@ -13,7 +13,7 @@ import { doc, getDoc, setDoc, updateDoc, runTransaction,
 
 export const account = {
   uid: null, name: "", photo: "",
-  score: 0, tier: 0, tickets: 5, games: 0,
+  score: 0, tier: 0, tickets: 5, ticketAt: 0, games: 0,
   loaded: false, signedIn: false,
 };
 
@@ -27,6 +27,32 @@ export function winnersCount(n){ return Math.floor(n / 2); }
 export function scoreFor(rank, n, earned, quit){
   const s = Math.max(0, Math.round(earned || 0));
   return quit ? Math.floor(s / 2) : s;
+}
+
+export const TICKET_MAX = 5;
+export const TICKET_MS = 30 * 60 * 1000;      /* 30분에 한 장 */
+
+/* 마지막으로 기록한 시각부터 지난 만큼 채운다.
+   최대치를 넘지 않고, 남은 시간을 같이 돌려준다. */
+function refill(tickets, at){
+  const now = Date.now();
+  let t = typeof tickets === "number" ? tickets : TICKET_MAX;
+  let last = typeof at === "number" && at > 0 ? at : now;
+  if (t >= TICKET_MAX) return { tickets: TICKET_MAX, at: now, left: 0 };
+  const gained = Math.floor((now - last) / TICKET_MS);
+  if (gained > 0){
+    t = Math.min(TICKET_MAX, t + gained);
+    last = last + gained * TICKET_MS;
+  }
+  if (t >= TICKET_MAX) return { tickets: TICKET_MAX, at: now, left: 0 };
+  return { tickets: t, at: last, left: TICKET_MS - (now - last) };
+}
+
+/* 다음 티켓까지 남은 밀리초 (0이면 가득 찼다) */
+export function ticketLeft(){
+  if (account.tickets >= TICKET_MAX) return 0;
+  const r = refill(account.tickets, account.ticketAt);
+  return r.left;
 }
 
 function today(){ return new Date().toISOString().slice(0, 10); }
@@ -106,18 +132,20 @@ async function loadProfile(user){
 
   if (!snap.exists()){
     const name = await claimName(user.uid, user.displayName);
-    const fresh = { name, score: 0, games: 0, tickets: 5,
-                    ticketDay: today(), createdAt: serverTimestamp() };
+    const fresh = { name, score: 0, games: 0, tickets: TICKET_MAX,
+                    ticketAt: Date.now(), createdAt: serverTimestamp() };
     await setDoc(ref, fresh);
     Object.assign(account, fresh);
   } else {
     const d = snap.data();
     Object.assign(account, d);
-    if (d.ticketDay !== today()){          /* 날짜가 바뀌면 티켓을 채운다 */
-      const fill = { tickets: 5, ticketDay: today() };
-      await updateDoc(ref, fill);
-      Object.assign(account, fill);
+    /* 지난 시간만큼 티켓을 채운다 */
+    const r = refill(d.tickets, d.ticketAt);
+    if (r.tickets !== d.tickets || !d.ticketAt){
+      await updateDoc(ref, { tickets: r.tickets, ticketAt: r.at });
     }
+    account.tickets = r.tickets;
+    account.ticketAt = r.at;
   }
   account.tier = tierOf(account.score);
   account.signedIn = true;
@@ -165,17 +193,24 @@ export async function finishGame(rank, players, earned, quit){
 }
 
 export async function useTicket(){
-  if (!account.signedIn || account.tickets <= 0) return false;
+  if (!account.signedIn) return false;
+  const r = refill(account.tickets, account.ticketAt);
+  account.tickets = r.tickets; account.ticketAt = r.at;
+  if (account.tickets <= 0) return false;
+  /* 가득 찬 상태에서 한 장을 쓰면 그때부터 다시 시간을 잰다 */
+  const wasFull = account.tickets >= TICKET_MAX;
   account.tickets -= 1;
-  await updateDoc(doc(db, "users", account.uid), { tickets: increment(-1) });
+  if (wasFull) account.ticketAt = Date.now();
+  await updateDoc(doc(db, "users", account.uid),
+    { tickets: account.tickets, ticketAt: account.ticketAt });
   window.dispatchEvent(new Event("accountchange"));
   return true;
 }
 
 export async function addTicket(n = 1){
   if (!account.signedIn) return account.tickets;
-  account.tickets += n;
-  await updateDoc(doc(db, "users", account.uid), { tickets: increment(n) });
+  account.tickets = Math.min(TICKET_MAX, account.tickets + n);
+  await updateDoc(doc(db, "users", account.uid), { tickets: account.tickets });
   window.dispatchEvent(new Event("accountchange"));
   return account.tickets;
 }

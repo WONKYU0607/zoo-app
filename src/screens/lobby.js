@@ -136,7 +136,20 @@ export function mount(root){
     if (t) t.textContent = a.tier;
     if (s) s.textContent = a.score.toLocaleString();
     if (k) k.textContent = a.tickets;
+    paintTimer();
   }
+  /* 다음 티켓까지 남은 시간 */
+  function paintTimer(){
+    const el2 = document.getElementById("acctTimer");
+    if (!el2) return;
+    const ms = window.__ticketLeft ? window.__ticketLeft() : 0;
+    if (!ms || ms <= 0){ el2.textContent = ""; return; }
+    const s = Math.ceil(ms / 1000);
+    const m = Math.floor(s / 60);
+    el2.textContent = m + ":" + String(s % 60).padStart(2, "0");
+  }
+  setInterval(paintTimer, 1000);
+  
   window.addEventListener("accountready", paintAcct);
   window.addEventListener("accountchange", paintAcct);
   paintAcct();

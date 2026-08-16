@@ -57,7 +57,7 @@ button:disabled{opacity:.42}
 }
 
 /* 한 줄 틀 */
-#opts .mk__row,#room .roomno,#room .sum,#result .row,#cfg .cfg__row{
+#opts .mk__row,#room .roomno,#room .sum,#result .row{
   border:12px solid transparent !important;
   border-image:var(--fr-row) 33 stretch !important;
   border-image-width:12px !important;

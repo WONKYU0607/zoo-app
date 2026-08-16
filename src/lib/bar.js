@@ -2,7 +2,7 @@
 export const BAR_SWAP = {
   "lobby": [
     "<div class=\"bar\">",
-    "<div class=\"bar\"><button class=\"navback\" data-back=\"entry\" aria-label=\"뒤로\">‹</button>"
+    "<div class=\"bar\">"
   ],
   "room": [
     "<button class=\"back\" aria-label=\"나가기\">‹</button>",
