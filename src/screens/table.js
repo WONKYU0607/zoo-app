@@ -81,7 +81,15 @@ export function mount(root){
     hand = (window.__hand || []).slice();
     SEATS[0].hold = hand;
     SEATS[0].c = hand.length;
-    turn = R && R.round ? ((R.round.turn - me + n) % n) : 0;
+    /* 방 상태가 아직 없으면 뽑기에서 정한 순서의 첫 사람을 선으로 쓴다.
+       여기서 0 으로 두면 선이 아닌데 내가 먼저 시작하는 것처럼 보인다 */
+    if (R && R.round && typeof R.round.turn === "number"){
+      turn = ((R.round.turn - me + n) % n + n) % n;
+    } else if (G.order && G.order.length){
+      turn = G.order[0];
+    } else {
+      turn = 0;
+    }
     trick = []; finish = []; sel = []; busy = false; lastPlayer = null;
     spread = false; animated = 0;
     myGen++;

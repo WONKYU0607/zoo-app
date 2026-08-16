@@ -185,6 +185,7 @@ window.__botFill = on => (on ? botFillStart() : botFillStop());
 window.__startRound = async () => {
   const code = net.online.code;
   if (!code) throw new Error("방이 없습니다");
+  botFillStop();                     /* 나누는 사이에 봇이 더 들어오면 인원이 흔들린다 */
   /* 버튼이 어떤 이유로든 눌렸을 때를 대비해 한 번 더 센다 */
   const n = net.seatCount(net.online.room);
   if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
@@ -385,10 +386,14 @@ async function watchBotTurn(room){
      8명 방에 5명이 흩어져 앉으면 둘이 다르다. order 로 바꿔서 봐야 한다. */
   const capN = (room.opts && room.opts.cap) || 8;
   const seats = net.seatArray(room, capN);
-  const ord = room.order || seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
+  let ord = room.order;
+  if (!Array.isArray(ord) || !ord.length){
+    ord = seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
+  }
   const at = ord[r.turn];
-  const cur = seats[at];
-  if (!cur || !cur.bot) return;                    /* 사람 차례 */
+  const cur = (at == null) ? null : seats[at];
+  if (!cur){ console.warn("봇 판정 실패 — 차례", r.turn, "자리표", ord); return; }
+  if (!cur.bot) return;                            /* 사람 차례 */
   botBusy = true;
   console.log("봇 차례 → 서버에 맡김", cur.name, "(자리", at, ", 차례", r.turn, ")");
   try { await net.botMoves(net.online.code); }

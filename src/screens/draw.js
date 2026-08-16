@@ -312,6 +312,9 @@ export function mount(root){
   }
   
   function boot(){
+    /* 옛 자리와 옛 카드가 잠깐 보이지 않게 먼저 비운다 */
+    const sbox0 = el("seats"); if (sbox0) sbox0.innerHTML = "";
+    const dbox0 = el("deck");  if (dbox0) dbox0.innerHTML = "";
     /* 온라인이면 인원과 선을 서버 값에서 가져온다. 뽑기 연출은 그대로 보여준다.
        이 판단을 먼저 해야 인원이 잠깐 잘못 그려지지 않는다 */
     online = Boolean(window.__net);

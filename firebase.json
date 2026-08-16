@@ -1,5 +1,12 @@
 {
   "functions": { "source": "functions", "runtime": "nodejs22" },
   "database": { "rules": "database.rules.json" },
-  "firestore": { "rules": "firestore.rules" }
+  "firestore": { "rules": "firestore.rules" },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "database": { "port": 9000 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
 }
