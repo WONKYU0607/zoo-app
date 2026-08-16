@@ -179,9 +179,16 @@ export function mount(root){
     if (!w) return;
     takenK.push(k);
     /* 온라인이면 자리마다 나올 숫자를 미리 정해 뒀다.
-       카드는 뒤집혀 있어 어느 장을 집든 같으므로, 정해진 값을 그대로 보여준다.
-       뽑은 뒤에 숫자가 바뀌는 일이 없다. */
-    drawn[seat] = (online && plan) ? plan[seat] : pool[k];
+       카드는 뒤집히기 전까지 안 보이므로, 집는 순간 그 카드의 숫자를 정해진 값으로 맞춘다.
+       그래야 카드에 보이는 숫자와 자리에 적히는 숫자가 같다. */
+    if (online && plan){
+      pool[k] = plan[seat];
+      /* 카드 앞면은 처음 만들 때 정해진다. 숫자를 바꿨으니 앞면도 다시 그린다.
+         아직 뒤집히기 전이라 눈에 안 띈다. */
+      const face = w.querySelector(".pk__f--a");
+      if (face) face.innerHTML = cardFace(pool[k]);
+    }
+    drawn[seat] = pool[k];
     pickOrder.push(seat);
     waiting = waiting.filter(x => x !== seat);
     w.classList.add("flip", "taken");

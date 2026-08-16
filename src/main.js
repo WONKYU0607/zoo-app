@@ -265,13 +265,16 @@ function watchPhase(room){
 
   /* 남의 수가 들어오면 화면에 적용한다. 내 자리 기준으로 돌려서 넘긴다 */
   seenMove = 0;
+  moveQueue.length = 0;
+  if (drainId){ clearTimeout(drainId); drainId = null; }
   net.online.onMove = (seq, mv) => {
     if (seq <= seenMove) return;
     seenMove = seq;
     const a = String(mv).split(",");
     const from = (Number(a[0]) - me + seats.length) % seats.length;
     a[0] = String(from);
-    if (window.__applyMove) window.__applyMove(a.join(","));
+    moveQueue.push({ seq: seq, mv: a.join(","), mine: from === 0 });
+    drainMoves();
   };
 
   /* 서버가 정한 선을 뽑기 화면이 연출로 보여준다 */
@@ -285,6 +288,23 @@ function watchPhase(room){
   window.__goto && window.__goto("draw");
 }
 let seenMove = 0;
+
+/* 서버는 봇 차례를 한꺼번에 계산해서 수를 통째로 보낸다.
+   그대로 다 적용하면 눈 깜짝할 새 지나가 게임 같지가 않다.
+   하나씩 사이를 띄워서 적용한다. */
+const moveQueue = [];
+let drainId = null;
+function drainMoves(){
+  if (drainId) return;                       /* 이미 하나씩 내보내는 중 */
+  const step = () => {
+    const m = moveQueue.shift();
+    if (!m){ drainId = null; return; }
+    if (window.__applyMove) window.__applyMove(m.mv);
+    /* 내 수는 이미 화면에 반영돼 있으니 기다리지 않는다 */
+    drainId = setTimeout(step, m.mine ? 0 : 2000);
+  };
+  step();
+}
 
 /* 판이 끝나면 방장 기기가 서버에 정산을 맡긴다.
    결과(다음 판 카드, 등수, 혁명 여부)는 방 상태로 모두에게 온다. */
