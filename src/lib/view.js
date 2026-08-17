@@ -71,6 +71,16 @@ export function screenView(G, ctx, myID, names){
       if (o[last - 1] === me) return toScreen(o[1], me, n);
       return -1;
     })(),
+    /* 방금 끝난 판의 마지막 장면과 등수 */
+    lastRound: G.lastRound ? {
+      roundNo: G.lastRound.roundNo,
+      order: G.lastRound.order.map(s => toScreen(s, me, n)),
+      points: G.lastRound.points.slice(),
+      table: G.lastRound.table.map(t => ({
+        by: toScreen(t.by, me, n), num: t.num, count: t.count,
+        cards: new Array(t.count).fill(t.num),
+      })),
+    } : null,
     over: ctx.gameover
       ? {
           score: G.counts.map((_, seat) => ctx.gameover.score[toSeat(seat, me, n)]),

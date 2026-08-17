@@ -186,7 +186,8 @@ export function initNav(){
   document.querySelector("#result #next").addEventListener("click", () => {
     const G = window.GAME || {};
     const rounds = (window.__opts && window.__opts.rounds) || 5;
-    if ((G.roundNo || 1) >= rounds){          // 마지막 판이었으면 처음부터
+    if ((G.roundNo || 1) >= rounds){          // 마지막 판이었으면
+      if (window.__onRestart){ window.__onRestart(); return; }
       window.__fresh = true;
       go("draw");
       return;

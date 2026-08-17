@@ -37,6 +37,9 @@ function nextAlive(G, from){
 
 function clearPile(G, leader){
   G.pile = null;
+  /* 치우기 직전 모습을 남긴다. 마지막 카드로 판을 끝내면 바로 치워지는데,
+     화면이 "무슨 카드로 끝냈는지"를 보여주려면 이게 있어야 한다 */
+  if ((G.table || []).length) G.shown = G.table.map(t => ({ by: t.by, num: t.num, count: t.count }));
   G.table = [];                               /* 바닥에 쌓인 것도 같이 치운다 */
   G.passed = G.passed.map(() => false);
   G.next = leader;
@@ -76,6 +79,7 @@ function dealRound(G, random){
   G.counts = hands.map(h => h.length);
   G.pile = null;
   G.table = [];
+  G.shown = [];
   G.passed = hands.map(() => false);
   G.finished = [];
 }
@@ -127,6 +131,16 @@ function openNextRound(G, random){
   const order = finalOrder(G);
   const n = G.counts.length;
 
+  /* 판이 끝난 순간을 남겨 둔다. 바로 다음 판을 나누기 때문에
+     이걸 안 남기면 마지막에 무슨 카드로 끝냈는지 화면이 못 보여준다 */
+  G.lastRound = {
+    order: order.slice(),
+    table: ((G.table || []).length ? G.table : (G.shown || []))
+             .map(t => ({ by: t.by, num: t.num, count: t.count })),
+    points: order.map((seat, rank) => roundPoints(rank, n)),
+    roundNo: G.roundNo,
+  };
+
   order.forEach((seat, rank) => { G.score[seat] += roundPoints(rank, n); });
   G.lastOrder = order;
   G.roundNo += 1;
@@ -160,6 +174,7 @@ export const ZooPresident = {
       score: new Array(n).fill(0),
       roundNo: 1, totalRounds: Math.max(3, opts.rounds),
       opts, lastOrder: null, taxOrder: null, revolution: null,
+      lastRound: null, shown: [],
       needTax: false, given: {}, gameOver: false,
     };
     dealRound(G, random);

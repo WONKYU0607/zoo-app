@@ -67,7 +67,9 @@ export function mount(root){
   let wasGreat = false;   /* 선언 시점의 대혁명 여부 (뒤집은 뒤엔 다시 계산하면 틀린다) */
   const G = () => (window.GAME = window.GAME || {});
   const holds = () => G().hold || [];
-  const myHand = () => holds()[0] || [];
+  /* 남의 손패는 온라인에서 원래 모른다. 없으면 빈 것으로 친다 */
+  const holdOf = i => { const h = holds()[i]; return Array.isArray(h) ? h : []; };
+  const myHand = () => holdOf(0);
   
   const nameOf = i => ((lang === "ko" ? G().names : G().namesEn) || G().names || [])[i] || "";
   
@@ -205,7 +207,7 @@ export function mount(root){
     pairs.forEach(([hi, lo, k]) => {
       /* 내가 낀 교환만 앞면. 남들끼리 주고받는 건 원래 안 보이는 정보라 뒷면 */
       const mine = hi === 0 || lo === 0;
-      const best = holds()[lo].slice().sort((a, b) => a - b).slice(0, k);
+      const best = holdOf(lo).slice().sort((a, b) => a - b).slice(0, k);
       for (let j = 0; j < k; j++){ flyCard(lo, hi, best[j], t, !mine); t += 150; }
       for (let j = 0; j < k; j++){
         flyCard(hi, lo, hi === 0 ? window.__myGive[j] : 12, t, !mine); t += 150;
@@ -321,7 +323,7 @@ export function mount(root){
         /* 내가 받는 카드: 상대의 가장 좋은 카드 (실제 손패에서) */
         const partner = r === 0 ? o[n-1] : r === 1 ? o[n-2] : null;
         const inC = partner === null ? []
-          : holds()[partner].slice().sort((a, b) => a - b).slice(0, r === 0 ? 2 : 1);
+          : holdOf(partner).slice().sort((a, b) => a - b).slice(0, r === 0 ? 2 : 1);
         const outC = takenIdx().map(i => myHand()[i]);
         let rows = "";
         if (inC.length) rows += '<div class="frow frow--in"><span class="frow__w">' +

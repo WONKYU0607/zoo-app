@@ -63,9 +63,15 @@ export function mount(root){
     busy = !v.myTurn;
 
     if (v.roundNo !== lastRound){          /* 새 판 */
+      const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
       window.__roundNo = v.roundNo;
+      /* 첫 판이 아니면 방금 끝난 판을 보여주고 넘긴다 */
+      if (!first && v.lastRound && window.__onRoundEnd){
+        showLastRound(v);
+        return;                            /* 새 판은 결과를 본 뒤에 그린다 */
+      }
     }
     if (v.table.length < trick.length){    /* 바닥이 치워졌다 */
       animated = 0; spread = false;
@@ -89,6 +95,22 @@ export function mount(root){
 
     draw();
     resetTimer();
+  }
+
+  /* 방금 끝난 판의 마지막 장면을 그대로 세워 두고, 잠시 뒤 결과 화면으로 */
+  function showLastRound(v){
+    const lr = v.lastRound;
+    SEATS = v.seats.map((x, i) => ({
+      n: x.name, c: i === lr.order[lr.order.length - 1] ? x.c : 0, s: "", hold: [],
+    }));
+    hand = [];
+    finish = lr.order.slice();
+    turn = -1; busy = true;
+    trick = lr.table.map(t => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
+    animated = 0; spread = false;
+    draw();
+    if (timerId) clearTimeout(timerId);
+    setTimeout(() => { window.__onRoundEnd && window.__onRoundEnd(v); }, 1600);
   }
 
   function boot(){

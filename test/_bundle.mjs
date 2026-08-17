@@ -18590,7 +18590,7 @@ function mount(root) {
       };
       h2.appendChild(s2);
     });
-    SEATS[0].c = hand.length;
+    if (SEATS[0]) SEATS[0].c = hand.length;
   }
   function renderBottom() {
     const c2 = cur();
@@ -18619,6 +18619,7 @@ function mount(root) {
     el("pass").disabled = turn !== 0 || busy || !cur();
   }
   function draw() {
+    if (!SEATS.length) return;
     renderSeats();
     renderPile();
     renderHand();

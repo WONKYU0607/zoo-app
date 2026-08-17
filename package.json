@@ -8,10 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "sync": "npm run build && npx cap sync android",
-    "test": "node test/engine.test.js && node test/table.test.mjs && node test/room.test.mjs",
+    "test": "node test/engine.test.js && node test/roundend.test.mjs && node test/table.test.mjs && node test/room.test.mjs && node test/sequence.test.mjs 3",
     "test:engine": "node test/engine.test.js",
     "test:table": "node test/table.test.mjs",
-    "test:room": "node test/room.test.mjs"
+    "test:room": "node test/room.test.mjs",
+    "test:round": "node test/roundend.test.mjs",
+    "test:seq": "node test/sequence.test.mjs 3"
   },
   "devDependencies": {
     "firebase-tools": "^15.27.0",

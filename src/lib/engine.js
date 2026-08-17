@@ -20,6 +20,7 @@ export const engine = {
   names: [],
   bots: [],            /* 봇이 앉은 자리 (엔진 자리 번호) */
   view: null,
+  paused: false,       /* 결과를 보는 동안 다음 판을 멈춘다 */
   botMs: 1400,         /* 봇이 생각하는 척하는 시간 */
 };
 
@@ -110,6 +111,10 @@ function scheduleBot(){
     return;
   }
 
+  /* 판 결과를 보고 있는 동안에는 다음 판이 저 혼자 굴러가면 안 된다.
+     세금은 멈추지 않는다 — 봇이 내야 다음으로 넘어간다 */
+  if (engine.paused) return;
+
   const seat = Number(ctx.currentPlayer);
   if (!engine.bots.includes(seat)) return;
 
@@ -166,6 +171,12 @@ export function startOnline({ server, matchID, playerID, credentials, numPlayers
     playerID: engine.myID, credentials,
     multiplayer: SocketIO({ server }),
   }));
+}
+
+/* 결과 화면을 보는 동안 다음 판을 멈춰 둔다 */
+export function setPaused(on){
+  engine.paused = Boolean(on);
+  if (!engine.paused) scheduleBot();
 }
 
 export function stop(){
