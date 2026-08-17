@@ -167,15 +167,15 @@ function mount(root) {
       if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
-  function asArray(raw, n) {
+  function asArray(raw2, n) {
     const out = new Array(n).fill(null);
-    if (!raw) return out;
-    if (Array.isArray(raw)) raw.forEach((v, i) => {
+    if (!raw2) return out;
+    if (Array.isArray(raw2)) raw2.forEach((v, i) => {
       if (i < n) out[i] = v || null;
     });
-    else Object.keys(raw).forEach((k) => {
+    else Object.keys(raw2).forEach((k) => {
       const i = +k;
-      if (i >= 0 && i < n) out[i] = raw[k] || null;
+      if (i >= 0 && i < n) out[i] = raw2[k] || null;
     });
     return out;
   }
@@ -349,6 +349,96 @@ function mount(root) {
   });
 }
 
+// src/lib/deck.js
+var isJoker = (c) => c >= 13;
+
+// src/lib/view.js
+var toScreen = (seat, me, n) => ((seat - me) % n + n) % n;
+var toSeat = (pos, me, n) => ((pos + me) % n + n) % n;
+function screenView(G, ctx, myID, names) {
+  const n = G.counts.length;
+  const me = Number(myID);
+  const nm = names || new Array(n).fill("");
+  const seats = new Array(n);
+  for (let seat = 0; seat < n; seat++) {
+    const pos = toScreen(seat, me, n);
+    seats[pos] = {
+      name: nm[seat] || "",
+      c: G.counts[seat],
+      s: G.passed[seat] ? "pass" : "",
+      out: G.counts[seat] === 0,
+      hold: seat === me ? (G.hands[seat] || []).slice() : null
+    };
+  }
+  const table = (G.table || []).map((t) => ({
+    by: toScreen(t.by, me, n),
+    num: t.num,
+    count: t.count,
+    cards: new Array(t.count).fill(t.num)
+    /* 남의 카드는 숫자만 안다 */
+  }));
+  return {
+    N: n,
+    me: 0,
+    /* 화면에서 나는 언제나 0 */
+    names: seats.map((s) => s.name),
+    seats,
+    hand: (G.hands[me] || []).slice(),
+    turn: ctx.phase === "play" ? toScreen(Number(ctx.currentPlayer), me, n) : -1,
+    myTurn: ctx.phase === "play" && Number(ctx.currentPlayer) === me,
+    table,
+    pile: G.pile ? { by: toScreen(G.pile.by, me, n), num: G.pile.num, count: G.pile.count } : null,
+    /* 바닥을 치우기 직전 모습. 1번으로 엎거나 마지막 카드로 완주하면
+       올리기와 치우기가 한 수 안에서 끝나므로, 이걸 넘겨야 화면이 보여줄 수 있다 */
+    lastTable: (G.shown || []).map((t) => ({
+      by: toScreen(t.by, me, n),
+      num: t.num,
+      count: t.count,
+      cards: new Array(t.count).fill(t.num)
+    })),
+    finish: (G.finished || []).map((s) => toScreen(s, me, n)),
+    score: G.counts.map((_, seat) => G.score[toSeat(seat, me, n)]),
+    roundNo: G.roundNo,
+    totalRounds: G.totalRounds,
+    phase: ctx.phase,
+    revolution: G.revolution ? { seat: toScreen(G.revolution.seat, me, n), great: G.revolution.great } : null,
+    /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
+    taxGive: (() => {
+      if (ctx.phase !== "tax" || !G.taxOrder) return 0;
+      if (G.given && G.given[me] !== void 0) return 0;
+      if (G.taxOrder[0] === me) return 2;
+      if (G.taxOrder[1] === me) return 1;
+      return 0;
+    })(),
+    /* 세금 상대 (화면 자리) */
+    taxWith: (() => {
+      if (ctx.phase !== "tax" || !G.taxOrder) return -1;
+      const o = G.taxOrder, last = o.length - 1;
+      if (o[0] === me) return toScreen(o[last], me, n);
+      if (o[1] === me) return toScreen(o[last - 1], me, n);
+      if (o[last] === me) return toScreen(o[0], me, n);
+      if (o[last - 1] === me) return toScreen(o[1], me, n);
+      return -1;
+    })(),
+    /* 방금 끝난 판의 마지막 장면과 등수 */
+    lastRound: G.lastRound ? {
+      roundNo: G.lastRound.roundNo,
+      order: G.lastRound.order.map((s) => toScreen(s, me, n)),
+      points: G.lastRound.points.slice(),
+      table: G.lastRound.table.map((t) => ({
+        by: toScreen(t.by, me, n),
+        num: t.num,
+        count: t.count,
+        cards: new Array(t.count).fill(t.num)
+      }))
+    } : null,
+    over: ctx.gameover ? {
+      score: G.counts.map((_, seat) => ctx.gameover.score[toSeat(seat, me, n)]),
+      order: (ctx.gameover.order || []).map((s) => toScreen(s, me, n))
+    } : null
+  };
+}
+
 // src/lib/engine.js
 var engine = {
   mode: null,
@@ -361,16 +451,132 @@ var engine = {
   view: null,
   paused: false,
   /* 결과를 보는 동안 다음 판을 멈춘다 */
+  auto: false,
+  /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
   botMs: 3e3
   /* 봇이 생각하는 척하는 시간 */
 };
 var listeners = [];
+var botTimer = null;
+var gen = 0;
 function onView(fn) {
   listeners.push(fn);
   if (engine.view) fn(engine.view);
   return () => {
     listeners = listeners.filter((f) => f !== fn);
   };
+}
+function raw() {
+  if (!engine.client) return null;
+  return engine.mode === "local" ? engine.client.store.getState() : engine.client.getState();
+}
+function push() {
+  const st = raw();
+  if (!st) return;
+  engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  listeners.forEach((f) => {
+    try {
+      f(engine.view);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  if (engine.mode === "local") scheduleBot();
+}
+function botPick(hand, pile) {
+  const cnt = {};
+  let jok = 0;
+  hand.forEach((c) => {
+    if (isJoker(c)) jok++;
+    else cnt[c] = (cnt[c] || 0) + 1;
+  });
+  const opts = [];
+  const maxN = pile ? pile.num - 1 : 12;
+  for (let num = 1; num <= maxN; num++) {
+    const same = cnt[num] || 0;
+    if (!same) continue;
+    if (pile) {
+      const need = pile.count - same;
+      if (need > jok) continue;
+      opts.push({ num, count: pile.count, useJok: Math.max(0, need), own: same });
+    } else opts.push({ num, count: same, useJok: 0, own: same });
+  }
+  if (!opts.length) return !pile && jok > 0 ? { num: 13, count: 1 } : null;
+  opts.forEach((o) => {
+    let s = o.num * 2;
+    s -= o.useJok * 10;
+    if (pile && o.own > o.count) s -= 24;
+    o.s = s;
+  });
+  opts.sort((a, b) => b.s - a.s);
+  if (opts.length > 1 && Math.random() < 0.1) return opts[1];
+  return opts[0];
+}
+var worstFirst = (a, b) => (isJoker(b) ? 99 : b) - (isJoker(a) ? 99 : a);
+var actsFor = (seat) => engine.bots.includes(seat) || engine.auto && seat === Number(engine.myID);
+function scheduleBot() {
+  if (botTimer) return;
+  const st = raw();
+  if (!st || st.ctx.gameover) return;
+  const G = st.G, ctx = st.ctx;
+  if (ctx.phase === "tax") {
+    const o = G.taxOrder;
+    const todo = [o[0], o[1]].filter((seat2) => actsFor(seat2) && G.given[seat2] === void 0);
+    if (!todo.length) return;
+    const g2 = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g2 !== gen) return;
+      const s2 = raw();
+      if (!s2 || s2.ctx.phase !== "tax") {
+        push();
+        return;
+      }
+      for (const seat2 of todo) {
+        const hand = (s2.G.hands[seat2] || []).slice().sort(worstFirst);
+        const need = seat2 === s2.G.taxOrder[0] ? 2 : 1;
+        if (hand.length < need) continue;
+        engine.client.updatePlayerID(String(seat2));
+        engine.client.moves.give(hand.slice(0, need));
+      }
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, 700);
+    return;
+  }
+  if (engine.paused) return;
+  const seat = Number(ctx.currentPlayer);
+  if (!actsFor(seat)) return;
+  const g = ++gen;
+  botTimer = setTimeout(() => {
+    botTimer = null;
+    if (g !== gen) return;
+    const s2 = raw();
+    if (!s2 || s2.ctx.gameover || s2.ctx.phase !== "play") {
+      push();
+      return;
+    }
+    const now = Number(s2.ctx.currentPlayer);
+    if (!actsFor(now)) {
+      push();
+      return;
+    }
+    const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
+    engine.client.updatePlayerID(String(now));
+    if (mv) engine.client.moves.play(mv.num, mv.count);
+    else engine.client.moves.pass();
+    engine.client.updatePlayerID(engine.myID);
+    push();
+  }, engine.botMs);
+}
+function setAuto(on) {
+  engine.auto = Boolean(on);
+  gen++;
+  if (botTimer) {
+    clearTimeout(botTimer);
+    botTimer = null;
+  }
+  scheduleBot();
 }
 function play(num, count) {
   if (!engine.client) return false;
@@ -412,6 +618,9 @@ function mount2(root) {
       mix: "\uAC19\uC740 \uC22B\uC790\uB9CC \uD568\uAED8 \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4",
       cnt: (n) => n + "\uC7A5\uC744 \uB9DE\uCDB0 \uC8FC\uC138\uC694",
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
+      autoOff: "\uC790\uB3D9",
+      autoOn: "\uC790\uB3D9 \uB044\uAE30",
+      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4 \xB7 \uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n) => n + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
@@ -438,6 +647,9 @@ function mount2(root) {
       mix: "Cards must share one number",
       cnt: (n) => "Play exactly " + n,
       lower: "Play a lower number",
+      autoOff: "Auto",
+      autoOn: "Auto off",
+      autoOnMsg: "Auto play on \xB7 tap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n) => n + "s",
       cleared: "Pile cleared \xB7 you lead again",
@@ -455,7 +667,7 @@ function mount2(root) {
   let hand = [];
   let finish = [];
   let offView = null;
-  let lastRound = -1, overSent = false;
+  let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   function apply(v) {
     if (!v) return;
     SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [] }));
@@ -471,10 +683,36 @@ function mount2(root) {
       animated = 0;
       spread = false;
       window.__roundNo = v.roundNo;
-      if (!first && v.lastRound && window.__onRoundEnd) {
+      if (!first && !v.over && v.lastRound && window.__onRoundEnd) {
         showLastRound(v);
         return;
       }
+    }
+    if (v.table.length === 0 && !v.over && (v.lastTable.length || trick.length)) {
+      const gsig = v.lastTable.map((t) => t.by + ":" + t.num + "x" + t.count).join("|");
+      if (gsig !== ghostSig) {
+        ghostSig = gsig;
+        ghost = (v.lastTable.length ? v.lastTable : trick).map((t) => ({
+          by: t.by,
+          num: t.num,
+          count: t.count,
+          cards: t.cards.slice()
+        }));
+        animated = 0;
+        if (holdPile) clearTimeout(holdPile);
+        holdPile = setTimeout(() => {
+          holdPile = null;
+          ghost = [];
+          draw();
+        }, 1400);
+      }
+    } else if (v.table.length) {
+      if (holdPile) {
+        clearTimeout(holdPile);
+        holdPile = null;
+      }
+      ghost = [];
+      ghostSig = "";
     }
     if (v.table.length < trick.length) {
       animated = 0;
@@ -518,8 +756,22 @@ function mount2(root) {
       window.__onRoundEnd && window.__onRoundEnd(v);
     }, 1600);
   }
+  function handTouched() {
+    if (engine.auto) setAuto2(false);
+  }
   function boot() {
     if (offView) offView();
+    if (el("auto")) {
+      el("auto").textContent = T[lang].autoOff;
+      el("auto").classList.remove("on");
+    }
+    setAuto(false);
+    if (holdPile) {
+      clearTimeout(holdPile);
+      holdPile = null;
+    }
+    ghost = [];
+    ghostSig = "";
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -673,28 +925,31 @@ function mount2(root) {
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
+  const outerTrick = () => trick;
   function renderPile() {
     const p = el("pile");
     p.innerHTML = "";
-    if (spread && trick.length) {
+    const shown = outerTrick().length ? outerTrick() : ghost;
+    const trick2 = shown;
+    if (spread && trick2.length) {
       const t = T[lang];
-      const maxC = Math.min(6, Math.max(...trick.map((x) => x.count)));
+      const maxC = Math.min(6, Math.max(...trick2.map((x) => x.count)));
       const cw = Math.max(18, Math.min(32, Math.floor((196 - (maxC - 1) * 3) / maxC)));
-      p.innerHTML = '<div class="spread">' + trick.slice().reverse().map((x, idx) => '<div class="srow' + (idx === 0 ? " srow--new" : "") + '"><span class="srow__w">' + (SEATS[x.by] && SEATS[x.by].n || "") + '</span><span class="srow__c">' + (x.cards || Array.from({ length: x.count }, () => x.num)).slice(0, 6).map((cc) => cardHTML(cc, cw, isJ(cc) ? x.num : null)).join("") + (x.count > 6 ? '<span class="srow__p">+' + (x.count - 6) + "</span>" : "") + "</span></div>").join("") + '<div class="spread__t">' + t.close + "</div></div>";
+      p.innerHTML = '<div class="spread">' + trick2.slice().reverse().map((x, idx) => '<div class="srow' + (idx === 0 ? " srow--new" : "") + '"><span class="srow__w">' + (SEATS[x.by] && SEATS[x.by].n || "") + '</span><span class="srow__c">' + (x.cards || Array.from({ length: x.count }, () => x.num)).slice(0, 6).map((cc) => cardHTML(cc, cw, isJ(cc) ? x.num : null)).join("") + (x.count > 6 ? '<span class="srow__p">+' + (x.count - 6) + "</span>" : "") + "</span></div>").join("") + '<div class="spread__t">' + t.close + "</div></div>";
       return;
     }
-    if (!trick.length) {
+    if (!trick2.length) {
       p.innerHTML = '<div class="pile__hint">' + T[lang].emptyPile + "</div>";
       animated = 0;
       return;
     }
     const rect = el("ring").getBoundingClientRect();
-    trick.slice(-4).forEach((t, kk) => {
-      const k = trick.length - Math.min(trick.length, 4) + kk;
+    trick2.slice(-4).forEach((t, kk) => {
+      const k = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t.by);
       const g = document.createElement("div");
-      g.className = "play" + (k < trick.length - 1 ? " play--old" : "") + (k >= animated ? " play--new" : "");
-      const d = trick.length - 1 - k;
+      g.className = "play" + (k < trick2.length - 1 ? " play--old" : "") + (k >= animated ? " play--new" : "");
+      const d = trick2.length - 1 - k;
       g.style.setProperty("--r", d === 0 ? "0deg" : k * 37 % 19 - 9 - d * 3 + "deg");
       g.style.setProperty("--dy", -Math.min(d, 3) * 6 + "px");
       g.style.setProperty("--sc", (1 - Math.min(d, 3) * 0.05).toFixed(3));
@@ -705,7 +960,7 @@ function mount2(root) {
       g.innerHTML = (t.cards || Array.from({ length: t.count }, () => t.num)).map((cc) => cardHTML(cc, cw, isJ(cc) ? t.num : null)).join("");
       p.appendChild(g);
     });
-    animated = trick.length;
+    animated = trick2.length;
   }
   function renderHand() {
     const h = el("hand");
@@ -720,6 +975,7 @@ function mount2(root) {
       s.style.zIndex = i;
       s.innerHTML = cardHTML(c, w);
       s.onclick = () => {
+        handTouched();
         if (turn !== 0 || busy) return;
         const k = sel.indexOf(i);
         if (k >= 0) sel.splice(k, 1);
@@ -767,14 +1023,8 @@ function mount2(root) {
   }
   let timerId = null, tickId = null, tLeft = 0;
   let myGen = 0, botGen = 0;
-  function laterBot(ms) {
-    const g = myGen;
-    setTimeout(() => {
-      botGen = g;
-      if (g === myGen) botTurn();
-    }, ms);
-  }
   const TURN_SEC = 15;
+  const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
   function resetTimer() {
@@ -784,7 +1034,7 @@ function mount2(root) {
     if (tickId) clearInterval(tickId);
     tLeft = 0;
     if (turn === 0 && !busy) {
-      tLeft = TURN_SEC;
+      tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
@@ -796,7 +1046,7 @@ function mount2(root) {
       }, 1e3);
       timerId = setTimeout(() => {
         if (turn === 0 && !busy) doPass(true);
-      }, TURN_SEC * 1e3);
+      }, turnSec() * 1e3);
     }
   }
   function quitGame() {
@@ -844,6 +1094,7 @@ function mount2(root) {
       busy = true;
       flash(T[lang].autoPass, true);
       play(w.num, w.count);
+      if (auto) toAuto();
       return;
     }
     sel = [];
@@ -851,6 +1102,14 @@ function mount2(root) {
     if (auto) flash(T[lang].autoPass, true);
     passTurn();
     unlockLater();
+    if (auto) toAuto();
+  }
+  function toAuto() {
+    if (engine.auto) return;
+    setTimeout(() => {
+      setAuto2(true);
+      flash(T[lang].autoOnMsg, true);
+    }, 400);
   }
   function weakest() {
     let best = null;
@@ -859,6 +1118,18 @@ function mount2(root) {
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
   el("pass").onclick = () => doPass(false);
+  function setAuto2(on) {
+    setAuto(on);
+    const b = el("auto");
+    b.textContent = on ? T[lang].autoOn : T[lang].autoOff;
+    b.classList.toggle("on", on);
+    if (on) {
+      sel = [];
+      renderHand();
+      renderBottom();
+    }
+  }
+  el("auto").onclick = () => setAuto2(!engine.auto);
   function flash(msg, msLong) {
     const f = el("flash");
     f.textContent = msg;
@@ -966,7 +1237,7 @@ var MARKUP = {
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
   <div class="acts">
-    <button class="bt-pass" id="pass">\uD328\uC2A4</button>
+    <button class="bt-pass" id="auto">\uC790\uB3D9</button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
     <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
   </div>
 </main>

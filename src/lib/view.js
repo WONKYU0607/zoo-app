@@ -45,6 +45,12 @@ export function screenView(G, ctx, myID, names){
     myTurn: ctx.phase === "play" && Number(ctx.currentPlayer) === me,
     table,
     pile: G.pile ? { by: toScreen(G.pile.by, me, n), num: G.pile.num, count: G.pile.count } : null,
+    /* 바닥을 치우기 직전 모습. 1번으로 엎거나 마지막 카드로 완주하면
+       올리기와 치우기가 한 수 안에서 끝나므로, 이걸 넘겨야 화면이 보여줄 수 있다 */
+    lastTable: (G.shown || []).map(t => ({
+      by: toScreen(t.by, me, n), num: t.num, count: t.count,
+      cards: new Array(t.count).fill(t.num),
+    })),
     finish: (G.finished || []).map(s => toScreen(s, me, n)),
     score: G.counts.map((_, seat) => G.score[toSeat(seat, me, n)]),
     roundNo: G.roundNo,

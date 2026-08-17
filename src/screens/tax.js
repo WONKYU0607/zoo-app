@@ -362,6 +362,7 @@ export function mount(root){
       ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
       : "";
     const b = el("next");
+    if (tickBase) tickBase = "";      /* 글자가 새로 정해지면 초읽기 바탕도 새로 잡는다 */
     /* 등수 발표는 볼 뿐이라 누를 것이 없다 */
     const bar = b.parentElement;
     if (bar) bar.style.visibility = step === 0 ? "hidden" : "";
@@ -408,9 +409,33 @@ export function mount(root){
   
   /* 누를 것이 없는 단계는 저절로 넘어간다 */
   var autoId = null;   /* 선언 전에 부르는 곳이 있어 var 로 둔다 */
+  var tickId = null, tickLeft = 0, tickBase = "";
+  /* 버튼에 남은 초를 붙여 준다. 먼저 누르면 바로 넘어간다 */
+  function stopTick(){
+    if (tickId){ clearInterval(tickId); tickId = null; }
+    const b = el("next");
+    if (b && tickBase) b.textContent = tickBase;
+    tickBase = "";
+  }
+  function startTick(ms){
+    stopTick();
+    if (step !== 2 && step !== 3) return;      /* 혁명·세금에서만 센다 */
+    const b = el("next");
+    if (!b) return;
+    tickBase = (b.textContent || "").replace(/\s*\(\d+\)$/, "");
+    tickLeft = Math.round(ms / 1000);
+    const paint = () => {
+      const bb = el("next");
+      if (!bb) return;
+      bb.textContent = tickBase + (tickLeft > 0 ? " (" + tickLeft + ")" : "");
+    };
+    paint();
+    tickId = setInterval(() => { tickLeft--; if (tickLeft < 0){ stopTick(); return; } paint(); }, 1000);
+  }
   var waitOn = 0;      /* 화면이 켜지기를 기다린 횟수 */
   function autoNext(){
     if (autoId){ clearTimeout(autoId); autoId = null; }
+    stopTick();
     if (step >= 4) return;
     const sec = window.document.getElementById("tax");
     /* 화면을 세우는 쪽이 먼저 boot 를 부르고 그다음 화면을 켠다.
@@ -421,13 +446,16 @@ export function mount(root){
       return;
     }
     waitOn = 0;
+    /* 시간은 누가 하느냐와 무관하게 같다.
+       한 판 안에서 모두가 같은 화면을 같은 시간 동안 본다.
+       봇이 대신 앉아 있을 뿐, 기준은 사람이다 */
     let wait = 0;
-    if (step === 0) wait = 2200;                       /* 등수 발표 */
-    else if (step === 1) wait = 2600;                  /* 카드 나누기 */
-    else if (step === 2 && revSeat !== 0) wait = 2600; /* 남의 혁명 */
-    else if (step === 2 && revSeat === 0) wait = 10000;/* 내 혁명 — 10초 안에 안 누르면 넘어감 */
-    else if (step === 3) wait = giveCount() ? 10000 : 4200;  /* 내가 낼 때만 10초 */
+    if (step === 0) wait = 3000;        /* 등수 발표 */
+    else if (step === 1) wait = 3000;   /* 카드 나누기 */
+    else if (step === 2) wait = 10000;  /* 혁명 */
+    else if (step === 3) wait = 10000;  /* 세금 */
     if (!wait) return;
+    startTick(wait);
     autoId = setTimeout(() => {
       const sec2 = window.document.getElementById("tax");
       if (!sec2 || !sec2.classList.contains("is-on")){ autoNext(); return; }

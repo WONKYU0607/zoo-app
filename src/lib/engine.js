@@ -21,6 +21,7 @@ export const engine = {
   bots: [],            /* 봇이 앉은 자리 (엔진 자리 번호) */
   view: null,
   paused: false,       /* 결과를 보는 동안 다음 판을 멈춘다 */
+  auto: false,         /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
   botMs: 3000,         /* 봇이 생각하는 척하는 시간 */
 };
 
@@ -81,6 +82,10 @@ function botPick(hand, pile){
 const worstFirst = (a, b) => (isJoker(b) ? 99 : b) - (isJoker(a) ? 99 : a);
 
 /* 봇 차례면 잠시 뒤에 둔다. 사람 차례면 아무것도 안 한다 */
+/* 이 자리를 내가 대신 둬 주는가 — 봇이거나, 자동치기를 켠 내 자리 */
+const actsFor = seat =>
+  engine.bots.includes(seat) || (engine.auto && seat === Number(engine.myID));
+
 function scheduleBot(){
   if (botTimer) return;
   const st = raw();
@@ -91,7 +96,7 @@ function scheduleBot(){
   if (ctx.phase === "tax"){
     const o = G.taxOrder;
     const todo = [o[0], o[1]].filter(seat =>
-      engine.bots.includes(seat) && G.given[seat] === undefined);
+      actsFor(seat) && G.given[seat] === undefined);
     if (!todo.length) return;
     const g = ++gen;
     botTimer = setTimeout(() => {
@@ -116,7 +121,7 @@ function scheduleBot(){
   if (engine.paused) return;
 
   const seat = Number(ctx.currentPlayer);
-  if (!engine.bots.includes(seat)) return;
+  if (!actsFor(seat)) return;
 
   const g = ++gen;
   botTimer = setTimeout(() => {
@@ -125,7 +130,7 @@ function scheduleBot(){
     const s2 = raw();
     if (!s2 || s2.ctx.gameover || s2.ctx.phase !== "play") { push(); return; }
     const now = Number(s2.ctx.currentPlayer);
-    if (!engine.bots.includes(now)) { push(); return; }
+    if (!actsFor(now)) { push(); return; }
     const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
     engine.client.updatePlayerID(String(now));
     if (mv) engine.client.moves.play(mv.num, mv.count);
@@ -133,6 +138,17 @@ function scheduleBot(){
     engine.client.updatePlayerID(engine.myID);
     push();
   }, engine.botMs);
+}
+
+/* 자동치기를 켜면 내 자리도 봇과 같은 판단으로 둔다.
+   판단 로직이 한 벌뿐이라, 자동으로 두는 수와 봇이 두는 수가 항상 같다 */
+export function setAuto(on){
+  engine.auto = Boolean(on);
+  /* 예약돼 있던 것을 걷어내고 지금 차례 기준으로 다시 잡는다.
+     끌 때 그냥 취소만 하면 봇 차례였을 경우 아무도 안 두고 멈춘다 */
+  gen++;
+  if (botTimer){ clearTimeout(botTimer); botTimer = null; }
+  scheduleBot();
 }
 
 /* ---------- 시작 / 끝 ---------- */

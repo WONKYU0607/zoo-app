@@ -20,6 +20,8 @@ export function mount(root){
          pass:"패스", pick:"카드를 고르세요", play:n=>n+"장 내기",
          notTurn:"상대 차례입니다", mix:"같은 숫자만 함께 낼 수 있습니다",
          cnt:n=>n+"장을 맞춰 주세요", lower:"더 낮은 숫자를 내세요",
+         autoOff:"자동", autoOn:"자동 끄기",
+         autoOnMsg:"자동치기로 넘어갑니다 · 카드를 만지면 풀립니다",
          autoPass:"시간이 다 되어 자동으로 넘겼습니다", left2:n=>n+"초", cleared:"판을 비웠습니다 · 다시 선", endR:"판 종료",
          close:"다시 누르면 접힙니다" },
   
@@ -32,6 +34,8 @@ export function mount(root){
          pass:"Pass", pick:"Select cards", play:n=>"Play "+n,
          notTurn:"Opponent's turn", mix:"Cards must share one number",
          cnt:n=>"Play exactly "+n, lower:"Play a lower number",
+         autoOff:"Auto", autoOn:"Auto off",
+         autoOnMsg:"Auto play on \u00B7 tap a card to take over",
          autoPass:"Time up \u2014 passed for you", left2:n=>n+"s", cleared:"Pile cleared \u00B7 you lead again", endR:"End round",
          close:"Tap again to close" }
   };
@@ -51,7 +55,7 @@ export function mount(root){
      규칙 판단은 여기서 하지 않는다. 엔진이 정한 결과를 그대로 그린다.
      자리 번호를 돌리는 일은 view.js 안에서 이미 끝나 있다. */
   let offView = null;
-  let lastRound = -1, overSent = false, holdPile = null, ghost = [];
+  let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
 
   function apply(v){
     if (!v) return;
@@ -77,13 +81,21 @@ export function mount(root){
     /* 바닥이 비워지면 잔상만 1.2초 남긴다 — 마지막 카드로 판을 끝낸 사람의 카드가
        눈에 띄지도 않고 사라지는 것을 막는다.
        잔상은 그리기 전용이다. 낼 수 있는지·패스가 되는지 판단에는 쓰지 않는다 */
-    if (v.table.length === 0 && trick.length > 0 && !v.over){
-      ghost = trick.slice();
-      if (holdPile) clearTimeout(holdPile);
-      holdPile = setTimeout(() => { holdPile = null; ghost = []; draw(); }, 1200);
+    if (v.table.length === 0 && !v.over && (v.lastTable.length || trick.length)){
+      /* 엔진이 준 "치우기 직전 모습"을 먼저 쓴다. 그게 없으면 화면에 있던 것을 쓴다 */
+      const gsig = v.lastTable.map(t => t.by + ":" + t.num + "x" + t.count).join("|");
+      if (gsig !== ghostSig){
+        ghostSig = gsig;
+        ghost = (v.lastTable.length ? v.lastTable : trick).map(t => ({
+          by: t.by, num: t.num, count: t.count, cards: t.cards.slice(),
+        }));
+        animated = 0;
+        if (holdPile) clearTimeout(holdPile);
+        holdPile = setTimeout(() => { holdPile = null; ghost = []; draw(); }, 1400);
+      }
     } else if (v.table.length){
       if (holdPile){ clearTimeout(holdPile); holdPile = null; }
-      ghost = [];
+      ghost = []; ghostSig = "";
     }
     if (v.table.length < trick.length){    /* 바닥이 새로 시작됐다 */
       animated = 0; spread = false;
@@ -125,10 +137,20 @@ export function mount(root){
     setTimeout(() => { window.__onRoundEnd && window.__onRoundEnd(v); }, 1600);
   }
 
+  /* 카드를 직접 고르면 자동치기를 끈다 */
+  function handTouched(){
+    if (eng.engine.auto) setAuto(false);
+  }
+
   function boot(){
     if (offView) offView();
+    if (el("auto")){
+      el("auto").textContent = T[lang].autoOff;
+      el("auto").classList.remove("on");
+    }
+    eng.setAuto(false);
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
-    ghost = [];
+    ghost = []; ghostSig = "";
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     offView = eng.onView(apply);
@@ -351,7 +373,7 @@ export function mount(root){
       s.style.left = ((h.clientWidth - total) / 2 + i * step) + "px";
       s.style.zIndex = i;
       s.innerHTML = cardHTML(c, w);
-      s.onclick = () => { if (turn !== 0 || busy) return;
+      s.onclick = () => { handTouched(); if (turn !== 0 || busy) return;
         const k = sel.indexOf(i); if (k >= 0) sel.splice(k,1); else sel.push(i); draw(); };
       h.appendChild(s);
     });
@@ -402,11 +424,9 @@ export function mount(root){
   
   let timerId = null, tickId = null, tLeft = 0;
   let myGen = 0, botGen = 0;               /* 판이 바뀌면 세대를 올려 이전 예약을 무효화 */
-  function laterBot(ms){
-    const g = myGen;
-    setTimeout(() => { botGen = g; if (g === myGen) botTurn(); }, ms);
-  }
-  const TURN_SEC = 15;
+const TURN_SEC = 15;
+  /* 검사에서 짧게 돌려볼 수 있게 열어 둔다. 평소에는 15초 */
+  const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   /* 온라인: 남의 차례가 시간을 넘기면 다음 사람이 대신 패스를 적는다.
      내가 다음 차례면 바로, 아니면 순서만큼 늦게 나선다. 앞사람이 적으면 취소된다. */
   function watchDeadline(){ /* 엔진이 차례를 관리한다. 제한 시간은 뒤에 서버 쪽에 붙인다 */ }
@@ -418,14 +438,14 @@ export function mount(root){
     if (tickId) clearInterval(tickId);
     tLeft = 0;
     if (turn === 0 && !busy){
-      tLeft = TURN_SEC;
+      tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
         if (tLeft <= 0){ clearInterval(tickId); tickId = null; }
         renderBottom();
       }, 1000);
-      timerId = setTimeout(() => { if (turn === 0 && !busy) doPass(true); }, TURN_SEC * 1000);
+      timerId = setTimeout(() => { if (turn === 0 && !busy) doPass(true); }, turnSec() * 1000);
     }
   }
   
@@ -478,12 +498,25 @@ export function mount(root){
       sel = []; busy = true;
       flash(T[lang].autoPass, true);
       eng.play(w.num, w.count);
+      if (auto) toAuto();
       return;
     }
     sel = []; busy = true;
     if (auto) flash(T[lang].autoPass, true);
     eng.passTurn();
     unlockLater();
+    if (auto) toAuto();
+  }
+
+  /* 시간이 다 되면 이번 턴만 넘기고, 다음 턴부터는 자동치기로 맡긴다.
+     자리를 비운 사람 때문에 판 전체가 계속 멈추는 것을 막는다.
+     돌아와서 카드를 만지면 저절로 풀린다 */
+  function toAuto(){
+    if (eng.engine.auto) return;
+    setTimeout(() => {
+      setAuto(true);
+      flash(T[lang].autoOnMsg, true);
+    }, 400);
   }
 
   /* 선일 때 자동으로 낼 것: 가장 약한(숫자가 큰) 카드 한 장. 카멜레온만 남았으면 단독 13 */
@@ -494,6 +527,17 @@ export function mount(root){
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
   el("pass").onclick = () => doPass(false);
+
+  /* 자동치기 — 잠깐 자리를 비울 때 봇과 같은 판단으로 대신 둔다.
+     카드를 직접 고르면 저절로 꺼진다 */
+  function setAuto(on){
+    eng.setAuto(on);
+    const b = el("auto");
+    b.textContent = on ? T[lang].autoOn : T[lang].autoOff;
+    b.classList.toggle("on", on);
+    if (on){ sel = []; renderHand(); renderBottom(); }
+  }
+  el("auto").onclick = () => setAuto(!eng.engine.auto);
   
   function flash(msg, msLong){
     const f = el("flash"); f.textContent = msg; f.style.opacity = 1;

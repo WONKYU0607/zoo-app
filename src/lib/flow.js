@@ -35,19 +35,51 @@ function addOneBot(){
   if (!addBot(myRoom)) return false;
   W().__opts.seated = seatCount(myRoom);
   emitRoom();
+  if (myRoom && seatCount(myRoom) >= myRoom.cap) startRoomCount(15);
   return true;
+}
+
+/* 방이 꽉 차면 방장이 안 눌러도 15초 뒤에 시작한다.
+   사람이 안 누르면 아무도 게임을 못 하는 상태로 남는다 */
+let roomCountId = null;
+function stopRoomCount(){
+  if (roomCountId){ clearInterval(roomCountId); roomCountId = null; }
+  const b = D().querySelector("#room #action button");
+  if (b) b.textContent = (b.textContent || "").replace(/\s*\(\d+\)$/, "");
+}
+function startRoomCount(sec){
+  if (roomCountId) return;
+  const page = D().getElementById("room");
+  if (!page) return;
+  let left = sec;
+  const tick = () => {
+    const b = D().querySelector("#room #action button");
+    if (!myRoom || myRoom.phase !== "waiting" || !page.classList.contains("is-on")){
+      if (!myRoom || myRoom.phase !== "waiting"){ stopRoomCount(); }
+      return;                                  /* 화면을 잠깐 벗어난 것뿐이면 계속 센다 */
+    }
+    if (!b || b.disabled) return;
+    const base = (b.textContent || "").replace(/\s*\(\d+\)$/, "");
+    if (left <= 0){ stopRoomCount(); b.click(); return; }
+    b.textContent = base + " (" + left + ")";
+    left--;
+  };
+  tick();
+  roomCountId = setInterval(tick, 1000);
 }
 
 /* ---------- 판 세우기 ---------- */
 
 function startGame(){
   botFillStop();
+  stopRoomCount();
   while (seatCount(myRoom) < 4) if (!addOneBot()) break;
   const n = seatCount(myRoom);
   if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
 
   myRoom.phase = "playing";
   emitRoom();
+  eng.setAuto(false);                      /* 새 게임은 자동치기 꺼진 채로 시작 */
 
   const o = W().__opts || {};
   const rounds = Math.max(3, Number(o.rounds) || 3);
@@ -175,7 +207,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
   };
   W().__peek = async () => null;
   W().__roomCode = () => (myRoom ? myRoom.code : null);
-  W().__leaveRoom = () => { botFillStop(); eng.stop(); myRoom = null; emitRoom(); };
+  W().__leaveRoom = () => { botFillStop(); stopRoomCount(); eng.stop(); myRoom = null; emitRoom(); };
   W().__saveOpts = async () => {
     if (!myRoom) return;
     setCap(myRoom, (W().__opts || {}).cap);
@@ -232,6 +264,8 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
 
 export function teardown(){
   botFillStop();
+  stopRoomCount();
+  stopCount();
   eng.stop();
   myRoom = null;
 }

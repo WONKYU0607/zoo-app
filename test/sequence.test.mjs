@@ -95,9 +95,17 @@ async function run(gi){
   check("방이 정원까지 찼다", window.__opts.seated === want, window.__opts.seated + "/" + want + "명");
   check("방 대기실이 켜져 있다", now() === "room", now());
 
-  /* 2. 시작 */
-  await window.__startRound();
-  check("뽑기 화면으로 갔다", now() === "draw", now());
+  /* 2. 꽉 차면 누르지 않아도 저절로 시작한다 */
+  const actBtn = () => q("room", "#action button");
+  let sawRoomCount = false;
+  for (let i = 0; i < 260; i++){
+    const b = actBtn();
+    if (b && /\(\d+\)\s*$/.test(b.textContent)) sawRoomCount = true;
+    if (now() !== "room") break;
+    await wait(100);
+  }
+  check("꽉 차면 시작 단추에 초읽기가 붙는다", sawRoomCount);
+  check("누르지 않아도 저절로 시작한다", now() === "draw", now());
   check("선을 엔진이 정했다", typeof window.__leadSeat === "number", String(window.__leadSeat));
 
   /* 3. 뽑기 화면에 머무는 동안 봇이 미리 두면 안 된다 */
@@ -121,7 +129,7 @@ async function run(gi){
   /* 4. 끝까지. 화면이 바뀌면 그 화면에 맞게 누른다 */
   let guard = 0, sawResultMid = 0, sawTax = 0, sawRevStep = 0, sawTaxStep = 0;
   const steps = new Set();
-  let hidBtnFail = 0, rankFail = 0;
+  let hidBtnFail = 0, rankFail = 0, sawStepCount = 0;
   let lastSig = "", stuck = 0;
   while (guard++ < 20000){
     const screen = now();
@@ -164,6 +172,10 @@ async function run(gi){
       if (stepLabel) steps.add(stepLabel.replace(/^\d+\.\s*/, ""));
       if (mid.includes("혁명")) sawRevStep++;
       if (mid.includes("세금")) sawTaxStep++;
+      if (/^[34]\./.test(stepLabel)){
+        const b0 = q("tax", "#next");
+        if (b0 && /\(\d+\)\s*$/.test(b0.textContent)) sawStepCount++;
+      }
       if (stepLabel.startsWith("1.")){
         if (acts && acts.style.visibility !== "hidden") hidBtnFail++;
         const ranks = q("tax", "#seats").querySelectorAll(".seat__r.on").length;
@@ -203,6 +215,7 @@ async function run(gi){
         [...steps].join(" / "));
   check("등수 발표에서는 버튼이 숨겨진다", hidBtnFail === 0, hidBtnFail + "번 보임");
   check("등수 발표에서 등수가 프로필에 붙는다", rankFail === 0, rankFail + "번 빠짐");
+  check("혁명·세금 단추에 초읽기가 붙는다", sawStepCount > 0, sawStepCount + "번");
   console.log("         (등수·혁명·세금 화면 " + sawTax + "틱, 혁명 단계 " + sawRevStep +
               "틱, 세금 단계 " + sawTaxStep + "틱)");
   check("거쳐 간 화면", ["room", "draw", "table", "tax", "result"].every(s => visited.has(s)),

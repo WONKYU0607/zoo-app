@@ -808,7 +808,7 @@ var MARKUP = {
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
   <div class="acts">
-    <button class="bt-pass" id="pass">\uD328\uC2A4</button>
+    <button class="bt-pass" id="auto">\uC790\uB3D9</button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
     <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
   </div>
 </main>
@@ -1808,6 +1808,7 @@ __export(engine_exports, {
   onView: () => onView,
   passTurn: () => passTurn,
   play: () => play,
+  setAuto: () => setAuto,
   setPaused: () => setPaused,
   startLocal: () => startLocal,
   startOnline: () => startOnline,
@@ -19057,6 +19058,14 @@ function screenView(G2, ctx, myID, names) {
     myTurn: ctx.phase === "play" && Number(ctx.currentPlayer) === me,
     table,
     pile: G2.pile ? { by: toScreen(G2.pile.by, me, n2), num: G2.pile.num, count: G2.pile.count } : null,
+    /* 바닥을 치우기 직전 모습. 1번으로 엎거나 마지막 카드로 완주하면
+       올리기와 치우기가 한 수 안에서 끝나므로, 이걸 넘겨야 화면이 보여줄 수 있다 */
+    lastTable: (G2.shown || []).map((t2) => ({
+      by: toScreen(t2.by, me, n2),
+      num: t2.num,
+      count: t2.count,
+      cards: new Array(t2.count).fill(t2.num)
+    })),
     finish: (G2.finished || []).map((s2) => toScreen(s2, me, n2)),
     score: G2.counts.map((_2, seat) => G2.score[toSeat(seat, me, n2)]),
     roundNo: G2.roundNo,
@@ -19112,6 +19121,8 @@ var engine = {
   view: null,
   paused: false,
   /* 결과를 보는 동안 다음 판을 멈춘다 */
+  auto: false,
+  /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
   botMs: 3e3
   /* 봇이 생각하는 척하는 시간 */
 };
@@ -19173,6 +19184,7 @@ function botPick(hand, pile) {
   return opts2[0];
 }
 var worstFirst = (a2, b2) => (isJoker(b2) ? 99 : b2) - (isJoker(a2) ? 99 : a2);
+var actsFor = (seat) => engine.bots.includes(seat) || engine.auto && seat === Number(engine.myID);
 function scheduleBot() {
   if (botTimer) return;
   const st = raw();
@@ -19180,7 +19192,7 @@ function scheduleBot() {
   const G2 = st.G, ctx = st.ctx;
   if (ctx.phase === "tax") {
     const o2 = G2.taxOrder;
-    const todo = [o2[0], o2[1]].filter((seat2) => engine.bots.includes(seat2) && G2.given[seat2] === void 0);
+    const todo = [o2[0], o2[1]].filter((seat2) => actsFor(seat2) && G2.given[seat2] === void 0);
     if (!todo.length) return;
     const g3 = ++gen;
     botTimer = setTimeout(() => {
@@ -19205,7 +19217,7 @@ function scheduleBot() {
   }
   if (engine.paused) return;
   const seat = Number(ctx.currentPlayer);
-  if (!engine.bots.includes(seat)) return;
+  if (!actsFor(seat)) return;
   const g2 = ++gen;
   botTimer = setTimeout(() => {
     botTimer = null;
@@ -19216,7 +19228,7 @@ function scheduleBot() {
       return;
     }
     const now2 = Number(s2.ctx.currentPlayer);
-    if (!engine.bots.includes(now2)) {
+    if (!actsFor(now2)) {
       push();
       return;
     }
@@ -19227,6 +19239,15 @@ function scheduleBot() {
     engine.client.updatePlayerID(engine.myID);
     push();
   }, engine.botMs);
+}
+function setAuto(on3) {
+  engine.auto = Boolean(on3);
+  gen++;
+  if (botTimer) {
+    clearTimeout(botTimer);
+    botTimer = null;
+  }
+  scheduleBot();
 }
 function attach(client) {
   engine.client = client;
@@ -19338,6 +19359,9 @@ function mount3(root) {
       mix: "\uAC19\uC740 \uC22B\uC790\uB9CC \uD568\uAED8 \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4",
       cnt: (n2) => n2 + "\uC7A5\uC744 \uB9DE\uCDB0 \uC8FC\uC138\uC694",
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
+      autoOff: "\uC790\uB3D9",
+      autoOn: "\uC790\uB3D9 \uB044\uAE30",
+      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4 \xB7 \uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n2) => n2 + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
@@ -19364,6 +19388,9 @@ function mount3(root) {
       mix: "Cards must share one number",
       cnt: (n2) => "Play exactly " + n2,
       lower: "Play a lower number",
+      autoOff: "Auto",
+      autoOn: "Auto off",
+      autoOnMsg: "Auto play on \xB7 tap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n2) => n2 + "s",
       cleared: "Pile cleared \xB7 you lead again",
@@ -19381,7 +19408,7 @@ function mount3(root) {
   let hand = [];
   let finish = [];
   let offView = null;
-  let lastRound = -1, overSent = false;
+  let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   function apply(v2) {
     if (!v2) return;
     SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [] }));
@@ -19397,10 +19424,36 @@ function mount3(root) {
       animated = 0;
       spread = false;
       window.__roundNo = v2.roundNo;
-      if (!first && v2.lastRound && window.__onRoundEnd) {
+      if (!first && !v2.over && v2.lastRound && window.__onRoundEnd) {
         showLastRound(v2);
         return;
       }
+    }
+    if (v2.table.length === 0 && !v2.over && (v2.lastTable.length || trick.length)) {
+      const gsig = v2.lastTable.map((t2) => t2.by + ":" + t2.num + "x" + t2.count).join("|");
+      if (gsig !== ghostSig) {
+        ghostSig = gsig;
+        ghost = (v2.lastTable.length ? v2.lastTable : trick).map((t2) => ({
+          by: t2.by,
+          num: t2.num,
+          count: t2.count,
+          cards: t2.cards.slice()
+        }));
+        animated = 0;
+        if (holdPile) clearTimeout(holdPile);
+        holdPile = setTimeout(() => {
+          holdPile = null;
+          ghost = [];
+          draw();
+        }, 1400);
+      }
+    } else if (v2.table.length) {
+      if (holdPile) {
+        clearTimeout(holdPile);
+        holdPile = null;
+      }
+      ghost = [];
+      ghostSig = "";
     }
     if (v2.table.length < trick.length) {
       animated = 0;
@@ -19444,8 +19497,22 @@ function mount3(root) {
       window.__onRoundEnd && window.__onRoundEnd(v2);
     }, 1600);
   }
+  function handTouched() {
+    if (engine.auto) setAuto2(false);
+  }
   function boot() {
     if (offView) offView();
+    if (el("auto")) {
+      el("auto").textContent = T[lang].autoOff;
+      el("auto").classList.remove("on");
+    }
+    setAuto(false);
+    if (holdPile) {
+      clearTimeout(holdPile);
+      holdPile = null;
+    }
+    ghost = [];
+    ghostSig = "";
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -19599,28 +19666,31 @@ function mount3(root) {
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
+  const outerTrick = () => trick;
   function renderPile() {
     const p2 = el("pile");
     p2.innerHTML = "";
-    if (spread && trick.length) {
+    const shown = outerTrick().length ? outerTrick() : ghost;
+    const trick2 = shown;
+    if (spread && trick2.length) {
       const t2 = T[lang];
-      const maxC = Math.min(6, Math.max(...trick.map((x2) => x2.count)));
+      const maxC = Math.min(6, Math.max(...trick2.map((x2) => x2.count)));
       const cw = Math.max(18, Math.min(32, Math.floor((196 - (maxC - 1) * 3) / maxC)));
-      p2.innerHTML = '<div class="spread">' + trick.slice().reverse().map((x2, idx) => '<div class="srow' + (idx === 0 ? " srow--new" : "") + '"><span class="srow__w">' + (SEATS[x2.by] && SEATS[x2.by].n || "") + '</span><span class="srow__c">' + (x2.cards || Array.from({ length: x2.count }, () => x2.num)).slice(0, 6).map((cc) => cardHTML(cc, cw, isJ(cc) ? x2.num : null)).join("") + (x2.count > 6 ? '<span class="srow__p">+' + (x2.count - 6) + "</span>" : "") + "</span></div>").join("") + '<div class="spread__t">' + t2.close + "</div></div>";
+      p2.innerHTML = '<div class="spread">' + trick2.slice().reverse().map((x2, idx) => '<div class="srow' + (idx === 0 ? " srow--new" : "") + '"><span class="srow__w">' + (SEATS[x2.by] && SEATS[x2.by].n || "") + '</span><span class="srow__c">' + (x2.cards || Array.from({ length: x2.count }, () => x2.num)).slice(0, 6).map((cc) => cardHTML(cc, cw, isJ(cc) ? x2.num : null)).join("") + (x2.count > 6 ? '<span class="srow__p">+' + (x2.count - 6) + "</span>" : "") + "</span></div>").join("") + '<div class="spread__t">' + t2.close + "</div></div>";
       return;
     }
-    if (!trick.length) {
+    if (!trick2.length) {
       p2.innerHTML = '<div class="pile__hint">' + T[lang].emptyPile + "</div>";
       animated = 0;
       return;
     }
     const rect = el("ring").getBoundingClientRect();
-    trick.slice(-4).forEach((t2, kk) => {
-      const k2 = trick.length - Math.min(trick.length, 4) + kk;
+    trick2.slice(-4).forEach((t2, kk) => {
+      const k2 = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t2.by);
       const g2 = document2.createElement("div");
-      g2.className = "play" + (k2 < trick.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
-      const d2 = trick.length - 1 - k2;
+      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
+      const d2 = trick2.length - 1 - k2;
       g2.style.setProperty("--r", d2 === 0 ? "0deg" : k2 * 37 % 19 - 9 - d2 * 3 + "deg");
       g2.style.setProperty("--dy", -Math.min(d2, 3) * 6 + "px");
       g2.style.setProperty("--sc", (1 - Math.min(d2, 3) * 0.05).toFixed(3));
@@ -19631,7 +19701,7 @@ function mount3(root) {
       g2.innerHTML = (t2.cards || Array.from({ length: t2.count }, () => t2.num)).map((cc) => cardHTML(cc, cw, isJ(cc) ? t2.num : null)).join("");
       p2.appendChild(g2);
     });
-    animated = trick.length;
+    animated = trick2.length;
   }
   function renderHand() {
     const h2 = el("hand");
@@ -19646,6 +19716,7 @@ function mount3(root) {
       s2.style.zIndex = i2;
       s2.innerHTML = cardHTML(c2, w2);
       s2.onclick = () => {
+        handTouched();
         if (turn !== 0 || busy) return;
         const k2 = sel.indexOf(i2);
         if (k2 >= 0) sel.splice(k2, 1);
@@ -19693,14 +19764,8 @@ function mount3(root) {
   }
   let timerId = null, tickId = null, tLeft = 0;
   let myGen = 0, botGen = 0;
-  function laterBot(ms) {
-    const g2 = myGen;
-    setTimeout(() => {
-      botGen = g2;
-      if (g2 === myGen) botTurn();
-    }, ms);
-  }
   const TURN_SEC = 15;
+  const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
   function resetTimer() {
@@ -19710,7 +19775,7 @@ function mount3(root) {
     if (tickId) clearInterval(tickId);
     tLeft = 0;
     if (turn === 0 && !busy) {
-      tLeft = TURN_SEC;
+      tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
@@ -19722,7 +19787,7 @@ function mount3(root) {
       }, 1e3);
       timerId = setTimeout(() => {
         if (turn === 0 && !busy) doPass(true);
-      }, TURN_SEC * 1e3);
+      }, turnSec() * 1e3);
     }
   }
   function quitGame() {
@@ -19770,6 +19835,7 @@ function mount3(root) {
       busy = true;
       flash(T[lang].autoPass, true);
       play(w2.num, w2.count);
+      if (auto) toAuto();
       return;
     }
     sel = [];
@@ -19777,6 +19843,14 @@ function mount3(root) {
     if (auto) flash(T[lang].autoPass, true);
     passTurn();
     unlockLater();
+    if (auto) toAuto();
+  }
+  function toAuto() {
+    if (engine.auto) return;
+    setTimeout(() => {
+      setAuto2(true);
+      flash(T[lang].autoOnMsg, true);
+    }, 400);
   }
   function weakest() {
     let best = null;
@@ -19785,6 +19859,18 @@ function mount3(root) {
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
   el("pass").onclick = () => doPass(false);
+  function setAuto2(on3) {
+    setAuto(on3);
+    const b2 = el("auto");
+    b2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
+    b2.classList.toggle("on", on3);
+    if (on3) {
+      sel = [];
+      renderHand();
+      renderBottom();
+    }
+  }
+  el("auto").onclick = () => setAuto2(!engine.auto);
   function flash(msg, msLong) {
     const f2 = el("flash");
     f2.textContent = msg;
@@ -19993,6 +20079,11 @@ function mount4(root) {
     el("fx").innerHTML = "";
   }
   function dealAll() {
+    if (online) {
+      const rv = window.__revolution;
+      revSeat = rv ? rv.seat : null;
+      return;
+    }
     const d2 = [];
     for (let n2 = 1; n2 <= 12; n2++) for (let i2 = 0; i2 < n2; i2++) d2.push(n2);
     d2.push(13, 14);
@@ -20008,7 +20099,10 @@ function mount4(root) {
     revSeat = w2 < 0 ? null : w2;
   }
   function applyTax2(myGive) {
-    if (online && window.__setTaxGive) window.__setTaxGive(myGive || null);
+    if (online) {
+      if (window.__setTaxGive) window.__setTaxGive(myGive || null);
+      return;
+    }
     const hh = holds(), o2 = order();
     [[o2[0], o2[N2 - 1], 2], [o2[1], o2[N2 - 2], 1]].forEach(([hi, lo, k2]) => {
       const best = hh[lo].slice().sort((a2, b2) => a2 - b2).slice(0, k2);
@@ -20069,13 +20163,13 @@ function mount4(root) {
     for (let i2 = 0; i2 < N2; i2++) {
       const p2 = seatPos(i2), r2 = rankOf(i2), n2 = N2;
       const d2 = document2.createElement("div");
-      d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (step >= 1 && r2 <= 1 ? " seat--top" : "") + (step >= 1 && r2 >= n2 - 2 ? " seat--bot" : "");
+      d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (r2 <= 1 ? " seat--top" : "") + (r2 >= n2 - 2 ? " seat--bot" : "");
       d2.style.left = p2.x.toFixed(1) + "%";
       d2.style.top = p2.y.toFixed(1) + "%";
       const big = N2 <= 6;
       d2.style.setProperty("--av", (big ? 44 : 34) + "px");
       d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      d2.innerHTML = '<span class="seat__r' + (step >= 1 ? " on" : "") + '">' + rankLabel(r2) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>";
+      d2.innerHTML = '<span class="seat__r on">' + rankLabel(r2) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>";
       box.appendChild(d2);
     }
     const hn = el("hint");
@@ -20122,7 +20216,7 @@ function mount4(root) {
     const t2 = T[lang], m = el("mid"), r2 = rankOf(0), n2 = N2, o2 = order();
     let html = "";
     if (step === 0) {
-      html = '<div class="mid__h">' + t2.rankH + '</div><div class="mid__s">' + t2.rankS + "</div>";
+      html = '<div class="mid__h">' + t2.rankH + "</div>";
     } else if (step === 1) {
       html = '<div class="mid__h">' + t2.dealH + '</div><div class="mid__s">' + t2.dealS + "</div>";
     } else if (step === 2) {
@@ -20154,6 +20248,9 @@ function mount4(root) {
     const g2 = giveCount();
     el("hint").innerHTML = step === 3 && g2 ? sel.length < g2 ? t2.giveNeed(g2 - sel.length) : "" : "";
     const b2 = el("next");
+    if (tickBase) tickBase = "";
+    const bar = b2.parentElement;
+    if (bar) bar.style.visibility = step === 0 ? "hidden" : "";
     if (step === 2 && revSeat === 0 && !declared) {
       b2.className = "bt-rev";
       b2.textContent = great ? t2.declareG : t2.declare;
@@ -20186,6 +20283,7 @@ function mount4(root) {
     reversed = false;
     revSeat = null;
     wasGreat = false;
+    waitOn = 0;
     clearFx();
     draw();
   }
@@ -20195,34 +20293,70 @@ function mount4(root) {
   };
   boot();
   autoNext();
-  function needStep(k2) {
-    if (k2 === 2) return revSeat !== null;
-    if (k2 === 3) {
-      if (taxSkipped()) return false;
-      const r2 = rankOf(0), n2 = N2;
-      return r2 === 0 || r2 === 1 || r2 === n2 - 1 || r2 === n2 - 2;
-    }
+  function needStep() {
     return true;
   }
   var autoId = null;
+  var tickId = null, tickLeft = 0, tickBase = "";
+  function stopTick() {
+    if (tickId) {
+      clearInterval(tickId);
+      tickId = null;
+    }
+    const b2 = el("next");
+    if (b2 && tickBase) b2.textContent = tickBase;
+    tickBase = "";
+  }
+  function startTick(ms) {
+    stopTick();
+    if (step !== 2 && step !== 3) return;
+    const b2 = el("next");
+    if (!b2) return;
+    tickBase = (b2.textContent || "").replace(/\s*\(\d+\)$/, "");
+    tickLeft = Math.round(ms / 1e3);
+    const paint = () => {
+      const bb = el("next");
+      if (!bb) return;
+      bb.textContent = tickBase + (tickLeft > 0 ? " (" + tickLeft + ")" : "");
+    };
+    paint();
+    tickId = setInterval(() => {
+      tickLeft--;
+      if (tickLeft < 0) {
+        stopTick();
+        return;
+      }
+      paint();
+    }, 1e3);
+  }
+  var waitOn = 0;
   function autoNext() {
     if (autoId) {
       clearTimeout(autoId);
       autoId = null;
     }
+    stopTick();
     if (step >= 4) return;
     const sec = window.document.getElementById("tax");
-    if (!sec || !sec.classList.contains("is-on")) return;
+    if (!sec || !sec.classList.contains("is-on")) {
+      if (waitOn++ > 40) return;
+      autoId = setTimeout(autoNext, 120);
+      return;
+    }
+    waitOn = 0;
     let wait2 = 0;
-    if (step === 0) wait2 = 2200;
-    else if (step === 1) wait2 = 2600;
-    else if (step === 2 && revSeat !== 0) wait2 = 2600;
-    else if (step === 2 && revSeat === 0) wait2 = 1e4;
+    if (step === 0) wait2 = 3e3;
+    else if (step === 1) wait2 = 3e3;
+    else if (step === 2) wait2 = 1e4;
     else if (step === 3) wait2 = 1e4;
     if (!wait2) return;
+    startTick(wait2);
     autoId = setTimeout(() => {
       const sec2 = window.document.getElementById("tax");
-      if (!sec2 || !sec2.classList.contains("is-on")) return;
+      if (!sec2 || !sec2.classList.contains("is-on")) {
+        autoNext();
+        return;
+      }
       if (step === 3) {
         const g2 = giveCount();
         if (g2 > 0 && sel.length < g2) {
@@ -20741,6 +20875,7 @@ var opt = null;
 var myRoom = null;
 var botTimer2 = null;
 var W2 = () => window;
+var D2 = () => window.document;
 function emitRoom() {
   W2().__room = toRoomView(myRoom);
   W2().dispatchEvent(new Event("roomchange"));
@@ -20761,15 +20896,53 @@ function addOneBot() {
   if (!addBot(myRoom)) return false;
   W2().__opts.seated = seatCount(myRoom);
   emitRoom();
+  if (myRoom && seatCount(myRoom) >= myRoom.cap) startRoomCount(15);
   return true;
+}
+var roomCountId = null;
+function stopRoomCount() {
+  if (roomCountId) {
+    clearInterval(roomCountId);
+    roomCountId = null;
+  }
+  const b2 = D2().querySelector("#room #action button");
+  if (b2) b2.textContent = (b2.textContent || "").replace(/\s*\(\d+\)$/, "");
+}
+function startRoomCount(sec) {
+  if (roomCountId) return;
+  const page = D2().getElementById("room");
+  if (!page) return;
+  let left = sec;
+  const tick = () => {
+    const b2 = D2().querySelector("#room #action button");
+    if (!myRoom || myRoom.phase !== "waiting" || !page.classList.contains("is-on")) {
+      if (!myRoom || myRoom.phase !== "waiting") {
+        stopRoomCount();
+      }
+      return;
+    }
+    if (!b2 || b2.disabled) return;
+    const base = (b2.textContent || "").replace(/\s*\(\d+\)$/, "");
+    if (left <= 0) {
+      stopRoomCount();
+      b2.click();
+      return;
+    }
+    b2.textContent = base + " (" + left + ")";
+    left--;
+  };
+  tick();
+  roomCountId = setInterval(tick, 1e3);
 }
 function startGame() {
   botFillStop();
+  stopRoomCount();
   while (seatCount(myRoom) < 4) if (!addOneBot()) break;
   const n2 = seatCount(myRoom);
   if (n2 < 4) throw new Error("4\uBA85\uC774 \uBAA8\uC5EC\uC57C \uC2DC\uC791\uD569\uB2C8\uB2E4 (\uC9C0\uAE08 " + n2 + "\uBA85)");
   myRoom.phase = "playing";
   emitRoom();
+  setAuto(false);
   const o2 = W2().__opts || {};
   const rounds = Math.max(3, Number(o2.rounds) || 3);
   startLocal({
@@ -20822,14 +20995,48 @@ function onRoundEnd(v2) {
   W2().__taxGive = null;
   W2().__revolution = v2.revolution ? { seat: v2.revolution.seat, great: v2.revolution.great } : null;
   opt.goto("result");
+  startCount(5);
 }
 function onGameOver(over) {
+  stopCount();
   setPaused(true);
   const G2 = W2().GAME = W2().GAME || {};
   G2.roundNo = W2().__opts && W2().__opts.rounds || G2.roundNo || 3;
   G2.finish = over.order.slice();
   G2.score = over.score.slice();
   opt.goto("result");
+}
+var countId = null;
+function stopCount() {
+  if (countId) {
+    clearInterval(countId);
+    countId = null;
+  }
+}
+function startCount(sec) {
+  stopCount();
+  const btn = D2().querySelector("#result #next");
+  const page = D2().getElementById("result");
+  if (!btn || !page) return;
+  const base = (btn.textContent || "\uB2E4\uC74C").replace(/\s*\(\d+\)$/, "");
+  let left = sec;
+  const tick = () => {
+    if (!page.classList.contains("is-on")) {
+      stopCount();
+      btn.textContent = base;
+      return;
+    }
+    if (left <= 0) {
+      stopCount();
+      btn.textContent = base;
+      btn.click();
+      return;
+    }
+    btn.textContent = base + " (" + left + ")";
+    left--;
+  };
+  tick();
+  countId = setInterval(tick, 1e3);
 }
 function ensureTaxGiven() {
   const v2 = engine.view;
@@ -20857,6 +21064,7 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   W2().__roomCode = () => myRoom ? myRoom.code : null;
   W2().__leaveRoom = () => {
     botFillStop();
+    stopRoomCount();
     stop();
     myRoom = null;
     emitRoom();
@@ -20887,6 +21095,7 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   };
   const prevBootTable = W2().__bootTable;
   W2().__bootTable = (fresh) => {
+    stopCount();
     ensureTaxGiven();
     setPaused(false);
     if (typeof prevBootTable === "function") prevBootTable(fresh);
@@ -20905,12 +21114,22 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
     opt.goto("room");
   };
   W2().__quitGame = () => {
+    stopCount();
+    botFillStop();
     stop();
     setPaused(false);
   };
+  const quit = D2().querySelector("#result #quit");
+  if (quit) quit.addEventListener("click", () => {
+    stopCount();
+    stop();
+    myRoom = null;
+  });
 }
 function teardown() {
   botFillStop();
+  stopRoomCount();
+  stopCount();
   stop();
   myRoom = null;
 }
