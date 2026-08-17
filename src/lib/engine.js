@@ -21,7 +21,7 @@ export const engine = {
   bots: [],            /* 봇이 앉은 자리 (엔진 자리 번호) */
   view: null,
   paused: false,       /* 결과를 보는 동안 다음 판을 멈춘다 */
-  botMs: 1400,         /* 봇이 생각하는 척하는 시간 */
+  botMs: 3000,         /* 봇이 생각하는 척하는 시간 */
 };
 
 let listeners = [];
@@ -176,7 +176,14 @@ export function startOnline({ server, matchID, playerID, credentials, numPlayers
 /* 결과 화면을 보는 동안 다음 판을 멈춰 둔다 */
 export function setPaused(on){
   engine.paused = Boolean(on);
-  if (!engine.paused) scheduleBot();
+  if (engine.paused){
+    /* 이미 예약돼 있던 수까지 걷어내야 한다.
+       안 그러면 멈추라고 한 뒤에도 한 수가 더 나간다 */
+    gen++;
+    if (botTimer){ clearTimeout(botTimer); botTimer = null; }
+    return;
+  }
+  scheduleBot();
 }
 
 export function stop(){

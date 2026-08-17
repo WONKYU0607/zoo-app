@@ -30,7 +30,7 @@ export function initNav(){
   });
   
   /* ---------- 방 설정 (로비의 방 만들기 / 대기실의 변경) ---------- */
-  window.__opts = window.__opts || {cap: 6, rounds: 5, tax: true, clear2: false};
+  window.__opts = window.__opts || {cap: 4, rounds: 3, tax: true, clear2: false};
   let optMode = "create";
   const OPT_T = {
     ko:{ create:"방 만들기", edit:"방 설정", goCreate:"방 만들기", goEdit:"확인",

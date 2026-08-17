@@ -359,6 +359,8 @@ var engine = {
   bots: [],
   /* 봇이 앉은 자리 (엔진 자리 번호) */
   view: null,
+  paused: false,
+  /* 결과를 보는 동안 다음 판을 멈춘다 */
   botMs: 1400
   /* 봇이 생각하는 척하는 시간 */
 };
@@ -463,11 +465,16 @@ function mount2(root) {
     turn = v.turn;
     busy = !v.myTurn;
     if (v.roundNo !== lastRound) {
+      const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = [];
       animated = 0;
       spread = false;
       window.__roundNo = v.roundNo;
+      if (!first && v.lastRound && window.__onRoundEnd) {
+        showLastRound(v);
+        return;
+      }
     }
     if (v.table.length < trick.length) {
       animated = 0;
@@ -489,6 +496,27 @@ function mount2(root) {
     if (v.phase === "tax" && window.__onTax) window.__onTax(v);
     draw();
     resetTimer();
+  }
+  function showLastRound(v) {
+    const lr = v.lastRound;
+    SEATS = v.seats.map((x, i) => ({
+      n: x.name,
+      c: i === lr.order[lr.order.length - 1] ? x.c : 0,
+      s: "",
+      hold: []
+    }));
+    hand = [];
+    finish = lr.order.slice();
+    turn = -1;
+    busy = true;
+    trick = lr.table.map((t) => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
+    animated = 0;
+    spread = false;
+    draw();
+    if (timerId) clearTimeout(timerId);
+    setTimeout(() => {
+      window.__onRoundEnd && window.__onRoundEnd(v);
+    }, 1600);
   }
   function boot() {
     if (offView) offView();

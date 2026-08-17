@@ -778,6 +778,325 @@ var require_setImmediate = __commonJS({
   }
 });
 
+// src/screens/_markup.js
+var MARKUP = {
+  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
+  "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
+  "table": `<main class="screen">
+  <div class="bar">
+    <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
+    <div class="bar__r" id="round"></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div class="lang" id="lang">
+        <button data-l="ko" aria-pressed="true">\uD55C</button>
+        <button data-l="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ring" id="ring">
+    <div class="stage"><div class="plane">
+      <div class="felt"></div>
+      <div class="pile" id="pile"></div>
+      <div id="seats"></div>
+    </div></div>
+  </div>
+
+  <div class="need" id="need"></div>
+  <div class="timer" id="timer"><i></i></div>
+  <div class="hand" id="hand"></div>
+  <div class="acts">
+    <button class="bt-pass" id="pass">\uD328\uC2A4</button>
+    <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
+  </div>
+</main>
+
+<div id="flash" style="position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);
+  padding:12px 22px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:16px;opacity:0;pointer-events:none;
+  transition:opacity .2s ease;z-index:50"></div>`,
+  "tax": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div style="display:flex;gap:6px">\n      <div class="lang" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="ring">\n    <div class="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="fx" id="fx"></div>\n      <div class="flash" id="flash"></div>\n      <div class="mid" id="mid"></div>\n    </div>\n  </div>\n\n  <div class="hint" id="hint"></div>\n  <div class="hand" id="hand"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="back"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>',
+  "result": '<main class="screen">\n  <div class="lang" id="lang">\n    <button data-l="ko" aria-pressed="true">\uD55C</button>\n    <button data-l="en" aria-pressed="false">EN</button>\n  </div>\n  <div class="head">\n    <div class="head__k" id="kicker"></div>\n    <div class="head__t" id="title"></div>\n    <div class="head__s" id="sub"></div>\n  </div>\n  <div class="legend" id="legend"></div>\n  <div class="list" id="list"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="quit"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>'
+};
+
+// src/state.js
+var opts = { cap: 6, rounds: 5, tax: true, clear2: false, seated: 0 };
+var game = {
+  N: 6,
+  roundNo: 1,
+  names: [],
+  namesEn: [],
+  hold: null,
+  /* 자리별 손패 */
+  order: null,
+  /* 이번 판 순서 (앞이 선) */
+  finish: null,
+  /* 지난 판 완주 순서 */
+  score: []
+};
+if (typeof window !== "undefined") {
+  window.__opts = opts;
+  window.GAME = game;
+}
+
+// src/nav.js
+var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
+var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
+var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
+function initNav() {
+  window.__lang = function() {
+    try {
+      const v2 = localStorage.getItem("zk_lang");
+      if (v2 === "ko" || v2 === "en") return v2;
+    } catch (e) {
+    }
+    const n2 = (navigator.language || navigator.userLanguage || "ko").toLowerCase();
+    return n2.indexOf("ko") === 0 ? "ko" : "en";
+  }();
+  window.setLang = (l2) => {
+    window.__lang = l2;
+    try {
+      localStorage.setItem("zk_lang", l2);
+    } catch (e) {
+    }
+    document.documentElement.lang = l2;
+    document.querySelectorAll("[data-l]").forEach((b2) => b2.setAttribute("aria-pressed", String(b2.dataset.l === l2)));
+    window.dispatchEvent(new Event("langchange"));
+  };
+  document.addEventListener("click", (e) => {
+    const b2 = e.target.closest("[data-l]");
+    if (b2) window.setLang(b2.dataset.l);
+    if (e.target.closest("[data-cfgopen]")) openCfg();
+    if (e.target.closest("[data-cfgclose]")) document.getElementById("cfg").classList.remove("on");
+  });
+  window.__opts = window.__opts || { cap: 6, rounds: 5, tax: true, clear2: false };
+  let optMode = "create";
+  const OPT_T = {
+    ko: {
+      create: "\uBC29 \uB9CC\uB4E4\uAE30",
+      edit: "\uBC29 \uC124\uC815",
+      goCreate: "\uBC29 \uB9CC\uB4E4\uAE30",
+      goEdit: "\uD655\uC778",
+      cap: ["\uBC29 \uC778\uC6D0", "4\uBA85 \u2013 8\uBA85"],
+      rnd: ["\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815", "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791"],
+      tax: ["\uC138\uAE08\uACFC \uD601\uBA85", "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4."],
+      cut: ["2\uBC88 \uCEF7", "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4."],
+      unit: "\uD310"
+    },
+    en: {
+      create: "Create a room",
+      edit: "Room settings",
+      goCreate: "Create room",
+      goEdit: "Done",
+      cap: ["Table size", "4 \u2013 8 players"],
+      rnd: ["Number of rounds", "Three at least"],
+      tax: ["Tax and revolution", "Cards change hands by standing, and two jokers overturn it."],
+      cut: ["Two-cut", "Playing a 2 clears the pile and you lead again."],
+      unit: ""
+    }
+  };
+  function optRow(pair, right) {
+    return '<div class="mk__row"><div><div class="mk__t">' + pair[0] + '</div><div class="mk__d">' + pair[1] + "</div></div>" + right + "</div>";
+  }
+  function optStep(k2, v2, lo, hi, unit) {
+    return '<div class="mk__st"><button data-opt="' + k2 + '-"' + (v2 <= lo ? " disabled" : "") + ">\u2212</button><span>" + v2 + (unit || "") + '</span><button data-opt="' + k2 + '+"' + (v2 >= hi ? " disabled" : "") + ">+</button></div>";
+  }
+  function optSw(k2, on3) {
+    return '<button class="mk__sw" data-opt="' + k2 + '" role="switch" aria-checked="' + on3 + '"></button>';
+  }
+  function optRender() {
+    const t2 = OPT_T[window.__lang] || OPT_T.ko, o2 = window.__opts;
+    const mk = optMode === "create";
+    document.getElementById("optT").textContent = mk ? t2.create : t2.edit;
+    document.getElementById("optGo").textContent = mk ? t2.goCreate : t2.goEdit;
+    document.getElementById("optBody").innerHTML = optRow(t2.cap, optStep("cap", o2.cap, 4, 8)) + optRow(t2.rnd, optStep("rnd", o2.rounds, 3, 99, t2.unit)) + optRow(t2.tax, optSw("tax", o2.tax)) + optRow(t2.cut, optSw("cut", o2.clear2));
+  }
+  function openOpts(mode) {
+    optMode = mode;
+    optRender();
+    document.getElementById("opts").classList.add("on");
+  }
+  document.addEventListener("click", (e) => {
+    const k2 = e.target.closest("[data-opt]");
+    if (k2) {
+      const o2 = window.__opts, v2 = k2.dataset.opt;
+      if (v2 === "cap-") o2.cap = Math.max(4, o2.cap - 1);
+      if (v2 === "cap+") o2.cap = Math.min(8, o2.cap + 1);
+      if (v2 === "rnd-") o2.rounds = Math.max(3, o2.rounds - 1);
+      if (v2 === "rnd+") o2.rounds = o2.rounds + 1;
+      if (v2 === "tax") o2.tax = !o2.tax;
+      if (v2 === "cut") o2.clear2 = !o2.clear2;
+      optRender();
+    }
+    if (e.target.closest("[data-optclose]")) document.getElementById("opts").classList.remove("on");
+    if (e.target.closest("[data-optopen]")) openOpts("edit");
+  });
+  document.getElementById("optGo").addEventListener("click", () => {
+    document.getElementById("opts").classList.remove("on");
+    if (optMode === "create") {
+      if (window.__createRoom) {
+        window.__createRoom().then((code) => {
+          if (code) go("room");
+        });
+      } else setTimeout(() => go("room"), 80);
+    } else {
+      window.dispatchEvent(new Event("optschange"));
+      if (window.__saveOpts) window.__saveOpts();
+    }
+  });
+  window.addEventListener("langchange", () => {
+    if (document.getElementById("opts").classList.contains("on")) optRender();
+  });
+  const CFG_T = {
+    ko: {
+      title: "\uC124\uC815",
+      lang: "\uC5B8\uC5B4",
+      note: "\uCC98\uC74C \uB4E4\uC5B4\uC624\uBA74 \uAE30\uAE30 \uC5B8\uC5B4\uC5D0 \uB9DE\uCDB0 \uC790\uB3D9\uC73C\uB85C \uC815\uD574\uC9D1\uB2C8\uB2E4. \uC5EC\uAE30\uC11C \uBC14\uAFB8\uBA74 \uADF8 \uC120\uD0DD\uC744 \uAE30\uC5B5\uD569\uB2C8\uB2E4."
+    },
+    en: {
+      title: "Settings",
+      lang: "LANGUAGE",
+      note: "The game picks your device language on first visit. Changing it here is remembered."
+    }
+  };
+  function openCfg() {
+    const t2 = CFG_T[window.__lang] || CFG_T.ko;
+    document.getElementById("cfgT").textContent = t2.title;
+    document.getElementById("cfgLangL").textContent = t2.lang;
+    document.getElementById("cfgNote").textContent = t2.note;
+    document.getElementById("cfg").classList.add("on");
+  }
+  window.addEventListener("langchange", () => {
+    if (document.getElementById("cfg").classList.contains("on")) openCfg();
+  });
+  window.setLang(window.__lang);
+  window.__goto = (id) => go(id);
+  window.__toTable = () => {
+    window.__fresh = false;
+    go("table");
+  };
+  function go(id) {
+    if (id === "draw" && window.__bootDraw) window.__bootDraw();
+    if (id === "table" && window.__bootTable) {
+      window.__bootTable(window.__fresh !== false);
+      window.__fresh = false;
+    }
+    if (id === "tax" && window.__bootTax) window.__bootTax();
+    if (id === "result" && window.__bootResult) window.__bootResult();
+    document.querySelectorAll(".page").forEach((p2) => p2.classList.remove("is-on"));
+    document.getElementById(id).classList.add("is-on");
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  }
+  document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
+  document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
+    if (window.__createRoom) {
+      const code = await window.__createRoom();
+      if (!code) return;
+    }
+    go("room");
+  });
+  document.querySelector("#lobby #btJoin").addEventListener("click", async () => {
+    const inp = document.querySelector("#lobby #code");
+    const code = (inp && (inp.value || inp.textContent) || "").replace(/[^0-9]/g, "");
+    if (code.length !== 4) {
+      alert("\uB124 \uC790\uB9AC \uBC88\uD638\uB97C \uB123\uC5B4 \uC8FC\uC138\uC694");
+      return;
+    }
+    if (window.__joinRoom) {
+      const seat = await window.__joinRoom(code);
+      if (seat == null) return;
+    }
+    go("room");
+  });
+  document.querySelector("#lobby #btNew").addEventListener("click", () => openOpts("create"));
+  document.querySelector("#room #action").addEventListener("click", (e) => {
+    const b2 = e.target.closest(".btn-primary");
+    if (!b2 || b2.disabled) return;
+    go("draw");
+  });
+  document.querySelector("#draw #go").addEventListener("click", (e) => {
+    if (!e.currentTarget.disabled) {
+      window.__fresh = true;
+      go("table");
+    }
+  });
+  window.__onRoundEnd = () => go("result");
+  document.querySelector("#table #endRound").addEventListener("click", () => {
+    if (window.__forceEnd) window.__forceEnd();
+  });
+  document.querySelector("#result #next").addEventListener("click", () => {
+    const G2 = window.GAME || {};
+    const rounds = window.__opts && window.__opts.rounds || 5;
+    if ((G2.roundNo || 1) >= rounds) {
+      if (window.__onRestart) {
+        window.__onRestart();
+        return;
+      }
+      window.__fresh = true;
+      go("draw");
+      return;
+    }
+    G2.roundNo = (G2.roundNo || 1) + 1;
+    window.__roundNo = G2.roundNo;
+    if (window.__opts && window.__opts.tax === false) {
+      window.__fresh = true;
+      go("table");
+    } else {
+      go("tax");
+    }
+  });
+  document.querySelector("#result #quit").addEventListener("click", () => go("lobby"));
+  window.__toResult = () => go("result");
+  document.querySelector("#tax #next").addEventListener("click", (e) => {
+    const label = e.currentTarget.textContent.trim();
+    if (label === "\uD310 \uC2DC\uC791" || label === "Start round") {
+      window.__fresh = false;
+      setTimeout(() => go("table"), 140);
+    }
+  });
+  document.querySelectorAll("[data-back]").forEach((b2) => b2.addEventListener("click", () => {
+    if (b2.closest("#table") && window.__quitGame) window.__quitGame();
+    go(b2.dataset.back);
+  }));
+}
+
+// src/lib/bar.js
+var BAR_SWAP = {
+  "lobby": [
+    '<div class="bar">',
+    '<div class="bar">'
+  ],
+  "room": [
+    '<button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>',
+    '<button class="back" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2039</button>'
+  ],
+  "draw": [
+    '<div class="bar__t" id="step"></div>',
+    '<div style="display:flex;align-items:center;gap:6px"><button class="navback" data-back="room" aria-label="\uB4A4\uB85C">\u2039</button><div class="bar__t" id="step"></div></div>'
+  ],
+  "result": [
+    '<div class="head__k" id="kicker"></div>',
+    '<div class="head__k" id="kicker"></div>'
+  ],
+  "tax": [
+    '<div class="bar__t" id="step"></div>',
+    '<div style="display:flex;align-items:center;gap:6px"><button class="navback" data-back="room" aria-label="\uB4A4\uB85C">\u2039</button><div class="bar__t" id="step"></div></div>'
+  ],
+  "table": [
+    '<button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>',
+    '<div style="display:flex;align-items:center;gap:9px"><button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button><button id="endRound" style="font-size:10.5px;letter-spacing:.04em;color:#8FA898;border:1px solid #2E4436;border-radius:2px;padding:4px 8px;background:none;cursor:pointer"></button></div>'
+  ]
+};
+
+// src/screens/room.js
+var room_exports = {};
+__export(room_exports, {
+  mount: () => mount
+});
+
 // src/lib/scoped.js
 function scoped(root) {
   return {
@@ -794,6 +1113,692 @@ function scoped(root) {
     addEventListener: (...a2) => window.document.addEventListener(...a2)
   };
 }
+
+// src/lib/assets.js
+var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
+var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
+var LOBBY_ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp" };
+var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
+var HERO = { "02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp" };
+var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
+
+// src/screens/room.js
+function mount(root) {
+  const document2 = scoped(root);
+  const HEADS2 = HEADS;
+  const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
+  const PLAYERS_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
+  const L2 = {
+    ko: {
+      title: "\uBC29 \uB300\uAE30\uC2E4",
+      roomL: "\uBC29 \uBC88\uD638",
+      copy: "\uBC88\uD638 \uBCF5\uC0AC",
+      host: "\uBC29\uC7A5",
+      guest: "\uCC38\uAC00\uC790",
+      count: (j2, c2) => j2 + " / " + c2 + "\uBA85",
+      needMore: "4\uBA85\uBD80\uD130 \uC2DC\uC791\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4",
+      canStart: "\uC9C0\uAE08 \uC2DC\uC791\uD558\uAC70\uB098 \uB354 \uAE30\uB2E4\uB9AC\uC154\uB3C4 \uB429\uB2C8\uB2E4",
+      full: "\uC790\uB9AC\uAC00 \uB2E4 \uCC3C\uC2B5\uB2C8\uB2E4",
+      empty: "\uBE48 \uC790\uB9AC",
+      hostTag: "\uBC29\uC7A5",
+      capT: "\uBC29 \uC778\uC6D0",
+      capD: "4\uBA85 \u2013 8\uBA85",
+      capDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
+      rndT: "\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815",
+      rndD: "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791",
+      rndDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
+      rndU: (n2) => n2 + "\uD310",
+      taxT: "\uC138\uAE08\uACFC \uD601\uBA85",
+      taxD: "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4.",
+      clrT: "2\uBC88 \uCEF7",
+      clrD: "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4.",
+      on: "\uCF1C\uC838 \uC788\uC2B5\uB2C8\uB2E4.",
+      off: "\uAEBC\uC838 \uC788\uC2B5\uB2C8\uB2E4.",
+      sumP: "\uBA85",
+      sumR: "\uD310",
+      sumT: "\uC138\uAE08",
+      sumC: "2\uBC88 \uCEF7",
+      on2: "\uCF2C",
+      off2: "\uB054",
+      edit: "\u203A \uBCC0\uACBD",
+      copied: "\uBCF5\uC0AC\uB428",
+      start: "\uC2DC\uC791\uD558\uAE30",
+      starting: "\uCE74\uB4DC\uB97C \uB098\uB204\uB294 \uC911",
+      needFour: "4\uBA85\uC774 \uBAA8\uC5EC\uC57C \uC2DC\uC791\uD569\uB2C8\uB2E4",
+      noTicket: "\uD2F0\uCF13\uC774 \uC5C6\uC2B5\uB2C8\uB2E4. \uB0B4\uC77C \uB2E4\uC2DC \uCC44\uC6CC\uC9D1\uB2C8\uB2E4",
+      wait: "\uBC29\uC7A5\uC774 \uC2DC\uC791\uD558\uAE30\uB97C \uAE30\uB2E4\uB9AC\uB294 \uC911\uC785\uB2C8\uB2E4"
+    },
+    en: {
+      title: "Waiting room",
+      roomL: "ROOM NUMBER",
+      copy: "Copy",
+      host: "Host",
+      guest: "Guest",
+      count: (j2, c2) => j2 + " of " + c2,
+      needMore: "Four players are needed to start",
+      canStart: "Start now, or wait for more",
+      full: "The table is full",
+      empty: "Open seat",
+      hostTag: "HOST",
+      capT: "Table size",
+      capD: "4 \u2013 8 players",
+      capDG: "The host decides.",
+      rndT: "Number of rounds",
+      rndD: "Three at least",
+      rndDG: "The host decides.",
+      rndU: (n2) => n2 + "",
+      taxT: "Tax and revolution",
+      taxD: "Cards change hands by standing, and two jokers overturn it.",
+      clrT: "Two-cut",
+      clrD: "Playing a 2 clears the pile and you lead again.",
+      on: "On.",
+      off: "Off.",
+      sumP: " players",
+      sumR: " rounds",
+      sumT: "Tax",
+      sumC: "Two-cut",
+      on2: "on",
+      off2: "off",
+      edit: "\u203A Change",
+      copied: "Copied",
+      start: "Start",
+      starting: "Dealing",
+      needFour: "Four players are needed",
+      noTicket: "No tickets left. They refill tomorrow",
+      wait: "Waiting for the host to start"
+    }
+  };
+  let lang = window.__lang || "ko";
+  const PLAYERS = PLAYERS_KO;
+  let cap = 6;
+  let joined = 4;
+  let clear2 = false;
+  let rounds = 5;
+  let taxOn = true;
+  let role = "host";
+  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
+  function placeTable(sec, cyPct) {
+    const b2 = sec.getBoundingClientRect();
+    const W3 = b2.width, H2 = b2.height;
+    const scale = Math.max(W3 / OV.iw, H2 / OV.ih);
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = cyPct == null ? (H2 - dh) / 2 + OV.cy * dh : cyPct / 100 * H2;
+    const ox = W3 / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {
+      cx: (ox + OV.cx * dw) / W3 * 100,
+      cy: cy / H2 * 100,
+      rx: OV.rx * dw / W3 * 100,
+      ry: OV.ry * dh / H2 * 100
+    };
+  }
+  function ringBox() {
+    const sec = window.document.getElementById("room");
+    if (!sec) return RB;
+    const b2 = sec.getBoundingClientRect();
+    const H2 = b2.height;
+    const base = placeTable(sec, null);
+    const ctrl = document2.getElementById("sum");
+    const limit = ctrl ? ctrl.getBoundingClientRect().top - b2.top - 22 : H2 * 0.72;
+    const ryPx = base.ry / 100 * H2;
+    const wantCy = Math.min(base.cy / 100 * H2, limit - ryPx);
+    return placeTable(sec, wantCy / H2 * 100);
+  }
+  let RB = { cx: 49, cy: 34, rx: 35, ry: 11.5 };
+  function anchorSeats(box, limitBottom) {
+    const root2 = window.document.documentElement;
+    const W3 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
+    box.querySelectorAll(".seat").forEach((s2) => {
+      const av = s2.querySelector(".seat__av");
+      if (!av) return;
+      const dy = av.offsetTop + av.offsetHeight / 2;
+      s2.style.transform = "translate(-50%," + -dy + "px)";
+      const r2 = s2.getBoundingClientRect();
+      let ox = 0, oy = 0;
+      if (r2.left < W3.left + 3) ox = W3.left + 3 - r2.left;
+      else if (r2.right > W3.right - 3) ox = W3.right - 3 - r2.right;
+      if (limitBottom && r2.bottom > limitBottom) oy = limitBottom - r2.bottom;
+      if (ox || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
+    });
+  }
+  function asArray(raw2, n2) {
+    const out = new Array(n2).fill(null);
+    if (!raw2) return out;
+    if (Array.isArray(raw2)) raw2.forEach((v2, i2) => {
+      if (i2 < n2) out[i2] = v2 || null;
+    });
+    else Object.keys(raw2).forEach((k2) => {
+      const i2 = +k2;
+      if (i2 >= 0 && i2 < n2) out[i2] = raw2[k2] || null;
+    });
+    return out;
+  }
+  function seatList() {
+    const R2 = window.__room;
+    if (R2 && R2.seats) {
+      return asArray(R2.seats, R2.cap || cap).map((s2, i2) => s2 ? {
+        name: s2.name || "",
+        me: i2 === R2.me,
+        host: s2.uid && s2.uid === R2.host,
+        off: Boolean(s2.off),
+        left: Boolean(s2.left)
+      } : null);
+    }
+    const KO = lang === "ko" ? PLAYERS_KO : PLAYERS_EN;
+    return Array.from({ length: joined }, (_2, i2) => ({
+      name: KO[i2],
+      me: i2 === 0,
+      host: i2 === 0 && role === "host",
+      off: false,
+      left: false
+    }));
+  }
+  function renderSeats() {
+    RB = ringBox();
+    const box = document2.getElementById("seats");
+    box.innerHTML = "";
+    const list = seatList();
+    const R2 = window.__room;
+    if (R2) cap = R2.cap || cap;
+    for (let i2 = 0; i2 < cap; i2++) {
+      const a2 = Math.PI / 2 + i2 * 2 * Math.PI / cap;
+      const sy = Math.sin(a2);
+      const bias = sy > 0.25 ? 3.4 * sy : 0;
+      const left = RB.cx + Math.cos(a2) * -RB.rx;
+      const top = RB.cy + sy * RB.ry + bias;
+      const p2 = list[i2] || null;
+      const filled = Boolean(p2);
+      const el = document2.createElement("div");
+      el.className = "seat" + (filled ? "" : " seat--empty") + (p2 && p2.me ? " seat--me" : "") + (p2 && (p2.off || p2.left) ? " seat--off" : "");
+      el.style.left = left.toFixed(2) + "%";
+      el.style.top = top.toFixed(2) + "%";
+      const big = cap <= 6;
+      el.style.setProperty("--av", (big ? 46 : 36) + "px");
+      el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2 % HEADS2.length] + ')"></span>' + (p2.off || p2.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p2.name + "</span>" + (p2.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span><span class="seat__n">' + L2[lang].empty + "</span>";
+      box.appendChild(el);
+    }
+    const sm = document2.getElementById("sum");
+    anchorSeats(box, sm ? sm.getBoundingClientRect().top - 6 : 0);
+    const t2 = L2[lang];
+    document2.getElementById("bt").textContent = t2.title;
+    document2.getElementById("rl").textContent = t2.roomL;
+    document2.getElementById("rc").textContent = t2.copy;
+    document2.querySelector('#view [data-v="host"]').textContent = t2.host;
+    document2.querySelector('#view [data-v="guest"]').textContent = t2.guest;
+    const fc = document2.querySelector(".felt__c");
+    if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
+    const R22 = window.__room;
+    const now2 = R22 && R22.seats ? asArray(R22.seats, R22.cap || cap).filter((s2) => s2 && !s2.left).length : joined;
+    document2.getElementById("feltN").textContent = t2.count(now2, cap);
+    document2.getElementById("feltS").textContent = now2 < 4 ? t2.needMore : now2 < cap ? t2.canStart : t2.full;
+  }
+  function syncOpts() {
+    const o2 = window.__opts || {};
+    cap = o2.cap || cap;
+    rounds = o2.rounds || rounds;
+    taxOn = o2.tax !== false;
+    clear2 = !!o2.clear2;
+    if (joined > cap) joined = cap;
+  }
+  function renderControls() {
+    const t2 = L2[lang];
+    const R2 = window.__room;
+    const arr = R2 ? asArray(R2.seats, R2.cap || cap) : null;
+    const now2 = arr ? arr.filter((s2) => s2 && !s2.left).length : joined;
+    const iamHost = R2 ? Boolean(arr && arr[R2.me] && arr[R2.me].uid === R2.host) : role === "host";
+    const sm = document2.getElementById("sum");
+    sm.innerHTML = "<b>" + cap + "</b>" + t2.sumP + " \xB7 <b>" + rounds + "</b>" + t2.sumR + " \xB7 " + t2.sumT + " " + (taxOn ? t2.on2 : t2.off2) + " \xB7 " + t2.sumC + " " + (clear2 ? t2.on2 : t2.off2) + (iamHost ? '  <span style="color:#E3C67C">' + t2.edit + "</span>" : "");
+    sm.disabled = !iamHost;
+    const a2 = document2.getElementById("action");
+    if (iamHost) {
+      a2.innerHTML = '<button class="btn-primary" ' + (now2 < 4 ? "disabled" : "") + ">" + (now2 < 4 ? t2.needFour : t2.start) + "</button>";
+    } else {
+      a2.innerHTML = '<div class="waiting">' + t2.wait + '<span class="dots"></span></div>';
+    }
+  }
+  function draw() {
+    syncOpts();
+    renderSeats();
+    renderControls();
+    const sm2 = document2.getElementById("sum");
+    anchorSeats(document2.getElementById("seats"), sm2 ? sm2.getBoundingClientRect().top - 6 : 0);
+  }
+  draw();
+  window.addEventListener("resize", draw);
+  window.addEventListener("optschange", draw);
+  window.addEventListener("roomchange", draw);
+  function paintCode() {
+    const el2 = document2.getElementById("roomNo");
+    if (el2 && window.__roomCode) el2.textContent = window.__roomCode() || "----";
+  }
+  window.addEventListener("roomchange", paintCode);
+  paintCode();
+  const rcBtn = document2.getElementById("rc");
+  if (rcBtn) rcBtn.addEventListener("click", () => {
+    const code = window.__roomCode && window.__roomCode() || "";
+    if (!code) return;
+    try {
+      navigator.clipboard.writeText(code);
+    } catch (e) {
+    }
+    const old = rcBtn.textContent;
+    rcBtn.textContent = L2[lang].copied;
+    setTimeout(() => {
+      rcBtn.textContent = old;
+    }, 1200);
+  });
+  document2.getElementById("action").addEventListener("click", async (e) => {
+    const b2 = e.target.closest(".btn-primary");
+    if (!b2 || b2.disabled) return;
+    const R2 = window.__room;
+    if (window.spendTicket) {
+      const ok = await window.spendTicket();
+      if (!ok) {
+        e.stopImmediatePropagation();
+        const sm = document2.getElementById("sum");
+        if (sm) sm.textContent = L2[lang].noTicket;
+        return;
+      }
+    }
+    window.__scored = false;
+    if (R2) {
+      e.stopImmediatePropagation();
+      b2.disabled = true;
+      b2.textContent = L2[lang].starting;
+      try {
+        await window.__startRound();
+      } catch (err) {
+        b2.disabled = false;
+        b2.textContent = L2[lang].start;
+        alert("\uC2DC\uC791\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4 : " + (err && (err.message || err.code) || err));
+      }
+      return;
+    }
+    if (window.__opts) window.__opts.seated = joined;
+  }, true);
+  document2.querySelectorAll("#lang button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      lang = b2.dataset.l;
+      document2.documentElement.lang = lang;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      draw();
+    });
+  });
+  document2.querySelectorAll("#view button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      role = b2.dataset.v;
+      document2.querySelectorAll("#view button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      draw();
+    });
+  });
+  setInterval(() => {
+    if (window.__room) return;
+    joined = joined < cap ? joined + 1 : 2;
+    draw();
+  }, 3400);
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    draw();
+  });
+}
+
+// src/screens/draw.js
+var draw_exports = {};
+__export(draw_exports, {
+  mount: () => mount2
+});
+function mount2(root) {
+  const document2 = scoped(root);
+  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const el = (id) => document2.getElementById(id);
+  const isJ = (c2) => c2 >= 13;
+  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
+  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
+  const NAMES_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
+  const NAMES_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
+  const T = {
+    ko: {
+      step: "\uCCAB \uC21C\uC11C \uC815\uD558\uAE30",
+      h: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC73C\uC138\uC694",
+      s: "\uC22B\uC790\uAC00 \uAC00\uC7A5 \uB0AE\uC740 \uBD84\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uAC70\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC73C\uB85C \uB3D5\uB2C8\uB2E4. \uCE74\uBA5C\uB808\uC628\uC740 13\uC73C\uB85C \uCE69\uB2C8\uB2E4.",
+      waitH: "\uBF51\uB294 \uC911",
+      waitS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uACE0\uB974\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
+      settling: "\uBF51\uC740 \uCE74\uB4DC\uB97C \uB9DE\uCDB0 \uBCF4\uB294 \uC911\uC785\uB2C8\uB2E4.",
+      doneH: "\uC21C\uC11C\uAC00 \uC815\uD574\uC84C\uC2B5\uB2C8\uB2E4",
+      first: "\uC120",
+      doneS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uC5EC\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC785\uB2C8\uB2E4.",
+      note: "\uCCAB \uD310\uC740 \uACC4\uAE09\uB3C4 \uC138\uAE08\uB3C4 \uC5C6\uC2B5\uB2C8\uB2E4.",
+      goIn: (n2) => n2 + "\uCD08 \uB4A4 \uC2DC\uC791\uD569\uB2C8\uB2E4",
+      picking: "\uACE0\uB974\uB294 \uC911"
+    },
+    en: {
+      step: "Opening draw",
+      h: "Draw one card",
+      s: "The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
+      waitH: "Drawing",
+      waitS: (n2) => "<b>" + n2 + "</b> is choosing.",
+      settling: "Comparing the draws.",
+      doneH: "Turn order is set",
+      first: "LEAD",
+      doneS: (n2) => "<b>" + n2 + "</b> leads. Turns run clockwise from there.",
+      note: "The first round has no ranks and no tax.",
+      goIn: (n2) => "Starting in " + n2,
+      picking: "Choosing"
+    }
+  };
+  let lang = window.__lang || "ko";
+  let online = false;
+  let N2 = 6;
+  const nameOf = (i2) => (lang === "ko" ? NAMES_KO : NAMES_EN)[i2];
+  const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
+  const val = (c2) => isJ(c2) ? 13 : c2;
+  let drawn = Array(N2).fill(null);
+  let pool = [];
+  let takenK = [];
+  let plan = null;
+  let waiting = [];
+  let phase = "pick";
+  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
+  function placeTable(sec, cyPct) {
+    const b2 = sec.getBoundingClientRect();
+    const W3 = b2.width, H2 = b2.height;
+    const scale = Math.max(W3 / OV.iw, H2 / OV.ih);
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = cyPct == null ? (H2 - dh) / 2 + OV.cy * dh : cyPct / 100 * H2;
+    const ox = W3 / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {
+      cx: (ox + OV.cx * dw) / W3 * 100,
+      cy: cy / H2 * 100,
+      rx: OV.rx * dw / W3 * 100,
+      ry: OV.ry * dh / H2 * 100
+    };
+  }
+  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
+  function syncRing() {
+    const sec = window.document.getElementById("draw");
+    if (!sec) return;
+    RING = placeTable(sec, null);
+    const d2 = el("deck");
+    if (d2) {
+      d2.style.left = RING.cx + "%";
+      d2.style.top = RING.cy + "%";
+    }
+  }
+  function seatPos(i2) {
+    const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
+    const s2 = Math.sin(a2);
+    const bias = s2 > 0.25 ? 3.4 * s2 : 0;
+    return { x: RING.cx + Math.cos(a2) * -RING.rx, y: RING.cy + s2 * RING.ry + bias };
+  }
+  function cardFace(c2) {
+    const n2 = isJ(c2) ? 13 : c2;
+    return '<div class="card"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(c2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
+  }
+  function makeDeck2() {
+    const d2 = [];
+    for (let n2 = 1; n2 <= 12; n2++) for (let i2 = 0; i2 < n2; i2++) d2.push(n2);
+    d2.push(13, 14);
+    for (let i2 = d2.length - 1; i2 > 0; i2--) {
+      const k2 = Math.floor(Math.random() * (i2 + 1));
+      [d2[i2], d2[k2]] = [d2[k2], d2[i2]];
+    }
+    return d2;
+  }
+  let pickOrder = [];
+  function winner() {
+    let best = null;
+    pickOrder.forEach((i2) => {
+      if (drawn[i2] == null) return;
+      if (best === null || val(drawn[i2]) < val(drawn[best])) best = i2;
+    });
+    return best === null ? 0 : best;
+  }
+  function ranking() {
+    const w2 = winner();
+    return Array.from({ length: N2 }, (_2, k2) => ({ i: (w2 + k2) % N2 }));
+  }
+  function layout(players) {
+    const d2 = makeDeck2();
+    pool = d2.slice(0, players.length);
+    plan = null;
+    if (online && typeof window.__leadSeat === "number") {
+      const cand = [];
+      for (let v2 = 1; v2 <= 12; v2++) cand.push(v2);
+      for (let i2 = cand.length - 1; i2 > 0; i2--) {
+        const k2 = Math.floor(Math.random() * (i2 + 1));
+        const t2 = cand[i2];
+        cand[i2] = cand[k2];
+        cand[k2] = t2;
+      }
+      const use = cand.slice(0, N2).sort((a2, b2) => a2 - b2);
+      const lead = window.__leadSeat;
+      plan = new Array(N2).fill(0);
+      plan[lead] = use[0];
+      let j2 = 1;
+      for (let i2 = 0; i2 < N2; i2++) if (i2 !== lead) plan[i2] = use[j2++];
+      pool = plan.slice();
+    }
+    waiting = players.slice();
+    const deck = el("deck");
+    deck.innerHTML = "";
+    const n2 = pool.length;
+    const cols = n2 <= 4 ? n2 : Math.min(4, Math.ceil(n2 / 2));
+    const avail = (el("ring").clientWidth || 360) - 48;
+    const pw = Math.max(26, Math.min(34, Math.floor((avail - (cols - 1) * 9) / cols)));
+    deck.style.setProperty("--cols", cols);
+    deck.style.setProperty("--pw", pw + "px");
+    pool.forEach((c2, k2) => {
+      const w2 = document2.createElement("div");
+      w2.className = "pk";
+      w2.dataset.k = k2;
+      w2.innerHTML = '<div class="pk__in"><div class="pk__f pk__f--b"><img src="' + ART2.back + '" alt=""></div><div class="pk__f pk__f--a">' + cardFace(c2) + "</div></div>";
+      w2.onclick = () => {
+        if (waiting[0] === 0) pick2(0, k2);
+      };
+      deck.appendChild(w2);
+    });
+  }
+  let pickTimer = null;
+  function armPickTimer() {
+    if (pickTimer) {
+      clearTimeout(pickTimer);
+      pickTimer = null;
+    }
+    if (phase !== "pick") return;
+    if (waiting.indexOf(0) < 0) return;
+    pickTimer = setTimeout(() => {
+      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
+      const free = el("deck").querySelectorAll(".pk:not(.taken)");
+      if (free.length) free[Math.floor(Math.random() * free.length)].click();
+    }, 12e3);
+  }
+  function pick2(seat, k2) {
+    const w2 = el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)');
+    if (!w2) return;
+    takenK.push(k2);
+    if (online && plan) {
+      pool[k2] = plan[seat];
+      const face = w2.querySelector(".pk__f--a");
+      if (face) face.innerHTML = cardFace(pool[k2]);
+    }
+    drawn[seat] = pool[k2];
+    pickOrder.push(seat);
+    waiting = waiting.filter((x2) => x2 !== seat);
+    w2.classList.add("flip", "taken");
+    w2.dataset.seat = seat;
+    draw();
+    if (pickTimer) {
+      clearTimeout(pickTimer);
+      pickTimer = null;
+    }
+    if (waiting.length) setTimeout(botPick2, 700);
+    else setTimeout(settle, 1e3);
+  }
+  function botPick2() {
+    const seat = waiting[0];
+    const free = pool.map((_2, k2) => k2).filter((k2) => el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)'));
+    pick2(seat, free[Math.floor(Math.random() * free.length)]);
+  }
+  let cd = 5, cdId = null;
+  function startCountdown() {
+    cd = 5;
+    draw();
+    if (cdId) clearInterval(cdId);
+    cdId = setInterval(() => {
+      const sec = window.document.getElementById("draw");
+      if (sec && !sec.classList.contains("is-on")) {
+        clearInterval(cdId);
+        cdId = null;
+        return;
+      }
+      cd--;
+      draw();
+      if (cd <= 0) {
+        clearInterval(cdId);
+        cdId = null;
+        const g2 = el("go");
+        if (g2 && !g2.disabled) g2.click();
+      }
+    }, 1e3);
+  }
+  function settle() {
+    phase = "done";
+    const w2 = online && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
+    window.GAME = window.GAME || {};
+    window.GAME.N = N2;
+    window.GAME.roundNo = 1;
+    window.GAME.score = Array(N2).fill(0);
+    window.GAME.order = Array.from({ length: N2 }, (_2, k2) => (w2 + k2) % N2);
+    if (!online) {
+      window.GAME.finish = null;
+      window.GAME.hold = null;
+    }
+    draw();
+    startCountdown();
+  }
+  function anchorSeats(box, limitBottom) {
+    const root2 = window.document.documentElement;
+    const W3 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
+    box.querySelectorAll(".seat").forEach((s2) => {
+      const av = s2.querySelector(".seat__av");
+      if (!av) return;
+      const dy = av.offsetTop + av.offsetHeight / 2;
+      s2.style.transform = "translate(-50%," + -dy + "px)";
+      const r2 = s2.getBoundingClientRect();
+      let ox = 0, oy = 0;
+      if (r2.left < W3.left + 3) ox = W3.left + 3 - r2.left;
+      else if (r2.right > W3.right - 3) ox = W3.right - 3 - r2.right;
+      if (limitBottom && r2.bottom > limitBottom) oy = limitBottom - r2.bottom;
+      if (ox || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
+    });
+  }
+  function renderSeats() {
+    syncRing();
+    const box = el("seats");
+    box.innerHTML = "";
+    const order = phase === "done" ? ranking().map((x2) => x2.i) : [];
+    for (let i2 = 0; i2 < N2; i2++) {
+      const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
+      const p2 = seatPos(i2);
+      const d2 = document2.createElement("div");
+      const r2 = order.indexOf(i2);
+      d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (waiting[0] === i2 && phase === "pick" ? " seat--turn" : "");
+      d2.style.left = p2.x.toFixed(1) + "%";
+      d2.style.top = p2.y.toFixed(1) + "%";
+      const big = N2 <= 6;
+      d2.style.setProperty("--av", (big ? 42 : 33) + "px");
+      d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
+      const first = phase === "done" && i2 === winner();
+      const dv = drawn[i2] == null ? "" : val(drawn[i2]);
+      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
+      const upper = Math.sin(Math.PI / 2 + i2 * 2 * Math.PI / N2) < 0;
+      d2.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>" + (upper ? "" : chip);
+      box.appendChild(d2);
+    }
+    const md = el("mid");
+    anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
+  }
+  function draw() {
+    const t2 = T[lang];
+    el("step").textContent = t2.step;
+    renderSeats();
+    const m = el("mid");
+    if (phase === "done") {
+      m.innerHTML = '<div class="mid__h">' + t2.doneH + '</div><div class="mid__s">' + t2.doneS(nameOf(winner())) + "<br>" + t2.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
+    } else if (!waiting.length) {
+      m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.settling + "</div>";
+    } else if (waiting[0] === 0) {
+      m.innerHTML = '<div class="mid__h">' + t2.h + '</div><div class="mid__s">' + t2.s + "</div>";
+    } else {
+      m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.waitS(nameOf(waiting[0])) + "</div>";
+    }
+    const g2 = el("go");
+    g2.textContent = phase === "done" ? t2.goIn(cd) : t2.picking;
+    g2.disabled = phase !== "done";
+    const md = el("mid");
+    anchorSeats(el("seats"), md ? md.getBoundingClientRect().top - 4 : 0);
+  }
+  function boot() {
+    const sbox0 = el("seats");
+    if (sbox0) sbox0.innerHTML = "";
+    const dbox0 = el("deck");
+    if (dbox0) dbox0.innerHTML = "";
+    online = Boolean(window.__net);
+    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
+    if (cdId) {
+      clearInterval(cdId);
+      cdId = null;
+    }
+    cd = 5;
+    drawn = Array(N2).fill(null);
+    pickOrder = [];
+    takenK = [];
+    window.__roundNo = 1;
+    window.__myRankIdx = null;
+    if (!online) {
+      window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
+    }
+    phase = "pick";
+    layout(Array.from({ length: N2 }, (_2, i2) => i2));
+    draw();
+  }
+  window.__bootDraw = () => {
+    boot();
+    armPickTimer();
+  };
+  boot();
+  document2.querySelectorAll("#lang button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      lang = b2.dataset.l;
+      document2.documentElement.lang = lang;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      draw();
+    });
+  });
+  el("go").addEventListener("click", () => {
+    if (cdId) {
+      clearInterval(cdId);
+      cdId = null;
+    }
+  });
+  window.addEventListener("resize", draw);
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    draw();
+  });
+}
+
+// src/screens/table.js
+var table_exports = {};
+__export(table_exports, {
+  mount: () => mount3
+});
 
 // src/lib/engine.js
 var engine_exports = {};
@@ -1361,8 +2366,8 @@ var RandomPlugin = {
     const random = new Random(data);
     return random.api();
   },
-  setup: ({ game }) => {
-    let { seed } = game;
+  setup: ({ game: game2 }) => {
+    let { seed } = game2;
     if (seed === void 0) {
       seed = Random.seed();
     }
@@ -1616,7 +2621,7 @@ var EventsPlugin = {
     return G2;
   },
   dangerouslyFlushRawState: ({ state, api }) => api._private.update(state),
-  api: ({ game, ctx, playerID }) => new Events(game.flow, ctx, playerID).api()
+  api: ({ game: game2, ctx, playerID }) => new Events(game2.flow, ctx, playerID).api()
 };
 var LogPlugin = {
   name: "log",
@@ -1665,8 +2670,8 @@ function error(error2) {
 }
 var CORE_PLUGINS = [ImmerPlugin, RandomPlugin, LogPlugin, SerializablePlugin];
 var DEFAULT_PLUGINS = [...CORE_PLUGINS, EventsPlugin];
-var ProcessAction = (state, action, opts) => {
-  opts.game.plugins.filter((plugin2) => plugin2.action !== void 0).filter((plugin2) => plugin2.name === action.payload.type).forEach((plugin2) => {
+var ProcessAction = (state, action, opts2) => {
+  opts2.game.plugins.filter((plugin2) => plugin2.action !== void 0).filter((plugin2) => plugin2.name === action.payload.type).forEach((plugin2) => {
     const name = plugin2.name;
     const pluginState = state.plugins[name] || { data: {} };
     const data = plugin2.action(pluginState.data, action.payload);
@@ -1687,13 +2692,13 @@ var GetAPIs = ({ plugins }) => Object.entries(plugins || {}).reduce((apis, [name
 var FnWrap = (methodToWrap, methodType, plugins) => {
   return [...CORE_PLUGINS, ...plugins, EventsPlugin].filter((plugin2) => plugin2.fnWrap !== void 0).reduce((method, { fnWrap }) => fnWrap(method, methodType), methodToWrap);
 };
-var Setup = (state, opts) => {
-  [...DEFAULT_PLUGINS, ...opts.game.plugins].filter((plugin2) => plugin2.setup !== void 0).forEach((plugin2) => {
+var Setup = (state, opts2) => {
+  [...DEFAULT_PLUGINS, ...opts2.game.plugins].filter((plugin2) => plugin2.setup !== void 0).forEach((plugin2) => {
     const name = plugin2.name;
     const data = plugin2.setup({
       G: state.G,
       ctx: state.ctx,
-      game: opts.game
+      game: opts2.game
     });
     state = {
       ...state,
@@ -1705,16 +2710,16 @@ var Setup = (state, opts) => {
   });
   return state;
 };
-var Enhance = (state, opts) => {
-  [...DEFAULT_PLUGINS, ...opts.game.plugins].filter((plugin2) => plugin2.api !== void 0).forEach((plugin2) => {
+var Enhance = (state, opts2) => {
+  [...DEFAULT_PLUGINS, ...opts2.game.plugins].filter((plugin2) => plugin2.api !== void 0).forEach((plugin2) => {
     const name = plugin2.name;
     const pluginState = state.plugins[name] || { data: {} };
     const api = plugin2.api({
       G: state.G,
       ctx: state.ctx,
       data: pluginState.data,
-      game: opts.game,
-      playerID: opts.playerID
+      game: opts2.game,
+      playerID: opts2.playerID
     });
     state = {
       ...state,
@@ -1726,15 +2731,15 @@ var Enhance = (state, opts) => {
   });
   return state;
 };
-var Flush = (state, opts) => {
-  [...CORE_PLUGINS, ...opts.game.plugins, EventsPlugin].reverse().forEach((plugin2) => {
+var Flush = (state, opts2) => {
+  [...CORE_PLUGINS, ...opts2.game.plugins, EventsPlugin].reverse().forEach((plugin2) => {
     const name = plugin2.name;
     const pluginState = state.plugins[name] || { data: {} };
     if (plugin2.flush) {
       const newData = plugin2.flush({
         G: state.G,
         ctx: state.ctx,
-        game: opts.game,
+        game: opts2.game,
         api: pluginState.api,
         data: pluginState.data
       });
@@ -1748,7 +2753,7 @@ var Flush = (state, opts) => {
     } else if (plugin2.dangerouslyFlushRawState) {
       state = plugin2.dangerouslyFlushRawState({
         state,
-        game: opts.game,
+        game: opts2.game,
         api: pluginState.api,
         data: pluginState.data
       });
@@ -1764,15 +2769,15 @@ var Flush = (state, opts) => {
   });
   return state;
 };
-var NoClient = (state, opts) => {
-  return [...DEFAULT_PLUGINS, ...opts.game.plugins].filter((plugin2) => plugin2.noClient !== void 0).map((plugin2) => {
+var NoClient = (state, opts2) => {
+  return [...DEFAULT_PLUGINS, ...opts2.game.plugins].filter((plugin2) => plugin2.noClient !== void 0).map((plugin2) => {
     const name = plugin2.name;
     const pluginState = state.plugins[name];
     if (pluginState) {
       return plugin2.noClient({
         G: state.G,
         ctx: state.ctx,
-        game: opts.game,
+        game: opts2.game,
         api: pluginState.api,
         data: pluginState.data
       });
@@ -1780,23 +2785,23 @@ var NoClient = (state, opts) => {
     return false;
   }).includes(true);
 };
-var IsInvalid = (state, opts) => {
-  const firstInvalidReturn = [...DEFAULT_PLUGINS, ...opts.game.plugins].filter((plugin2) => plugin2.isInvalid !== void 0).map((plugin2) => {
+var IsInvalid = (state, opts2) => {
+  const firstInvalidReturn = [...DEFAULT_PLUGINS, ...opts2.game.plugins].filter((plugin2) => plugin2.isInvalid !== void 0).map((plugin2) => {
     const { name } = plugin2;
     const pluginState = state.plugins[name];
     const message = plugin2.isInvalid({
       G: state.G,
       ctx: state.ctx,
-      game: opts.game,
+      game: opts2.game,
       data: pluginState && pluginState.data
     });
     return message ? { plugin: name, message } : false;
   }).find((value2) => value2);
   return firstInvalidReturn || false;
 };
-var FlushAndValidate = (state, opts) => {
-  const updatedState = Flush(state, opts);
-  const isInvalid = IsInvalid(updatedState, opts);
+var FlushAndValidate = (state, opts2) => {
+  const updatedState = Flush(state, opts2);
+  const isInvalid = IsInvalid(updatedState, opts2);
   if (!isInvalid)
     return [updatedState];
   const { plugin: plugin2, message } = isInvalid;
@@ -1804,12 +2809,12 @@ var FlushAndValidate = (state, opts) => {
 ${message}`);
   return [state, isInvalid];
 };
-var PlayerView = ({ G: G2, ctx, plugins = {} }, { game, playerID }) => {
-  [...DEFAULT_PLUGINS, ...game.plugins].forEach(({ name, playerView }) => {
+var PlayerView = ({ G: G2, ctx, plugins = {} }, { game: game2, playerID }) => {
+  [...DEFAULT_PLUGINS, ...game2.plugins].forEach(({ name, playerView }) => {
     if (!playerView)
       return;
     const { data } = plugins[name] || { data: {} };
-    const newData = playerView({ G: G2, ctx, game, data, playerID });
+    const newData = playerView({ G: G2, ctx, game: game2, data, playerID });
     plugins = {
       ...plugins,
       [name]: { data: newData }
@@ -2710,28 +3715,28 @@ function Flow({ moves, phases, endIf, onEnd, turn, events, plugins }) {
     getMove: GetMove
   };
 }
-function IsProcessed(game) {
-  return game.processMove !== void 0;
+function IsProcessed(game2) {
+  return game2.processMove !== void 0;
 }
-function ProcessGameConfig(game) {
-  if (IsProcessed(game)) {
-    return game;
+function ProcessGameConfig(game2) {
+  if (IsProcessed(game2)) {
+    return game2;
   }
-  if (game.name === void 0)
-    game.name = "default";
-  if (game.deltaState === void 0)
-    game.deltaState = false;
-  if (game.disableUndo === void 0)
-    game.disableUndo = false;
-  if (game.setup === void 0)
-    game.setup = () => ({});
-  if (game.moves === void 0)
-    game.moves = {};
-  if (game.playerView === void 0)
-    game.playerView = ({ G: G2 }) => G2;
-  if (game.plugins === void 0)
-    game.plugins = [];
-  game.plugins.forEach((plugin2) => {
+  if (game2.name === void 0)
+    game2.name = "default";
+  if (game2.deltaState === void 0)
+    game2.deltaState = false;
+  if (game2.disableUndo === void 0)
+    game2.disableUndo = false;
+  if (game2.setup === void 0)
+    game2.setup = () => ({});
+  if (game2.moves === void 0)
+    game2.moves = {};
+  if (game2.playerView === void 0)
+    game2.playerView = ({ G: G2 }) => G2;
+  if (game2.plugins === void 0)
+    game2.plugins = [];
+  game2.plugins.forEach((plugin2) => {
     if (plugin2.name === void 0) {
       throw new Error("Plugin missing name attribute");
     }
@@ -2739,22 +3744,22 @@ function ProcessGameConfig(game) {
       throw new Error(plugin2.name + ": Plugin name must not include spaces");
     }
   });
-  if (game.name.includes(" ")) {
-    throw new Error(game.name + ": Game name must not include spaces");
+  if (game2.name.includes(" ")) {
+    throw new Error(game2.name + ": Game name must not include spaces");
   }
-  const flow = Flow(game);
+  const flow = Flow(game2);
   return {
-    ...game,
+    ...game2,
     flow,
     moveNames: flow.moveNames,
-    pluginNames: game.plugins.map((p2) => p2.name),
+    pluginNames: game2.plugins.map((p2) => p2.name),
     processMove: (state, action) => {
       let moveFn = flow.getMove(state.ctx, action.type, action.playerID);
       if (IsLongFormMove(moveFn)) {
         moveFn = moveFn.move;
       }
       if (moveFn instanceof Function) {
-        const fn2 = FnWrap(moveFn, GameMethod.MOVE, game.plugins);
+        const fn2 = FnWrap(moveFn, GameMethod.MOVE, game2.plugins);
         let args = [];
         if (action.args !== void 0) {
           args = Array.isArray(action.args) ? action.args : [action.args];
@@ -2808,17 +3813,17 @@ var CanUndoMove = (G2, ctx, move) => {
   }
   return move.undoable;
 };
-function updateUndoRedoState(state, opts) {
-  if (opts.game.disableUndo)
+function updateUndoRedoState(state, opts2) {
+  if (opts2.game.disableUndo)
     return state;
   const undoEntry = {
     G: state.G,
     ctx: state.ctx,
     plugins: state.plugins,
-    playerID: opts.action.payload.playerID || state.ctx.currentPlayer
+    playerID: opts2.action.payload.playerID || state.ctx.currentPlayer
   };
-  if (opts.action.type === "MAKE_MOVE") {
-    undoEntry.moveType = opts.action.payload.type;
+  if (opts2.action.type === "MAKE_MOVE") {
+    undoEntry.moveType = opts2.action.payload.type;
   }
   return {
     ...state,
@@ -2895,8 +3900,8 @@ var TransientHandlingMiddleware = (store) => (next) => (action) => {
     }
   }
 };
-function CreateGameReducer({ game, isClient }) {
-  game = ProcessGameConfig(game);
+function CreateGameReducer({ game: game2, isClient }) {
+  game2 = ProcessGameConfig(game2);
   return (stateWithTransients = null, action) => {
     let [
       state
@@ -2915,29 +3920,29 @@ function CreateGameReducer({ game, isClient }) {
           error(`cannot call event after game end`);
           return WithError(state, ActionErrorType.GameOver);
         }
-        if (actionHasPlayerID(action) && !game.flow.isPlayerActive(state.G, state.ctx, action.payload.playerID)) {
+        if (actionHasPlayerID(action) && !game2.flow.isPlayerActive(state.G, state.ctx, action.payload.playerID)) {
           error(`disallowed event: ${action.payload.type}`);
           return WithError(state, ActionErrorType.InactivePlayer);
         }
         state = Enhance(state, {
-          game,
+          game: game2,
           isClient: false,
           playerID: action.payload.playerID
         });
-        let newState = game.flow.processEvent(state, action);
+        let newState = game2.flow.processEvent(state, action);
         let stateWithError;
         [newState, stateWithError] = flushAndValidatePlugins(newState, state, {
-          game,
+          game: game2,
           isClient: false
         });
         if (stateWithError)
           return stateWithError;
-        newState = updateUndoRedoState(newState, { game, action });
+        newState = updateUndoRedoState(newState, { game: game2, action });
         return { ...newState, _stateID: state._stateID + 1 };
       }
       case MAKE_MOVE: {
         const oldState = state = { ...state, deltalog: [] };
-        const move = game.flow.getMove(state.ctx, action.payload.type, action.payload.playerID || state.ctx.currentPlayer);
+        const move = game2.flow.getMove(state.ctx, action.payload.type, action.payload.playerID || state.ctx.currentPlayer);
         if (move === null) {
           error(`disallowed move: ${action.payload.type}`);
           return WithError(state, ActionErrorType.UnavailableMove);
@@ -2949,29 +3954,29 @@ function CreateGameReducer({ game, isClient }) {
           error(`cannot make move after game end`);
           return WithError(state, ActionErrorType.GameOver);
         }
-        if (actionHasPlayerID(action) && !game.flow.isPlayerActive(state.G, state.ctx, action.payload.playerID)) {
+        if (actionHasPlayerID(action) && !game2.flow.isPlayerActive(state.G, state.ctx, action.payload.playerID)) {
           error(`disallowed move: ${action.payload.type}`);
           return WithError(state, ActionErrorType.InactivePlayer);
         }
         state = Enhance(state, {
-          game,
+          game: game2,
           isClient,
           playerID: action.payload.playerID
         });
-        const G2 = game.processMove(state, action.payload);
+        const G2 = game2.processMove(state, action.payload);
         if (G2 === INVALID_MOVE) {
           error(`invalid move: ${action.payload.type} args: ${action.payload.args}`);
           return WithError(state, ActionErrorType.InvalidMove);
         }
         const newState = { ...state, G: G2 };
-        if (isClient && NoClient(newState, { game })) {
+        if (isClient && NoClient(newState, { game: game2 })) {
           return state;
         }
         state = newState;
         if (isClient) {
           let stateWithError2;
           [state, stateWithError2] = flushAndValidatePlugins(state, oldState, {
-            game,
+            game: game2,
             isClient: true
           });
           if (stateWithError2)
@@ -2982,14 +3987,14 @@ function CreateGameReducer({ game, isClient }) {
           };
         }
         state = initializeDeltalog(state, action, move);
-        state = game.flow.processMove(state, action.payload);
+        state = game2.flow.processMove(state, action.payload);
         let stateWithError;
         [state, stateWithError] = flushAndValidatePlugins(state, oldState, {
-          game
+          game: game2
         });
         if (stateWithError)
           return stateWithError;
-        state = updateUndoRedoState(state, { game, action });
+        state = updateUndoRedoState(state, { game: game2, action });
         return {
           ...state,
           _stateID: state._stateID + 1
@@ -3002,7 +4007,7 @@ function CreateGameReducer({ game, isClient }) {
       }
       case UNDO: {
         state = { ...state, deltalog: [] };
-        if (game.disableUndo) {
+        if (game2.disableUndo) {
           error("Undo is not enabled");
           return WithError(state, ActionErrorType.ActionDisabled);
         }
@@ -3018,7 +4023,7 @@ function CreateGameReducer({ game, isClient }) {
           return WithError(state, ActionErrorType.ActionInvalid);
         }
         if (last.moveType) {
-          const lastMove = game.flow.getMove(restore.ctx, last.moveType, last.playerID);
+          const lastMove = game2.flow.getMove(restore.ctx, last.moveType, last.playerID);
           if (!CanUndoMove(G2, ctx, lastMove)) {
             error(`Move cannot be undone`);
             return WithError(state, ActionErrorType.ActionInvalid);
@@ -3037,7 +4042,7 @@ function CreateGameReducer({ game, isClient }) {
       }
       case REDO: {
         state = { ...state, deltalog: [] };
-        if (game.disableUndo) {
+        if (game2.disableUndo) {
           error("Redo is not enabled");
           return WithError(state, ActionErrorType.ActionDisabled);
         }
@@ -3063,7 +4068,7 @@ function CreateGameReducer({ game, isClient }) {
         };
       }
       case PLUGIN: {
-        return ProcessAction(state, action, { game });
+        return ProcessAction(state, action, { game: game2 });
       }
       case PATCH: {
         const oldState = state;
@@ -3223,7 +4228,7 @@ var Bot = class {
 };
 var CHUNK_SIZE = 25;
 var MCTSBot = class extends Bot {
-  constructor({ enumerate, seed, objectives, game, iterations, playoutDepth, iterationCallback }) {
+  constructor({ enumerate, seed, objectives, game: game2, iterations, playoutDepth, iterationCallback }) {
     super({ enumerate, seed });
     if (objectives === void 0) {
       objectives = () => ({});
@@ -3231,7 +4236,7 @@ var MCTSBot = class extends Bot {
     this.objectives = objectives;
     this.iterationCallback = iterationCallback || (() => {
     });
-    this.reducer = CreateGameReducer({ game });
+    this.reducer = CreateGameReducer({ game: game2 });
     this.iterations = iterations;
     this.playoutDepth = playoutDepth;
     this.addOpt({
@@ -13660,12 +14665,12 @@ var import_lodash2 = __toESM(require_lodash());
 var import_rfc69022 = __toESM(require_rfc6902());
 
 // node_modules/boardgame.io/dist/esm/initialize-7316768f.js
-function InitializeGame({ game, numPlayers, setupData }) {
-  game = ProcessGameConfig(game);
+function InitializeGame({ game: game2, numPlayers, setupData }) {
+  game2 = ProcessGameConfig(game2);
   if (!numPlayers) {
     numPlayers = 2;
   }
-  const ctx = game.flow.ctx(numPlayers);
+  const ctx = game2.flow.ctx(numPlayers);
   let state = {
     // User managed state.
     G: {},
@@ -13674,10 +14679,10 @@ function InitializeGame({ game, numPlayers, setupData }) {
     // Plugin related state.
     plugins: {}
   };
-  state = Setup(state, { game });
-  state = Enhance(state, { game, playerID: void 0 });
+  state = Setup(state, { game: game2 });
+  state = Enhance(state, { game: game2, playerID: void 0 });
   const pluginAPIs = GetAPIs(state);
-  state.G = game.setup({ ...pluginAPIs, ctx: state.ctx }, setupData);
+  state.G = game2.setup({ ...pluginAPIs, ctx: state.ctx }, setupData);
   let initial = {
     ...state,
     // List of {G, ctx} pairs that can be undone.
@@ -13689,9 +14694,9 @@ function InitializeGame({ game, numPlayers, setupData }) {
     // are at the same version that the server.
     _stateID: 0
   };
-  initial = game.flow.init(initial);
-  [initial] = FlushAndValidate(initial, { game });
-  if (!game.disableUndo) {
+  initial = game2.flow.init(initial);
+  [initial] = FlushAndValidate(initial, { game: game2 });
+  if (!game2.disableUndo) {
     initial._undo = [
       {
         G: initial.G,
@@ -13750,7 +14755,7 @@ var DummyImpl = class extends Transport {
   updatePlayerID() {
   }
 };
-var DummyTransport = (opts) => new DummyImpl(opts);
+var DummyTransport = (opts2) => new DummyImpl(opts2);
 var ClientManager = class {
   constructor() {
     this.debugPanel = null;
@@ -13899,8 +14904,8 @@ var createMoveDispatchers = createDispatchers.bind(null, "makeMove");
 var createEventDispatchers = createDispatchers.bind(null, "gameEvent");
 var createPluginDispatchers = createDispatchers.bind(null, "plugin");
 var _ClientImpl = class {
-  constructor({ game, debug, numPlayers, multiplayer, matchID, playerID, credentials, enhancer }) {
-    this.game = ProcessGameConfig(game);
+  constructor({ game: game2, debug, numPlayers, multiplayer, matchID, playerID, credentials, enhancer }) {
+    this.game = ProcessGameConfig(game2);
     this.playerID = playerID;
     this.matchID = matchID || "default";
     this.credentials = credentials;
@@ -13985,7 +14990,7 @@ var _ClientImpl = class {
       multiplayer = DummyTransport;
     this.transport = multiplayer({
       transportDataCallback: (data) => this.receiveTransportData(data),
-      gameKey: game,
+      gameKey: game2,
       game: this.game,
       matchID,
       playerID,
@@ -14151,8 +15156,8 @@ var _ClientImpl = class {
     this.notifySubscribers();
   }
 };
-function Client(opts) {
-  return new _ClientImpl(opts);
+function Client(opts2) {
+  return new _ClientImpl(opts2);
 }
 
 // node_modules/boardgame.io/dist/esm/client.js
@@ -14558,8 +15563,8 @@ function pick(obj, ...attr2) {
 }
 var NATIVE_SET_TIMEOUT = globalThisShim.setTimeout;
 var NATIVE_CLEAR_TIMEOUT = globalThisShim.clearTimeout;
-function installTimerFunctions(obj, opts) {
-  if (opts.useNativeTimers) {
+function installTimerFunctions(obj, opts2) {
+  if (opts2.useNativeTimers) {
     obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(globalThisShim);
     obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(globalThisShim);
   } else {
@@ -14633,14 +15638,14 @@ var Transport2 = class extends Emitter {
    * @param {Object} opts - options
    * @protected
    */
-  constructor(opts) {
+  constructor(opts2) {
     super();
     this.writable = false;
-    installTimerFunctions(this, opts);
-    this.opts = opts;
-    this.query = opts.query;
-    this.socket = opts.socket;
-    this.supportsBinary = !opts.forceBase64;
+    installTimerFunctions(this, opts2);
+    this.opts = opts2;
+    this.query = opts2.query;
+    this.socket = opts2.socket;
+    this.supportsBinary = !opts2.forceBase64;
   }
   /**
    * Emits an error.
@@ -14898,15 +15903,15 @@ var BaseXHR = class extends Polling {
    * @param {Object} opts
    * @package
    */
-  constructor(opts) {
-    super(opts);
+  constructor(opts2) {
+    super(opts2);
     if (typeof location !== "undefined") {
       const isSSL = "https:" === location.protocol;
       let port = location.port;
       if (!port) {
         port = isSSL ? "443" : "80";
       }
-      this.xd = typeof location !== "undefined" && opts.hostname !== location.hostname || port !== opts.port;
+      this.xd = typeof location !== "undefined" && opts2.hostname !== location.hostname || port !== opts2.port;
     }
   }
   /**
@@ -14947,14 +15952,14 @@ var Request = class _Request extends Emitter {
    * @param {Object} options
    * @package
    */
-  constructor(createRequest, uri, opts) {
+  constructor(createRequest, uri, opts2) {
     super();
     this.createRequest = createRequest;
-    installTimerFunctions(this, opts);
-    this._opts = opts;
-    this._method = opts.method || "GET";
+    installTimerFunctions(this, opts2);
+    this._opts = opts2;
+    this._method = opts2.method || "GET";
     this._uri = uri;
-    this._data = void 0 !== opts.data ? opts.data : null;
+    this._data = void 0 !== opts2.data ? opts2.data : null;
     this._create();
   }
   /**
@@ -14964,9 +15969,9 @@ var Request = class _Request extends Emitter {
    */
   _create() {
     var _a;
-    const opts = pick(this._opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
-    opts.xdomain = !!this._opts.xd;
-    const xhr = this._xhr = this.createRequest(opts);
+    const opts2 = pick(this._opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
+    opts2.xdomain = !!this._opts.xd;
+    const xhr = this._xhr = this.createRequest(opts2);
     try {
       xhr.open(this._method, this._uri, true);
       try {
@@ -15103,18 +16108,18 @@ var hasXHR2 = function() {
   return xhr && xhr.responseType !== null;
 }();
 var XHR = class extends BaseXHR {
-  constructor(opts) {
-    super(opts);
-    const forceBase64 = opts && opts.forceBase64;
+  constructor(opts2) {
+    super(opts2);
+    const forceBase64 = opts2 && opts2.forceBase64;
     this.supportsBinary = hasXHR2 && !forceBase64;
   }
-  request(opts = {}) {
-    Object.assign(opts, { xd: this.xd }, this.opts);
-    return new Request(newRequest, this.uri(), opts);
+  request(opts2 = {}) {
+    Object.assign(opts2, { xd: this.xd }, this.opts);
+    return new Request(newRequest, this.uri(), opts2);
   }
 };
-function newRequest(opts) {
-  const xdomain = opts.xdomain;
+function newRequest(opts2) {
+  const xdomain = opts2.xdomain;
   try {
     if ("undefined" !== typeof XMLHttpRequest && (!xdomain || hasCORS)) {
       return new XMLHttpRequest();
@@ -15138,12 +16143,12 @@ var BaseWS = class extends Transport2 {
   doOpen() {
     const uri = this.uri();
     const protocols = this.opts.protocols;
-    const opts = isReactNative ? {} : pick(this.opts, "agent", "perMessageDeflate", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "localAddress", "protocolVersion", "origin", "maxPayload", "family", "checkServerIdentity");
+    const opts2 = isReactNative ? {} : pick(this.opts, "agent", "perMessageDeflate", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "localAddress", "protocolVersion", "origin", "maxPayload", "family", "checkServerIdentity");
     if (this.opts.extraHeaders) {
-      opts.headers = this.opts.extraHeaders;
+      opts2.headers = this.opts.extraHeaders;
     }
     try {
-      this.ws = this.createSocket(uri, protocols, opts);
+      this.ws = this.createSocket(uri, protocols, opts2);
     } catch (err) {
       return this.emitReserved("error", err);
     }
@@ -15215,8 +16220,8 @@ var BaseWS = class extends Transport2 {
 };
 var WebSocketCtor = globalThisShim.WebSocket || globalThisShim.MozWebSocket;
 var WS = class extends BaseWS {
-  createSocket(uri, protocols, opts) {
-    return !isReactNative ? protocols ? new WebSocketCtor(uri, protocols) : new WebSocketCtor(uri) : new WebSocketCtor(uri, protocols, opts);
+  createSocket(uri, protocols, opts2) {
+    return !isReactNative ? protocols ? new WebSocketCtor(uri, protocols) : new WebSocketCtor(uri) : new WebSocketCtor(uri, protocols, opts2);
   }
   doWrite(_packet, data) {
     this.ws.send(data);
@@ -15368,7 +16373,7 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
    * @param {String|Object} uri - uri or options
    * @param {Object} opts - options
    */
-  constructor(uri, opts) {
+  constructor(uri, opts2) {
     super();
     this.binaryType = defaultBinaryType;
     this.writeBuffer = [];
@@ -15378,29 +16383,29 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
     this._maxPayload = -1;
     this._pingTimeoutTime = Infinity;
     if (uri && "object" === typeof uri) {
-      opts = uri;
+      opts2 = uri;
       uri = null;
     }
     if (uri) {
       const parsedUri = parse2(uri);
-      opts.hostname = parsedUri.host;
-      opts.secure = parsedUri.protocol === "https" || parsedUri.protocol === "wss";
-      opts.port = parsedUri.port;
+      opts2.hostname = parsedUri.host;
+      opts2.secure = parsedUri.protocol === "https" || parsedUri.protocol === "wss";
+      opts2.port = parsedUri.port;
       if (parsedUri.query)
-        opts.query = parsedUri.query;
-    } else if (opts.host) {
-      opts.hostname = parse2(opts.host).host;
+        opts2.query = parsedUri.query;
+    } else if (opts2.host) {
+      opts2.hostname = parse2(opts2.host).host;
     }
-    installTimerFunctions(this, opts);
-    this.secure = null != opts.secure ? opts.secure : typeof location !== "undefined" && "https:" === location.protocol;
-    if (opts.hostname && !opts.port) {
-      opts.port = this.secure ? "443" : "80";
+    installTimerFunctions(this, opts2);
+    this.secure = null != opts2.secure ? opts2.secure : typeof location !== "undefined" && "https:" === location.protocol;
+    if (opts2.hostname && !opts2.port) {
+      opts2.port = this.secure ? "443" : "80";
     }
-    this.hostname = opts.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
-    this.port = opts.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
+    this.hostname = opts2.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
+    this.port = opts2.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
     this.transports = [];
     this._transportsByName = {};
-    opts.transports.forEach((t2) => {
+    opts2.transports.forEach((t2) => {
       const transportName = t2.prototype.name;
       this.transports.push(transportName);
       this._transportsByName[transportName] = t2;
@@ -15419,7 +16424,7 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
       },
       transportOptions: {},
       closeOnBeforeunload: false
-    }, opts);
+    }, opts2);
     this.opts.path = this.opts.path.replace(/\/$/, "") + (this.opts.addTrailingSlash ? "/" : "");
     if (typeof this.opts.query === "string") {
       this.opts.query = decode2(this.opts.query);
@@ -15461,14 +16466,14 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
     query.transport = name;
     if (this.id)
       query.sid = this.id;
-    const opts = Object.assign({}, this.opts, {
+    const opts2 = Object.assign({}, this.opts, {
       query,
       socket: this,
       hostname: this.hostname,
       secure: this.secure,
       port: this.port
     }, this.opts.transportOptions[name]);
-    return new this._transportsByName[name](opts);
+    return new this._transportsByName[name](opts2);
   }
   /**
    * Initializes transport to use and starts probe.
@@ -15911,9 +16916,9 @@ var SocketWithUpgrade = class extends SocketWithoutUpgrade {
   }
 };
 var Socket = class extends SocketWithUpgrade {
-  constructor(uri, opts = {}) {
+  constructor(uri, opts2 = {}) {
     const isOptionsOnly = typeof uri === "object";
-    const o2 = isOptionsOnly ? { ...uri } : { ...opts };
+    const o2 = isOptionsOnly ? { ...uri } : { ...opts2 };
     if (!o2.transports || o2.transports && typeof o2.transports[0] === "string") {
       o2.transports = (o2.transports || ["polling", "websocket", "webtransport"]).map((transportName) => transports[transportName]).filter((t2) => !!t2);
     }
@@ -16164,12 +17169,12 @@ var Decoder = class _Decoder extends Emitter {
   /**
    * Decoder constructor
    */
-  constructor(opts) {
+  constructor(opts2) {
     super();
     this.opts = Object.assign({
       reviver: void 0,
       maxAttachments: 10
-    }, typeof opts === "function" ? { reviver: opts } : opts);
+    }, typeof opts2 === "function" ? { reviver: opts2 } : opts2);
   }
   /**
    * Decodes an encoded packet string into packet JSON.
@@ -16389,7 +17394,7 @@ var Socket2 = class extends Emitter {
   /**
    * `Socket` constructor.
    */
-  constructor(io2, nsp, opts) {
+  constructor(io2, nsp, opts2) {
     super();
     this.connected = false;
     this.recovered = false;
@@ -16402,10 +17407,10 @@ var Socket2 = class extends Emitter {
     this.flags = {};
     this.io = io2;
     this.nsp = nsp;
-    if (opts && opts.auth) {
-      this.auth = opts.auth;
+    if (opts2 && opts2.auth) {
+      this.auth = opts2.auth;
     }
-    this._opts = Object.assign({}, opts);
+    this._opts = Object.assign({}, opts2);
     if (this.io._autoConnect)
       this.open();
   }
@@ -17149,12 +18154,12 @@ var Socket2 = class extends Emitter {
 };
 
 // node_modules/socket.io-client/build/esm/contrib/backo2.js
-function Backoff(opts) {
-  opts = opts || {};
-  this.ms = opts.min || 100;
-  this.max = opts.max || 1e4;
-  this.factor = opts.factor || 2;
-  this.jitter = opts.jitter > 0 && opts.jitter <= 1 ? opts.jitter : 0;
+function Backoff(opts2) {
+  opts2 = opts2 || {};
+  this.ms = opts2.min || 100;
+  this.max = opts2.max || 1e4;
+  this.factor = opts2.factor || 2;
+  this.jitter = opts2.jitter > 0 && opts2.jitter <= 1 ? opts2.jitter : 0;
   this.attempts = 0;
 }
 Backoff.prototype.duration = function() {
@@ -17181,36 +18186,36 @@ Backoff.prototype.setJitter = function(jitter) {
 
 // node_modules/socket.io-client/build/esm/manager.js
 var Manager = class extends Emitter {
-  constructor(uri, opts) {
+  constructor(uri, opts2) {
     var _a;
     super();
     this.nsps = {};
     this.subs = [];
     if (uri && "object" === typeof uri) {
-      opts = uri;
+      opts2 = uri;
       uri = void 0;
     }
-    opts = opts || {};
-    opts.path = opts.path || "/socket.io";
-    this.opts = opts;
-    installTimerFunctions(this, opts);
-    this.reconnection(opts.reconnection !== false);
-    this.reconnectionAttempts(opts.reconnectionAttempts || Infinity);
-    this.reconnectionDelay(opts.reconnectionDelay || 1e3);
-    this.reconnectionDelayMax(opts.reconnectionDelayMax || 5e3);
-    this.randomizationFactor((_a = opts.randomizationFactor) !== null && _a !== void 0 ? _a : 0.5);
+    opts2 = opts2 || {};
+    opts2.path = opts2.path || "/socket.io";
+    this.opts = opts2;
+    installTimerFunctions(this, opts2);
+    this.reconnection(opts2.reconnection !== false);
+    this.reconnectionAttempts(opts2.reconnectionAttempts || Infinity);
+    this.reconnectionDelay(opts2.reconnectionDelay || 1e3);
+    this.reconnectionDelayMax(opts2.reconnectionDelayMax || 5e3);
+    this.randomizationFactor((_a = opts2.randomizationFactor) !== null && _a !== void 0 ? _a : 0.5);
     this.backoff = new Backoff({
       min: this.reconnectionDelay(),
       max: this.reconnectionDelayMax(),
       jitter: this.randomizationFactor()
     });
-    this.timeout(null == opts.timeout ? 2e4 : opts.timeout);
+    this.timeout(null == opts2.timeout ? 2e4 : opts2.timeout);
     this._readyState = "closed";
     this.uri = uri;
-    const _parser = opts.parser || esm_exports;
+    const _parser = opts2.parser || esm_exports;
     this.encoder = new _parser.Encoder();
     this.decoder = new _parser.Decoder();
-    this._autoConnect = opts.autoConnect !== false;
+    this._autoConnect = opts2.autoConnect !== false;
     if (this._autoConnect)
       this.open();
   }
@@ -17390,10 +18395,10 @@ var Manager = class extends Emitter {
    * @return {Socket}
    * @public
    */
-  socket(nsp, opts) {
+  socket(nsp, opts2) {
     let socket = this.nsps[nsp];
     if (!socket) {
-      socket = new Socket2(this, nsp, opts);
+      socket = new Socket2(this, nsp, opts2);
       this.nsps[nsp] = socket;
     } else if (this._autoConnect && !socket.active) {
       socket.connect();
@@ -17531,31 +18536,31 @@ var Manager = class extends Emitter {
 
 // node_modules/socket.io-client/build/esm/index.js
 var cache = {};
-function lookup2(uri, opts) {
+function lookup2(uri, opts2) {
   if (typeof uri === "object") {
-    opts = uri;
+    opts2 = uri;
     uri = void 0;
   }
-  opts = opts || {};
-  const parsed = url(uri, opts.path || "/socket.io");
+  opts2 = opts2 || {};
+  const parsed = url(uri, opts2.path || "/socket.io");
   const source = parsed.source;
   const id = parsed.id;
   const path = parsed.path;
   const sameNamespace = cache[id] && path in cache[id]["nsps"];
-  const newConnection = opts.forceNew || opts["force new connection"] || false === opts.multiplex || sameNamespace;
+  const newConnection = opts2.forceNew || opts2["force new connection"] || false === opts2.multiplex || sameNamespace;
   let io2;
   if (newConnection) {
-    io2 = new Manager(source, opts);
+    io2 = new Manager(source, opts2);
   } else {
     if (!cache[id]) {
-      cache[id] = new Manager(source, opts);
+      cache[id] = new Manager(source, opts2);
     }
     io2 = cache[id];
   }
-  if (parsed.query && !opts.query) {
-    opts.query = parsed.queryKey;
+  if (parsed.query && !opts2.query) {
+    opts2.query = parsed.queryKey;
   }
-  return io2.socket(parsed.path, opts);
+  return io2.socket(parsed.path, opts2);
 }
 Object.assign(lookup2, {
   Manager,
@@ -17579,8 +18584,8 @@ var SocketIOTransport = class extends Transport {
    * @param {string} numPlayers - The number of players.
    * @param {string} server - The game server in the form of 'hostname:port'. Defaults to the server serving the client if not provided.
    */
-  constructor({ socket, socketOpts, server, ...opts }) {
-    super(opts);
+  constructor({ socket, socketOpts, server, ...opts2 }) {
+    super(opts2);
     this.server = server;
     this.socket = socket;
     this.socketOpts = socketOpts;
@@ -17845,7 +18850,7 @@ var ZooPresident = {
   name: "zoo-president",
   setup: ({ ctx, random }, setupData) => {
     const n2 = ctx.numPlayers;
-    const opts = Object.assign({ rounds: 3, tax: true, clear2: false }, setupData || {});
+    const opts2 = Object.assign({ rounds: 3, tax: true, clear2: false }, setupData || {});
     const G2 = {
       hands: [],
       counts: new Array(n2).fill(0),
@@ -17856,8 +18861,8 @@ var ZooPresident = {
       next: 0,
       score: new Array(n2).fill(0),
       roundNo: 1,
-      totalRounds: Math.max(3, opts.rounds),
-      opts,
+      totalRounds: Math.max(3, opts2.rounds),
+      opts: opts2,
       lastOrder: null,
       taxOrder: null,
       revolution: null,
@@ -18145,7 +19150,7 @@ function botPick(hand, pile) {
     if (isJoker(c2)) jok++;
     else cnt[c2] = (cnt[c2] || 0) + 1;
   });
-  const opts = [];
+  const opts2 = [];
   const maxN = pile ? pile.num - 1 : 12;
   for (let num = 1; num <= maxN; num++) {
     const same = cnt[num] || 0;
@@ -18153,19 +19158,19 @@ function botPick(hand, pile) {
     if (pile) {
       const need = pile.count - same;
       if (need > jok) continue;
-      opts.push({ num, count: pile.count, useJok: Math.max(0, need), own: same });
-    } else opts.push({ num, count: same, useJok: 0, own: same });
+      opts2.push({ num, count: pile.count, useJok: Math.max(0, need), own: same });
+    } else opts2.push({ num, count: same, useJok: 0, own: same });
   }
-  if (!opts.length) return !pile && jok > 0 ? { num: 13, count: 1 } : null;
-  opts.forEach((o2) => {
+  if (!opts2.length) return !pile && jok > 0 ? { num: 13, count: 1 } : null;
+  opts2.forEach((o2) => {
     let s2 = o2.num * 2;
     s2 -= o2.useJok * 10;
     if (pile && o2.own > o2.count) s2 -= 24;
     o2.s = s2;
   });
-  opts.sort((a2, b2) => b2.s - a2.s);
-  if (opts.length > 1 && Math.random() < 0.1) return opts[1];
-  return opts[0];
+  opts2.sort((a2, b2) => b2.s - a2.s);
+  if (opts2.length > 1 && Math.random() < 0.1) return opts2[1];
+  return opts2[0];
 }
 var worstFirst = (a2, b2) => (isJoker(b2) ? 99 : b2) - (isJoker(a2) ? 99 : a2);
 function scheduleBot() {
@@ -18230,16 +19235,16 @@ function attach(client) {
   unsub = client.subscribe(() => push());
   push();
 }
-function startLocal({ numPlayers = 6, opts = {}, names = [], myID = "0", bots = null } = {}) {
+function startLocal({ numPlayers = 6, opts: opts2 = {}, names = [], myID = "0", bots = null } = {}) {
   stop();
   engine.mode = "local";
   engine.myID = String(myID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
   engine.bots = bots || Array.from({ length: numPlayers }, (_2, i2) => i2).filter((i2) => i2 !== Number(myID));
-  const game = Object.assign({}, ZooPresident, {
-    setup: (ctx) => ZooPresident.setup(ctx, opts)
+  const game2 = Object.assign({}, ZooPresident, {
+    setup: (ctx) => ZooPresident.setup(ctx, opts2)
   });
-  attach(Client({ game, numPlayers, playerID: engine.myID }));
+  attach(Client({ game: game2, numPlayers, playerID: engine.myID }));
 }
 function startOnline({ server, matchID, playerID, credentials, numPlayers, names = [] }) {
   stop();
@@ -18298,13 +19303,8 @@ function give(cards) {
   return true;
 }
 
-// src/lib/assets.js
-var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
-var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
-
 // src/screens/table.js
-function mount(root) {
+function mount3(root) {
   const document2 = scoped(root);
   const HEADS2 = HEADS, ART2 = ART;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
@@ -18472,18 +19472,18 @@ function mount(root) {
   const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
   function placeTable(sec, cyPct) {
     const b2 = sec.getBoundingClientRect();
-    const W2 = b2.width, H2 = b2.height;
-    const scale = Math.max(W2 / OV.iw, H2 / OV.ih);
+    const W3 = b2.width, H2 = b2.height;
+    const scale = Math.max(W3 / OV.iw, H2 / OV.ih);
     const dw = OV.iw * scale, dh = OV.ih * scale;
     const cy = cyPct == null ? (H2 - dh) / 2 + OV.cy * dh : cyPct / 100 * H2;
-    const ox = W2 / 2 - OV.cx * dw;
+    const ox = W3 / 2 - OV.cx * dw;
     const oy = cy - OV.cy * dh;
     sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
     sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
     return {
-      cx: (ox + OV.cx * dw) / W2 * 100,
+      cx: (ox + OV.cx * dw) / W3 * 100,
       cy: cy / H2 * 100,
-      rx: OV.rx * dw / W2 * 100,
+      rx: OV.rx * dw / W3 * 100,
       ry: OV.ry * dh / H2 * 100
     };
   }
@@ -18551,7 +19551,7 @@ function mount(root) {
   }
   function anchorSeats(box, limitBottom) {
     const root2 = window.document.documentElement;
-    const W2 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
+    const W3 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
     box.querySelectorAll(".seat").forEach((s2) => {
       const av = s2.querySelector(".seat__av");
       if (!av) return;
@@ -18560,8 +19560,8 @@ function mount(root) {
       s2.style.transform = "translate(calc(-50% + " + nx + "px)," + -dy + "px)";
       const r2 = s2.getBoundingClientRect();
       let ox = nx, oy = 0;
-      if (r2.left < W2.left + 1) ox = nx + (W2.left + 1 - r2.left);
-      else if (r2.right > W2.right - 1) ox = nx + (W2.right - 1 - r2.right);
+      if (r2.left < W3.left + 1) ox = nx + (W3.left + 1 - r2.left);
+      else if (r2.right > W3.right - 1) ox = nx + (W3.right - 1 - r2.right);
       if (limitBottom && r2.bottom > limitBottom) oy = limitBottom - r2.bottom;
       if (ox !== nx || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
@@ -18805,9 +19805,1119 @@ function mount(root) {
     draw();
   });
 }
+
+// src/screens/tax.js
+var tax_exports = {};
+__export(tax_exports, {
+  mount: () => mount4
+});
+function mount4(root) {
+  const document2 = scoped(root);
+  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const el = (id) => document2.getElementById(id);
+  const isJ = (c2) => c2 >= 13;
+  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
+  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
+  const T = {
+    ko: {
+      steps: ["\uB4F1\uC218 \uBC1C\uD45C", "\uD328 \uB098\uB204\uAE30", "\uD601\uBA85", "\uC138\uAE08", "\uC2DC\uC791"],
+      dealH: "\uD328 \uB098\uB204\uAE30",
+      dealS: "80\uC7A5\uC744 \uACE8\uACE0\uB8E8 \uB098\uB215\uB2C8\uB2E4. \uC774 \uC21C\uAC04 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC774 \uD55C \uC0AC\uB78C\uC5D0\uAC8C \uBAB0\uB9AC\uBA74 \uD601\uBA85\uC774 \uC5F4\uB9BD\uB2C8\uB2E4.",
+      rankH: "\uC774\uBC88 \uD310\uC758 \uB4F1\uC218",
+      rankS: "\uC9C0\uB09C \uD310\uC5D0\uC11C \uC190\uC744 \uD134 \uC21C\uC11C\uAC00 \uADF8\uB300\uB85C \uC774\uBC88 \uD310 \uB4F1\uC218\uAC00 \uB429\uB2C8\uB2E4.",
+      revH: "\uD601\uBA85",
+      revNone: "\uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uBAA8\uB450 \uC954 \uC0AC\uB78C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.",
+      revMine: "\uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC774 \uBAA8\uB450 \uC190\uC5D0 \uB4E4\uC5B4\uC654\uC2B5\uB2C8\uB2E4. \uD601\uBA85\uC744 \uC120\uC5B8\uD558\uBA74 \uC774\uBC88 \uD310 \uC138\uAE08\uC774 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4.",
+      revOther: (n2) => n2 + "\uB2D8\uC774 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uC950\uACE0 \uD601\uBA85\uC744 \uC120\uC5B8\uD588\uC2B5\uB2C8\uB2E4. \uC774\uBC88 \uD310 \uC138\uAE08\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.",
+      revGreatOther: (n2) => n2 + "\uB2D8\uC774 \uAF34\uB4F1\uC73C\uB85C \uB300\uD601\uBA85\uC744 \uC120\uC5B8\uD588\uC2B5\uB2C8\uB2E4. \uC138\uAE08\uC774 \uC0AC\uB77C\uC9C0\uACE0 \uB4F1\uC218\uAC00 \uD1B5\uC9F8\uB85C \uB4A4\uC9D1\uD799\uB2C8\uB2E4.",
+      revGreatMine: "\uAF34\uB4F1\uC778\uB370 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uBAA8\uB450 \uC950\uC5C8\uC2B5\uB2C8\uB2E4. \uB300\uD601\uBA85\uC744 \uC120\uC5B8\uD558\uBA74 \uC138\uAE08\uC774 \uC0AC\uB77C\uC9C0\uACE0 \uACC4\uAE09\uC774 \uD1B5\uC9F8\uB85C \uB4A4\uC9D1\uD799\uB2C8\uB2E4.",
+      revGreatDone: "\uB300\uD601\uBA85. \uACC4\uAE09\uC774 \uB4A4\uC9D1\uD614\uC2B5\uB2C8\uB2E4.",
+      revDone: "\uD601\uBA85. \uC774\uBC88 \uD310 \uC138\uAE08\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.",
+      taxH: "\uC138\uAE08",
+      taxSkip: "\uD601\uBA85\uC73C\uB85C \uC774\uBC88 \uD310 \uC138\uAE08\uC740 \uAC77\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
+      taxMineTop: (n2) => "\uAF34\uB4F1 <b>" + n2 + "</b>\uB2D8\uC758 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uB450 \uC7A5\uC744 \uAC00\uC838\uC635\uB2C8\uB2E4. \uB300\uC2E0 \uC544\uBB34 \uCE74\uB4DC\uB098 \uB450 \uC7A5\uC744 \uC8FC\uC138\uC694.",
+      taxMineTop2: (n2) => "\uB4A4\uC5D0\uC11C \uB450 \uBC88\uC9F8 <b>" + n2 + "</b>\uB2D8\uACFC \uD55C \uC7A5\uC529 \uBC14\uAFC9\uB2C8\uB2E4. \uC904 \uCE74\uB4DC \uD55C \uC7A5\uC744 \uACE0\uB974\uC138\uC694.",
+      taxMineBot: (n2) => "1\uB4F1 <b>" + n2 + "</b>\uB2D8\uC774 \uB0B4 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uB450 \uC7A5\uC744 \uAC00\uC838\uAC11\uB2C8\uB2E4.",
+      taxMineBot2: (n2) => "2\uB4F1 <b>" + n2 + "</b>\uB2D8\uC774 \uB0B4 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uD55C \uC7A5\uC744 \uAC00\uC838\uAC11\uB2C8\uB2E4.",
+      taxMid: "1\uB4F1\uACFC \uAF34\uB4F1\uC774 \uCE74\uB4DC\uB97C \uC8FC\uACE0\uBC1B\uC2B5\uB2C8\uB2E4.",
+      give: (n2) => n2 + "\uC7A5 \uC8FC\uAE30",
+      giveNeed: (n2) => "\uC904 \uCE74\uB4DC " + n2 + "\uC7A5\uC744 \uACE0\uB974\uC138\uC694",
+      take: "\uAC00\uC838\uC634",
+      gave: "\uC90C",
+      doneH: "\uC900\uBE44 \uC644\uB8CC",
+      doneS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uCCAB \uD310\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
+      declare: "\uD601\uBA85 \uC120\uC5B8",
+      declareG: "\uB300\uD601\uBA85 \uC120\uC5B8",
+      skip: "\uB118\uAE30\uAE30",
+      next: "\uB2E4\uC74C",
+      back: "\uCC98\uC74C\uBD80\uD130",
+      start: "\uD310 \uC2DC\uC791",
+      joker: "\uCE74\uBA5C\uB808\uC628"
+    },
+    en: {
+      steps: ["Standings", "Deal", "Revolution", "Tax", "Start"],
+      dealH: "Dealing",
+      dealS: "All 80 cards go out. If both chameleons land in one hand, a revolution opens up.",
+      rankH: "Standings for this round",
+      rankS: "Last round's finishing order becomes this round's standing.",
+      revH: "Revolution",
+      revNone: "Nobody holds both chameleons.",
+      revMine: "Both chameleons are in your hand. Declare a revolution and this round's tax is cancelled.",
+      revOther: (n2) => n2 + " holds both chameleons and declared a revolution. No tax this round.",
+      revGreatOther: (n2) => n2 + " declared a great revolution from last place. Tax is cancelled and every standing reverses.",
+      revGreatMine: "You are last and hold both chameleons. A great revolution cancels tax and reverses every rank.",
+      revGreatDone: "Great revolution. Every rank is reversed.",
+      revDone: "Revolution. No tax this round.",
+      taxH: "Tax",
+      taxSkip: "The revolution cancels tax for this round.",
+      taxMineTop: (n2) => "You take the two best cards from <b>" + n2 + "</b>, last place. Hand back any two.",
+      taxMineTop2: (n2) => "You swap one card with <b>" + n2 + "</b>, second from last. Pick one to give.",
+      taxMineBot: (n2) => "<b>" + n2 + "</b>, in first place, takes your two best cards.",
+      taxMineBot2: (n2) => "<b>" + n2 + "</b>, in second place, takes your best card.",
+      taxMid: "The top and bottom players exchange cards.",
+      give: (n2) => "Give " + n2,
+      giveNeed: (n2) => "Pick " + n2 + " to give",
+      take: "taken",
+      gave: "given",
+      doneH: "Ready",
+      doneS: (n2) => "<b>" + n2 + "</b> leads the first trick.",
+      declare: "Declare",
+      declareG: "Declare great revolution",
+      skip: "Skip",
+      next: "Next",
+      back: "Restart",
+      start: "Start round",
+      joker: "CHAMELEON"
+    }
+  };
+  let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
+  let N2 = 6;
+  let online = false;
+  let ranks = [];
+  let wasGreat = false;
+  const G2 = () => window.GAME = window.GAME || {};
+  const holds = () => G2().hold || [];
+  const holdOf = (i2) => {
+    const h2 = holds()[i2];
+    return Array.isArray(h2) ? h2 : [];
+  };
+  const myHand = () => holdOf(0);
+  const nameOf = (i2) => ((lang === "ko" ? G2().names : G2().namesEn) || G2().names || [])[i2] || "";
+  const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
+  function cardHTML(n2, w2) {
+    if (isJ(n2)) return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"></div></div>';
+    return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
+  }
+  function order() {
+    return reversed ? ranks.slice().reverse() : ranks;
+  }
+  function rankOf(seat) {
+    return order().indexOf(seat);
+  }
+  function ordEn(n2) {
+    const s2 = ["th", "st", "nd", "rd"], v2 = n2 % 100;
+    return n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]);
+  }
+  function rankLabel(r2) {
+    return lang === "ko" ? r2 + 1 + "\uB4F1" : ordEn(r2 + 1);
+  }
+  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
+  function placeTable(sec, cyPct) {
+    const b2 = sec.getBoundingClientRect();
+    const W3 = b2.width, H2 = b2.height;
+    const scale = Math.max(W3 / OV.iw, H2 / OV.ih);
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = cyPct == null ? (H2 - dh) / 2 + OV.cy * dh : cyPct / 100 * H2;
+    const ox = W3 / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {
+      cx: (ox + OV.cx * dw) / W3 * 100,
+      cy: cy / H2 * 100,
+      rx: OV.rx * dw / W3 * 100,
+      ry: OV.ry * dh / H2 * 100
+    };
+  }
+  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
+  function syncRing() {
+    const sec = window.document.getElementById("tax");
+    if (!sec) return;
+    RING = placeTable(sec, null);
+    const m = el("mid");
+    if (m) {
+      m.style.left = RING.cx + "%";
+      m.style.top = RING.cy + "%";
+    }
+  }
+  function seatPos(i2) {
+    const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
+    const s2 = Math.sin(a2);
+    const bias = s2 > 0.25 ? 3.4 * s2 : 0;
+    return { x: RING.cx + Math.cos(a2) * -RING.rx, y: RING.cy + s2 * RING.ry + bias };
+  }
+  function flyCard(from, to, card, delay, faceDown) {
+    const a2 = from < 0 ? { x: 50, y: 50 } : seatPos(from);
+    const b2 = to < 0 ? { x: 50, y: 50 } : seatPos(to);
+    const d2 = document2.createElement("div");
+    d2.className = "fly";
+    d2.style.left = a2.x + "%";
+    d2.style.top = a2.y + "%";
+    d2.style.transform = "translate(-50%,-50%) scale(.7)";
+    d2.style.opacity = 0;
+    d2.innerHTML = faceDown ? backHTML(32) : cardHTML(card, 32);
+    el("fx").appendChild(d2);
+    setTimeout(() => {
+      d2.style.opacity = 1;
+      d2.style.left = b2.x + "%";
+      d2.style.top = b2.y + "%";
+      d2.style.transform = "translate(-50%,-50%) scale(1) rotate(" + (Math.random() * 20 - 10).toFixed(0) + "deg)";
+    }, delay + 20);
+    setTimeout(() => {
+      d2.style.opacity = 0;
+    }, delay + 620);
+    setTimeout(() => d2.remove(), delay + 950);
+  }
+  function backHTML(w2) {
+    return '<div class="card" style="--w:' + w2 + 'px;padding:2px"><div class="card__art" style="border-width:1px"><img src="' + ART2.back + '" alt=""></div></div>';
+  }
+  function clearFx() {
+    el("fx").innerHTML = "";
+  }
+  function dealAll() {
+    const d2 = [];
+    for (let n2 = 1; n2 <= 12; n2++) for (let i2 = 0; i2 < n2; i2++) d2.push(n2);
+    d2.push(13, 14);
+    for (let i2 = d2.length - 1; i2 > 0; i2--) {
+      const k2 = Math.floor(Math.random() * (i2 + 1));
+      [d2[i2], d2[k2]] = [d2[k2], d2[i2]];
+    }
+    const hands = Array.from({ length: N2 }, () => []);
+    d2.forEach((c2, i2) => hands[i2 % N2].push(c2));
+    hands.forEach((x2) => x2.sort((a2, b2) => a2 - b2));
+    G2().hold = hands;
+    const w2 = hands.findIndex((x2) => x2.filter((c2) => c2 >= 13).length === 2);
+    revSeat = w2 < 0 ? null : w2;
+  }
+  function applyTax2(myGive) {
+    if (online && window.__setTaxGive) window.__setTaxGive(myGive || null);
+    const hh = holds(), o2 = order();
+    [[o2[0], o2[N2 - 1], 2], [o2[1], o2[N2 - 2], 1]].forEach(([hi, lo, k2]) => {
+      const best = hh[lo].slice().sort((a2, b2) => a2 - b2).slice(0, k2);
+      best.forEach((c2) => hh[lo].splice(hh[lo].indexOf(c2), 1));
+      const give2 = hi === 0 ? myGive.slice(0, k2) : hh[hi].slice().sort((a2, b2) => b2 - a2).slice(0, k2);
+      give2.forEach((c2) => hh[hi].splice(hh[hi].indexOf(c2), 1));
+      hh[hi].push(...best);
+      hh[lo].push(...give2);
+      hh[hi].sort((a2, b2) => a2 - b2);
+      hh[lo].sort((a2, b2) => a2 - b2);
+    });
+  }
+  function runDeal() {
+    clearFx();
+    for (let round = 0; round < 3; round++)
+      for (let i2 = 0; i2 < N2; i2++)
+        flyCard(-1, i2, 0, (round * 6 + i2) * 55, true);
+  }
+  function runTax() {
+    window.__myGive = window.__myGive || [];
+    clearFx();
+    const o2 = order(), n2 = N2;
+    const pairs = [[o2[0], o2[n2 - 1], 2], [o2[1], o2[n2 - 2], 1]];
+    let t2 = 0;
+    pairs.forEach(([hi, lo, k2]) => {
+      const mine = hi === 0 || lo === 0;
+      const best = holdOf(lo).slice().sort((a2, b2) => a2 - b2).slice(0, k2);
+      for (let j2 = 0; j2 < k2; j2++) {
+        flyCard(lo, hi, best[j2], t2, !mine);
+        t2 += 150;
+      }
+      for (let j2 = 0; j2 < k2; j2++) {
+        flyCard(hi, lo, hi === 0 ? window.__myGive[j2] : 12, t2, !mine);
+        t2 += 150;
+      }
+    });
+  }
+  function anchorSeats(box, limitBottom) {
+    const root2 = window.document.documentElement;
+    const W3 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
+    box.querySelectorAll(".seat").forEach((s2) => {
+      const av = s2.querySelector(".seat__av");
+      if (!av) return;
+      const dy = av.offsetTop + av.offsetHeight / 2;
+      s2.style.transform = "translate(-50%," + -dy + "px)";
+      const r2 = s2.getBoundingClientRect();
+      let ox = 0, oy = 0;
+      if (r2.left < W3.left + 3) ox = W3.left + 3 - r2.left;
+      else if (r2.right > W3.right - 3) ox = W3.right - 3 - r2.right;
+      if (limitBottom && r2.bottom > limitBottom) oy = limitBottom - r2.bottom;
+      if (ox || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
+    });
+  }
+  function renderSeats() {
+    syncRing();
+    const box = el("seats");
+    box.innerHTML = "";
+    for (let i2 = 0; i2 < N2; i2++) {
+      const p2 = seatPos(i2), r2 = rankOf(i2), n2 = N2;
+      const d2 = document2.createElement("div");
+      d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (step >= 1 && r2 <= 1 ? " seat--top" : "") + (step >= 1 && r2 >= n2 - 2 ? " seat--bot" : "");
+      d2.style.left = p2.x.toFixed(1) + "%";
+      d2.style.top = p2.y.toFixed(1) + "%";
+      const big = N2 <= 6;
+      d2.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
+      d2.innerHTML = '<span class="seat__r' + (step >= 1 ? " on" : "") + '">' + rankLabel(r2) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>";
+      box.appendChild(d2);
+    }
+    const hn = el("hint");
+    anchorSeats(box, hn ? hn.getBoundingClientRect().top - 4 : 0);
+  }
+  function renderHand() {
+    const h2 = el("hand");
+    h2.innerHTML = "";
+    const hand = myHand(), w2 = 54, n2 = hand.length;
+    const step2 = n2 > 1 ? Math.min(40, (h2.clientWidth - w2) / (n2 - 1)) : 0;
+    const total = w2 + step2 * (n2 - 1);
+    const taken = takenIdx();
+    hand.forEach((c2, i2) => {
+      const s2 = document2.createElement("div");
+      s2.className = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (taken.includes(i2) ? " slot--take" : "");
+      s2.style.left = (h2.clientWidth - total) / 2 + i2 * step2 + "px";
+      s2.style.zIndex = i2;
+      s2.innerHTML = cardHTML(c2, w2);
+      s2.onclick = () => {
+        if (!giveCount()) return;
+        const k2 = sel.indexOf(i2);
+        if (k2 >= 0) sel.splice(k2, 1);
+        else if (sel.length < giveCount()) sel.push(i2);
+        draw();
+      };
+      h2.appendChild(s2);
+    });
+  }
+  function giveCount() {
+    if (step !== 3 || taxSkipped()) return 0;
+    const r2 = rankOf(0), n2 = N2;
+    return r2 === 0 ? 2 : r2 === 1 ? 1 : 0;
+  }
+  function takenIdx() {
+    if (step !== 3 || taxSkipped()) return [];
+    const r2 = rankOf(0), n2 = N2;
+    const k2 = r2 === n2 - 1 ? 2 : r2 === n2 - 2 ? 1 : 0;
+    return myHand().map((c2, i2) => i2).sort((a2, b2) => myHand()[a2] - myHand()[b2]).slice(0, k2);
+  }
+  function taxSkipped() {
+    return revSeat !== null && declared;
+  }
+  function renderMid() {
+    const t2 = T[lang], m = el("mid"), r2 = rankOf(0), n2 = N2, o2 = order();
+    let html = "";
+    if (step === 0) {
+      html = '<div class="mid__h">' + t2.rankH + '</div><div class="mid__s">' + t2.rankS + "</div>";
+    } else if (step === 1) {
+      html = '<div class="mid__h">' + t2.dealH + '</div><div class="mid__s">' + t2.dealS + "</div>";
+    } else if (step === 2) {
+      const great = revSeat !== null && rankOf(revSeat) === n2 - 1;
+      html = '<div class="mid__h">' + t2.revH + '</div><div class="mid__s">' + (revSeat === null ? t2.revNone : declared ? wasGreat ? t2.revGreatDone : t2.revDone : revSeat === 0 ? great ? t2.revGreatMine : t2.revMine : great ? t2.revGreatOther(nameOf(revSeat)) : t2.revOther(nameOf(revSeat))) + "</div>";
+      if (revSeat === 0 && !declared)
+        html += '<div class="flow rev"><div class="frow"><span class="frow__c">' + cardHTML(13, 40) + cardHTML(14, 40) + "</span></div></div>";
+    } else if (step === 3) {
+      html = '<div class="mid__h">' + t2.taxH + '</div><div class="mid__s">' + (taxSkipped() ? t2.taxSkip : r2 === 0 ? t2.taxMineTop(nameOf(o2[n2 - 1])) : r2 === 1 ? t2.taxMineTop2(nameOf(o2[n2 - 2])) : r2 === n2 - 1 ? t2.taxMineBot(nameOf(o2[0])) : r2 === n2 - 2 ? t2.taxMineBot2(nameOf(o2[1])) : t2.taxMid) + "</div>";
+      if (!taxSkipped()) {
+        const partner = r2 === 0 ? o2[n2 - 1] : r2 === 1 ? o2[n2 - 2] : null;
+        const inC = partner === null ? [] : holdOf(partner).slice().sort((a2, b2) => a2 - b2).slice(0, r2 === 0 ? 2 : 1);
+        const outC = takenIdx().map((i2) => myHand()[i2]);
+        let rows = "";
+        if (inC.length) rows += '<div class="frow frow--in"><span class="frow__w">' + nameOf(partner) + ' \u2192</span><span class="frow__c">' + inC.map((c2) => cardHTML(c2, 34)).join("") + "</span></div>";
+        if (outC.length) rows += '<div class="frow frow--out"><span class="frow__w">\u2192 ' + nameOf(o2[r2 === n2 - 1 ? 0 : 1]) + '</span><span class="frow__c">' + outC.map((c2) => cardHTML(c2, 34)).join("") + "</span></div>";
+        if (sel.length) rows += '<div class="frow frow--out"><span class="frow__w">\u2192 ' + nameOf(partner) + '</span><span class="frow__c">' + sel.map((i2) => cardHTML(myHand()[i2], 34)).join("") + "</span></div>";
+        if (rows) html += '<div class="flow">' + rows + "</div>";
+      }
+    } else {
+      html = '<div class="mid__h">' + t2.doneH + '</div><div class="mid__s">' + t2.doneS(nameOf(order()[0])) + "</div>";
+    }
+    m.innerHTML = html;
+  }
+  function renderBottom() {
+    const t2 = T[lang], great = revSeat !== null && rankOf(revSeat) === N2 - 1;
+    el("step").textContent = step + 1 + ". " + t2.steps[step];
+    el("back").textContent = t2.back;
+    const g2 = giveCount();
+    el("hint").innerHTML = step === 3 && g2 ? sel.length < g2 ? t2.giveNeed(g2 - sel.length) : "" : "";
+    const b2 = el("next");
+    if (step === 2 && revSeat === 0 && !declared) {
+      b2.className = "bt-rev";
+      b2.textContent = great ? t2.declareG : t2.declare;
+      b2.disabled = false;
+    } else {
+      b2.className = "bt-main";
+      b2.textContent = step === 4 ? t2.start : step === 3 && g2 ? t2.give(g2) : t2.next;
+      b2.disabled = step === 3 && g2 > 0 && sel.length < g2;
+    }
+  }
+  function draw() {
+    renderSeats();
+    renderMid();
+    renderHand();
+    renderBottom();
+    const hn = el("hint");
+    anchorSeats(el("seats"), hn ? hn.getBoundingClientRect().top - 4 : 0);
+    if (step >= 1) window.__myRankIdx = rankOf(0);
+  }
+  function boot() {
+    if (window.__net) {
+      online = true;
+    }
+    const g2 = G2();
+    N2 = g2.N || 6;
+    ranks = g2.finish && g2.finish.length === N2 ? g2.finish.slice() : Array.from({ length: N2 }, (_2, i2) => i2);
+    step = 0;
+    sel = [];
+    declared = false;
+    reversed = false;
+    revSeat = null;
+    wasGreat = false;
+    clearFx();
+    draw();
+  }
+  window.__bootTax = () => {
+    boot();
+    autoNext();
+  };
+  boot();
+  autoNext();
+  function needStep(k2) {
+    if (k2 === 2) return revSeat !== null;
+    if (k2 === 3) {
+      if (taxSkipped()) return false;
+      const r2 = rankOf(0), n2 = N2;
+      return r2 === 0 || r2 === 1 || r2 === n2 - 1 || r2 === n2 - 2;
+    }
+    return true;
+  }
+  var autoId = null;
+  function autoNext() {
+    if (autoId) {
+      clearTimeout(autoId);
+      autoId = null;
+    }
+    if (step >= 4) return;
+    const sec = window.document.getElementById("tax");
+    if (!sec || !sec.classList.contains("is-on")) return;
+    let wait2 = 0;
+    if (step === 0) wait2 = 2200;
+    else if (step === 1) wait2 = 2600;
+    else if (step === 2 && revSeat !== 0) wait2 = 2600;
+    else if (step === 2 && revSeat === 0) wait2 = 1e4;
+    else if (step === 3) wait2 = 1e4;
+    if (!wait2) return;
+    autoId = setTimeout(() => {
+      const sec2 = window.document.getElementById("tax");
+      if (!sec2 || !sec2.classList.contains("is-on")) return;
+      if (step === 3) {
+        const g2 = giveCount();
+        if (g2 > 0 && sel.length < g2) {
+          const mine = myHand();
+          const idx = mine.map((c2, i2) => i2).sort((a2, b3) => (mine[b3] >= 13 ? 99 : mine[b3]) - (mine[a2] >= 13 ? 99 : mine[a2]));
+          sel = idx.slice(0, g2);
+          draw();
+        }
+      }
+      const b2 = el("next");
+      if (b2 && !b2.disabled) b2.click();
+    }, wait2);
+  }
+  el("next").onclick = () => {
+    const great = revSeat !== null && rankOf(revSeat) === N2 - 1;
+    if (step === 2 && revSeat !== null && !declared) {
+      declared = true;
+      wasGreat = great;
+      if (great) {
+        reversed = true;
+        el("flash").classList.remove("go");
+        void el("flash").offsetWidth;
+        el("flash").classList.add("go");
+        draw();
+        document2.querySelectorAll(".seat__r").forEach((x2) => x2.classList.add("swap"));
+        setTimeout(() => document2.querySelectorAll(".seat__r").forEach((x2) => x2.classList.remove("swap")), 750);
+        return;
+      }
+      draw();
+      return;
+    }
+    if (step === 3 && !taxSkipped()) {
+      window.__myGive = sel.map((i2) => myHand()[i2]);
+      runTax();
+      applyTax2(window.__myGive);
+      sel = [];
+    }
+    if (step < 4) step++;
+    while (step < 4 && !needStep(step)) step++;
+    if (step === 1) {
+      dealAll();
+    }
+    draw();
+    if (step === 1) runDeal();
+    if (step === 4) {
+      G2().order = order().slice();
+      if (autoId) {
+        clearTimeout(autoId);
+        autoId = null;
+      }
+      setTimeout(() => {
+        if (window.__toTable) window.__toTable();
+      }, 400);
+      return;
+    }
+    autoNext();
+  };
+  el("back").onclick = () => {
+    if (window.__toResult) window.__toResult();
+  };
+  document2.querySelectorAll("#lang button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      lang = b2.dataset.l;
+      document2.documentElement.lang = lang;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      draw();
+    });
+  });
+  window.addEventListener("resize", draw);
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    draw();
+  });
+}
+
+// src/screens/result.js
+var result_exports = {};
+__export(result_exports, {
+  mount: () => mount5
+});
+function mount5(root) {
+  const document2 = scoped(root);
+  const HEADS2 = HEADS;
+  const el = (id) => document2.getElementById(id);
+  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
+  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
+  const T = {
+    ko: {
+      kickR: (n2) => n2 + "\uD310 \uACB0\uACFC",
+      kickF: "\uCD5C\uC885 \uACB0\uACFC",
+      titleR: "\uC774\uBC88 \uD310 \uB4F1\uC218",
+      titleF: "\uC6B0\uC2B9",
+      subR: (a2, b2) => a2 + "\uD310\uAE4C\uC9C0 \uB05D\uB0AC\uC2B5\uB2C8\uB2E4. " + b2 + "\uD310 \uB0A8\uC558\uC2B5\uB2C8\uB2E4.",
+      subLast: "\uB9C8\uC9C0\uB9C9 \uD310\uC785\uB2C8\uB2E4.",
+      subF: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uAC00\uC7A5 \uB192\uC740 \uC810\uC218\uB85C \uC774\uACBC\uC2B5\uB2C8\uB2E4.",
+      colP: "\uB4F1\uC218",
+      colG: "\uC774\uBC88 \uD310",
+      colT: "\uCD1D\uC810",
+      next: "\uB2E4\uC74C \uD310",
+      nextF: "\uB2E4\uC2DC \uD558\uAE30",
+      quit: "\uB098\uAC00\uAE30",
+      tie: "\uB3D9\uC810\uC785\uB2C8\uB2E4. \uC0AC\uC790\uB97C \uB354 \uB9CE\uC774 \uD55C \uBD84\uC774 \uC55E\uC12D\uB2C8\uB2E4."
+    },
+    en: {
+      kickR: (n2) => "Round " + n2,
+      kickF: "Final",
+      titleR: "This round",
+      titleF: "Winner",
+      subR: (a2, b2) => a2 + " rounds played, " + b2 + " to go.",
+      subLast: "Last round.",
+      subF: (n2) => "<b>" + n2 + "</b> finishes with the highest score.",
+      colP: "Place",
+      colG: "Round",
+      colT: "Total",
+      next: "Next round",
+      nextF: "Play again",
+      quit: "Leave",
+      tie: "Tied on points. More Lion finishes ranks higher."
+    }
+  };
+  let lang = window.__lang || "ko";
+  function ordEn(n2) {
+    const s2 = ["th", "st", "nd", "rd"], v2 = n2 % 100;
+    return n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]);
+  }
+  function rankLabel(r2) {
+    return lang === "ko" ? r2 + 1 + "\uB4F1" : ordEn(r2 + 1);
+  }
+  function render() {
+    const G2 = window.GAME || {};
+    const n2 = G2.N || 6;
+    const names = (lang === "ko" ? G2.names : G2.namesEn) || G2.names || [];
+    const finish = G2.finish || [];
+    const score = G2.score || [];
+    const rounds = window.__opts && window.__opts.rounds || 5;
+    const played = G2.roundNo || 1;
+    const last = played >= rounds;
+    const t2 = T[lang];
+    const rows = last ? names.map((_2, i2) => i2).sort((a2, b2) => (score[b2] || 0) - (score[a2] || 0)) : finish.slice();
+    el("kicker").textContent = last ? t2.kickF : t2.kickR(played);
+    el("title").innerHTML = last ? '<span class="crown">\u265B</span><br>' + t2.titleF : t2.titleR;
+    el("sub").innerHTML = last ? t2.subF(names[rows[0]] || "") : played + 1 > rounds ? t2.subLast : t2.subR(played, rounds - played);
+    el("legend").innerHTML = "<span>" + t2.colP + "</span><span>" + t2.colG + " \xB7 " + t2.colT + "</span>";
+    if (last && !window.__scored) {
+      window.__scored = true;
+      const myRank = rows.indexOf(0);
+      const earned = score[0] || 0;
+      if (window.reportGame) window.reportGame(myRank, names.length, earned, false);
+    }
+    const cut = Math.floor(names.length / 2);
+    el("list").innerHTML = rows.map((seat, idx) => {
+      const place = last ? idx : finish.indexOf(seat);
+      const gained = place < cut ? 100 - place * 10 : 0;
+      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + (!last && idx === cut - 1 ? " row--cut" : "") + (gained === 0 ? " row--none" : "") + '"><span class="row__p">' + (idx + 1) + '</span><img class="row__av" src="' + HEADS2[seat % HEADS2.length] + '" alt=""><span class="row__n">' + (names[seat] || "") + '</span><span class="row__r">' + rankLabel(place) + '</span><span class="row__g">+' + gained + '</span><span class="row__t">' + (score[seat] || 0) + "</span></div>";
+    }).join("");
+    el("next").textContent = last ? t2.nextF : t2.next;
+    el("quit").textContent = t2.quit;
+  }
+  window.__bootResult = render;
+  render();
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    render();
+  });
+}
+
+// src/screens/lobby.js
+var lobby_exports = {};
+__export(lobby_exports, {
+  mount: () => mount6
+});
+function mount6(root) {
+  const document2 = scoped(root);
+  const IMG = LOBBY_ART;
+  const T = {
+    ko: {
+      mark: "\uB3D9\uBB3C\uC758 \uC655\uAD6D",
+      lbQuick: "\uBC14\uB85C \uC2DC\uC791\uD558\uAE30",
+      btQuick: "\uBE60\uB978 \uCC38\uAC00",
+      hQuick: "\uAE30\uB2E4\uB9AC\uB294 \uBD84\uB4E4\uACFC \uC790\uB3D9\uC73C\uB85C \uC774\uC5B4 \uB4DC\uB9BD\uB2C8\uB2E4. \uC778\uC6D0\uC774 \uBAA8\uC774\uBA74 \uBC14\uB85C \uC2DC\uC791\uD569\uB2C8\uB2E4.",
+      lbNew: "\uCE5C\uAD6C\uC640 \uD558\uAE30",
+      btNew: "\uBC29 \uB9CC\uB4E4\uAE30",
+      hNew: "\uBC29\uC744 \uB9CC\uB4E4\uBA74 4\uC790\uB9AC \uBC88\uD638\uAC00 \uB098\uC635\uB2C8\uB2E4. \uCE5C\uAD6C\uC5D0\uAC8C \uBC88\uD638\uB97C \uC54C\uB824 \uC8FC\uC138\uC694. 4\uBA85\uBD80\uD130 8\uBA85\uAE4C\uC9C0 \uD568\uAED8\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
+      lbJoin: "\uBC88\uD638\uB85C \uB4E4\uC5B4\uAC00\uAE30",
+      btJoin: "\uCC38\uAC00",
+      mkTitle: "\uBC29 \uB9CC\uB4E4\uAE30",
+      mkGo: "\uBC29 \uB9CC\uB4E4\uAE30",
+      mkCap: ["\uBC29 \uC778\uC6D0", "4\uBA85 \u2013 8\uBA85"],
+      mkRnd: ["\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815", "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791"],
+      mkTax: ["\uC138\uAE08\uACFC \uD601\uBA85", "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4."],
+      mkCut: ["2\uBC88 \uCEF7", "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4."],
+      rules: "\uADDC\uCE59 \uBCF4\uAE30",
+      shTitle: "\uADDC\uCE59",
+      shLead: "\uC190\uC5D0 \uB4E0 \uCE74\uB4DC\uB97C <b>\uBA3C\uC800 \uB2E4 \uD138\uC5B4\uB0B4\uBA74</b> \uC774\uAE41\uB2C8\uB2E4. \uD575\uC2EC\uC740 \uD558\uB098\uC785\uB2C8\uB2E4 \u2014 <b>\uC22B\uC790\uAC00 \uB0AE\uC744\uC218\uB85D \uB192\uC740 \uACC4\uAE09</b>\uC774\uACE0, \uD574\uB2F9 \uC22B\uC790\uC640 \uB371\uC5D0 \uB4E4\uC5B4\uC788\uB294 \uCE74\uB4DC\uC758 \uC7A5 \uC218\uAC00 \uC77C\uCE58\uD569\uB2C8\uB2E4. \uC608) 1 \uC0AC\uC790 = 1\uC7A5, 12 \uC0DD\uC950 = 12\uC7A5.",
+      names: ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"],
+      count: function(n2) {
+        return n2 + "\uC7A5";
+      },
+      items: [
+        ["\uB0B4\uB294 \uBC95", "\uC55E\uC0AC\uB78C\uC774 \uB0B8 \uAC83\uACFC <b>\uAC19\uC740 \uC7A5\uC218</b>\uB85C, <b>\uB354 \uB0AE\uC740 \uC22B\uC790</b>\uB9CC \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4. 8\uBC88 \uC138 \uC7A5 \uC704\uC5D0\uB294 7\uBC88 \uC774\uD558 \uC138 \uC7A5\uC744 \uB0C5\uB2C8\uB2E4."],
+        ["\uD328\uC2A4", "\uC5B8\uC81C\uB4E0 \uB118\uAE38 \uC218 \uC788\uACE0 \uB2E4\uC74C \uCC28\uB840\uC5D0 \uB2E4\uC2DC \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC804\uC6D0\uC774 \uB118\uAE30\uBA74 \uBC14\uB2E5\uC744 \uCE58\uC6B0\uACE0 \uB9C8\uC9C0\uB9C9\uC5D0 \uB0B8 \uBD84\uC774 \uC0C8\uB85C \uC2DC\uC791\uD569\uB2C8\uB2E4."],
+        ["\uC138\uAE08", "\uD310\uC774 \uB05D\uB098\uBA74 \uB4F1\uC218\uAC00 \uB2E4\uC74C \uD310\uC758 \uACC4\uAE09\uC774 \uB429\uB2C8\uB2E4. 1\uB4F1\uC740 \uAF34\uB4F1\uC758 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uB450 \uC7A5\uC744 \uAC00\uC838\uAC00\uACE0 \uC544\uBB34 \uCE74\uB4DC\uB098 \uB450 \uC7A5\uC744 \uC90D\uB2C8\uB2E4. 2\uB4F1\uC740 \uB4A4\uC5D0\uC11C \uB450 \uBC88\uC9F8\uC640 \uD55C \uC7A5\uC529 \uBC14\uAFC9\uB2C8\uB2E4."],
+        ["\uD601\uBA85", "\uD55C \uC0AC\uB78C\uC774 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uBAA8\uB450 \uC950\uBA74 \uADF8 \uD310\uC758 \uC138\uAE08\uC774 \uCDE8\uC18C\uB429\uB2C8\uB2E4. \uADF8 \uC0AC\uB78C\uC774 \uAF34\uB4F1\uC774\uBA74 \uB300\uD601\uBA85\uC774 \uB418\uC5B4 \uACC4\uAE09\uC774 \uD1B5\uC9F8\uB85C \uB4A4\uC9D1\uD799\uB2C8\uB2E4."],
+        ["\uC810\uC218\uC640 \uC2B9\uB9AC", "\uD55C \uD310\uC774 \uB05D\uB098\uBA74 1\uB4F1 100\uC810, 2\uB4F1 90\uC810\uCC98\uB7FC \uB4F1\uC218\uB9C8\uB2E4 \uC810\uC218\uB97C \uBC1B\uC2B5\uB2C8\uB2E4. \uBC29\uC7A5\uC774 \uC815\uD55C \uD310 \uC218\uB97C \uB2E4 \uCE58\uB974\uACE0 \uCD1D\uC810\uC774 \uAC00\uC7A5 \uB192\uC740 \uBD84\uC774 \uC6B0\uC2B9\uD569\uB2C8\uB2E4. \uC138\uAE08\uACFC \uD601\uBA85 \uAE30\uB2A5\uC740 \uBC29\uC5D0\uC11C \uB04C \uC218 \uC788\uC2B5\uB2C8\uB2E4."]
+      ],
+      joker: ["\uCE74\uBA5C\uB808\uC628", "\uB2E4\uB978 \uCE74\uB4DC\uC640 \uAC19\uC774 \uB0B4\uBA74 \uADF8 \uCE74\uB4DC\uB85C \uBCC0\uD569\uB2C8\uB2E4. 5\uBC88 \uB450 \uC7A5\uC5D0 \uCE74\uBA5C\uB808\uC628\uC744 \uC5B9\uC73C\uBA74 5\uBC88 \uC138 \uC7A5\uC774 \uB429\uB2C8\uB2E4. \uD63C\uC790 \uB0B4\uBA74 13\uBC88\uC73C\uB85C \uCDE8\uAE09\uB418\uC5B4 \uAC00\uC7A5 \uC57D\uD569\uB2C8\uB2E4. \uB371\uC5D0 \uCD1D \uB450 \uC7A5 \uC788\uC2B5\uB2C8\uB2E4."]
+    },
+    en: {
+      mark: "Zoo President",
+      lbQuick: "PLAY NOW",
+      btQuick: "Quick match",
+      hQuick: "We'll pair you with players already waiting. The game starts as soon as the table fills.",
+      lbNew: "PLAY WITH FRIENDS",
+      btNew: "Create room",
+      hNew: "You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
+      lbJoin: "JOIN BY NUMBER",
+      btJoin: "Join",
+      mkTitle: "Create a room",
+      mkGo: "Create room",
+      mkCap: ["Table size", "4 \u2013 8 players"],
+      mkRnd: ["Number of rounds", "Three at least"],
+      mkTax: ["Tax and revolution", "Cards change hands by standing, and two jokers overturn it."],
+      mkCut: ["Two-cut", "Playing a 2 clears the pile and you lead again."],
+      rules: "How to play",
+      shTitle: "How to play",
+      shLead: "<b>Empty your hand first</b> to win. One idea drives everything \u2014 <b>the lower the number, the higher the rank</b>, and that number is also how many of the card sit in the deck. 1 Lion means one card, 12 Mouse means twelve.",
+      names: ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"],
+      count: function(n2) {
+        return n2 + (n2 === 1 ? " card" : " cards");
+      },
+      items: [
+        ["Playing", "Match the <b>same count</b> as the player before you, at a <b>lower number</b>. Three 8s must be answered with three cards of 7 or lower."],
+        ["Passing", "Pass any time and play again on your next turn. Once everyone passes, the pile is cleared and whoever played last leads."],
+        ["Tax", "Finishing order sets rank for the next round. First takes the last player's two best cards and hands back any two. Second swaps one card with the second from last."],
+        ["Revolution", "If one player holds both chameleons, tax is cancelled for that round. If that player finished last it becomes a great revolution and every rank reverses."],
+        ["Score and winning", "Each round pays out by place \u2014 100 for first, 90 for second, and so on down. After the number of rounds the host set, the highest total wins. Tax and revolution can be switched off in the room."]
+      ],
+      joker: ["Chameleon", "Played alongside other cards it becomes that card \u2014 two 5s plus a chameleon makes three 5s. Played alone it counts as 13, the weakest card of all. Two are in the deck."]
+    }
+  };
+  let lang = window.__lang || "ko";
+  function miniCard(key, num, name) {
+    return '<div class="card"><div class="card__band"><span class="card__num">' + num + '</span><span class="card__name">' + name + '</span><span class="card__num">' + num + '</span></div><div class="card__art"><img src="' + IMG[key] + '" alt=""></div><div class="card__band"><span class="card__num">' + num + '</span><span class="card__num">' + num + "</span></div></div>";
+  }
+  function render() {
+    const t2 = T[lang];
+    document2.body.dataset.lang = lang;
+    document2.documentElement.lang = lang;
+    const set2 = (id, v2) => document2.getElementById(id).textContent = v2;
+    set2("lbQuick", t2.lbQuick);
+    set2("btQuick", t2.btQuick);
+    set2("hQuick", t2.hQuick);
+    set2("lbNew", t2.lbNew);
+    set2("btNew", t2.btNew);
+    set2("hNew", t2.hNew);
+    set2("lbJoin", t2.lbJoin);
+    set2("btJoin", t2.btJoin);
+    set2("btRules", t2.rules);
+    set2("shTitle", t2.shTitle);
+    document2.getElementById("shLead").innerHTML = t2.shLead;
+    document2.getElementById("grid").innerHTML = t2.names.map((name, i2) => {
+      const n2 = i2 + 1;
+      const key = String(n2).padStart(2, "0");
+      return '<div class="cell">' + miniCard(key, n2, name) + '<span class="cell__c">' + t2.count(n2) + "</span></div>";
+    }).join("");
+    const jk = '<div class="rule rule--joker"><div class="jk"><div class="card"><div class="card__band" style="justify-content:center"><span class="card__name">' + t2.joker[0] + '</span></div><div class="card__art"><img src="' + IMG.joker + '" alt=""></div><div class="card__band"><span class="card__num">&nbsp;</span></div></div></div><div><h3>' + t2.joker[0] + "</h3><p>" + t2.joker[1] + "</p></div></div>";
+    document2.getElementById("rules").innerHTML = jk + t2.items.map((it) => '<div class="rule"><h3>' + it[0] + "</h3><p>" + it[1] + "</p></div>").join("");
+  }
+  render();
+  document2.querySelectorAll("#lang button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      lang = b2.dataset.l;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      render();
+    });
+  });
+  const sheet = document2.getElementById("sheet");
+  document2.getElementById("btRules").addEventListener("click", () => sheet.classList.add("is-open"));
+  sheet.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", () => sheet.classList.remove("is-open")));
+  document2.getElementById("code").addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
+  });
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    render();
+  });
+  function paintAcct() {
+    const a2 = window.ACCOUNT;
+    if (!a2) return;
+    const t2 = document2.getElementById("acctTier");
+    const s2 = document2.getElementById("acctScore");
+    const k2 = document2.getElementById("acctTick");
+    const n2 = document2.getElementById("acctName");
+    if (n2) n2.textContent = a2.name || "";
+    if (t2) t2.textContent = a2.tier;
+    if (s2) s2.textContent = a2.score.toLocaleString();
+    if (k2) k2.textContent = a2.tickets;
+    paintTimer();
+  }
+  function paintTimer() {
+    const el2 = document2.getElementById("acctTimer");
+    if (!el2) return;
+    const ms = window.__ticketLeft ? window.__ticketLeft() : 0;
+    if (!ms || ms <= 0) {
+      el2.textContent = "";
+      return;
+    }
+    const s2 = Math.ceil(ms / 1e3);
+    const m = Math.floor(s2 / 60);
+    el2.textContent = m + ":" + String(s2 % 60).padStart(2, "0");
+  }
+  setInterval(paintTimer, 1e3);
+  window.addEventListener("accountready", paintAcct);
+  window.addEventListener("accountchange", paintAcct);
+  paintAcct();
+}
+
+// src/screens/entry.js
+var entry_exports = {};
+__export(entry_exports, {
+  mount: () => mount7
+});
+function mount7(root) {
+  const document2 = scoped(root);
+  const IMG = HERO;
+  const FAN = [
+    { key: "10", num: "10", ko: "\uD1A0\uB07C", en: "RABBIT" },
+    { key: "joker_a", joker: true, ko: "\uCE74\uBA5C\uB808\uC628", en: "CHAMELEON" },
+    { key: "02", num: "2", ko: "\uD638\uB791\uC774", en: "TIGER" },
+    { key: "05", num: "5", ko: "\uC545\uC5B4", en: "CROCODILE" },
+    { key: "04", num: "4", ko: "\uCF54\uB07C\uB9AC", en: "ELEPHANT" }
+  ];
+  const T = {
+    ko: {
+      eyebrow: "ZOO PRESIDENT",
+      wordmark: "\uB3D9\uBB3C\uC758 \uC655\uAD6D",
+      sub: "\uACC4\uAE09 \uCE74\uB4DC\uAC8C\uC784",
+      start: "\uAD6C\uAE00\uB85C \uC2DC\uC791\uD558\uAE30",
+      starting: "\uB4E4\uC5B4\uAC00\uB294 \uC911",
+      enter: "\uAC8C\uC784 \uC2DC\uC791",
+      hintIn: "\uAD6C\uAE00 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD569\uB2C8\uB2E4",
+      hintErr: "\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694",
+      hintNet: "\uC778\uD130\uB137 \uC5F0\uACB0\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694"
+    },
+    en: {
+      eyebrow: "CARD CLASH",
+      wordmark: "Zoo President",
+      sub: "Climbing card game",
+      start: "Continue with Google",
+      starting: "Signing in",
+      enter: "Start game",
+      hintIn: "Sign in with your Google account",
+      hintErr: "Sign-in failed. Please try again",
+      hintNet: "Check your internet connection"
+    }
+  };
+  let lang = window.__lang || "ko";
+  const fan = document2.getElementById("fan");
+  function renderFan() {
+    fan.innerHTML = "";
+    FAN.forEach((c2, i2) => {
+      const d2 = document2.createElement("div");
+      d2.className = "card" + (c2.joker ? " is-joker" : "");
+      d2.dataset.i = i2;
+      d2.innerHTML = c2.joker ? '<div class="card__band"><span class="card__name">' + c2[lang] + '</span></div><div class="card__art"><img src="' + IMG[c2.key] + '" alt=""></div><div class="card__band"><span class="card__mark">JOKER</span></div>' : '<div class="card__band"><span class="card__num">' + c2.num + '</span><span class="card__name">' + c2[lang] + '</span><span class="card__num">' + c2.num + '</span></div><div class="card__art"><img src="' + IMG[c2.key] + '" alt=""></div><div class="card__band"><span class="card__num">' + c2.num + '</span><span class="card__num">' + c2.num + "</span></div>";
+      fan.appendChild(d2);
+    });
+  }
+  function apply() {
+    const t2 = T[lang];
+    document2.body.dataset.lang = lang;
+    document2.documentElement.lang = lang;
+    document2.getElementById("eyebrow").textContent = t2.eyebrow;
+    document2.getElementById("wordmark").textContent = t2.wordmark;
+    document2.getElementById("sub").textContent = t2.sub;
+    document2.getElementById("start").textContent = t2.start;
+    renderFan();
+  }
+  apply();
+  document2.querySelectorAll("#lang button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      lang = b2.dataset.l;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      apply();
+    });
+  });
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    apply();
+  });
+  let busy = false;
+  function paintEntry() {
+    const t2 = T[lang];
+    const a2 = window.ACCOUNT;
+    const b2 = document2.getElementById("start");
+    const hint = document2.getElementById("hint");
+    if (!b2) return;
+    if (busy) {
+      b2.textContent = t2.starting;
+      b2.disabled = true;
+      hint.textContent = "";
+      return;
+    }
+    b2.disabled = false;
+    if (a2 && a2.signedIn) {
+      b2.textContent = t2.enter;
+      hint.textContent = a2.name || "";
+      hint.className = "hint";
+    } else {
+      b2.textContent = t2.start;
+      if (hint.className !== "hint hint--err") {
+        hint.textContent = t2.hintIn;
+      }
+    }
+  }
+  document2.getElementById("start").addEventListener("click", async (e) => {
+    const a2 = window.ACCOUNT;
+    if (a2 && a2.signedIn) return;
+    e.stopImmediatePropagation();
+    const hint = document2.getElementById("hint");
+    busy = true;
+    paintEntry();
+    try {
+      await window.signInGoogle();
+      hint.className = "hint";
+    } catch (err) {
+      hint.className = "hint hint--err";
+      hint.textContent = navigator.onLine ? T[lang].hintErr : T[lang].hintNet;
+      console.warn(err);
+    }
+    busy = false;
+    paintEntry();
+  }, true);
+  const tb = document2.getElementById("testin");
+  if (tb) {
+    tb.addEventListener("click", async (e) => {
+      e.stopImmediatePropagation();
+      const nm = prompt("\uC2DC\uD5D8\uC6A9 \uC774\uB984", "\uC2DC\uD5D8" + Math.floor(Math.random() * 900 + 100));
+      if (nm === null) return;
+      busy = true;
+      paintEntry();
+      try {
+        await window.signInTest(nm);
+      } catch (err) {
+        const hint = document2.getElementById("hint");
+        hint.className = "hint hint--err";
+        hint.textContent = String(err && err.message || err).slice(0, 60);
+        console.warn(err);
+      }
+      busy = false;
+      paintEntry();
+    }, true);
+  }
+  function showTest() {
+    if (!tb) return;
+    const a2 = window.ACCOUNT;
+    tb.hidden = !window.__isLocal || Boolean(a2 && a2.signedIn);
+  }
+  window.addEventListener("accountready", showTest);
+  window.addEventListener("accountchange", showTest);
+  setTimeout(showTest, 300);
+  window.addEventListener("accountready", paintEntry);
+  window.addEventListener("accountchange", paintEntry);
+  window.addEventListener("langchange", paintEntry);
+  paintEntry();
+}
+
+// src/lib/flow.js
+var flow_exports = {};
+__export(flow_exports, {
+  install: () => install,
+  teardown: () => teardown
+});
+
+// src/lib/localroom.js
+var BOT_NAMES = ["\uC11C\uC5F0", "\uC900\uD638", "\uBBFC\uC9C0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
+var ME = "me";
+function createRoom({ cap = 6, name = "\uB098" } = {}) {
+  return {
+    cap: Math.min(8, Math.max(4, cap)),
+    phase: "waiting",
+    seats: [{ uid: ME, name: String(name || "\uB098"), bot: false }]
+  };
+}
+function addBot(room) {
+  if (!room || room.phase !== "waiting") return false;
+  if (room.seats.length >= room.cap) return false;
+  const used = room.seats.map((s2) => s2 && s2.name);
+  const name = BOT_NAMES.find((n2) => !used.includes(n2)) || "\uBD07" + room.seats.length;
+  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true });
+  return true;
+}
+function setCap(room, cap) {
+  if (!room) return;
+  room.cap = Math.min(8, Math.max(4, Number(cap) || room.cap));
+  while (room.seats.length > room.cap) room.seats.pop();
+}
+function toRoomView(room) {
+  if (!room) return null;
+  return {
+    cap: room.cap,
+    me: 0,
+    host: ME,
+    phase: room.phase,
+    round: null,
+    seats: room.seats.slice()
+  };
+}
+var seatCount = (room) => room ? room.seats.length : 0;
+
+// src/lib/flow.js
+var opt = null;
+var myRoom = null;
+var botTimer2 = null;
+var W2 = () => window;
+function emitRoom() {
+  W2().__room = toRoomView(myRoom);
+  W2().dispatchEvent(new Event("roomchange"));
+}
+function botFillStart() {
+  if (botTimer2) return;
+  botTimer2 = setInterval(() => {
+    if (!addOneBot()) botFillStop();
+  }, opt.botJoinMs);
+}
+function botFillStop() {
+  if (botTimer2) {
+    clearInterval(botTimer2);
+    botTimer2 = null;
+  }
+}
+function addOneBot() {
+  if (!addBot(myRoom)) return false;
+  W2().__opts.seated = seatCount(myRoom);
+  emitRoom();
+  return true;
+}
+function startGame() {
+  botFillStop();
+  while (seatCount(myRoom) < 4) if (!addOneBot()) break;
+  const n2 = seatCount(myRoom);
+  if (n2 < 4) throw new Error("4\uBA85\uC774 \uBAA8\uC5EC\uC57C \uC2DC\uC791\uD569\uB2C8\uB2E4 (\uC9C0\uAE08 " + n2 + "\uBA85)");
+  myRoom.phase = "playing";
+  emitRoom();
+  const o2 = W2().__opts || {};
+  const rounds = Math.max(3, Number(o2.rounds) || 3);
+  startLocal({
+    numPlayers: n2,
+    myID: "0",
+    names: myRoom.seats.map((s2) => s2.name),
+    opts: { rounds, tax: o2.tax !== false, clear2: Boolean(o2.clear2) }
+  });
+  const v2 = engine.view;
+  if (!v2) throw new Error("\uD310\uC744 \uC138\uC6B0\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4");
+  W2().__net = { engine: true };
+  W2().GAME = {
+    N: n2,
+    roundNo: v2.roundNo,
+    names: v2.names.slice(),
+    namesEn: v2.names.slice(),
+    hold: null,
+    order: null,
+    finish: null,
+    score: v2.score.slice(),
+    mySeat: 0
+  };
+  W2().__opts = Object.assign(W2().__opts || {}, { seated: n2, rounds });
+  W2().__leadSeat = v2.turn >= 0 ? v2.turn : 0;
+  W2().GAME.order = Array.from({ length: n2 }, (_2, k2) => (W2().__leadSeat + k2) % n2);
+  W2().__roundNo = v2.roundNo;
+  W2().__myRankIdx = null;
+  W2().__scored = null;
+  W2().__gameOver = null;
+  opt.goto("draw");
+}
+function onRoundEnd(v2) {
+  const lr = v2.lastRound;
+  if (!lr) {
+    setPaused(false);
+    return;
+  }
+  setPaused(true);
+  const G2 = W2().GAME = W2().GAME || {};
+  G2.N = v2.N;
+  G2.names = v2.names.slice();
+  G2.namesEn = v2.names.slice();
+  G2.finish = lr.order.slice();
+  G2.score = v2.score.slice();
+  G2.hold = Array.from({ length: v2.N }, (_2, i2) => i2 === 0 ? v2.hand.slice() : []);
+  G2.roundNo = lr.roundNo;
+  W2().__roundNo = lr.roundNo;
+  W2().__myGive = null;
+  W2().__taxGive = null;
+  W2().__revolution = v2.revolution ? { seat: v2.revolution.seat, great: v2.revolution.great } : null;
+  opt.goto("result");
+}
+function onGameOver(over) {
+  setPaused(true);
+  const G2 = W2().GAME = W2().GAME || {};
+  G2.roundNo = W2().__opts && W2().__opts.rounds || G2.roundNo || 3;
+  G2.finish = over.order.slice();
+  G2.score = over.score.slice();
+  opt.goto("result");
+}
+function ensureTaxGiven() {
+  const v2 = engine.view;
+  if (!v2 || v2.phase !== "tax" || !v2.taxGive) return;
+  const worst2 = (c2) => c2 >= 13 ? 99 : c2;
+  const hand = (v2.hand || []).slice().sort((a2, b2) => worst2(b2) - worst2(a2));
+  if (hand.length < v2.taxGive) return;
+  give(hand.slice(0, v2.taxGive));
+}
+function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
+  opt = { goto, myName, botJoinMs };
+  W2().__createRoom = async () => {
+    const o2 = W2().__opts || {};
+    myRoom = createRoom({ cap: o2.cap || 6, name: opt.myName() });
+    W2().__opts = Object.assign(W2().__opts || {}, { cap: myRoom.cap, seated: 1 });
+    emitRoom();
+    botFillStart();
+    return "LOCAL";
+  };
+  W2().__joinRoom = async () => {
+    alert("\uC11C\uBC84 \uB300\uC804\uC740 \uC544\uC9C1 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4. \uBD07\uACFC \uD558\uAE30\uB85C \uC2DC\uC791\uD574 \uC8FC\uC138\uC694.");
+    return null;
+  };
+  W2().__peek = async () => null;
+  W2().__roomCode = () => myRoom ? "LOCAL" : null;
+  W2().__leaveRoom = () => {
+    botFillStop();
+    stop();
+    myRoom = null;
+    emitRoom();
+  };
+  W2().__saveOpts = async () => {
+    if (!myRoom) return;
+    setCap(myRoom, (W2().__opts || {}).cap);
+    W2().__opts.cap = myRoom.cap;
+    W2().__opts.seated = seatCount(myRoom);
+    emitRoom();
+  };
+  W2().__botFill = (on3) => on3 ? botFillStart() : botFillStop();
+  W2().__addBot = addOneBot;
+  W2().__startRound = async () => startGame();
+  W2().__onRoundEnd = onRoundEnd;
+  W2().__onGameOver = () => {
+    const o2 = W2().__gameOver;
+    if (o2) onGameOver(o2);
+  };
+  W2().__onTax = (v2) => {
+    W2().__myNeedGive = v2.taxGive;
+  };
+  W2().__setTaxGive = (cards) => {
+    W2().__taxGive = cards;
+    if (Array.isArray(cards) && cards.length) give(cards);
+  };
+  W2().__endRoundOnline = async () => {
+  };
+  const prevBootTable = W2().__bootTable;
+  W2().__bootTable = (fresh) => {
+    ensureTaxGiven();
+    setPaused(false);
+    if (typeof prevBootTable === "function") prevBootTable(fresh);
+  };
+  const prevToTable = W2().__toTable;
+  W2().__toTable = () => {
+    setPaused(false);
+    if (typeof prevToTable === "function") prevToTable();
+    else opt.goto("table");
+  };
+  W2().__onRestart = () => {
+    stop();
+    if (!myRoom) return opt.goto("lobby");
+    myRoom.phase = "waiting";
+    emitRoom();
+    opt.goto("room");
+  };
+  W2().__quitGame = () => {
+    stop();
+    setPaused(false);
+  };
+}
+function teardown() {
+  botFillStop();
+  stop();
+  myRoom = null;
+}
 export {
+  BAR_SWAP,
+  CFG_HTML,
+  GEAR,
+  MARKUP,
+  OPT_HTML,
+  draw_exports as draw,
   engine_exports as eng,
-  mount as mountTable
+  entry_exports as entry,
+  flow_exports as flow,
+  initNav,
+  lobby_exports as lobby,
+  result_exports as result,
+  room_exports as room,
+  table_exports as table,
+  tax_exports as tax
 };
 /*! Bundled license information:
 

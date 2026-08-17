@@ -6,8 +6,12 @@ export const BOT_NAMES = ["서연", "준호", "민지", "태윤", "하은", "지
 
 const ME = "me";                       /* 내 자리 uid. 방장도 나다 */
 
-export function createRoom({ cap = 6, name = "나" } = {}){
+/* 방 번호. 이 기기 안의 방이어도 번호는 붙인다 — 화면이 "----" 로 보이면 고장 같아 보인다 */
+const newCode = () => String(Math.floor(1000 + Math.random() * 9000));
+
+export function createRoom({ cap = 4, name = "나" } = {}){
   return {
+    code: newCode(),
     cap: Math.min(8, Math.max(4, cap)),
     phase: "waiting",
     seats: [{ uid: ME, name: String(name || "나"), bot: false }],
@@ -34,6 +38,7 @@ export function setCap(room, cap){
 export function toRoomView(room){
   if (!room) return null;
   return {
+    code: room.code,
     cap: room.cap,
     me: 0,
     host: ME,

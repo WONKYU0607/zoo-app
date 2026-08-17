@@ -44,7 +44,7 @@ async function run(gi){
   global.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   global.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
   window.__lang = "ko";
-  window.__opts = { cap: 6, rounds: 3, tax: true, clear2: false };
+  window.__opts = undefined;        /* 기본값을 그대로 쓴다 */
   window.alert = () => {};
 
   const B = await import("./_bundle_seq.mjs?v=" + gi + "_" + Date.now());
@@ -77,11 +77,21 @@ async function run(gi){
   };
   const q = (screen, sel) => document.querySelector("#" + screen + " " + sel);
 
-  /* 1. 방 만들기 */
+  /* 1. 기본값 */
+  check("기본 인원이 4명", window.__opts.cap === 4, String(window.__opts.cap));
+  check("기본 판수가 3판", window.__opts.rounds === 3, String(window.__opts.rounds));
+
+  /* 2. 방 만들기 */
   await window.__createRoom();
   window.__goto("room");
-  for (let i = 0; i < 200 && (window.__opts.seated || 1) < 6; i++) await wait(10);
-  check("방에 6명이 찼다", window.__opts.seated === 6, window.__opts.seated + "명");
+  const code = window.__roomCode();
+  check("방 번호가 4자리 숫자", /^[0-9]{4}$/.test(String(code)), String(code));
+  check("방 번호가 화면에 뜬다",
+        (q("room", "#roomNo") ? q("room", "#roomNo").textContent : "").trim() === String(code),
+        q("room", "#roomNo") ? q("room", "#roomNo").textContent.trim() : "없음");
+  const want = window.__opts.cap;
+  for (let i = 0; i < 400 && (window.__opts.seated || 1) < want; i++) await wait(10);
+  check("방이 정원까지 찼다", window.__opts.seated === want, window.__opts.seated + "/" + want + "명");
   check("방 대기실이 켜져 있다", now() === "room", now());
 
   /* 2. 시작 */
@@ -89,12 +99,23 @@ async function run(gi){
   check("뽑기 화면으로 갔다", now() === "draw", now());
   check("선을 엔진이 정했다", typeof window.__leadSeat === "number", String(window.__leadSeat));
 
-  /* 3. 판으로 */
+  /* 3. 뽑기 화면에 머무는 동안 봇이 미리 두면 안 된다 */
+  await wait(300);
+  const beforeTable = B.eng.engine.view;
+  check("판에 들어서기 전에는 아무도 안 뒀다",
+        beforeTable.seats.every(s => s.c === beforeTable.seats[0].c),
+        beforeTable.seats.map(s => s.c).join(","));
+
+  /* 4. 판으로 */
   window.__goto("table");
   await wait(60);
   check("판 화면에 내 손패가 있다",
         q("table", "#hand").querySelectorAll(".card").length > 0,
         q("table", "#hand").querySelectorAll(".card").length + "장");
+  const lead = B.eng.engine.view.turn;
+  check("선이 아니면 아직 내 차례가 아니다",
+        lead === 0 ? true : B.eng.engine.view.myTurn === false,
+        "선 " + lead);
 
   /* 4. 끝까지. 화면이 바뀌면 그 화면에 맞게 누른다 */
   let guard = 0, sawResultMid = 0, sawTax = 0, sawRevStep = 0, sawTaxStep = 0;
@@ -110,12 +131,12 @@ async function run(gi){
     if (screen === "result"){
       const kicker = q("result", "#kicker").textContent;
       const rows = q("result", "#list").querySelectorAll(".row").length;
-      if (window.__gameOver && (window.GAME.roundNo || 0) >= 3){
-        check("최종 결과가 떴다", rows === 6, rows + "줄 / " + kicker);
+      if (window.__gameOver && (window.GAME.roundNo || 0) >= (window.__opts.rounds || 3)){
+        check("최종 결과가 떴다", rows === want, rows + "줄 / " + kicker);
         break;
       }
       sawResultMid++;
-      if (sawResultMid === 1) check("판 결과가 떴다", rows === 6, rows + "줄 / " + kicker);
+      if (sawResultMid === 1) check("판 결과가 떴다", rows === want, rows + "줄 / " + kicker);
       q("result", "#next").click();
       await wait(20);
       continue;

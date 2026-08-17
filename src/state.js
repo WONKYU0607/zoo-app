@@ -2,7 +2,7 @@
    화면 코드가 아직 window 를 통해 읽으므로 양쪽에 걸어 둔다.
    Firebase 를 붙일 때 이 파일만 서버와 맞추면 된다. */
 
-export const opts = { cap: 6, rounds: 5, tax: true, clear2: false, seated: 0 };
+export const opts = { cap: 4, rounds: 3, tax: true, clear2: false, seated: 0 };
 
 export const game = {
   N: 6,

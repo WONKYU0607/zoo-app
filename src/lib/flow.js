@@ -57,6 +57,10 @@ function startGame(){
     opts: { rounds, tax: o.tax !== false, clear2: Boolean(o.clear2) },
   });
 
+  /* 뽑기 화면을 보는 동안 봇들이 다 둬 버리면, 판에 들어서자마자 내 차례가 된다.
+     판 화면이 실제로 설 때(__bootTable)까지 멈춰 둔다 */
+  eng.setPaused(true);
+
   const v = eng.engine.view;
   if (!v) throw new Error("판을 세우지 못했습니다");
 
@@ -135,7 +139,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
 
   W().__createRoom = async () => {
     const o = W().__opts || {};
-    myRoom = createRoom({ cap: o.cap || 6, name: opt.myName() });
+    myRoom = createRoom({ cap: o.cap || 4, name: opt.myName() });
     W().__opts = Object.assign(W().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
@@ -146,7 +150,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     return null;
   };
   W().__peek = async () => null;
-  W().__roomCode = () => (myRoom ? "LOCAL" : null);
+  W().__roomCode = () => (myRoom ? myRoom.code : null);
   W().__leaveRoom = () => { botFillStop(); eng.stop(); myRoom = null; emitRoom(); };
   W().__saveOpts = async () => {
     if (!myRoom) return;
