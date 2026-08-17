@@ -15,6 +15,7 @@ let myRoom = null;
 let botTimer = null;
 
 const W = () => window;
+const D = () => window.document;
 const call = (name, ...a) => { const f = W()[name]; if (typeof f === "function") f(...a); };
 
 function emitRoom(){
@@ -109,15 +110,38 @@ function onRoundEnd(v){
   W().__revolution = v.revolution ? { seat: v.revolution.seat, great: v.revolution.great } : null;
 
   opt.goto("result");                      /* 먼저 이번 판 결과 */
+  startCount(5);                           /* 5초 뒤 저절로 다음 단계로 */
 }
 
 function onGameOver(over){
+  stopCount();                             /* 최종 결과는 저절로 넘어가지 않는다 */
   eng.setPaused(true);
   const G = (W().GAME = W().GAME || {});
   G.roundNo = (W().__opts && W().__opts.rounds) || G.roundNo || 3;
   G.finish = over.order.slice();
   G.score = over.score.slice();
   opt.goto("result");                      /* 마지막 판이면 최종 결과가 그려진다 */
+}
+
+/* 판 결과 화면은 5초 뒤에 저절로 다음으로 넘어간다.
+   누르지 않으면 게임이 멈춰 있는다는 지적이 있었다 */
+let countId = null;
+function stopCount(){ if (countId){ clearInterval(countId); countId = null; } }
+function startCount(sec){
+  stopCount();
+  const btn = D().querySelector("#result #next");
+  const page = D().getElementById("result");
+  if (!btn || !page) return;
+  const base = (btn.textContent || "다음").replace(/\s*\(\d+\)$/, "");
+  let left = sec;
+  const tick = () => {
+    if (!page.classList.contains("is-on")){ stopCount(); btn.textContent = base; return; }
+    if (left <= 0){ stopCount(); btn.textContent = base; btn.click(); return; }
+    btn.textContent = base + " (" + left + ")";
+    left--;
+  };
+  tick();
+  countId = setInterval(tick, 1000);
 }
 
 /* 세금을 아직 안 냈으면 대신 내 준다.
@@ -178,6 +202,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
      여기(판 화면이 서는 곳)에서 풀어야 빠짐없이 걸린다 */
   const prevBootTable = W().__bootTable;
   W().__bootTable = fresh => {
+    stopCount();
     ensureTaxGiven();                      /* 안 낸 세금이 있으면 대신 낸다 */
     eng.setPaused(false);
     if (typeof prevBootTable === "function") prevBootTable(fresh);
@@ -198,7 +223,11 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     opt.goto("room");
   };
 
-  W().__quitGame = () => { eng.stop(); eng.setPaused(false); };
+  W().__quitGame = () => { stopCount(); botFillStop(); eng.stop(); eng.setPaused(false); };
+
+  /* 결과 화면의 "나가기" — 세던 것을 멈추고 판도 접는다 */
+  const quit = D().querySelector("#result #quit");
+  if (quit) quit.addEventListener("click", () => { stopCount(); eng.stop(); myRoom = null; });
 }
 
 export function teardown(){

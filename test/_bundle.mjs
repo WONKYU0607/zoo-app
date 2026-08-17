@@ -18107,7 +18107,7 @@ var engine = {
   view: null,
   paused: false,
   /* 결과를 보는 동안 다음 판을 멈춘다 */
-  botMs: 1400
+  botMs: 3e3
   /* 봇이 생각하는 척하는 시간 */
 };
 var listeners = [];
@@ -18258,7 +18258,15 @@ function startOnline({ server, matchID, playerID, credentials, numPlayers, names
 }
 function setPaused(on3) {
   engine.paused = Boolean(on3);
-  if (!engine.paused) scheduleBot();
+  if (engine.paused) {
+    gen++;
+    if (botTimer) {
+      clearTimeout(botTimer);
+      botTimer = null;
+    }
+    return;
+  }
+  scheduleBot();
 }
 function stop() {
   gen++;

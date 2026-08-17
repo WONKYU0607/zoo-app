@@ -159,6 +159,13 @@ export function mount(root){
   function clearFx(){ el("fx").innerHTML = ""; }
   
   function dealAll(){
+    if (online){
+      /* 엔진이 이미 나눴다. 손패도 혁명도 엔진이 알려 준 것을 쓴다.
+         여기서 다시 나누면 화면과 실제 판이 어긋난다 */
+      const rv = window.__revolution;
+      revSeat = rv ? rv.seat : null;
+      return;
+    }
     const d = [];
     for (let n = 1; n <= 12; n++) for (let i = 0; i < n; i++) d.push(n);
     d.push(13, 14);
@@ -176,7 +183,10 @@ export function mount(root){
   
   /* 세금을 실제 손패에 적용 */
   function applyTax(myGive){
-    if (online && window.__setTaxGive) window.__setTaxGive(myGive || null);
+    if (online){
+      if (window.__setTaxGive) window.__setTaxGive(myGive || null);
+      return;                       /* 실제 교환은 엔진이 한다 */
+    }
     const hh = holds(), o = order();
     [[o[0], o[N-1], 2], [o[1], o[N-2], 1]].forEach(([hi, lo, k]) => {
       const best = hh[lo].slice().sort((a, b) => a - b).slice(0, k);
@@ -242,13 +252,13 @@ export function mount(root){
       const p = seatPos(i), r = rankOf(i), n = N;
       const d = document.createElement("div");
       d.className = "seat" + (i === 0 ? " seat--me" : "") +
-        (step >= 1 && r <= 1 ? " seat--top" : "") + (step >= 1 && r >= n - 2 ? " seat--bot" : "");
+        (r <= 1 ? " seat--top" : "") + (r >= n - 2 ? " seat--bot" : "");
       d.style.left = p.x.toFixed(1) + "%"; d.style.top = p.y.toFixed(1) + "%";
       const big = N <= 6;
       d.style.setProperty("--av", (big ? 44 : 34) + "px");
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.innerHTML =
-        '<span class="seat__r' + (step >= 1 ? " on" : "") + '">' + rankLabel(r) + '</span>' +
+        '<span class="seat__r on">' + rankLabel(r) + '</span>' +
         '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i] + ')"></span>' +
         '<span class="seat__n">' + nameOf(i) + '</span>';
       box.appendChild(d);
@@ -297,8 +307,8 @@ export function mount(root){
     const t = T[lang], m = el("mid"), r = rankOf(0), n = N, o = order();
     let html = "";
     if (step === 0){
-      /* 등수와 카드 나누기를 한 화면에서 보여준다 */
-      html = '<div class="mid__h">' + t.rankH + '</div><div class="mid__s">' + t.rankS + '</div>';
+      /* 제목만 가운데. 등수는 각자 프로필에 붙는다 */
+      html = '<div class="mid__h">' + t.rankH + '</div>';
     } else if (step === 1){
       html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + t.dealS + '</div>';
     } else if (step === 2){
@@ -352,6 +362,9 @@ export function mount(root){
       ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
       : "";
     const b = el("next");
+    /* 등수 발표는 볼 뿐이라 누를 것이 없다 */
+    const bar = b.parentElement;
+    if (bar) bar.style.visibility = step === 0 ? "hidden" : "";
     if (step === 2 && revSeat === 0 && !declared){
       b.className = "bt-rev"; b.textContent = great ? t.declareG : t.declare; b.disabled = false;
     } else {
@@ -378,6 +391,7 @@ export function mount(root){
     ranks = (g.finish && g.finish.length === N) ? g.finish.slice()
           : Array.from({length: N}, (_, i) => i);
     step = 0; sel = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
+    waitOn = 0;                 /* 기다린 횟수를 되돌린다. 안 하면 다음에 자동 진행이 안 걸린다 */
     clearFx();
     draw();
   }
@@ -387,33 +401,36 @@ export function mount(root){
   
   /* 볼 것이 없는 단계는 건너뛴다.
      혁명은 실제로 열린 판에만, 세금은 내가 주고받을 때만 보여준다. */
-  function needStep(k){
-    if (k === 2) return revSeat !== null;              /* 혁명이 열렸을 때만 */
-    if (k === 3){
-      if (taxSkipped()) return false;                  /* 혁명으로 세금이 사라졌다 */
-      const r = rankOf(0), n = N;
-      return r === 0 || r === 1 || r === n - 1 || r === n - 2;   /* 내가 주고받을 때만 */
-    }
-    return true;
-  }
+  /* 다섯 단계를 전부 지나간다.
+     혁명이 없으면 "일어나지 않았습니다"를, 세금은 남들끼리 주고받는 것도 보여준다.
+     무슨 일이 있었는지 모른 채 다음 판이 시작되면 안 된다 */
+  function needStep(){ return true; }
   
   /* 누를 것이 없는 단계는 저절로 넘어간다 */
   var autoId = null;   /* 선언 전에 부르는 곳이 있어 var 로 둔다 */
+  var waitOn = 0;      /* 화면이 켜지기를 기다린 횟수 */
   function autoNext(){
     if (autoId){ clearTimeout(autoId); autoId = null; }
     if (step >= 4) return;
     const sec = window.document.getElementById("tax");
-    if (!sec || !sec.classList.contains("is-on")) return;   /* 안 보이는 화면은 건드리지 않는다 */
+    /* 화면을 세우는 쪽이 먼저 boot 를 부르고 그다음 화면을 켠다.
+       여기서 포기해 버리면 자동 진행이 영영 안 걸린다 — 켜질 때까지 기다린다 */
+    if (!sec || !sec.classList.contains("is-on")){
+      if (waitOn++ > 40) return;
+      autoId = setTimeout(autoNext, 120);
+      return;
+    }
+    waitOn = 0;
     let wait = 0;
     if (step === 0) wait = 2200;                       /* 등수 발표 */
     else if (step === 1) wait = 2600;                  /* 카드 나누기 */
     else if (step === 2 && revSeat !== 0) wait = 2600; /* 남의 혁명 */
     else if (step === 2 && revSeat === 0) wait = 10000;/* 내 혁명 — 10초 안에 안 누르면 넘어감 */
-    else if (step === 3) wait = 10000;                 /* 세금 — 10초 */
+    else if (step === 3) wait = giveCount() ? 10000 : 4200;  /* 내가 낼 때만 10초 */
     if (!wait) return;
     autoId = setTimeout(() => {
       const sec2 = window.document.getElementById("tax");
-      if (!sec2 || !sec2.classList.contains("is-on")) return;
+      if (!sec2 || !sec2.classList.contains("is-on")){ autoNext(); return; }
       /* 세금에서 안 고르고 시간을 넘기면 가장 나쁜 카드를 자동으로 준다 */
       if (step === 3){
         const g = giveCount();

@@ -361,7 +361,7 @@ var engine = {
   view: null,
   paused: false,
   /* 결과를 보는 동안 다음 판을 멈춘다 */
-  botMs: 1400
+  botMs: 3e3
   /* 봇이 생각하는 척하는 시간 */
 };
 var listeners = [];
@@ -900,8 +900,10 @@ __export(localroom_exports, {
 });
 var BOT_NAMES = ["\uC11C\uC5F0", "\uC900\uD638", "\uBBFC\uC9C0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
 var ME = "me";
-function createRoom({ cap = 6, name = "\uB098" } = {}) {
+var newCode = () => String(Math.floor(1e3 + Math.random() * 9e3));
+function createRoom({ cap = 4, name = "\uB098" } = {}) {
   return {
+    code: newCode(),
     cap: Math.min(8, Math.max(4, cap)),
     phase: "waiting",
     seats: [{ uid: ME, name: String(name || "\uB098"), bot: false }]
@@ -923,6 +925,7 @@ function setCap(room, cap) {
 function toRoomView(room) {
   if (!room) return null;
   return {
+    code: room.code,
     cap: room.cap,
     me: 0,
     host: ME,

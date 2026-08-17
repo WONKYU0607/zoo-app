@@ -51,7 +51,7 @@ export function mount(root){
      규칙 판단은 여기서 하지 않는다. 엔진이 정한 결과를 그대로 그린다.
      자리 번호를 돌리는 일은 view.js 안에서 이미 끝나 있다. */
   let offView = null;
-  let lastRound = -1, overSent = false;
+  let lastRound = -1, overSent = false, holdPile = null, ghost = [];
 
   function apply(v){
     if (!v) return;
@@ -67,13 +67,25 @@ export function mount(root){
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
       window.__roundNo = v.roundNo;
-      /* 첫 판이 아니면 방금 끝난 판을 보여주고 넘긴다 */
-      if (!first && v.lastRound && window.__onRoundEnd){
+      /* 첫 판이 아니고 게임이 안 끝났으면 방금 끝난 판을 보여주고 넘긴다.
+         마지막 판이면 판 결과를 건너뛰고 최종 결과로 간다 */
+      if (!first && !v.over && v.lastRound && window.__onRoundEnd){
         showLastRound(v);
         return;                            /* 새 판은 결과를 본 뒤에 그린다 */
       }
     }
-    if (v.table.length < trick.length){    /* 바닥이 치워졌다 */
+    /* 바닥이 비워지면 잔상만 1.2초 남긴다 — 마지막 카드로 판을 끝낸 사람의 카드가
+       눈에 띄지도 않고 사라지는 것을 막는다.
+       잔상은 그리기 전용이다. 낼 수 있는지·패스가 되는지 판단에는 쓰지 않는다 */
+    if (v.table.length === 0 && trick.length > 0 && !v.over){
+      ghost = trick.slice();
+      if (holdPile) clearTimeout(holdPile);
+      holdPile = setTimeout(() => { holdPile = null; ghost = []; draw(); }, 1200);
+    } else if (v.table.length){
+      if (holdPile){ clearTimeout(holdPile); holdPile = null; }
+      ghost = [];
+    }
+    if (v.table.length < trick.length){    /* 바닥이 새로 시작됐다 */
       animated = 0; spread = false;
     }
     trick = v.table.map(t => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
@@ -115,6 +127,8 @@ export function mount(root){
 
   function boot(){
     if (offView) offView();
+    if (holdPile){ clearTimeout(holdPile); holdPile = null; }
+    ghost = [];
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     offView = eng.onView(apply);
@@ -278,8 +292,12 @@ export function mount(root){
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
   
+  const outerTrick = () => trick;
   function renderPile(){
     const p = el("pile"); p.innerHTML = "";
+    /* 바닥이 비었으면 잔상을 잠깐 대신 보여준다. 여기서만 쓴다 */
+    const shown = outerTrick().length ? outerTrick() : ghost;
+    const trick = shown;
     if (spread && trick.length){
       const t = T[lang];
       const maxC = Math.min(6, Math.max(...trick.map(x => x.count)));

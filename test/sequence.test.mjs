@@ -43,7 +43,6 @@ async function run(gi){
   global.Event = dom.window.Event;
   global.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   global.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
-  window.__lang = "ko";
   window.__opts = undefined;        /* 기본값을 그대로 쓴다 */
   window.alert = () => {};
 
@@ -63,6 +62,8 @@ async function run(gi){
     if (m && m.mount) m.mount(document.getElementById(id));
   });
   B.initNav();
+  window.__lang = "ko";
+  if (window.setLang) window.setLang("ko");
 
   const visited = new Set();
   const realGoto = window.__goto;
@@ -119,6 +120,8 @@ async function run(gi){
 
   /* 4. 끝까지. 화면이 바뀌면 그 화면에 맞게 누른다 */
   let guard = 0, sawResultMid = 0, sawTax = 0, sawRevStep = 0, sawTaxStep = 0;
+  const steps = new Set();
+  let hidBtnFail = 0, rankFail = 0;
   let lastSig = "", stuck = 0;
   while (guard++ < 20000){
     const screen = now();
@@ -126,11 +129,22 @@ async function run(gi){
     const sig = screen + "|" + (v ? v.phase + v.turn + v.seats.map(s => s.c).join(",") : "") +
                 "|" + (q("tax", "#next") ? q("tax", "#next").textContent : "");
     if (sig === lastSig) stuck++; else { stuck = 0; lastSig = sig; }
-    if (stuck > 1500){ check("진행", false, "게임 " + gi + " 멈춤 — " + screen); break; }
+    if (stuck > 1500){
+      check("진행", false, "게임 " + gi + " 멈춤 — " + screen +
+        (v ? " | phase=" + v.phase + " turn=" + v.turn + " myTurn=" + v.myTurn +
+             " hand=" + v.hand.length + " counts=" + v.seats.map(s => s.c).join(",") +
+             " taxGive=" + v.taxGive + " paused=" + B.eng.engine.paused : ""));
+      break;
+    }
 
     if (screen === "result"){
       const kicker = q("result", "#kicker").textContent;
       const rows = q("result", "#list").querySelectorAll(".row").length;
+      if (sawResultMid === 0 && !window.__gameOver){
+        check("다음 버튼에 초읽기가 붙는다",
+              /\(\d\)\s*$/.test(q("result", "#next").textContent),
+              q("result", "#next").textContent.trim());
+      }
       if (window.__gameOver && (window.GAME.roundNo || 0) >= (window.__opts.rounds || 3)){
         check("최종 결과가 떴다", rows === want, rows + "줄 / " + kicker);
         break;
@@ -145,19 +159,26 @@ async function run(gi){
     if (screen === "tax"){
       sawTax++;
       const mid = q("tax", "#mid").textContent;
+      const stepLabel = (q("tax", "#step") ? q("tax", "#step").textContent : "").trim();
+      const acts = q("tax", "#next").parentElement;
+      if (stepLabel) steps.add(stepLabel.replace(/^\d+\.\s*/, ""));
       if (mid.includes("혁명")) sawRevStep++;
       if (mid.includes("세금")) sawTaxStep++;
-      const b = q("tax", "#next");
-      if (b && !b.disabled) b.click();
-      /* 카드를 골라야 하는 단계면 골라 준다 */
+      if (stepLabel.startsWith("1.")){
+        if (acts && acts.style.visibility !== "hidden") hidBtnFail++;
+        const ranks = q("tax", "#seats").querySelectorAll(".seat__r.on").length;
+        if (ranks < want) rankFail++;
+      }
+      /* 카드를 골라야 하는 단계면 먼저 고른다. 그리고 한 틱에 한 번만 누른다 */
       const need = window.__myNeedGive || 0;
-      if (need > 0 && !window.__taxGive){
+      const b = q("tax", "#next");
+      if (b && b.disabled && need > 0){
         const slots = q("tax", "#hand") ? q("tax", "#hand").querySelectorAll(".slot") : [];
         for (let k = 0; k < need && k < slots.length; k++) slots[slots.length - 1 - k].click();
-        const b2 = q("tax", "#next");
-        if (b2 && !b2.disabled) b2.click();
+      } else if (b && !b.disabled && acts.style.visibility !== "hidden"){
+        b.click();
       }
-      await wait(20);
+      await wait(40);
       continue;
     }
 
@@ -177,6 +198,11 @@ async function run(gi){
 
   check("판 결과 화면을 판마다 지나갔다", sawResultMid >= 2, sawResultMid + "회");
   check("혁명·세금 화면을 거쳤다", visited.has("tax"), [...visited].join(" → "));
+  check("등수 발표·혁명·세금 단계를 모두 지나갔다",
+        ["등수 발표", "패 나누기", "혁명", "세금"].every(k => [...steps].some(x => x.includes(k))),
+        [...steps].join(" / "));
+  check("등수 발표에서는 버튼이 숨겨진다", hidBtnFail === 0, hidBtnFail + "번 보임");
+  check("등수 발표에서 등수가 프로필에 붙는다", rankFail === 0, rankFail + "번 빠짐");
   console.log("         (등수·혁명·세금 화면 " + sawTax + "틱, 혁명 단계 " + sawRevStep +
               "틱, 세금 단계 " + sawTaxStep + "틱)");
   check("거쳐 간 화면", ["room", "draw", "table", "tax", "result"].every(s => visited.has(s)),

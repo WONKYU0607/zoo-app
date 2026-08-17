@@ -37,10 +37,9 @@ function nextAlive(G, from){
 
 function clearPile(G, leader){
   G.pile = null;
-  /* 치우기 직전 모습을 남긴다. 마지막 카드로 판을 끝내면 바로 치워지는데,
-     화면이 "무슨 카드로 끝냈는지"를 보여주려면 이게 있어야 한다 */
+  /* 치우기 직전 모습을 남긴다. 화면이 "무슨 카드로 끝냈는지"를 보여줄 때 쓴다 */
   if ((G.table || []).length) G.shown = G.table.map(t => ({ by: t.by, num: t.num, count: t.count }));
-  G.table = [];                               /* 바닥에 쌓인 것도 같이 치운다 */
+  G.table = [];
   G.passed = G.passed.map(() => false);
   G.next = leader;
 }

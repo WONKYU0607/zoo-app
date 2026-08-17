@@ -822,7 +822,7 @@ var MARKUP = {
 };
 
 // src/state.js
-var opts = { cap: 6, rounds: 5, tax: true, clear2: false, seated: 0 };
+var opts = { cap: 4, rounds: 3, tax: true, clear2: false, seated: 0 };
 var game = {
   N: 6,
   roundNo: 1,
@@ -871,7 +871,7 @@ function initNav() {
     if (e.target.closest("[data-cfgopen]")) openCfg();
     if (e.target.closest("[data-cfgclose]")) document.getElementById("cfg").classList.remove("on");
   });
-  window.__opts = window.__opts || { cap: 6, rounds: 5, tax: true, clear2: false };
+  window.__opts = window.__opts || { cap: 4, rounds: 3, tax: true, clear2: false };
   let optMode = "create";
   const OPT_T = {
     ko: {
@@ -19112,7 +19112,7 @@ var engine = {
   view: null,
   paused: false,
   /* 결과를 보는 동안 다음 판을 멈춘다 */
-  botMs: 1400
+  botMs: 3e3
   /* 봇이 생각하는 척하는 시간 */
 };
 var listeners = [];
@@ -19263,7 +19263,15 @@ function startOnline({ server, matchID, playerID, credentials, numPlayers, names
 }
 function setPaused(on3) {
   engine.paused = Boolean(on3);
-  if (!engine.paused) scheduleBot();
+  if (engine.paused) {
+    gen++;
+    if (botTimer) {
+      clearTimeout(botTimer);
+      botTimer = null;
+    }
+    return;
+  }
+  scheduleBot();
 }
 function stop() {
   gen++;
@@ -20692,8 +20700,10 @@ __export(flow_exports, {
 // src/lib/localroom.js
 var BOT_NAMES = ["\uC11C\uC5F0", "\uC900\uD638", "\uBBFC\uC9C0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
 var ME = "me";
-function createRoom({ cap = 6, name = "\uB098" } = {}) {
+var newCode = () => String(Math.floor(1e3 + Math.random() * 9e3));
+function createRoom({ cap = 4, name = "\uB098" } = {}) {
   return {
+    code: newCode(),
     cap: Math.min(8, Math.max(4, cap)),
     phase: "waiting",
     seats: [{ uid: ME, name: String(name || "\uB098"), bot: false }]
@@ -20715,6 +20725,7 @@ function setCap(room, cap) {
 function toRoomView(room) {
   if (!room) return null;
   return {
+    code: room.code,
     cap: room.cap,
     me: 0,
     host: ME,
@@ -20767,6 +20778,7 @@ function startGame() {
     names: myRoom.seats.map((s2) => s2.name),
     opts: { rounds, tax: o2.tax !== false, clear2: Boolean(o2.clear2) }
   });
+  setPaused(true);
   const v2 = engine.view;
   if (!v2) throw new Error("\uD310\uC744 \uC138\uC6B0\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4");
   W2().__net = { engine: true };
@@ -20831,7 +20843,7 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   opt = { goto, myName, botJoinMs };
   W2().__createRoom = async () => {
     const o2 = W2().__opts || {};
-    myRoom = createRoom({ cap: o2.cap || 6, name: opt.myName() });
+    myRoom = createRoom({ cap: o2.cap || 4, name: opt.myName() });
     W2().__opts = Object.assign(W2().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
@@ -20842,7 +20854,7 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
     return null;
   };
   W2().__peek = async () => null;
-  W2().__roomCode = () => myRoom ? "LOCAL" : null;
+  W2().__roomCode = () => myRoom ? myRoom.code : null;
   W2().__leaveRoom = () => {
     botFillStop();
     stop();
