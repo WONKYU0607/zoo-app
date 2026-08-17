@@ -82,20 +82,12 @@ window.__ticketLeft = () => ticketLeft();
 
 import { app } from "./lib/firebase.js";
 import * as eng from "./lib/engine.js";
-
-const BOT_NAMES = ["서연", "준호", "민지", "태윤", "하은", "지훈", "예린"];
+import { createRoom, addBot as addBotTo, setCap, toRoomView, seatCount } from "./lib/localroom.js";
 
 /* 이 기기 안의 방. 자리 0번은 언제나 나 */
 let myRoom = null;
 function emitRoom(){
-  window.__room = myRoom ? {
-    cap: myRoom.cap,
-    me: 0,
-    host: true,
-    phase: myRoom.phase,
-    round: null,
-    seats: myRoom.seats.slice(),
-  } : null;
+  window.__room = toRoomView(myRoom);
   window.dispatchEvent(new Event("roomchange"));
 }
 
@@ -103,22 +95,13 @@ function myName(){
   return (account && account.name) || (window.__opts && window.__opts.myName) || "나";
 }
 
-function makeRoom(){
-  const o = window.__opts || {};
-  const cap = Math.min(8, Math.max(4, o.cap || 6));
-  myRoom = {
-    cap,
-    phase: "waiting",
-    seats: [{ uid: "me", name: myName(), bot: false }],
-  };
-  window.__opts = Object.assign(window.__opts || {}, { cap, seated: 1 });
-  emitRoom();
-  return myRoom;
-}
-
 /* 방 만들기 — 지금은 이 기기 안에서만. 서버 대전은 다음 단계 */
 window.__createRoom = async () => {
-  makeRoom();
+  const o = window.__opts || {};
+  myRoom = createRoom({ cap: o.cap || 6, name: myName() });
+  window.__opts = Object.assign(window.__opts || {}, { cap: myRoom.cap, seated: 1 });
+  emitRoom();
+  botFillStart();                       /* 사람이 없으니 봇이 한 명씩 들어온다 */
   return "LOCAL";
 };
 
@@ -128,32 +111,27 @@ window.__joinRoom = async () => {
 };
 window.__peek = async () => null;
 window.__roomCode = () => (myRoom ? "LOCAL" : null);
-window.__leaveRoom = () => { eng.stop(); myRoom = null; emitRoom(); };
+window.__leaveRoom = () => { botFillStop(); eng.stop(); myRoom = null; emitRoom(); };
 
 window.__saveOpts = async () => {
   if (!myRoom) return;
-  const o = window.__opts || {};
-  myRoom.cap = Math.min(8, Math.max(4, o.cap || myRoom.cap));
-  while (myRoom.seats.length > myRoom.cap) myRoom.seats.pop();
-  window.__opts.seated = myRoom.seats.length;
+  setCap(myRoom, (window.__opts || {}).cap);
+  window.__opts.cap = myRoom.cap;
+  window.__opts.seated = seatCount(myRoom);
   emitRoom();
 };
 
 /* 봇 채우기 — 빈자리에 한 명씩 */
 let botTimer = null;
 function addBot(){
-  if (!myRoom || myRoom.phase !== "waiting") return false;
-  if (myRoom.seats.length >= myRoom.cap) return false;
-  const used = myRoom.seats.map(s => s && s.name);
-  const name = BOT_NAMES.find(n => !used.includes(n)) || ("봇" + myRoom.seats.length);
-  myRoom.seats.push({ uid: "bot" + myRoom.seats.length, name, bot: true });
-  window.__opts.seated = myRoom.seats.length;
+  if (!addBotTo(myRoom)) return false;
+  window.__opts.seated = seatCount(myRoom);
   emitRoom();
   return true;
 }
 function botFillStart(){
   if (botTimer) return;
-  botTimer = setInterval(() => { if (!addBot()) botFillStop(); }, 3000);
+  botTimer = setInterval(() => { if (!addBot()) botFillStop(); }, 2500);
 }
 function botFillStop(){ if (botTimer){ clearInterval(botTimer); botTimer = null; } }
 window.__botFill = on => (on ? botFillStart() : botFillStop());
@@ -163,8 +141,8 @@ window.__addBot = addBot;
 window.__startRound = async () => {
   if (!myRoom) throw new Error("방이 없습니다");
   botFillStop();
-  while (myRoom.seats.length < 4) if (!addBot()) break;
-  const n = myRoom.seats.length;
+  while (seatCount(myRoom) < 4) if (!addBot()) break;
+  const n = seatCount(myRoom);
   if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
 
   myRoom.phase = "playing";

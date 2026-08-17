@@ -315,7 +315,7 @@ export function mount(root){
         const k = sel.indexOf(i); if (k >= 0) sel.splice(k,1); else sel.push(i); draw(); };
       h.appendChild(s);
     });
-    SEATS[0].c = hand.length;
+    if (SEATS[0]) SEATS[0].c = hand.length;
   }
   
   function renderBottom(){
@@ -352,6 +352,9 @@ export function mount(root){
   }
   
   function draw(){
+    /* 아직 판이 없으면 그릴 것도 없다.
+       화면들은 앱이 뜰 때 한꺼번에 붙으므로, 게임 전에도 draw 가 불린다 */
+    if (!SEATS.length) return;
     renderSeats(); renderPile(); renderHand(); renderBottom();
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
