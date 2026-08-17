@@ -2,7 +2,6 @@ import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
 import { watchAuth, signInGoogle, signInTest, isLocal, account, finishGame, useTicket, ticketLeft } from "./lib/account.js";
-import * as net from "./lib/online.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -59,20 +58,10 @@ window.signInGoogle = signInGoogle;
 window.signInTest = signInTest;
 window.__isLocal = isLocal;
 
-watchAuth().then(async () => {
+watchAuth().then(() => {
   window.dispatchEvent(new Event("accountready"));
-  /* 새로고침했으면 있던 방으로 돌아간다 */
-  if (account.signedIn && app){
-    try {
-      net.initOnline(app); netReady = true;
-      const back = await net.rejoin();
-      if (back){
-        net.online.onRoom = pushRoom;
-        pushRoom(net.online.room);
-        window.__goto && window.__goto("room");
-      }
-    } catch(e){ console.warn("방 복귀 실패", e); }
-  }
+  /* 판은 이 기기 안에서 도므로 새로고침하면 처음부터다.
+     서버 대전을 붙이면 그때 방 복귀를 다시 넣는다 */
 });
 
 /* 게임이 끝났을 때 계정에 점수를 올린다.
@@ -87,316 +76,147 @@ window.reportGame = (rank, players, earned, quit) => {
 window.spendTicket = () => useTicket();
 window.__ticketLeft = () => ticketLeft();
 
-/* ---------- 온라인 대전 연결 ---------- */
+/* ---------- 대전 연결 (엔진) ---------- */
+/* 게임 진행은 전부 lib/engine.js 가 맡는다. 여기는 방을 세우고 화면을 넘길 뿐이다.
+   자리 번호를 돌리는 코드는 이 파일에 한 줄도 없다. view.js 가 혼자 한다. */
+
 import { app } from "./lib/firebase.js";
+import * as eng from "./lib/engine.js";
 
-let netReady = false;
-function ensureNet(){
-  if (netReady) return true;
-  if (!app){ alert("서버 설정이 없습니다 (.env 확인)"); return false; }
-  if (!account.signedIn){ alert("로그인이 필요합니다"); return false; }
-  net.initOnline(app);
-  netReady = true;
-  return true;
-}
+const BOT_NAMES = ["서연", "준호", "민지", "태윤", "하은", "지훈", "예린"];
 
-/* 방 상태가 바뀌면 화면에 알린다 */
-function pushRoom(room){
-  if (!room) { window.__room = null; botFillStop(); return; }
-  watchPhase(room);
-  if (room.phase === "waiting" && room.host === account.uid) botFillStart();
-  else botFillStop();
-  if (room.phase === "playing"){ watchBotTurn(room); botWatchStart(); }
-  else botWatchStop();
-  watchLeavers(room);
-  const cap = (room.opts && room.opts.cap) || 6;
-  window.__room = {
-    cap: cap,
-    me: net.online.seat,
-    host: room.host,
-    phase: room.phase,
-    round: room.round || null,
-    seats: net.seatArray(room, cap),        /* 항상 배열로 */
-  };
-  window.__opts = Object.assign(window.__opts || {}, room.opts || {});
+/* 이 기기 안의 방. 자리 0번은 언제나 나 */
+let myRoom = null;
+function emitRoom(){
+  window.__room = myRoom ? {
+    cap: myRoom.cap,
+    me: 0,
+    host: true,
+    phase: myRoom.phase,
+    round: null,
+    seats: myRoom.seats.slice(),
+  } : null;
   window.dispatchEvent(new Event("roomchange"));
 }
 
-async function guard(fn, label){
-  try { return await fn(); }
-  catch (e){
-    console.error(label, e);
-    alert(label + " : " + (e && (e.code || e.message) || e));
-    return null;
-  }
+function myName(){
+  return (account && account.name) || (window.__opts && window.__opts.myName) || "나";
 }
 
-/* 방 만들기 — 설정 창에서 확인을 누르면 실제 방을 만든다 */
-window.__createRoom = async () => {
-  if (!ensureNet()) return null;
-  const code = await guard(() => net.createRoom(window.__opts), "방을 만들지 못했습니다");
-  if (!code) return null;
-  net.online.onRoom = pushRoom;
-  pushRoom(net.online.room);
-  return code;
-};
-
-/* 번호로 들어가기 */
-window.__joinRoom = async code => {
-  if (!ensureNet()) return null;
-  const seat = await guard(() => net.joinRoom(String(code)), "들어갈 수 없습니다");
-  if (seat == null) return null;
-  net.online.onRoom = pushRoom;
-  pushRoom(net.online.room);
-  return seat;
-};
-
-window.__leaveRoom = () => { try { net.leaveRoom(); } catch(e){} window.__room = null; };
-window.__roomCode = () => net.online.code;
-window.__peek = code => { ensureNet(); return net.peek(code); };
-
-/* 방장이 방 조건을 바꾸면 서버에 쓴다. 안 그러면 나만 바뀌고 남은 모른다 */
-window.__saveOpts = async () => {
-  const R = net.online.room;
-  if (!R || R.host !== account.uid) return;
+function makeRoom(){
   const o = window.__opts || {};
-  try { await net.saveOpts(net.online.code, {
-    cap: o.cap, rounds: o.rounds, tax: o.tax, clear2: o.clear2 }); }
-  catch(e){ console.warn("설정 저장 실패", e); }
+  const cap = Math.min(8, Math.max(4, o.cap || 6));
+  myRoom = {
+    cap,
+    phase: "waiting",
+    seats: [{ uid: "me", name: myName(), bot: false }],
+  };
+  window.__opts = Object.assign(window.__opts || {}, { cap, seated: 1 });
+  emitRoom();
+  return myRoom;
+}
+
+/* 방 만들기 — 지금은 이 기기 안에서만. 서버 대전은 다음 단계 */
+window.__createRoom = async () => {
+  makeRoom();
+  return "LOCAL";
 };
 
-/* 세금에서 1등이 고른 두 장을 서버에 넘긴다 */
-window.__setTaxGive = cards => { window.__taxGive = cards; };
+window.__joinRoom = async () => {
+  alert("서버 대전은 아직 준비 중입니다. 봇과 하기로 시작해 주세요.");
+  return null;
+};
+window.__peek = async () => null;
+window.__roomCode = () => (myRoom ? "LOCAL" : null);
+window.__leaveRoom = () => { eng.stop(); myRoom = null; emitRoom(); };
 
-/* 방장이 누르면 서버가 카드를 나눈다 */
-/* 봇 채우기 — 방장 화면에서 7초마다 한 명씩 */
+window.__saveOpts = async () => {
+  if (!myRoom) return;
+  const o = window.__opts || {};
+  myRoom.cap = Math.min(8, Math.max(4, o.cap || myRoom.cap));
+  while (myRoom.seats.length > myRoom.cap) myRoom.seats.pop();
+  window.__opts.seated = myRoom.seats.length;
+  emitRoom();
+};
+
+/* 봇 채우기 — 빈자리에 한 명씩 */
 let botTimer = null;
+function addBot(){
+  if (!myRoom || myRoom.phase !== "waiting") return false;
+  if (myRoom.seats.length >= myRoom.cap) return false;
+  const used = myRoom.seats.map(s => s && s.name);
+  const name = BOT_NAMES.find(n => !used.includes(n)) || ("봇" + myRoom.seats.length);
+  myRoom.seats.push({ uid: "bot" + myRoom.seats.length, name, bot: true });
+  window.__opts.seated = myRoom.seats.length;
+  emitRoom();
+  return true;
+}
 function botFillStart(){
   if (botTimer) return;
-  botTimer = setInterval(async () => {
-    const R = net.online.room;
-    if (!R || R.phase !== "waiting" || R.host !== account.uid){ botFillStop(); return; }
-    try { await net.addBot(); } catch(e){ console.warn(e); }
-  }, 5000);
+  botTimer = setInterval(() => { if (!addBot()) botFillStop(); }, 3000);
 }
 function botFillStop(){ if (botTimer){ clearInterval(botTimer); botTimer = null; } }
 window.__botFill = on => (on ? botFillStart() : botFillStop());
+window.__addBot = addBot;
 
+/* 시작 */
 window.__startRound = async () => {
-  const code = net.online.code;
-  if (!code) throw new Error("방이 없습니다");
-  botFillStop();                     /* 나누는 사이에 봇이 더 들어오면 인원이 흔들린다 */
-  /* 버튼이 어떤 이유로든 눌렸을 때를 대비해 한 번 더 센다 */
-  const n = net.seatCount(net.online.room);
+  if (!myRoom) throw new Error("방이 없습니다");
+  botFillStop();
+  while (myRoom.seats.length < 4) if (!addBot()) break;
+  const n = myRoom.seats.length;
   if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
-  await net.startRound(code);
-};
 
-/* 방 상태가 playing 으로 바뀌면 모두 함께 게임으로 들어간다 */
-let lastPhase = null, lastRound = 0;
-function watchPhase(room){
-  if (!room) { lastPhase = null; lastRound = 0; return; }
+  myRoom.phase = "playing";
+  emitRoom();
 
-  /* 게임이 끝났으면 결과로 */
-  if (room.phase === "over" && lastPhase !== "over"){
-    lastPhase = "over";
-    window.GAME = window.GAME || {};
-    window.GAME.score = room.score || [];
-    window.GAME.finish = room.order || null;
-    window.__goto && window.__goto("result");
-    return;
-  }
+  const o = window.__opts || {};
+  eng.startLocal({
+    numPlayers: n,
+    myID: "0",
+    names: myRoom.seats.map(s => s.name),
+    opts: { rounds: o.rounds || 3, tax: o.tax !== false, clear2: Boolean(o.clear2) },
+  });
 
-  const rn = room.roundNo || 1;
-  const newRound = room.phase === "playing" && rn !== lastRound;
-  if (room.phase === lastPhase && !newRound) return;
-  lastPhase = room.phase;
-  if (room.phase !== "playing") return;
-  lastRound = rn;
+  const v = eng.engine.view;
+  if (!v) throw new Error("판을 세우지 못했습니다");
 
-  /* 서버가 적어 둔 순서를 그대로 쓴다. 자리 배열에 구멍이 있어도 어긋나지 않는다 */
-  const capN = (room.opts && room.opts.cap) || 6;
-  const all = net.seatArray(room, capN);
-  const order = room.order || all.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
-  const seats = order.map(i => all[i]).filter(Boolean);
-  const me = Math.max(0, order.indexOf(net.online.seat));
-
-  /* 게임 화면이 서버 값을 쓰도록 넘겨준다 */
+  /* 화면이 쓰는 값. 이름·점수는 이미 내 자리 기준으로 돌아온 것들이다 */
+  window.__net = { engine: true };            /* 뽑기 화면이 선을 엔진에서 받게 한다 */
   window.GAME = {
-    N: seats.length,
-    roundNo: room.roundNo || 1,
-    names: seats.map(s => s.name || ""),
-    namesEn: seats.map(s => s.name || ""),
-    hold: null,
-    order: null,
-    finish: null,
-    score: room.score || seats.map(() => 0),
-    mySeat: me,
+    N: n,
+    roundNo: v.roundNo,
+    names: v.names.slice(),
+    namesEn: v.names.slice(),
+    hold: null, order: null, finish: null,
+    score: v.score.slice(),
+    mySeat: 0,
   };
-  window.__opts = Object.assign(window.__opts || {}, room.opts || {}, { seated: seats.length });
-  window.__net = {
-    seat: me,
-    /* 화면이 계산한 판 상태를 같이 보낸다.
-       자리 번호는 내 기준으로 돌아가 있으므로 서버 기준으로 되돌린다 */
-    send: (mv, st) => {
-      const nn = seats.length;
-      const back = v => ((v + me) % nn);
-      let out = null;
-      if (st){
-        out = { turn: back(st.turn), trick: null };
-        if (st.counts){ out.counts = new Array(nn);
-          st.counts.forEach((c, i) => { out.counts[back(i)] = c; }); }
-        if (st.passed){ out.passed = new Array(nn);
-          st.passed.forEach((v, i) => { out.passed[back(i)] = v; }); }
-        if (st.finish) out.finish = st.finish.map(back);
-        if (st.trick) out.trick = { by: back(st.trick.by), num: st.trick.num, count: st.trick.count };
-      }
-      return net.playMove(mv, out);
-    },
-  };
-  window.__room = window.__room || {};
-  window.__room.round = room.round;
+  window.__opts = Object.assign(window.__opts || {}, { seated: n });
+  window.__leadSeat = v.turn >= 0 ? v.turn : 0;
+  window.GAME.order = Array.from({ length: n }, (_, k) => (window.__leadSeat + k) % n);
+  window.__roundNo = v.roundNo;
+  window.__myRankIdx = null;
+  window.__scored = null;
 
-  /* 내 손패가 오면 화면에 넘긴다 */
-  net.online.onHand = h => {
-    window.__hand = h || [];
-    window.dispatchEvent(new Event("handchange"));
-  };
-  window.__hand = net.online.hand || [];
-
-  /* 남의 수가 들어오면 화면에 적용한다. 내 자리 기준으로 돌려서 넘긴다 */
-  seenMove = 0;
-  moveQueue.length = 0;
-  if (drainId){ clearTimeout(drainId); drainId = null; }
-  net.online.onMove = (seq, mv) => {
-    if (seq <= seenMove) return;
-    seenMove = seq;
-    const a = String(mv).split(",");
-    const from = (Number(a[0]) - me + seats.length) % seats.length;
-    a[0] = String(from);
-    moveQueue.push({ seq: seq, mv: a.join(","), mine: from === 0 });
-    drainMoves();
-  };
-
-  /* 서버가 정한 선을 뽑기 화면이 연출로 보여준다 */
-  const lead = room.round ? room.round.lead : 0;
-  const n = seats.length;
-  window.__leadSeat = ((lead - me + n) % n);        /* 내 자리 기준으로 돌린 선 */
-  window.GAME.order = [];
-  for (let i = 0; i < n; i++) window.GAME.order.push((window.__leadSeat + i) % n);
-
-  watchBotTurn(room);
   window.__goto && window.__goto("draw");
-}
-let seenMove = 0;
-
-/* 서버는 봇 차례를 한꺼번에 계산해서 수를 통째로 보낸다.
-   그대로 다 적용하면 눈 깜짝할 새 지나가 게임 같지가 않다.
-   하나씩 사이를 띄워서 적용한다. */
-const moveQueue = [];
-let drainId = null;
-function drainMoves(){
-  if (drainId) return;                       /* 이미 하나씩 내보내는 중 */
-  const step = () => {
-    const m = moveQueue.shift();
-    if (!m){ drainId = null; return; }
-    if (window.__applyMove) window.__applyMove(m.mv);
-    /* 내 수는 이미 화면에 반영돼 있으니 기다리지 않는다 */
-    drainId = setTimeout(step, m.mine ? 0 : 2000);
-  };
-  step();
-}
-
-/* 판이 끝나면 방장 기기가 서버에 정산을 맡긴다.
-   결과(다음 판 카드, 등수, 혁명 여부)는 방 상태로 모두에게 온다. */
-let settling = false;
-window.__endRoundOnline = async finishOrder => {
-  const R = net.online.room;
-  if (!R) return;
-  /* 판 결과를 방에 적어 둔다. 방장이 그걸 보고 정산한다 */
-  try { await net.reportFinish(net.online.code, finishOrder); } catch(e){ console.warn(e); }
-  if (R.host !== account.uid) return;              /* 방장만 정산 */
-  if (settling) return;
-  settling = true;
-  try {
-    const give = window.__taxGive || null;
-    const res = await net.settleRound(net.online.code, give);
-    window.__taxGive = null;
-    if (res && res.data && res.data.over){
-      window.__gameOver = res.data;
-      window.__goto && window.__goto("result");
-    }
-  } catch(e){ console.warn("정산 실패", e); }
-  finally { setTimeout(() => { settling = false; }, 500); }
 };
 
-/* 이탈 판정 — 1분 동안 안 돌아오면 나간 것으로 표시한다.
-   방장 기기가 맡는다. 방장이 없으면 남은 사람 중 가장 앞자리가 맡는다. */
-let leaveTimer = null;
-function watchLeavers(room){
-  if (leaveTimer){ clearInterval(leaveTimer); leaveTimer = null; }
-  if (!room || !net.online.code) return;
-  leaveTimer = setInterval(async () => {
-    const R = net.online.room;
-    if (!R) return;
-    const seats = net.seatArray(R);
-    const live = R.live || {};
-    /* 이 일을 맡을 사람: 방장, 없으면 가장 앞자리 사람 */
-    let keeper = R.host;
-    const hostSeat = seats.find(s => s && s.uid === R.host && !s.left);
-    if (!hostSeat){
-      const first = seats.find(s => s && !s.bot && !s.left);
-      keeper = first ? first.uid : null;
-    }
-    if (keeper !== account.uid) return;
+/* 세금 — 화면이 고른 카드를 엔진에 그대로 넘긴다 */
+window.__setTaxGive = cards => {
+  window.__taxGive = cards;
+  if (Array.isArray(cards) && cards.length) eng.give(cards);
+};
 
-    const now = Date.now();
-    for (let i = 0; i < seats.length; i++){
-      const s = seats[i];
-      if (!s || s.bot || s.left) continue;
-      if (s.uid === account.uid) continue;
-      const seen = live[s.uid];
-      if (seen === 0 || (typeof seen === "number" && now - seen > 60000)){
-        try { await net.markOff(net.online.code, i); } catch(e){}
-      }
-    }
-  }, 5000);
-}
+/* 판이 끝났을 때 화면이 부른다. 엔진이 알아서 다음 판을 세우므로 할 일이 없다 */
+window.__endRoundOnline = async () => {};
 
-/* 봇 차례가 오면 서버에 다음 수를 맡긴다.
-   방장 한 명만 부른다. 여럿이 부르면 같은 수가 두 번 적힌다. */
-let botBusy = false, botTick = null;
-function botWatchStart(){
-  if (botTick) return;
-  botTick = setInterval(() => {
-    const R = net.online.room;
-    if (!R || R.phase !== "playing"){ botWatchStop(); return; }
-    watchBotTurn(R);
-  }, 2500);
-}
-function botWatchStop(){ if (botTick){ clearInterval(botTick); botTick = null; } }
+/* 세금 단계에 들어가면 화면을 넘긴다 */
+window.__onTax = v => {
+  window.__myRankIdx = v.taxGive > 0 ? (v.taxGive === 2 ? 0 : 1) : null;
+  window.__myGive = v.taxGive;
+  if (v.taxGive > 0 && window.__goto) window.__goto("tax");
+};
 
-async function watchBotTurn(room){
-  if (!room || room.phase !== "playing") return;
-  if (room.host !== account.uid) return;          /* 방장만 */
-  if (botBusy) return;
-  const r = room.round;
-  if (!r) return;
-  /* r.turn 은 "몇 번째 차례"이고 자리 번호가 아니다.
-     8명 방에 5명이 흩어져 앉으면 둘이 다르다. order 로 바꿔서 봐야 한다. */
-  const capN = (room.opts && room.opts.cap) || 8;
-  const seats = net.seatArray(room, capN);
-  let ord = room.order;
-  if (!Array.isArray(ord) || !ord.length){
-    ord = seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0);
-  }
-  const at = ord[r.turn];
-  const cur = (at == null) ? null : seats[at];
-  if (!cur){ console.warn("봇 판정 실패 — 차례", r.turn, "자리표", ord); return; }
-  if (!cur.bot) return;                            /* 사람 차례 */
-  botBusy = true;
-  console.log("봇 차례 → 서버에 맡김", cur.name, "(자리", at, ", 차례", r.turn, ")");
-  try { await net.botMoves(net.online.code); }
-  catch(e){ console.error("봇 수 실패", e && (e.code || e.message) || e); }
-  finally { setTimeout(() => { botBusy = false; }, 400); }
-}
+/* 게임이 끝나면 결과로 */
+window.__onGameOver = () => { window.__goto && window.__goto("result"); };
