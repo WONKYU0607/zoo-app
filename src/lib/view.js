@@ -4,9 +4,24 @@
    그 둘 사이를 돌리는 일은 **오직 이 파일에서만** 한다.
    여기 말고 어디에서도 자리 번호를 돌리지 말 것. 지난 구조가 그것 때문에 깨졌다. */
 
-/* 엔진 자리 → 화면 자리 */
+/* 자리 줄(등수 순서)이 없으면 자리 번호 순서로 앉은 것으로 본다 */
+const orderOf = (G, n) => (G && G.seatOrder && G.seatOrder.length === n
+  ? G.seatOrder
+  : Array.from({ length: n }, (_, i) => i));
+
+/* 엔진 자리 → 화면 자리.
+   화면은 나를 아래(0번)에 두고 자리 줄을 따라 시계 방향으로 앉힌다.
+   자리 줄이 매 판 바뀌므로 같은 사람이 판마다 다른 위치에 앉는다 — 원작 그대로다 */
+export const toScreenIn = (order, seat, me) => {
+  const n = order.length;
+  return ((order.indexOf(seat) - order.indexOf(me)) % n + n) % n;
+};
+export const toSeatIn = (order, pos, me) => {
+  const n = order.length;
+  return order[((order.indexOf(me) + pos) % n + n) % n];
+};
+/* 자리 줄이 없던 시절의 모양 — 검사와 옛 코드가 쓴다 */
 export const toScreen = (seat, me, n) => ((seat - me) % n + n) % n;
-/* 화면 자리 → 엔진 자리 */
 export const toSeat   = (pos,  me, n) => ((pos + me) % n + n) % n;
 
 /* 화면이 한 번에 받아 쓰는 덩어리.
@@ -15,6 +30,10 @@ export function screenView(G, ctx, myID, names){
   const n = G.counts.length;
   const me = Number(myID);
   const nm = names || new Array(n).fill("");
+  /* 이 판의 자리 줄. 여기서만 자리를 돌린다 */
+  const ord = orderOf(G, n);
+  const toScreen = (seat, _me, _n) => toScreenIn(ord, seat, me);
+  const toSeat   = (pos,  _me, _n) => toSeatIn(ord, pos, me);
 
   const seats = new Array(n);
   for (let seat = 0; seat < n; seat++){
@@ -57,8 +76,17 @@ export function screenView(G, ctx, myID, names){
     totalRounds: G.totalRounds,
     phase: ctx.phase,
     revolution: G.revolution
-      ? { seat: toScreen(G.revolution.seat, me, n), great: G.revolution.great }
+      ? {
+          seat: toScreen(G.revolution.seat, me, n),
+          great: G.revolution.great,
+          mine: G.revolution.seat === me,
+          decided: Boolean(G.revDecided),
+          declared: Boolean(G.revDeclared),
+        }
       : null,
+    /* 내가 지금 선언할 수 있는가 */
+    canDeclare: Boolean(G.revolution && !G.revDecided && G.revolution.seat === me),
+    taxCancelled: Boolean(G.taxCancelled),
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G.taxOrder) return 0;

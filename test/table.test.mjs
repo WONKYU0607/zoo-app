@@ -90,8 +90,9 @@ async function playOne(gi){
     if (sig === lastSig) stuck++; else { stuck = 0; lastSig = sig; }
     if (stuck > 400){ check("진행", false, "게임 " + gi + " 멈춤 — " + sig); return null; }
 
-    /* 세금 단계: 내가 낼 게 있으면 가장 나쁜 카드를 낸다 */
+    /* 세금 단계: 혁명을 쥐었으면 선언하고, 내가 낼 게 있으면 가장 나쁜 카드를 낸다 */
     if (v.phase === "tax"){
+      if (v.canDeclare) eng.declareRev();
       if (v.taxGive > 0){
         const hand = v.hand.slice().sort((a, b) => (b >= 13 ? 99 : b) - (a >= 13 ? 99 : a));
         eng.give(hand.slice(0, v.taxGive));

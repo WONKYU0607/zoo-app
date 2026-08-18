@@ -33,6 +33,7 @@ export function mount(root){
       take:"가져옴", gave:"줌",
       doneH:"준비 완료", doneS:n=>'<b>'+n+'</b>님이 첫 판을 시작합니다.',
       declare:"혁명 선언", declareG:"대혁명 선언", skip:"넘기기",
+      waitSec:n=>n+"초 후 다음으로 넘어갑니다",
       next:"다음", back:"처음부터", start:"판 시작",
       joker:"카멜레온"
     },
@@ -56,6 +57,7 @@ export function mount(root){
       take:"taken", gave:"given",
       doneH:"Ready", doneS:n=>'<b>'+n+'</b> leads the first trick.',
       declare:"Declare", declareG:"Declare great revolution", skip:"Skip",
+      waitSec:n=>"Next in "+n+"s",
       next:"Next", back:"Restart", start:"Start round",
       joker:"CHAMELEON"
     }
@@ -301,7 +303,11 @@ export function mount(root){
     const k = r === n - 1 ? 2 : r === n - 2 ? 1 : 0;
     return myHand().map((c, i) => i).sort((a, b) => myHand()[a] - myHand()[b]).slice(0, k);
   }
-  function taxSkipped(){ return revSeat !== null && declared; }
+  function taxSkipped(){
+    /* 엔진이 정한 값이 있으면 그걸 따른다 (선언해야 세금이 사라진다) */
+    if (online && window.__taxCancelled !== undefined) return Boolean(window.__taxCancelled);
+    return revSeat !== null && declared;
+  }
   
   function renderMid(){
     const t = T[lang], m = el("mid"), r = rankOf(0), n = N, o = order();
@@ -356,16 +362,24 @@ export function mount(root){
   function renderBottom(){
     const t = T[lang], great = revSeat !== null && rankOf(revSeat) === N - 1;
     el("step").textContent = (step + 1) + ". " + t.steps[step];
-    el("back").textContent = t.back;
+    /* "처음부터"는 혼자 하기 시제품에서 남은 것이라 지금은 뜻이 없다 */
+    const bk = el("back");
+    if (bk) bk.style.display = "none";
     const g = giveCount();
-    el("hint").innerHTML = step === 3 && g
-      ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
-      : "";
     const b = el("next");
     if (tickBase) tickBase = "";      /* 글자가 새로 정해지면 초읽기 바탕도 새로 잡는다 */
-    /* 등수 발표는 볼 뿐이라 누를 것이 없다 */
+    /* 누를 것이 있는 사람에게만 단추를 보여준다.
+       혁명은 카멜레온 두 장을 쥔 사람, 세금은 주고받는 당사자.
+       나머지는 초읽기만 보고 기다린다 */
     const bar = b.parentElement;
-    if (bar) bar.style.visibility = step === 0 ? "hidden" : "";
+    const mine = step === 0 ? false
+      : step === 2 ? (revSeat === 0 && !declared)
+      : step === 3 ? (g > 0 && !taxSkipped())
+      : true;
+    if (bar) bar.style.visibility = mine ? "" : "hidden";
+    el("hint").innerHTML = step === 3 && g && mine
+      ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
+      : (!mine && (step === 2 || step === 3) && tickLeft > 0 ? t.waitSec(tickLeft) : "");
     if (step === 2 && revSeat === 0 && !declared){
       b.className = "bt-rev"; b.textContent = great ? t.declareG : t.declare; b.disabled = false;
     } else {
@@ -428,6 +442,11 @@ export function mount(root){
       const bb = el("next");
       if (!bb) return;
       bb.textContent = tickBase + (tickLeft > 0 ? " (" + tickLeft + ")" : "");
+      /* 단추가 숨겨진 사람에게는 안내 문구 자리에 남은 시간을 보여준다 */
+      const bar2 = bb.parentElement;
+      const h = el("hint");
+      if (h && bar2 && bar2.style.visibility === "hidden")
+        h.textContent = tickLeft > 0 ? T[lang].waitSec(tickLeft) : "";
     };
     paint();
     tickId = setInterval(() => { tickLeft--; if (tickLeft < 0){ stopTick(); return; } paint(); }, 1000);
@@ -459,6 +478,10 @@ export function mount(root){
     autoId = setTimeout(() => {
       const sec2 = window.document.getElementById("tax");
       if (!sec2 || !sec2.classList.contains("is-on")){ autoNext(); return; }
+      /* 혁명은 안 부르고 넘기면 그대로 세금을 걷는다 (쥐고도 안 부르는 것이 전략) */
+      if (step === 2 && online && revSeat === 0 && !declared && window.__passRev){
+        window.__passRev();
+      }
       /* 세금에서 안 고르고 시간을 넘기면 가장 나쁜 카드를 자동으로 준다 */
       if (step === 3){
         const g = giveCount();
@@ -480,6 +503,8 @@ export function mount(root){
     if (step === 2 && revSeat !== null && !declared){
       declared = true;
       wasGreat = great;
+      /* 엔진에 실제로 선언한다. 이걸 안 부르면 세금이 그대로 걷힌다 */
+      if (online && revSeat === 0 && window.__declareRev) window.__declareRev();
       if (great){
         reversed = true;
         el("flash").classList.remove("go"); void el("flash").offsetWidth; el("flash").classList.add("go");
@@ -510,7 +535,7 @@ export function mount(root){
     }
     autoNext();
   };
-  el("back").onclick = () => { if (window.__toResult) window.__toResult(); };
+  if (el("back")) el("back").onclick = () => { if (window.__toResult) window.__toResult(); };
   
   document.querySelectorAll("#lang button").forEach(b => {
     b.addEventListener("click", () => {

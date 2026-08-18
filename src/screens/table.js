@@ -56,9 +56,13 @@ export function mount(root){
      자리 번호를 돌리는 일은 view.js 안에서 이미 끝나 있다. */
   let offView = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
+  let holdingEnd = false;
 
   function apply(v){
     if (!v) return;
+    /* 방금 끝난 판을 세워 두는 동안에는 새 판 상태를 그리지 않는다.
+       안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
+    if (holdingEnd && !v.over) return;
     SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [] }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
@@ -91,7 +95,7 @@ export function mount(root){
         }));
         animated = 0;
         if (holdPile) clearTimeout(holdPile);
-        holdPile = setTimeout(() => { holdPile = null; ghost = []; draw(); }, 1400);
+        holdPile = setTimeout(() => { holdPile = null; ghost = []; draw(); }, 2000);
       }
     } else if (v.table.length){
       if (holdPile){ clearTimeout(holdPile); holdPile = null; }
@@ -123,6 +127,7 @@ export function mount(root){
 
   /* 방금 끝난 판의 마지막 장면을 그대로 세워 두고, 잠시 뒤 결과 화면으로 */
   function showLastRound(v){
+    holdingEnd = true;
     const lr = v.lastRound;
     SEATS = v.seats.map((x, i) => ({
       n: x.name, c: i === lr.order[lr.order.length - 1] ? x.c : 0, s: "", hold: [],
@@ -134,7 +139,10 @@ export function mount(root){
     animated = 0; spread = false;
     draw();
     if (timerId) clearTimeout(timerId);
-    setTimeout(() => { window.__onRoundEnd && window.__onRoundEnd(v); }, 1600);
+    setTimeout(() => {
+      holdingEnd = false;
+      window.__onRoundEnd && window.__onRoundEnd(v);
+    }, 2000);
   }
 
   /* 카드를 직접 고르면 자동치기를 끈다 */
@@ -150,7 +158,7 @@ export function mount(root){
     }
     eng.setAuto(false);
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
-    ghost = []; ghostSig = "";
+    ghost = []; ghostSig = ""; holdingEnd = false;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     offView = eng.onView(apply);
@@ -473,6 +481,7 @@ const TURN_SEC = 15;
     const e = effective(list);
     sel = []; busy = true;
     eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
+    iMoved();
     unlockLater();
   };
 
@@ -486,6 +495,9 @@ const TURN_SEC = 15;
       if (v && v.myTurn && busy){ busy = false; draw(); }
     }, 1200);
   }
+
+  /* 내가 직접 뒀다고 서버에 알린다. 안 알리면 자리를 비운 것으로 본다 */
+  function iMoved(){ if (window.__iMoved) window.__iMoved(); }
 
   function doPass(auto){
     if (turn !== 0 || busy) return;
@@ -503,6 +515,7 @@ const TURN_SEC = 15;
     }
     sel = []; busy = true;
     if (auto) flash(T[lang].autoPass, true);
+    if (!auto) iMoved();
     eng.passTurn();
     unlockLater();
     if (auto) toAuto();

@@ -16,24 +16,29 @@ const JOKER_ALONE = 13;                       /* 카멜레온 단독은 13번 �
 const alive = G => G.counts.map((c, i) => (c > 0 ? i : -1)).filter(i => i >= 0);
 const active = G => G.counts.map((c, i) => (c > 0 && !G.passed[i] ? i : -1)).filter(i => i >= 0);
 
+/* 자리 순서(= 등수 순서). 1등이 맨 앞이고 거기서 시계 방향으로 앉는다.
+   원작 달무티가 매 판 등수대로 자리를 다시 앉는 것을 그대로 옮긴 것이다.
+   차례도 자리 번호가 아니라 이 줄을 따라 돈다 — 대혁명으로 줄이 뒤집히면
+   누구 다음에 누가 두는지가 통째로 바뀐다. */
+const seatOrder = G => (G.seatOrder && G.seatOrder.length
+  ? G.seatOrder
+  : G.counts.map((_, i) => i));
+const seatPos = (G, seat) => seatOrder(G).indexOf(seat);
+
+/* 자리 줄에서 from 다음으로 조건을 만족하는 사람 */
+function nextBy(G, from, ok){
+  const o = seatOrder(G), n = o.length;
+  const at = o.indexOf(from);
+  for (let k = 1; k <= n; k++){
+    const i = o[(at + k + n) % n];
+    if (ok(i)) return i;
+  }
+  return -1;
+}
 /* 다음 순번 중 아직 낼 수 있는 사람 */
-function nextActive(G, from){
-  const n = G.counts.length;
-  for (let k = 1; k <= n; k++){
-    const i = (from + k) % n;
-    if (G.counts[i] > 0 && !G.passed[i]) return i;
-  }
-  return -1;
-}
+const nextActive = (G, from) => nextBy(G, from, i => G.counts[i] > 0 && !G.passed[i]);
 /* 다음 순번 중 카드가 남은 사람 (선을 넘길 때) */
-function nextAlive(G, from){
-  const n = G.counts.length;
-  for (let k = 1; k <= n; k++){
-    const i = (from + k) % n;
-    if (G.counts[i] > 0) return i;
-  }
-  return -1;
-}
+const nextAlive  = (G, from) => nextBy(G, from, i => G.counts[i] > 0);
 
 function clearPile(G, leader){
   G.pile = null;
@@ -148,13 +153,20 @@ function openNextRound(G, random){
 
   dealRound(G, random);
 
+  /* 혁명은 "쥐었다"가 아니라 "선언했다"로 발동한다.
+     쥐고도 안 부르는 것이 전략이므로 여기서는 가능 여부만 표시한다 */
   const rev = findRevolution(G, order);
   G.revolution = rev.on ? { seat: rev.seat, great: rev.great } : null;
-  if (rev.great) order.reverse();
+  G.revDeclared = false;
+  G.revDecided = !rev.on;                             /* 쥔 사람이 없으면 정할 것도 없다 */
+  G.taxCancelled = false;
   G.taxOrder = order;
+  G.seatOrder = order.slice();          /* 등수대로 다시 앉는다 */
 
-  /* 혁명이 나면 세금은 전면 취소 */
-  G.needTax = Boolean(G.opts.tax) && !rev.on && n >= 4;
+  const taxOn = Boolean(G.opts.tax) && n >= 4;
+  /* 세금이 있거나, 선언할 사람이 있으면 그 단계를 거친다 */
+  G.needTax = taxOn || rev.on;
+  G.taxOn = taxOn;
   G.next = order[0];                                  /* 1등이 선 */
   G.given = {};
 }
@@ -172,12 +184,15 @@ export const ZooPresident = {
       pile: null, table: [], finished: [], next: 0,
       score: new Array(n).fill(0),
       roundNo: 1, totalRounds: Math.max(3, opts.rounds),
-      opts, lastOrder: null, taxOrder: null, revolution: null,
+      opts, lastOrder: null, taxOrder: null, seatOrder: null, revolution: null,
+      revDeclared: false, revDecided: true, taxCancelled: false, taxOn: false,
       lastRound: null, shown: [],
       needTax: false, given: {}, gameOver: false,
     };
     dealRound(G, random);
-    G.next = Math.floor(random.Number() * n);         /* 첫 판 선은 무작위 */
+    /* 첫 판 자리는 뽑기로 정한다. 엔진이 순서를 정하고 화면이 그대로 보여준다 */
+    G.seatOrder = random.Shuffle(Array.from({ length: n }, (_, i) => i));
+    G.next = G.seatOrder[0];
     return G;
   },
 
@@ -260,8 +275,31 @@ export const ZooPresident = {
         stages: {
           giving: {
             moves: {
+              /* 혁명 선언 — 카멜레온 두 장을 쥔 사람만.
+                 선언하면 이번 판 세금이 사라지고, 대혁명이면 등수가 통째로 뒤집힌다 */
+              declare: ({ G, playerID }) => {
+                const seat = Number(playerID);
+                if (!G.revolution || G.revDecided) return INVALID_MOVE;
+                if (G.revolution.seat !== seat) return INVALID_MOVE;
+                G.revDeclared = true;
+                G.revDecided = true;
+                G.taxCancelled = true;
+                if (G.revolution.great){
+                  G.taxOrder = G.taxOrder.slice().reverse();
+                  G.seatOrder = G.taxOrder.slice();   /* 자리도 통째로 뒤집힌다 */
+                }
+                G.next = G.taxOrder[0];
+              },
+              /* 쥐고도 안 부른다 — 세금은 그대로 걷는다 */
+              passRev: ({ G, playerID }) => {
+                const seat = Number(playerID);
+                if (!G.revolution || G.revDecided) return INVALID_MOVE;
+                if (G.revolution.seat !== seat) return INVALID_MOVE;
+                G.revDecided = true;
+              },
               give: ({ G, playerID }, cards) => {
                 const seat = Number(playerID);
+                if (!G.revDecided || G.taxCancelled || !G.taxOn) return INVALID_MOVE;
                 const o = G.taxOrder;
                 const need = seat === o[0] ? 2 : (seat === o[1] ? 1 : 0);
                 if (!need) return INVALID_MOVE;
@@ -279,13 +317,15 @@ export const ZooPresident = {
           },
         },
       },
-      /* 둘 다 골랐으면 넘어간다. 안 고르면 밖에서 시간 초과로 넘긴다 */
+      /* 혁명을 정했고, 세금까지 끝나야 넘어간다 */
       endIf: ({ G }) => {
+        if (!G.revDecided) return false;
+        if (G.taxCancelled || !G.taxOn) return true;
         const o = G.taxOrder;
         return G.given[o[0]] !== undefined && G.given[o[1]] !== undefined;
       },
       onEnd: ({ G }) => {
-        applyTax(G, G.given);
+        if (!G.taxCancelled && G.taxOn) applyTax(G, G.given);
         G.needTax = false;
         G.next = G.taxOrder[0];
       },
@@ -301,6 +341,12 @@ export const ZooPresident = {
     enumerate: (G, ctx, playerID) => {
       const seat = Number(playerID);
       if (ctx.phase === "tax"){
+        /* 혁명을 쥔 봇은 선언한다 (봇은 늘 이득을 택한다) */
+        if (G.revolution && !G.revDecided){
+          if (G.revolution.seat === seat) return [{ move: "declare", args: [] }];
+          return [];
+        }
+        if (G.taxCancelled || !G.taxOn) return [];
         const o = G.taxOrder;
         const need = seat === o[0] ? 2 : (seat === o[1] ? 1 : 0);
         if (!need || G.given[seat] !== undefined) return [];

@@ -74,13 +74,15 @@ for (let gi = 1; gi <= 12; gi++){
                 "낸 사람 " + last.by + " / 등수 " + v.lastRound.order.indexOf(last.by));
         }
         /* 그 장면도 자리마다 따라 돌아야 한다 */
-        /* me=0 화면에서 0은 곧 엔진 자리 0 이므로, 다른 사람 화면은 그걸 돌린 값이어야 한다 */
+        /* 자리 줄이 판마다 바뀌므로 번호로 비교하면 안 된다.
+           "그 자리에 앉은 사람이 같은 사람인가"로 본다 */
         for (let me = 1; me < N; me++){
           const w = screenView(st.G, st.ctx, String(me), NAMES);
+          const who = (view, pos) => view.seats[pos].name;
           const ok = w.lastRound.table.every((t, k) =>
-                       t.by === toScreen(v.lastRound.table[k].by, me, N))
+                       who(w, t.by) === who(v, v.lastRound.table[k].by))
                   && w.lastRound.order.every((o, k) =>
-                       o === toScreen(v.lastRound.order[k], me, N));
+                       who(w, o) === who(v, v.lastRound.order[k]));
           check("판 끝 장면도 자리 따라 돔 (me=" + me + ")", ok);
         }
       }
@@ -89,6 +91,14 @@ for (let gi = 1; gi <= 12; gi++){
 
     if (st.ctx.phase === "tax"){
       sawTax++;
+      /* 혁명은 선언해야 발동한다. 쥔 사람이 있으면 선언시켜 본다 */
+      if (st.G.revolution && !st.G.revDecided){
+        c.updatePlayerID(String(st.G.revolution.seat));
+        c.moves.declare();
+        c.updatePlayerID(null);
+        continue;
+      }
+      if (st.G.taxCancelled || !st.G.taxOn) { c.updatePlayerID(null); continue; }
       const o = st.G.taxOrder;
       for (const seat of [o[0], o[1]]){
         if (st.G.given[seat] !== undefined) continue;

@@ -52,6 +52,7 @@ for (let i = 0; i < 600; i++){
   const v = eng.engine.view;
   if (!v) { await wait(10); continue; }
   if (v.phase === "tax"){                    /* 세금은 화면이 맡는 부분이라 대신 내 준다 */
+    if (v.canDeclare) eng.declareRev();
     if (v.taxGive > 0){
       const h = v.hand.slice().sort((a,b) => (b>=13?99:b)-(a>=13?99:a));
       eng.give(h.slice(0, v.taxGive));
@@ -109,9 +110,12 @@ const h0 = eng.engine.view.hand.length;
 for (let i = 0; i < 400; i++){
   const v = eng.engine.view;
   if (!v) { await wait(20); continue; }
-  if (v.phase === "tax" && v.taxGive > 0){
-    const h = v.hand.slice().sort((a,b) => (b>=13?99:b)-(a>=13?99:a));
-    eng.give(h.slice(0, v.taxGive));
+  if (v.phase === "tax"){
+    if (v.canDeclare) eng.declareRev();
+    if (v.taxGive > 0){
+      const h = v.hand.slice().sort((a,b) => (b>=13?99:b)-(a>=13?99:a));
+      eng.give(h.slice(0, v.taxGive));
+    }
   }
   if (v.hand.length < h0) break;
   await wait(20);

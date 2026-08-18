@@ -798,9 +798,11 @@ function scoped(root) {
 // src/lib/engine.js
 var engine_exports = {};
 __export(engine_exports, {
+  declareRev: () => declareRev,
   engine: () => engine,
   give: () => give,
   onView: () => onView,
+  passRev: () => passRev,
   passTurn: () => passTurn,
   play: () => play,
   setAuto: () => setAuto,
@@ -17836,9 +17838,13 @@ function openNextRound(G2, random) {
   dealRound(G2, random);
   const rev = findRevolution(G2, order);
   G2.revolution = rev.on ? { seat: rev.seat, great: rev.great } : null;
-  if (rev.great) order.reverse();
+  G2.revDeclared = false;
+  G2.revDecided = !rev.on;
+  G2.taxCancelled = false;
   G2.taxOrder = order;
-  G2.needTax = Boolean(G2.opts.tax) && !rev.on && n2 >= 4;
+  const taxOn = Boolean(G2.opts.tax) && n2 >= 4;
+  G2.needTax = taxOn || rev.on;
+  G2.taxOn = taxOn;
   G2.next = order[0];
   G2.given = {};
 }
@@ -17862,6 +17868,10 @@ var ZooPresident = {
       lastOrder: null,
       taxOrder: null,
       revolution: null,
+      revDeclared: false,
+      revDecided: true,
+      taxCancelled: false,
+      taxOn: false,
       lastRound: null,
       shown: [],
       needTax: false,
@@ -17947,8 +17957,28 @@ var ZooPresident = {
         stages: {
           giving: {
             moves: {
+              /* 혁명 선언 — 카멜레온 두 장을 쥔 사람만.
+                 선언하면 이번 판 세금이 사라지고, 대혁명이면 등수가 통째로 뒤집힌다 */
+              declare: ({ G: G2, playerID }) => {
+                const seat = Number(playerID);
+                if (!G2.revolution || G2.revDecided) return INVALID_MOVE;
+                if (G2.revolution.seat !== seat) return INVALID_MOVE;
+                G2.revDeclared = true;
+                G2.revDecided = true;
+                G2.taxCancelled = true;
+                if (G2.revolution.great) G2.taxOrder = G2.taxOrder.slice().reverse();
+                G2.next = G2.taxOrder[0];
+              },
+              /* 쥐고도 안 부른다 — 세금은 그대로 걷는다 */
+              passRev: ({ G: G2, playerID }) => {
+                const seat = Number(playerID);
+                if (!G2.revolution || G2.revDecided) return INVALID_MOVE;
+                if (G2.revolution.seat !== seat) return INVALID_MOVE;
+                G2.revDecided = true;
+              },
               give: ({ G: G2, playerID }, cards) => {
                 const seat = Number(playerID);
+                if (!G2.revDecided || G2.taxCancelled || !G2.taxOn) return INVALID_MOVE;
                 const o2 = G2.taxOrder;
                 const need = seat === o2[0] ? 2 : seat === o2[1] ? 1 : 0;
                 if (!need) return INVALID_MOVE;
@@ -17966,13 +17996,15 @@ var ZooPresident = {
           }
         }
       },
-      /* 둘 다 골랐으면 넘어간다. 안 고르면 밖에서 시간 초과로 넘긴다 */
+      /* 혁명을 정했고, 세금까지 끝나야 넘어간다 */
       endIf: ({ G: G2 }) => {
+        if (!G2.revDecided) return false;
+        if (G2.taxCancelled || !G2.taxOn) return true;
         const o2 = G2.taxOrder;
         return G2.given[o2[0]] !== void 0 && G2.given[o2[1]] !== void 0;
       },
       onEnd: ({ G: G2 }) => {
-        applyTax(G2, G2.given);
+        if (!G2.taxCancelled && G2.taxOn) applyTax(G2, G2.given);
         G2.needTax = false;
         G2.next = G2.taxOrder[0];
       },
@@ -17986,6 +18018,11 @@ var ZooPresident = {
     enumerate: (G2, ctx, playerID) => {
       const seat = Number(playerID);
       if (ctx.phase === "tax") {
+        if (G2.revolution && !G2.revDecided) {
+          if (G2.revolution.seat === seat) return [{ move: "declare", args: [] }];
+          return [];
+        }
+        if (G2.taxCancelled || !G2.taxOn) return [];
         const o2 = G2.taxOrder;
         const need = seat === o2[0] ? 2 : seat === o2[1] ? 1 : 0;
         if (!need || G2.given[seat] !== void 0) return [];
@@ -18066,7 +18103,16 @@ function screenView(G2, ctx, myID, names) {
     roundNo: G2.roundNo,
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
-    revolution: G2.revolution ? { seat: toScreen(G2.revolution.seat, me, n2), great: G2.revolution.great } : null,
+    revolution: G2.revolution ? {
+      seat: toScreen(G2.revolution.seat, me, n2),
+      great: G2.revolution.great,
+      mine: G2.revolution.seat === me,
+      decided: Boolean(G2.revDecided),
+      declared: Boolean(G2.revDeclared)
+    } : null,
+    /* 내가 지금 선언할 수 있는가 */
+    canDeclare: Boolean(G2.revolution && !G2.revDecided && G2.revolution.seat === me),
+    taxCancelled: Boolean(G2.taxCancelled),
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G2.taxOrder) return 0;
@@ -18186,9 +18232,12 @@ function scheduleBot() {
   if (!st || st.ctx.gameover) return;
   const G2 = st.G, ctx = st.ctx;
   if (ctx.phase === "tax") {
+    const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
+    const revTodo = revSeat >= 0 && actsFor(revSeat);
     const o2 = G2.taxOrder;
-    const todo = [o2[0], o2[1]].filter((seat2) => actsFor(seat2) && G2.given[seat2] === void 0);
-    if (!todo.length) return;
+    const canGive = G2.revDecided && !G2.taxCancelled && G2.taxOn;
+    const todo = canGive ? [o2[0], o2[1]].filter((seat2) => actsFor(seat2) && G2.given[seat2] === void 0) : [];
+    if (!revTodo && !todo.length) return;
     const g3 = ++gen;
     botTimer = setTimeout(() => {
       botTimer = null;
@@ -18198,12 +18247,20 @@ function scheduleBot() {
         push();
         return;
       }
-      for (const seat2 of todo) {
-        const hand = (s2.G.hands[seat2] || []).slice().sort(worstFirst);
-        const need = seat2 === s2.G.taxOrder[0] ? 2 : 1;
-        if (hand.length < need) continue;
-        engine.client.updatePlayerID(String(seat2));
-        engine.client.moves.give(hand.slice(0, need));
+      if (revTodo && s2.G.revolution && !s2.G.revDecided) {
+        engine.client.updatePlayerID(String(s2.G.revolution.seat));
+        engine.client.moves.declare();
+      }
+      const s3 = raw();
+      if (s3 && s3.ctx.phase === "tax" && s3.G.revDecided && !s3.G.taxCancelled && s3.G.taxOn) {
+        for (const seat2 of [s3.G.taxOrder[0], s3.G.taxOrder[1]]) {
+          if (!actsFor(seat2) || s3.G.given[seat2] !== void 0) continue;
+          const hand = (s3.G.hands[seat2] || []).slice().sort(worstFirst);
+          const need = seat2 === s3.G.taxOrder[0] ? 2 : 1;
+          if (hand.length < need) continue;
+          engine.client.updatePlayerID(String(seat2));
+          engine.client.moves.give(hand.slice(0, need));
+        }
       }
       engine.client.updatePlayerID(engine.myID);
       push();
@@ -18274,7 +18331,9 @@ function startOnline({ server, matchID, playerID, credentials, numPlayers, names
     matchID,
     playerID: engine.myID,
     credentials,
-    multiplayer: SocketIO({ server })
+    multiplayer: SocketIO({ server }),
+    debug: false
+    /* boardgame.io 의 개발용 패널을 띄우지 않는다 */
   }));
 }
 function setPaused(on3) {
@@ -18319,6 +18378,18 @@ function passTurn() {
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.pass();
   return true;
+}
+function declareRev() {
+  if (!engine.client) return;
+  engine.client.updatePlayerID(engine.myID);
+  engine.client.moves.declare();
+  push();
+}
+function passRev() {
+  if (!engine.client) return;
+  engine.client.updatePlayerID(engine.myID);
+  engine.client.moves.passRev();
+  push();
 }
 function give(cards) {
   if (!engine.client) return false;
@@ -18409,8 +18480,10 @@ function mount(root) {
   let finish = [];
   let offView = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
+  let holdingEnd = false;
   function apply(v2) {
     if (!v2) return;
+    if (holdingEnd && !v2.over) return;
     SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [] }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
@@ -18445,7 +18518,7 @@ function mount(root) {
           holdPile = null;
           ghost = [];
           draw();
-        }, 1400);
+        }, 2e3);
       }
     } else if (v2.table.length) {
       if (holdPile) {
@@ -18477,6 +18550,7 @@ function mount(root) {
     resetTimer();
   }
   function showLastRound(v2) {
+    holdingEnd = true;
     const lr = v2.lastRound;
     SEATS = v2.seats.map((x2, i2) => ({
       n: x2.name,
@@ -18494,8 +18568,9 @@ function mount(root) {
     draw();
     if (timerId) clearTimeout(timerId);
     setTimeout(() => {
+      holdingEnd = false;
       window.__onRoundEnd && window.__onRoundEnd(v2);
-    }, 1600);
+    }, 2e3);
   }
   function handTouched() {
     if (engine.auto) setAuto2(false);
@@ -18513,6 +18588,7 @@ function mount(root) {
     }
     ghost = [];
     ghostSig = "";
+    holdingEnd = false;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -18810,6 +18886,7 @@ function mount(root) {
     sel = [];
     busy = true;
     play(e, list.length);
+    iMoved();
     unlockLater();
   };
   let unlockId = null;
@@ -18823,6 +18900,9 @@ function mount(root) {
         draw();
       }
     }, 1200);
+  }
+  function iMoved() {
+    if (window.__iMoved) window.__iMoved();
   }
   function doPass(auto) {
     if (turn !== 0 || busy) return;
@@ -18841,6 +18921,7 @@ function mount(root) {
     sel = [];
     busy = true;
     if (auto) flash(T[lang].autoPass, true);
+    if (!auto) iMoved();
     passTurn();
     unlockLater();
     if (auto) toAuto();

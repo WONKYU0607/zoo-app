@@ -401,7 +401,16 @@ function screenView(G, ctx, myID, names) {
     roundNo: G.roundNo,
     totalRounds: G.totalRounds,
     phase: ctx.phase,
-    revolution: G.revolution ? { seat: toScreen(G.revolution.seat, me, n), great: G.revolution.great } : null,
+    revolution: G.revolution ? {
+      seat: toScreen(G.revolution.seat, me, n),
+      great: G.revolution.great,
+      mine: G.revolution.seat === me,
+      decided: Boolean(G.revDecided),
+      declared: Boolean(G.revDeclared)
+    } : null,
+    /* 내가 지금 선언할 수 있는가 */
+    canDeclare: Boolean(G.revolution && !G.revDecided && G.revolution.seat === me),
+    taxCancelled: Boolean(G.taxCancelled),
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G.taxOrder) return 0;
@@ -520,9 +529,12 @@ function scheduleBot() {
   if (!st || st.ctx.gameover) return;
   const G = st.G, ctx = st.ctx;
   if (ctx.phase === "tax") {
+    const revSeat = G.revolution && !G.revDecided ? G.revolution.seat : -1;
+    const revTodo = revSeat >= 0 && actsFor(revSeat);
     const o = G.taxOrder;
-    const todo = [o[0], o[1]].filter((seat2) => actsFor(seat2) && G.given[seat2] === void 0);
-    if (!todo.length) return;
+    const canGive = G.revDecided && !G.taxCancelled && G.taxOn;
+    const todo = canGive ? [o[0], o[1]].filter((seat2) => actsFor(seat2) && G.given[seat2] === void 0) : [];
+    if (!revTodo && !todo.length) return;
     const g2 = ++gen;
     botTimer = setTimeout(() => {
       botTimer = null;
@@ -532,12 +544,20 @@ function scheduleBot() {
         push();
         return;
       }
-      for (const seat2 of todo) {
-        const hand = (s2.G.hands[seat2] || []).slice().sort(worstFirst);
-        const need = seat2 === s2.G.taxOrder[0] ? 2 : 1;
-        if (hand.length < need) continue;
-        engine.client.updatePlayerID(String(seat2));
-        engine.client.moves.give(hand.slice(0, need));
+      if (revTodo && s2.G.revolution && !s2.G.revDecided) {
+        engine.client.updatePlayerID(String(s2.G.revolution.seat));
+        engine.client.moves.declare();
+      }
+      const s3 = raw();
+      if (s3 && s3.ctx.phase === "tax" && s3.G.revDecided && !s3.G.taxCancelled && s3.G.taxOn) {
+        for (const seat2 of [s3.G.taxOrder[0], s3.G.taxOrder[1]]) {
+          if (!actsFor(seat2) || s3.G.given[seat2] !== void 0) continue;
+          const hand = (s3.G.hands[seat2] || []).slice().sort(worstFirst);
+          const need = seat2 === s3.G.taxOrder[0] ? 2 : 1;
+          if (hand.length < need) continue;
+          engine.client.updatePlayerID(String(seat2));
+          engine.client.moves.give(hand.slice(0, need));
+        }
       }
       engine.client.updatePlayerID(engine.myID);
       push();
@@ -668,8 +688,10 @@ function mount2(root) {
   let finish = [];
   let offView = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
+  let holdingEnd = false;
   function apply(v) {
     if (!v) return;
+    if (holdingEnd && !v.over) return;
     SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [] }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
@@ -704,7 +726,7 @@ function mount2(root) {
           holdPile = null;
           ghost = [];
           draw();
-        }, 1400);
+        }, 2e3);
       }
     } else if (v.table.length) {
       if (holdPile) {
@@ -736,6 +758,7 @@ function mount2(root) {
     resetTimer();
   }
   function showLastRound(v) {
+    holdingEnd = true;
     const lr = v.lastRound;
     SEATS = v.seats.map((x, i) => ({
       n: x.name,
@@ -753,8 +776,9 @@ function mount2(root) {
     draw();
     if (timerId) clearTimeout(timerId);
     setTimeout(() => {
+      holdingEnd = false;
       window.__onRoundEnd && window.__onRoundEnd(v);
-    }, 1600);
+    }, 2e3);
   }
   function handTouched() {
     if (engine.auto) setAuto2(false);
@@ -772,6 +796,7 @@ function mount2(root) {
     }
     ghost = [];
     ghostSig = "";
+    holdingEnd = false;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -1069,6 +1094,7 @@ function mount2(root) {
     sel = [];
     busy = true;
     play(e, list.length);
+    iMoved();
     unlockLater();
   };
   let unlockId = null;
@@ -1082,6 +1108,9 @@ function mount2(root) {
         draw();
       }
     }, 1200);
+  }
+  function iMoved() {
+    if (window.__iMoved) window.__iMoved();
   }
   function doPass(auto) {
     if (turn !== 0 || busy) return;
@@ -1100,6 +1129,7 @@ function mount2(root) {
     sel = [];
     busy = true;
     if (auto) flash(T[lang].autoPass, true);
+    if (!auto) iMoved();
     passTurn();
     unlockLater();
     if (auto) toAuto();

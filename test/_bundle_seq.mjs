@@ -1490,7 +1490,7 @@ function mount2(root) {
     }
   };
   let lang = window.__lang || "ko";
-  let online = false;
+  let online2 = false;
   let N2 = 6;
   const nameOf = (i2) => (lang === "ko" ? NAMES_KO : NAMES_EN)[i2];
   const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
@@ -1567,7 +1567,7 @@ function mount2(root) {
     const d2 = makeDeck2();
     pool = d2.slice(0, players.length);
     plan = null;
-    if (online && typeof window.__leadSeat === "number") {
+    if (online2 && typeof window.__leadSeat === "number") {
       const cand = [];
       for (let v2 = 1; v2 <= 12; v2++) cand.push(v2);
       for (let i2 = cand.length - 1; i2 > 0; i2--) {
@@ -1604,25 +1604,63 @@ function mount2(root) {
       deck.appendChild(w2);
     });
   }
-  let pickTimer = null;
+  const PICK_SEC = 5;
+  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null;
   function armPickTimer() {
-    if (pickTimer) {
-      clearTimeout(pickTimer);
-      pickTimer = null;
-    }
+    stopPickTimer();
     if (phase !== "pick") return;
+    startBotLoop();
     if (waiting.indexOf(0) < 0) return;
+    pickLeft = PICK_SEC;
+    draw();
+    pickTickId = setInterval(() => {
+      pickLeft--;
+      if (pickLeft < 0) pickLeft = 0;
+      draw();
+    }, 1e3);
     pickTimer = setTimeout(() => {
       if (phase !== "pick" || waiting.indexOf(0) < 0) return;
       const free = el("deck").querySelectorAll(".pk:not(.taken)");
       if (free.length) free[Math.floor(Math.random() * free.length)].click();
-    }, 12e3);
+    }, PICK_SEC * 1e3);
+  }
+  function stopPickTimer() {
+    if (pickTimer) {
+      clearTimeout(pickTimer);
+      pickTimer = null;
+    }
+    if (pickTickId) {
+      clearInterval(pickTickId);
+      pickTickId = null;
+    }
+    pickLeft = 0;
+  }
+  function startBotLoop() {
+    if (botLoopId) return;
+    botLoopId = setInterval(() => {
+      if (phase !== "pick") {
+        stopBotLoop();
+        return;
+      }
+      const others = waiting.filter((x2) => x2 !== 0);
+      if (!others.length) {
+        stopBotLoop();
+        return;
+      }
+      botPick2();
+    }, 900);
+  }
+  function stopBotLoop() {
+    if (botLoopId) {
+      clearInterval(botLoopId);
+      botLoopId = null;
+    }
   }
   function pick2(seat, k2) {
     const w2 = el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)');
     if (!w2) return;
     takenK.push(k2);
-    if (online && plan) {
+    if (online2 && plan) {
       pool[k2] = plan[seat];
       const face = w2.querySelector(".pk__f--a");
       if (face) face.innerHTML = cardFace(pool[k2]);
@@ -1633,15 +1671,15 @@ function mount2(root) {
     w2.classList.add("flip", "taken");
     w2.dataset.seat = seat;
     draw();
-    if (pickTimer) {
-      clearTimeout(pickTimer);
-      pickTimer = null;
+    if (seat === 0) stopPickTimer();
+    if (!waiting.length) {
+      stopBotLoop();
+      setTimeout(settle, 1e3);
     }
-    if (waiting.length) setTimeout(botPick2, 700);
-    else setTimeout(settle, 1e3);
   }
   function botPick2() {
-    const seat = waiting[0];
+    const seat = waiting.find((x2) => x2 !== 0);
+    if (seat === void 0) return;
     const free = pool.map((_2, k2) => k2).filter((k2) => el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)'));
     pick2(seat, free[Math.floor(Math.random() * free.length)]);
   }
@@ -1669,13 +1707,13 @@ function mount2(root) {
   }
   function settle() {
     phase = "done";
-    const w2 = online && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
+    const w2 = online2 && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
     window.GAME = window.GAME || {};
     window.GAME.N = N2;
     window.GAME.roundNo = 1;
     window.GAME.score = Array(N2).fill(0);
     window.GAME.order = Array.from({ length: N2 }, (_2, k2) => (w2 + k2) % N2);
-    if (!online) {
+    if (!online2) {
       window.GAME.finish = null;
       window.GAME.hold = null;
     }
@@ -1733,8 +1771,8 @@ function mount2(root) {
       m.innerHTML = '<div class="mid__h">' + t2.doneH + '</div><div class="mid__s">' + t2.doneS(nameOf(winner())) + "<br>" + t2.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
     } else if (!waiting.length) {
       m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.settling + "</div>";
-    } else if (waiting[0] === 0) {
-      m.innerHTML = '<div class="mid__h">' + t2.h + '</div><div class="mid__s">' + t2.s + "</div>";
+    } else if (waiting.indexOf(0) >= 0) {
+      m.innerHTML = '<div class="mid__h">' + t2.h + '</div><div class="mid__s">' + t2.s + '</div><div class="cd">' + Math.max(pickLeft, 0) + "</div>";
     } else {
       m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.waitS(nameOf(waiting[0])) + "</div>";
     }
@@ -1749,8 +1787,8 @@ function mount2(root) {
     if (sbox0) sbox0.innerHTML = "";
     const dbox0 = el("deck");
     if (dbox0) dbox0.innerHTML = "";
-    online = Boolean(window.__net);
-    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
+    online2 = Boolean(window.__net);
+    N2 = online2 ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
     if (cdId) {
       clearInterval(cdId);
       cdId = null;
@@ -1761,7 +1799,7 @@ function mount2(root) {
     takenK = [];
     window.__roundNo = 1;
     window.__myRankIdx = null;
-    if (!online) {
+    if (!online2) {
       window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
     }
     phase = "pick";
@@ -1803,9 +1841,11 @@ __export(table_exports, {
 // src/lib/engine.js
 var engine_exports = {};
 __export(engine_exports, {
+  declareRev: () => declareRev,
   engine: () => engine,
   give: () => give,
   onView: () => onView,
+  passRev: () => passRev,
   passTurn: () => passTurn,
   play: () => play,
   setAuto: () => setAuto,
@@ -2357,11 +2397,11 @@ var Random = class {
 };
 var RandomPlugin = {
   name: "random",
-  noClient: ({ api }) => {
-    return api._private.isUsed();
+  noClient: ({ api: api2 }) => {
+    return api2._private.isUsed();
   },
-  flush: ({ api }) => {
-    return api._private.getState();
+  flush: ({ api: api2 }) => {
+    return api2._private.getState();
   },
   api: ({ data }) => {
     const random = new Random(data);
@@ -2607,21 +2647,21 @@ var Events = class {
 };
 var EventsPlugin = {
   name: "events",
-  noClient: ({ api }) => api._private.isUsed(),
+  noClient: ({ api: api2 }) => api2._private.isUsed(),
   isInvalid: ({ data }) => data.error || false,
   // Update the events plugin’s internal turn context each time a move
   // or hook is called. This allows events called after turn or phase
   // endings to dispatch the current turn and phase correctly.
   fnWrap: (method, methodType) => (context, ...args) => {
-    const api = context.events;
-    if (api)
-      api._private.updateTurnContext(context.ctx, methodType);
+    const api2 = context.events;
+    if (api2)
+      api2._private.updateTurnContext(context.ctx, methodType);
     const G2 = method(context, ...args);
-    if (api)
-      api._private.unsetCurrentMethod();
+    if (api2)
+      api2._private.unsetCurrentMethod();
     return G2;
   },
-  dangerouslyFlushRawState: ({ state, api }) => api._private.update(state),
+  dangerouslyFlushRawState: ({ state, api: api2 }) => api2._private.update(state),
   api: ({ game: game2, ctx, playerID }) => new Events(game2.flow, ctx, playerID).api()
 };
 var LogPlugin = {
@@ -2686,8 +2726,8 @@ var ProcessAction = (state, action, opts2) => {
   });
   return state;
 };
-var GetAPIs = ({ plugins }) => Object.entries(plugins || {}).reduce((apis, [name, { api }]) => {
-  apis[name] = api;
+var GetAPIs = ({ plugins }) => Object.entries(plugins || {}).reduce((apis, [name, { api: api2 }]) => {
+  apis[name] = api2;
   return apis;
 }, {});
 var FnWrap = (methodToWrap, methodType, plugins) => {
@@ -2715,7 +2755,7 @@ var Enhance = (state, opts2) => {
   [...DEFAULT_PLUGINS, ...opts2.game.plugins].filter((plugin2) => plugin2.api !== void 0).forEach((plugin2) => {
     const name = plugin2.name;
     const pluginState = state.plugins[name] || { data: {} };
-    const api = plugin2.api({
+    const api2 = plugin2.api({
       G: state.G,
       ctx: state.ctx,
       data: pluginState.data,
@@ -2726,7 +2766,7 @@ var Enhance = (state, opts2) => {
       ...state,
       plugins: {
         ...state.plugins,
-        [name]: { ...pluginState, api }
+        [name]: { ...pluginState, api: api2 }
       }
     };
   });
@@ -18841,9 +18881,13 @@ function openNextRound(G2, random) {
   dealRound(G2, random);
   const rev = findRevolution(G2, order);
   G2.revolution = rev.on ? { seat: rev.seat, great: rev.great } : null;
-  if (rev.great) order.reverse();
+  G2.revDeclared = false;
+  G2.revDecided = !rev.on;
+  G2.taxCancelled = false;
   G2.taxOrder = order;
-  G2.needTax = Boolean(G2.opts.tax) && !rev.on && n2 >= 4;
+  const taxOn = Boolean(G2.opts.tax) && n2 >= 4;
+  G2.needTax = taxOn || rev.on;
+  G2.taxOn = taxOn;
   G2.next = order[0];
   G2.given = {};
 }
@@ -18867,6 +18911,10 @@ var ZooPresident = {
       lastOrder: null,
       taxOrder: null,
       revolution: null,
+      revDeclared: false,
+      revDecided: true,
+      taxCancelled: false,
+      taxOn: false,
       lastRound: null,
       shown: [],
       needTax: false,
@@ -18952,8 +19000,28 @@ var ZooPresident = {
         stages: {
           giving: {
             moves: {
+              /* 혁명 선언 — 카멜레온 두 장을 쥔 사람만.
+                 선언하면 이번 판 세금이 사라지고, 대혁명이면 등수가 통째로 뒤집힌다 */
+              declare: ({ G: G2, playerID }) => {
+                const seat = Number(playerID);
+                if (!G2.revolution || G2.revDecided) return INVALID_MOVE;
+                if (G2.revolution.seat !== seat) return INVALID_MOVE;
+                G2.revDeclared = true;
+                G2.revDecided = true;
+                G2.taxCancelled = true;
+                if (G2.revolution.great) G2.taxOrder = G2.taxOrder.slice().reverse();
+                G2.next = G2.taxOrder[0];
+              },
+              /* 쥐고도 안 부른다 — 세금은 그대로 걷는다 */
+              passRev: ({ G: G2, playerID }) => {
+                const seat = Number(playerID);
+                if (!G2.revolution || G2.revDecided) return INVALID_MOVE;
+                if (G2.revolution.seat !== seat) return INVALID_MOVE;
+                G2.revDecided = true;
+              },
               give: ({ G: G2, playerID }, cards) => {
                 const seat = Number(playerID);
+                if (!G2.revDecided || G2.taxCancelled || !G2.taxOn) return INVALID_MOVE;
                 const o2 = G2.taxOrder;
                 const need = seat === o2[0] ? 2 : seat === o2[1] ? 1 : 0;
                 if (!need) return INVALID_MOVE;
@@ -18971,13 +19039,15 @@ var ZooPresident = {
           }
         }
       },
-      /* 둘 다 골랐으면 넘어간다. 안 고르면 밖에서 시간 초과로 넘긴다 */
+      /* 혁명을 정했고, 세금까지 끝나야 넘어간다 */
       endIf: ({ G: G2 }) => {
+        if (!G2.revDecided) return false;
+        if (G2.taxCancelled || !G2.taxOn) return true;
         const o2 = G2.taxOrder;
         return G2.given[o2[0]] !== void 0 && G2.given[o2[1]] !== void 0;
       },
       onEnd: ({ G: G2 }) => {
-        applyTax(G2, G2.given);
+        if (!G2.taxCancelled && G2.taxOn) applyTax(G2, G2.given);
         G2.needTax = false;
         G2.next = G2.taxOrder[0];
       },
@@ -18991,6 +19061,11 @@ var ZooPresident = {
     enumerate: (G2, ctx, playerID) => {
       const seat = Number(playerID);
       if (ctx.phase === "tax") {
+        if (G2.revolution && !G2.revDecided) {
+          if (G2.revolution.seat === seat) return [{ move: "declare", args: [] }];
+          return [];
+        }
+        if (G2.taxCancelled || !G2.taxOn) return [];
         const o2 = G2.taxOrder;
         const need = seat === o2[0] ? 2 : seat === o2[1] ? 1 : 0;
         if (!need || G2.given[seat] !== void 0) return [];
@@ -19071,7 +19146,16 @@ function screenView(G2, ctx, myID, names) {
     roundNo: G2.roundNo,
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
-    revolution: G2.revolution ? { seat: toScreen(G2.revolution.seat, me, n2), great: G2.revolution.great } : null,
+    revolution: G2.revolution ? {
+      seat: toScreen(G2.revolution.seat, me, n2),
+      great: G2.revolution.great,
+      mine: G2.revolution.seat === me,
+      decided: Boolean(G2.revDecided),
+      declared: Boolean(G2.revDeclared)
+    } : null,
+    /* 내가 지금 선언할 수 있는가 */
+    canDeclare: Boolean(G2.revolution && !G2.revDecided && G2.revolution.seat === me),
+    taxCancelled: Boolean(G2.taxCancelled),
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G2.taxOrder) return 0;
@@ -19191,9 +19275,12 @@ function scheduleBot() {
   if (!st || st.ctx.gameover) return;
   const G2 = st.G, ctx = st.ctx;
   if (ctx.phase === "tax") {
+    const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
+    const revTodo = revSeat >= 0 && actsFor(revSeat);
     const o2 = G2.taxOrder;
-    const todo = [o2[0], o2[1]].filter((seat2) => actsFor(seat2) && G2.given[seat2] === void 0);
-    if (!todo.length) return;
+    const canGive = G2.revDecided && !G2.taxCancelled && G2.taxOn;
+    const todo = canGive ? [o2[0], o2[1]].filter((seat2) => actsFor(seat2) && G2.given[seat2] === void 0) : [];
+    if (!revTodo && !todo.length) return;
     const g3 = ++gen;
     botTimer = setTimeout(() => {
       botTimer = null;
@@ -19203,12 +19290,20 @@ function scheduleBot() {
         push();
         return;
       }
-      for (const seat2 of todo) {
-        const hand = (s2.G.hands[seat2] || []).slice().sort(worstFirst);
-        const need = seat2 === s2.G.taxOrder[0] ? 2 : 1;
-        if (hand.length < need) continue;
-        engine.client.updatePlayerID(String(seat2));
-        engine.client.moves.give(hand.slice(0, need));
+      if (revTodo && s2.G.revolution && !s2.G.revDecided) {
+        engine.client.updatePlayerID(String(s2.G.revolution.seat));
+        engine.client.moves.declare();
+      }
+      const s3 = raw();
+      if (s3 && s3.ctx.phase === "tax" && s3.G.revDecided && !s3.G.taxCancelled && s3.G.taxOn) {
+        for (const seat2 of [s3.G.taxOrder[0], s3.G.taxOrder[1]]) {
+          if (!actsFor(seat2) || s3.G.given[seat2] !== void 0) continue;
+          const hand = (s3.G.hands[seat2] || []).slice().sort(worstFirst);
+          const need = seat2 === s3.G.taxOrder[0] ? 2 : 1;
+          if (hand.length < need) continue;
+          engine.client.updatePlayerID(String(seat2));
+          engine.client.moves.give(hand.slice(0, need));
+        }
       }
       engine.client.updatePlayerID(engine.myID);
       push();
@@ -19279,7 +19374,9 @@ function startOnline({ server, matchID, playerID, credentials, numPlayers, names
     matchID,
     playerID: engine.myID,
     credentials,
-    multiplayer: SocketIO({ server })
+    multiplayer: SocketIO({ server }),
+    debug: false
+    /* boardgame.io 의 개발용 패널을 띄우지 않는다 */
   }));
 }
 function setPaused(on3) {
@@ -19324,6 +19421,18 @@ function passTurn() {
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.pass();
   return true;
+}
+function declareRev() {
+  if (!engine.client) return;
+  engine.client.updatePlayerID(engine.myID);
+  engine.client.moves.declare();
+  push();
+}
+function passRev() {
+  if (!engine.client) return;
+  engine.client.updatePlayerID(engine.myID);
+  engine.client.moves.passRev();
+  push();
 }
 function give(cards) {
   if (!engine.client) return false;
@@ -19409,8 +19518,10 @@ function mount3(root) {
   let finish = [];
   let offView = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
+  let holdingEnd = false;
   function apply(v2) {
     if (!v2) return;
+    if (holdingEnd && !v2.over) return;
     SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [] }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
@@ -19445,7 +19556,7 @@ function mount3(root) {
           holdPile = null;
           ghost = [];
           draw();
-        }, 1400);
+        }, 2e3);
       }
     } else if (v2.table.length) {
       if (holdPile) {
@@ -19477,6 +19588,7 @@ function mount3(root) {
     resetTimer();
   }
   function showLastRound(v2) {
+    holdingEnd = true;
     const lr = v2.lastRound;
     SEATS = v2.seats.map((x2, i2) => ({
       n: x2.name,
@@ -19494,8 +19606,9 @@ function mount3(root) {
     draw();
     if (timerId) clearTimeout(timerId);
     setTimeout(() => {
+      holdingEnd = false;
       window.__onRoundEnd && window.__onRoundEnd(v2);
-    }, 1600);
+    }, 2e3);
   }
   function handTouched() {
     if (engine.auto) setAuto2(false);
@@ -19513,6 +19626,7 @@ function mount3(root) {
     }
     ghost = [];
     ghostSig = "";
+    holdingEnd = false;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -19810,6 +19924,7 @@ function mount3(root) {
     sel = [];
     busy = true;
     play(e, list.length);
+    iMoved();
     unlockLater();
   };
   let unlockId = null;
@@ -19823,6 +19938,9 @@ function mount3(root) {
         draw();
       }
     }, 1200);
+  }
+  function iMoved() {
+    if (window.__iMoved) window.__iMoved();
   }
   function doPass(auto) {
     if (turn !== 0 || busy) return;
@@ -19841,6 +19959,7 @@ function mount3(root) {
     sel = [];
     busy = true;
     if (auto) flash(T[lang].autoPass, true);
+    if (!auto) iMoved();
     passTurn();
     unlockLater();
     if (auto) toAuto();
@@ -19943,6 +20062,7 @@ function mount4(root) {
       declare: "\uD601\uBA85 \uC120\uC5B8",
       declareG: "\uB300\uD601\uBA85 \uC120\uC5B8",
       skip: "\uB118\uAE30\uAE30",
+      waitSec: (n2) => n2 + "\uCD08 \uD6C4 \uB2E4\uC74C\uC73C\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4",
       next: "\uB2E4\uC74C",
       back: "\uCC98\uC74C\uBD80\uD130",
       start: "\uD310 \uC2DC\uC791",
@@ -19978,6 +20098,7 @@ function mount4(root) {
       declare: "Declare",
       declareG: "Declare great revolution",
       skip: "Skip",
+      waitSec: (n2) => "Next in " + n2 + "s",
       next: "Next",
       back: "Restart",
       start: "Start round",
@@ -19986,7 +20107,7 @@ function mount4(root) {
   };
   let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
   let N2 = 6;
-  let online = false;
+  let online2 = false;
   let ranks = [];
   let wasGreat = false;
   const G2 = () => window.GAME = window.GAME || {};
@@ -20079,7 +20200,7 @@ function mount4(root) {
     el("fx").innerHTML = "";
   }
   function dealAll() {
-    if (online) {
+    if (online2) {
       const rv = window.__revolution;
       revSeat = rv ? rv.seat : null;
       return;
@@ -20099,7 +20220,7 @@ function mount4(root) {
     revSeat = w2 < 0 ? null : w2;
   }
   function applyTax2(myGive) {
-    if (online) {
+    if (online2) {
       if (window.__setTaxGive) window.__setTaxGive(myGive || null);
       return;
     }
@@ -20210,6 +20331,7 @@ function mount4(root) {
     return myHand().map((c2, i2) => i2).sort((a2, b2) => myHand()[a2] - myHand()[b2]).slice(0, k2);
   }
   function taxSkipped() {
+    if (online2 && window.__taxCancelled !== void 0) return Boolean(window.__taxCancelled);
     return revSeat !== null && declared;
   }
   function renderMid() {
@@ -20244,13 +20366,15 @@ function mount4(root) {
   function renderBottom() {
     const t2 = T[lang], great = revSeat !== null && rankOf(revSeat) === N2 - 1;
     el("step").textContent = step + 1 + ". " + t2.steps[step];
-    el("back").textContent = t2.back;
+    const bk = el("back");
+    if (bk) bk.style.display = "none";
     const g2 = giveCount();
-    el("hint").innerHTML = step === 3 && g2 ? sel.length < g2 ? t2.giveNeed(g2 - sel.length) : "" : "";
     const b2 = el("next");
     if (tickBase) tickBase = "";
     const bar = b2.parentElement;
-    if (bar) bar.style.visibility = step === 0 ? "hidden" : "";
+    const mine = step === 0 ? false : step === 2 ? revSeat === 0 && !declared : step === 3 ? g2 > 0 && !taxSkipped() : true;
+    if (bar) bar.style.visibility = mine ? "" : "hidden";
+    el("hint").innerHTML = step === 3 && g2 && mine ? sel.length < g2 ? t2.giveNeed(g2 - sel.length) : "" : !mine && (step === 2 || step === 3) && tickLeft > 0 ? t2.waitSec(tickLeft) : "";
     if (step === 2 && revSeat === 0 && !declared) {
       b2.className = "bt-rev";
       b2.textContent = great ? t2.declareG : t2.declare;
@@ -20272,7 +20396,7 @@ function mount4(root) {
   }
   function boot() {
     if (window.__net) {
-      online = true;
+      online2 = true;
     }
     const g2 = G2();
     N2 = g2.N || 6;
@@ -20318,6 +20442,10 @@ function mount4(root) {
       const bb = el("next");
       if (!bb) return;
       bb.textContent = tickBase + (tickLeft > 0 ? " (" + tickLeft + ")" : "");
+      const bar2 = bb.parentElement;
+      const h2 = el("hint");
+      if (h2 && bar2 && bar2.style.visibility === "hidden")
+        h2.textContent = tickLeft > 0 ? T[lang].waitSec(tickLeft) : "";
     };
     paint();
     tickId = setInterval(() => {
@@ -20357,6 +20485,9 @@ function mount4(root) {
         autoNext();
         return;
       }
+      if (step === 2 && online2 && revSeat === 0 && !declared && window.__passRev) {
+        window.__passRev();
+      }
       if (step === 3) {
         const g2 = giveCount();
         if (g2 > 0 && sel.length < g2) {
@@ -20375,6 +20506,7 @@ function mount4(root) {
     if (step === 2 && revSeat !== null && !declared) {
       declared = true;
       wasGreat = great;
+      if (online2 && revSeat === 0 && window.__declareRev) window.__declareRev();
       if (great) {
         reversed = true;
         el("flash").classList.remove("go");
@@ -20414,7 +20546,7 @@ function mount4(root) {
     }
     autoNext();
   };
-  el("back").onclick = () => {
+  if (el("back")) el("back").onclick = () => {
     if (window.__toResult) window.__toResult();
   };
   document2.querySelectorAll("#lang button").forEach((b2) => {
@@ -20870,15 +21002,90 @@ function toRoomView(room) {
 }
 var seatCount = (room) => room ? room.seats.length : 0;
 
+// src/lib/lobby.js
+var serverUrl = () => typeof globalThis !== "undefined" && globalThis.__ZOO_SERVER || (import.meta && import.meta.env && import.meta.env.VITE_GAME_SERVER || "");
+var online = () => Boolean(serverUrl());
+async function api(path, body) {
+  const res = await fetch(serverUrl() + path, {
+    method: body ? "POST" : "GET",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : void 0
+  });
+  const text2 = await res.text();
+  let data = null;
+  try {
+    data = text2 ? JSON.parse(text2) : {};
+  } catch (e) {
+    data = {};
+  }
+  if (!res.ok) throw new Error(data && data.error || "\uC11C\uBC84 \uC624\uB958 " + res.status);
+  return data;
+}
+var createRoom2 = ({ numPlayers, name, rounds, tax, clear2 }) => api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2 });
+var joinRoom = (code, name) => api(`/zoo/rooms/${code}/join`, { name });
+var peekRoom = (code) => api(`/zoo/rooms/${code}`);
+var startRoom = (code) => api(`/zoo/rooms/${code}/start`, {});
+var keepAlive = (code, seat) => api(`/zoo/rooms/${code}/alive`, { seat }).catch(() => null);
+
 // src/lib/flow.js
 var opt = null;
 var myRoom = null;
 var botTimer2 = null;
+var net = null;
+var pollId = null;
 var W2 = () => window;
 var D2 = () => window.document;
 function emitRoom() {
-  W2().__room = toRoomView(myRoom);
+  W2().__room = net ? netRoomView() : toRoomView(myRoom);
   W2().dispatchEvent(new Event("roomchange"));
+}
+function netRoomView() {
+  if (!net) return null;
+  const seats = new Array(net.numPlayers).fill(null);
+  (net.players || []).forEach((p2) => {
+    const i2 = Number(p2.id);
+    if (!p2.name) return;
+    seats[i2] = {
+      uid: "s" + i2,
+      name: p2.name,
+      bot: Boolean(p2.bot),
+      off: Boolean(p2.away),
+      left: Boolean(p2.left)
+    };
+  });
+  return {
+    code: net.code,
+    cap: net.numPlayers,
+    me: Number(net.playerID),
+    host: net.playerID === "0" ? "s0" : "host",
+    phase: net.started ? "playing" : "waiting",
+    round: null,
+    seats
+  };
+}
+function pollStart() {
+  if (pollId || !net) return;
+  pollId = setInterval(async () => {
+    if (!net) {
+      pollStop();
+      return;
+    }
+    try {
+      const r2 = await peekRoom(net.code);
+      net.players = r2.players;
+      net.started = r2.started;
+      W2().__opts.seated = (r2.players || []).filter((p2) => p2.name).length;
+      emitRoom();
+      if (r2.started && !net.inGame) enterOnlineGame();
+    } catch (e) {
+    }
+  }, 1500);
+}
+function pollStop() {
+  if (pollId) {
+    clearInterval(pollId);
+    pollId = null;
+  }
 }
 function botFillStart() {
   if (botTimer2) return;
@@ -20935,6 +21142,7 @@ function startRoomCount(sec) {
   roomCountId = setInterval(tick, 1e3);
 }
 function startGame() {
+  if (net) return startOnlineGame();
   botFillStop();
   stopRoomCount();
   while (seatCount(myRoom) < 4) if (!addOneBot()) break;
@@ -20954,6 +21162,45 @@ function startGame() {
   setPaused(true);
   const v2 = engine.view;
   if (!v2) throw new Error("\uD310\uC744 \uC138\uC6B0\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4");
+  W2().__opts = Object.assign(W2().__opts || {}, { rounds });
+  openTable(v2, n2, myRoom.seats.map((s2) => s2.name));
+}
+async function startOnlineGame() {
+  stopRoomCount();
+  await startRoom(net.code);
+  const r2 = await peekRoom(net.code);
+  net.players = r2.players;
+  net.started = true;
+  emitRoom();
+  enterOnlineGame();
+}
+function enterOnlineGame() {
+  if (!net || net.inGame) return;
+  net.inGame = true;
+  pollStop();
+  startOnline({
+    server: serverUrl(),
+    matchID: net.matchID,
+    playerID: net.playerID,
+    credentials: net.credentials,
+    numPlayers: net.numPlayers,
+    names: (net.players || []).map((p2) => p2.name || "")
+  });
+  setPaused(true);
+  let tries = 0;
+  const wait2 = setInterval(() => {
+    const v2 = engine.view;
+    if (!v2) {
+      if (tries++ > 120) {
+        clearInterval(wait2);
+      }
+      return;
+    }
+    clearInterval(wait2);
+    openTable(v2, net.numPlayers, (net.players || []).map((p2) => p2.name || ""));
+  }, 100);
+}
+function openTable(v2, n2, names) {
   W2().__net = { engine: true };
   W2().GAME = {
     N: n2,
@@ -20966,7 +21213,7 @@ function startGame() {
     score: v2.score.slice(),
     mySeat: 0
   };
-  W2().__opts = Object.assign(W2().__opts || {}, { seated: n2, rounds });
+  W2().__opts = Object.assign(W2().__opts || {}, { seated: n2 });
   W2().__leadSeat = v2.turn >= 0 ? v2.turn : 0;
   W2().GAME.order = Array.from({ length: n2 }, (_2, k2) => (W2().__leadSeat + k2) % n2);
   W2().__roundNo = v2.roundNo;
@@ -20993,7 +21240,8 @@ function onRoundEnd(v2) {
   W2().__roundNo = lr.roundNo;
   W2().__myGive = null;
   W2().__taxGive = null;
-  W2().__revolution = v2.revolution ? { seat: v2.revolution.seat, great: v2.revolution.great } : null;
+  W2().__taxCancelled = v2.taxCancelled;
+  W2().__revolution = v2.revolution ? { seat: v2.revolution.seat, great: v2.revolution.great, mine: v2.revolution.mine } : null;
   opt.goto("result");
   startCount(5);
 }
@@ -21040,7 +21288,9 @@ function startCount(sec) {
 }
 function ensureTaxGiven() {
   const v2 = engine.view;
-  if (!v2 || v2.phase !== "tax" || !v2.taxGive) return;
+  if (!v2 || v2.phase !== "tax") return;
+  if (v2.canDeclare) passRev();
+  if (!v2.taxGive) return;
   const worst2 = (c2) => c2 >= 13 ? 99 : c2;
   const hand = (v2.hand || []).slice().sort((a2, b2) => worst2(b2) - worst2(a2));
   if (hand.length < v2.taxGive) return;
@@ -21050,23 +21300,67 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   opt = { goto, myName, botJoinMs };
   W2().__createRoom = async () => {
     const o2 = W2().__opts || {};
+    if (online()) {
+      const r2 = await createRoom2({
+        numPlayers: o2.cap || 4,
+        name: opt.myName(),
+        rounds: o2.rounds || 3,
+        tax: o2.tax !== false,
+        clear2: Boolean(o2.clear2)
+      });
+      net = Object.assign(
+        { started: false, inGame: false },
+        r2,
+        { players: [{ id: 0, name: opt.myName() }] }
+      );
+      W2().__opts = Object.assign(W2().__opts || {}, { cap: r2.numPlayers, seated: 1 });
+      emitRoom();
+      pollStart();
+      return r2.code;
+    }
     myRoom = createRoom({ cap: o2.cap || 4, name: opt.myName() });
     W2().__opts = Object.assign(W2().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
-    return "LOCAL";
+    return myRoom.code;
   };
-  W2().__joinRoom = async () => {
-    alert("\uC11C\uBC84 \uB300\uC804\uC740 \uC544\uC9C1 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4. \uBD07\uACFC \uD558\uAE30\uB85C \uC2DC\uC791\uD574 \uC8FC\uC138\uC694.");
-    return null;
+  W2().__joinRoom = async (code) => {
+    if (!online()) {
+      alert("\uC11C\uBC84 \uB300\uC804\uC744 \uC4F0\uB824\uBA74 \uAC8C\uC784 \uC11C\uBC84 \uC8FC\uC18C\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.");
+      return null;
+    }
+    const r2 = await joinRoom(String(code).trim(), opt.myName());
+    net = Object.assign(
+      { started: false, inGame: false },
+      r2,
+      { players: [{ id: Number(r2.playerID), name: opt.myName() }] }
+    );
+    W2().__opts = Object.assign(W2().__opts || {}, {
+      cap: r2.numPlayers,
+      rounds: r2.opts && r2.opts.rounds || 3,
+      tax: !(r2.opts && r2.opts.tax === false),
+      clear2: Boolean(r2.opts && r2.opts.clear2)
+    });
+    emitRoom();
+    pollStart();
+    return r2.code;
   };
-  W2().__peek = async () => null;
-  W2().__roomCode = () => myRoom ? myRoom.code : null;
+  W2().__peek = async (code) => {
+    if (!online()) return null;
+    try {
+      return await peekRoom(String(code).trim());
+    } catch (e) {
+      return null;
+    }
+  };
+  W2().__roomCode = () => net ? net.code : myRoom ? myRoom.code : null;
   W2().__leaveRoom = () => {
     botFillStop();
     stopRoomCount();
+    pollStop();
     stop();
     myRoom = null;
+    net = null;
     emitRoom();
   };
   W2().__saveOpts = async () => {
@@ -21087,6 +21381,11 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   W2().__onTax = (v2) => {
     W2().__myNeedGive = v2.taxGive;
   };
+  W2().__iMoved = () => {
+    if (net) keepAlive(net.code, Number(net.playerID));
+  };
+  W2().__declareRev = () => declareRev();
+  W2().__passRev = () => passRev();
   W2().__setTaxGive = (cards) => {
     W2().__taxGive = cards;
     if (Array.isArray(cards) && cards.length) give(cards);
@@ -21130,6 +21429,8 @@ function teardown() {
   botFillStop();
   stopRoomCount();
   stopCount();
+  pollStop();
+  net = null;
   stop();
   myRoom = null;
 }

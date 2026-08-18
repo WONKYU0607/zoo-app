@@ -94,21 +94,35 @@ function scheduleBot(){
   const G = st.G, ctx = st.ctx;
 
   if (ctx.phase === "tax"){
+    /* 혁명을 쥔 사람이 봇이면 대신 선언해 준다.
+       내 자리면 화면이 정할 때까지 기다린다 — 쥐고도 안 부르는 것이 전략이므로 */
+    const revSeat = G.revolution && !G.revDecided ? G.revolution.seat : -1;
+    const revTodo = revSeat >= 0 && actsFor(revSeat);
     const o = G.taxOrder;
-    const todo = [o[0], o[1]].filter(seat =>
-      actsFor(seat) && G.given[seat] === undefined);
-    if (!todo.length) return;
+    const canGive = G.revDecided && !G.taxCancelled && G.taxOn;
+    const todo = canGive
+      ? [o[0], o[1]].filter(seat => actsFor(seat) && G.given[seat] === undefined)
+      : [];
+    if (!revTodo && !todo.length) return;
     const g = ++gen;
     botTimer = setTimeout(() => {
       botTimer = null;
       if (g !== gen) return;
       const s2 = raw(); if (!s2 || s2.ctx.phase !== "tax") { push(); return; }
-      for (const seat of todo){
-        const hand = (s2.G.hands[seat] || []).slice().sort(worstFirst);
-        const need = seat === s2.G.taxOrder[0] ? 2 : 1;
-        if (hand.length < need) continue;
-        engine.client.updatePlayerID(String(seat));
-        engine.client.moves.give(hand.slice(0, need));
+      if (revTodo && s2.G.revolution && !s2.G.revDecided){
+        engine.client.updatePlayerID(String(s2.G.revolution.seat));
+        engine.client.moves.declare();          /* 봇은 늘 이득을 택한다 */
+      }
+      const s3 = raw();
+      if (s3 && s3.ctx.phase === "tax" && s3.G.revDecided && !s3.G.taxCancelled && s3.G.taxOn){
+        for (const seat of [s3.G.taxOrder[0], s3.G.taxOrder[1]]){
+          if (!actsFor(seat) || s3.G.given[seat] !== undefined) continue;
+          const hand = (s3.G.hands[seat] || []).slice().sort(worstFirst);
+          const need = seat === s3.G.taxOrder[0] ? 2 : 1;
+          if (hand.length < need) continue;
+          engine.client.updatePlayerID(String(seat));
+          engine.client.moves.give(hand.slice(0, need));
+        }
       }
       engine.client.updatePlayerID(engine.myID);
       push();
@@ -186,6 +200,7 @@ export function startOnline({ server, matchID, playerID, credentials, numPlayers
     game: ZooPresident, numPlayers, matchID,
     playerID: engine.myID, credentials,
     multiplayer: SocketIO({ server }),
+    debug: false,                          /* boardgame.io 의 개발용 패널을 띄우지 않는다 */
   }));
 }
 
@@ -226,6 +241,20 @@ export function passTurn(){
   engine.client.moves.pass();
   return true;
 }
+/* 혁명 선언 / 안 하고 넘기기 */
+export function declareRev(){
+  if (!engine.client) return;
+  engine.client.updatePlayerID(engine.myID);
+  engine.client.moves.declare();
+  push();
+}
+export function passRev(){
+  if (!engine.client) return;
+  engine.client.updatePlayerID(engine.myID);
+  engine.client.moves.passRev();
+  push();
+}
+
 export function give(cards){
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);

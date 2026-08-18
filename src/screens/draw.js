@@ -161,18 +161,44 @@ export function mount(root){
     });
   }
   
-  /* 뽑기 제한 시간. 안 뽑으면 자동으로 한 장 집는다 */
-  let pickTimer = null;
+  /* 뽑기 제한 시간 5초. 안 뽑으면 자동으로 한 장 집는다.
+     남들은 나를 기다리지 않고 저마다 뽑는다 */
+  const PICK_SEC = 5;
+  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null;
   function armPickTimer(){
-    if (pickTimer){ clearTimeout(pickTimer); pickTimer = null; }
+    stopPickTimer();
     if (phase !== "pick") return;
+    startBotLoop();
     if (waiting.indexOf(0) < 0) return;              /* 내가 이미 뽑았다 */
+    pickLeft = PICK_SEC;
+    draw();
+    pickTickId = setInterval(() => {
+      pickLeft--;
+      if (pickLeft < 0) pickLeft = 0;
+      draw();
+    }, 1000);
     pickTimer = setTimeout(() => {
       if (phase !== "pick" || waiting.indexOf(0) < 0) return;
       const free = el("deck").querySelectorAll('.pk:not(.taken)');
       if (free.length) free[Math.floor(Math.random() * free.length)].click();
-    }, 12000);
+    }, PICK_SEC * 1000);
   }
+  function stopPickTimer(){
+    if (pickTimer){ clearTimeout(pickTimer); pickTimer = null; }
+    if (pickTickId){ clearInterval(pickTickId); pickTickId = null; }
+    pickLeft = 0;
+  }
+  /* 나 말고 남은 사람들이 차례로 한 장씩 집는다 */
+  function startBotLoop(){
+    if (botLoopId) return;
+    botLoopId = setInterval(() => {
+      if (phase !== "pick"){ stopBotLoop(); return; }
+      const others = waiting.filter(x => x !== 0);
+      if (!others.length){ stopBotLoop(); return; }
+      botPick();
+    }, 900);
+  }
+  function stopBotLoop(){ if (botLoopId){ clearInterval(botLoopId); botLoopId = null; } }
   
   function pick(seat, k){
     const w = el("deck").querySelector('.pk[data-k="' + k + '"]:not(.taken)');
@@ -194,13 +220,13 @@ export function mount(root){
     w.classList.add("flip", "taken");
     w.dataset.seat = seat;
     draw();
-    if (pickTimer){ clearTimeout(pickTimer); pickTimer = null; }
-    if (waiting.length) setTimeout(botPick, 700);
-    else setTimeout(settle, 1000);
+    if (seat === 0) stopPickTimer();
+    if (!waiting.length){ stopBotLoop(); setTimeout(settle, 1000); }
   }
   
   function botPick(){
-    const seat = waiting[0];
+    const seat = waiting.find(x => x !== 0);   /* 내 자리는 대신 뽑지 않는다 */
+    if (seat === undefined) return;
     const free = pool.map((_, k) => k).filter(k =>
       el("deck").querySelector('.pk[data-k="' + k + '"]:not(.taken)'));
     pick(seat, free[Math.floor(Math.random() * free.length)]);
@@ -298,8 +324,10 @@ export function mount(root){
         '<div class="cd">' + Math.max(cd, 0) + '</div>';
     } else if (!waiting.length){
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.settling + '</div>';
-    } else if (waiting[0] === 0){
-      m.innerHTML = '<div class="mid__h">' + t.h + '</div><div class="mid__s">' + t.s + '</div>';
+    } else if (waiting.indexOf(0) >= 0){
+      /* 내가 아직 안 뽑았으면 남은 시간을 보여준다 */
+      m.innerHTML = '<div class="mid__h">' + t.h + '</div><div class="mid__s">' + t.s + '</div>' +
+        '<div class="cd">' + Math.max(pickLeft, 0) + '</div>';
     } else {
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' +
         t.waitS(nameOf(waiting[0])) + '</div>';

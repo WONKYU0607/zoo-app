@@ -9,19 +9,64 @@
 
 import * as eng from "./engine.js";
 import { createRoom, addBot, setCap, toRoomView, seatCount } from "./localroom.js";
+import * as lobby from "./lobby.js";
 
 let opt = null;             /* { goto, boot, myName } */
 let myRoom = null;
 let botTimer = null;
+/* 서버 대전 — 서버가 정한 자리와 자리표를 그대로 들고 있는다 */
+let net = null;            /* { code, matchID, playerID, credentials, numPlayers } */
+let pollId = null;
 
 const W = () => window;
 const D = () => window.document;
 const call = (name, ...a) => { const f = W()[name]; if (typeof f === "function") f(...a); };
 
 function emitRoom(){
-  W().__room = toRoomView(myRoom);
+  W().__room = net ? netRoomView() : toRoomView(myRoom);
   W().dispatchEvent(new Event("roomchange"));
 }
+
+/* 서버가 알려 준 자리들을 방 대기실이 읽는 모양으로 */
+function netRoomView(){
+  if (!net) return null;
+  const seats = new Array(net.numPlayers).fill(null);
+  (net.players || []).forEach(p => {
+    const i = Number(p.id);
+    if (!p.name) return;
+    seats[i] = {
+      uid: "s" + i, name: p.name, bot: Boolean(p.bot),
+      off: Boolean(p.away), left: Boolean(p.left),
+    };
+  });
+  return {
+    code: net.code,
+    cap: net.numPlayers,
+    me: Number(net.playerID),
+    host: net.playerID === "0" ? "s0" : "host",
+    phase: net.started ? "playing" : "waiting",
+    round: null,
+    seats,
+  };
+}
+
+/* 방 대기실에 있는 동안 서버 상태를 계속 받아 온다 */
+function pollStart(){
+  if (pollId || !net) return;
+  pollId = setInterval(async () => {
+    if (!net){ pollStop(); return; }
+    try {
+      const r = await lobby.peekRoom(net.code);
+      net.players = r.players;
+      net.started = r.started;
+      W().__opts.seated = (r.players || []).filter(p => p.name).length;
+      emitRoom();
+      /* 방장이 시작했으면 따라 들어간다 */
+      if (r.started && !net.inGame) enterOnlineGame();
+    } catch(e){ /* 잠깐 끊긴 것은 넘긴다 */ }
+  }, 1500);
+}
+function pollStop(){ if (pollId){ clearInterval(pollId); pollId = null; } }
 
 /* ---------- 방 ---------- */
 
@@ -71,6 +116,7 @@ function startRoomCount(sec){
 /* ---------- 판 세우기 ---------- */
 
 function startGame(){
+  if (net) return startOnlineGame();
   botFillStop();
   stopRoomCount();
   while (seatCount(myRoom) < 4) if (!addOneBot()) break;
@@ -96,8 +142,48 @@ function startGame(){
 
   const v = eng.engine.view;
   if (!v) throw new Error("판을 세우지 못했습니다");
+  W().__opts = Object.assign(W().__opts || {}, { rounds });
+  openTable(v, n, myRoom.seats.map(s => s.name));
+}
 
-  W().__net = { engine: true };            /* 뽑기 화면이 선을 엔진에서 받게 한다 */
+/* 서버 대전 시작 — 빈자리는 서버가 봇으로 채운다 */
+async function startOnlineGame(){
+  stopRoomCount();
+  await lobby.startRoom(net.code);
+  const r = await lobby.peekRoom(net.code);
+  net.players = r.players; net.started = true;
+  emitRoom();
+  enterOnlineGame();
+}
+
+function enterOnlineGame(){
+  if (!net || net.inGame) return;
+  net.inGame = true;
+  pollStop();
+
+  eng.startOnline({
+    server: lobby.serverUrl(),
+    matchID: net.matchID,
+    playerID: net.playerID,
+    credentials: net.credentials,
+    numPlayers: net.numPlayers,
+    names: (net.players || []).map(p => p.name || ""),
+  });
+  eng.setPaused(true);                    /* 판 화면이 설 때까지 멈춰 둔다 */
+
+  /* 서버에서 첫 상태가 올 때까지 기다렸다가 화면을 세운다 */
+  let tries = 0;
+  const wait = setInterval(() => {
+    const v = eng.engine.view;
+    if (!v){ if (tries++ > 120){ clearInterval(wait); } return; }
+    clearInterval(wait);
+    openTable(v, net.numPlayers, (net.players || []).map(p => p.name || ""));
+  }, 100);
+}
+
+/* 판 화면에 넘길 값을 세운다 (이 기기 방과 서버 대전이 같이 쓴다) */
+function openTable(v, n, names){
+  W().__net = { engine: true };
   W().GAME = {
     N: n,
     roundNo: v.roundNo,
@@ -107,14 +193,13 @@ function startGame(){
     score: v.score.slice(),
     mySeat: 0,
   };
-  W().__opts = Object.assign(W().__opts || {}, { seated: n, rounds });
+  W().__opts = Object.assign(W().__opts || {}, { seated: n });
   W().__leadSeat = v.turn >= 0 ? v.turn : 0;
   W().GAME.order = Array.from({ length: n }, (_, k) => (W().__leadSeat + k) % n);
   W().__roundNo = v.roundNo;
   W().__myRankIdx = null;
   W().__scored = null;
   W().__gameOver = null;
-
   opt.goto("draw");
 }
 
@@ -139,7 +224,10 @@ function onRoundEnd(v){
   W().__roundNo = lr.roundNo;
   W().__myGive = null;
   W().__taxGive = null;
-  W().__revolution = v.revolution ? { seat: v.revolution.seat, great: v.revolution.great } : null;
+  W().__taxCancelled = v.taxCancelled;
+  W().__revolution = v.revolution
+    ? { seat: v.revolution.seat, great: v.revolution.great, mine: v.revolution.mine }
+    : null;
 
   opt.goto("result");                      /* 먼저 이번 판 결과 */
   startCount(5);                           /* 5초 뒤 저절로 다음 단계로 */
@@ -181,7 +269,10 @@ function startCount(sec){
    봇들은 아무도 두지 않는 상태가 된다. 실제로 그렇게 멈추는 것을 검사에서 잡았다. */
 function ensureTaxGiven(){
   const v = eng.engine.view;
-  if (!v || v.phase !== "tax" || !v.taxGive) return;
+  if (!v || v.phase !== "tax") return;
+  /* 선언을 안 하고 넘어가면 엔진이 계속 기다린다. 안 부른 것으로 처리한다 */
+  if (v.canDeclare) eng.passRev();
+  if (!v.taxGive) return;
   const worst = c => (c >= 13 ? 99 : c);
   const hand = (v.hand || []).slice().sort((a, b) => worst(b) - worst(a));
   if (hand.length < v.taxGive) return;
@@ -195,19 +286,52 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
 
   W().__createRoom = async () => {
     const o = W().__opts || {};
+    if (lobby.online()){
+      const r = await lobby.createRoom({
+        numPlayers: o.cap || 4, name: opt.myName(),
+        rounds: o.rounds || 3, tax: o.tax !== false, clear2: Boolean(o.clear2),
+      });
+      /* 서버가 참가자 목록을 보내오기 전까지 내 자리만이라도 채워 둔다 */
+      net = Object.assign({ started: false, inGame: false }, r,
+        { players: [{ id: 0, name: opt.myName() }] });
+      W().__opts = Object.assign(W().__opts || {}, { cap: r.numPlayers, seated: 1 });
+      emitRoom();
+      pollStart();
+      return r.code;
+    }
     myRoom = createRoom({ cap: o.cap || 4, name: opt.myName() });
     W().__opts = Object.assign(W().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
-    return "LOCAL";
+    return myRoom.code;
   };
-  W().__joinRoom = async () => {
-    alert("서버 대전은 아직 준비 중입니다. 봇과 하기로 시작해 주세요.");
-    return null;
+
+  W().__joinRoom = async code => {
+    if (!lobby.online()){
+      alert("서버 대전을 쓰려면 게임 서버 주소가 필요합니다.");
+      return null;
+    }
+    const r = await lobby.joinRoom(String(code).trim(), opt.myName());
+    net = Object.assign({ started: false, inGame: false }, r,
+      { players: [{ id: Number(r.playerID), name: opt.myName() }] });
+    W().__opts = Object.assign(W().__opts || {}, {
+      cap: r.numPlayers, rounds: (r.opts && r.opts.rounds) || 3,
+      tax: !(r.opts && r.opts.tax === false), clear2: Boolean(r.opts && r.opts.clear2),
+    });
+    emitRoom();
+    pollStart();
+    return r.code;
   };
-  W().__peek = async () => null;
-  W().__roomCode = () => (myRoom ? myRoom.code : null);
-  W().__leaveRoom = () => { botFillStop(); stopRoomCount(); eng.stop(); myRoom = null; emitRoom(); };
+
+  W().__peek = async code => {
+    if (!lobby.online()) return null;
+    try { return await lobby.peekRoom(String(code).trim()); } catch(e){ return null; }
+  };
+  W().__roomCode = () => (net ? net.code : (myRoom ? myRoom.code : null));
+  W().__leaveRoom = () => {
+    botFillStop(); stopRoomCount(); pollStop(); eng.stop();
+    myRoom = null; net = null; emitRoom();
+  };
   W().__saveOpts = async () => {
     if (!myRoom) return;
     setCap(myRoom, (W().__opts || {}).cap);
@@ -223,6 +347,11 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
   W().__onRoundEnd  = onRoundEnd;
   W().__onGameOver  = () => { const o = W().__gameOver; if (o) onGameOver(o); };
   W().__onTax       = v => { W().__myNeedGive = v.taxGive; };
+  /* 내가 직접 뒀다는 신호. 안 보내면 서버가 자리비움으로 본다 */
+  W().__iMoved = () => { if (net) lobby.keepAlive(net.code, Number(net.playerID)); };
+  /* 혁명 선언 — 화면의 단추가 부른다 */
+  W().__declareRev = () => eng.declareRev();
+  W().__passRev    = () => eng.passRev();
   W().__setTaxGive  = cards => {
     W().__taxGive = cards;
     if (Array.isArray(cards) && cards.length) eng.give(cards);
@@ -266,6 +395,8 @@ export function teardown(){
   botFillStop();
   stopRoomCount();
   stopCount();
+  pollStop();
+  net = null;
   eng.stop();
   myRoom = null;
 }
