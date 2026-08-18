@@ -18776,22 +18776,18 @@ function legalMove(hand, num, count, cur) {
 var JOKER_ALONE = 13;
 var alive = (G2) => G2.counts.map((c2, i2) => c2 > 0 ? i2 : -1).filter((i2) => i2 >= 0);
 var active2 = (G2) => G2.counts.map((c2, i2) => c2 > 0 && !G2.passed[i2] ? i2 : -1).filter((i2) => i2 >= 0);
-function nextActive(G2, from) {
-  const n2 = G2.counts.length;
+var seatOrder = (G2) => G2.seatOrder && G2.seatOrder.length ? G2.seatOrder : G2.counts.map((_2, i2) => i2);
+function nextBy(G2, from, ok) {
+  const o2 = seatOrder(G2), n2 = o2.length;
+  const at = o2.indexOf(from);
   for (let k2 = 1; k2 <= n2; k2++) {
-    const i2 = (from + k2) % n2;
-    if (G2.counts[i2] > 0 && !G2.passed[i2]) return i2;
+    const i2 = o2[(at + k2 + n2) % n2];
+    if (ok(i2)) return i2;
   }
   return -1;
 }
-function nextAlive(G2, from) {
-  const n2 = G2.counts.length;
-  for (let k2 = 1; k2 <= n2; k2++) {
-    const i2 = (from + k2) % n2;
-    if (G2.counts[i2] > 0) return i2;
-  }
-  return -1;
-}
+var nextActive = (G2, from) => nextBy(G2, from, (i2) => G2.counts[i2] > 0 && !G2.passed[i2]);
+var nextAlive = (G2, from) => nextBy(G2, from, (i2) => G2.counts[i2] > 0);
 function clearPile(G2, leader) {
   G2.pile = null;
   if ((G2.table || []).length) G2.shown = G2.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count }));
@@ -18885,6 +18881,7 @@ function openNextRound(G2, random) {
   G2.revDecided = !rev.on;
   G2.taxCancelled = false;
   G2.taxOrder = order;
+  G2.seatOrder = order.slice();
   const taxOn = Boolean(G2.opts.tax) && n2 >= 4;
   G2.needTax = taxOn || rev.on;
   G2.taxOn = taxOn;
@@ -18910,6 +18907,7 @@ var ZooPresident = {
       opts: opts2,
       lastOrder: null,
       taxOrder: null,
+      seatOrder: null,
       revolution: null,
       revDeclared: false,
       revDecided: true,
@@ -18922,7 +18920,8 @@ var ZooPresident = {
       gameOver: false
     };
     dealRound(G2, random);
-    G2.next = Math.floor(random.Number() * n2);
+    G2.seatOrder = random.Shuffle(Array.from({ length: n2 }, (_2, i2) => i2));
+    G2.next = G2.seatOrder[0];
     return G2;
   },
   /* 남의 손패는 장수만 보인다 */
@@ -19009,7 +19008,10 @@ var ZooPresident = {
                 G2.revDeclared = true;
                 G2.revDecided = true;
                 G2.taxCancelled = true;
-                if (G2.revolution.great) G2.taxOrder = G2.taxOrder.slice().reverse();
+                if (G2.revolution.great) {
+                  G2.taxOrder = G2.taxOrder.slice().reverse();
+                  G2.seatOrder = G2.taxOrder.slice();
+                }
                 G2.next = G2.taxOrder[0];
               },
               /* 쥐고도 안 부른다 — 세금은 그대로 걷는다 */
@@ -19098,12 +19100,22 @@ var ZooPresident = {
 };
 
 // src/lib/view.js
-var toScreen = (seat, me, n2) => ((seat - me) % n2 + n2) % n2;
-var toSeat = (pos, me, n2) => ((pos + me) % n2 + n2) % n2;
+var orderOf = (G2, n2) => G2 && G2.seatOrder && G2.seatOrder.length === n2 ? G2.seatOrder : Array.from({ length: n2 }, (_2, i2) => i2);
+var toScreenIn = (order, seat, me) => {
+  const n2 = order.length;
+  return ((order.indexOf(seat) - order.indexOf(me)) % n2 + n2) % n2;
+};
+var toSeatIn = (order, pos, me) => {
+  const n2 = order.length;
+  return order[((order.indexOf(me) + pos) % n2 + n2) % n2];
+};
 function screenView(G2, ctx, myID, names) {
   const n2 = G2.counts.length;
   const me = Number(myID);
   const nm = names || new Array(n2).fill("");
+  const ord = orderOf(G2, n2);
+  const toScreen = (seat, _me, _n) => toScreenIn(ord, seat, me);
+  const toSeat = (pos, _me, _n) => toSeatIn(ord, pos, me);
   const seats = new Array(n2);
   for (let seat = 0; seat < n2; seat++) {
     const pos = toScreen(seat, me, n2);

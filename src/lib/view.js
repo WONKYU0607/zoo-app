@@ -90,6 +90,9 @@ export function screenView(G, ctx, myID, names){
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G.taxOrder) return 0;
+      /* 혁명을 정하기 전이거나 세금이 사라졌으면 아직(또는 영영) 낼 것이 없다.
+         이걸 안 걸면 화면·검사가 계속 세금을 내려다 거부당한다 */
+      if (!G.revDecided || G.taxCancelled || !G.taxOn) return 0;
       if (G.given && G.given[me] !== undefined) return 0;
       if (G.taxOrder[0] === me) return 2;
       if (G.taxOrder[1] === me) return 1;

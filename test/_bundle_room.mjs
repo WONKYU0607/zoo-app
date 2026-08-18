@@ -353,12 +353,22 @@ function mount(root) {
 var isJoker = (c) => c >= 13;
 
 // src/lib/view.js
-var toScreen = (seat, me, n) => ((seat - me) % n + n) % n;
-var toSeat = (pos, me, n) => ((pos + me) % n + n) % n;
+var orderOf = (G, n) => G && G.seatOrder && G.seatOrder.length === n ? G.seatOrder : Array.from({ length: n }, (_, i) => i);
+var toScreenIn = (order, seat, me) => {
+  const n = order.length;
+  return ((order.indexOf(seat) - order.indexOf(me)) % n + n) % n;
+};
+var toSeatIn = (order, pos, me) => {
+  const n = order.length;
+  return order[((order.indexOf(me) + pos) % n + n) % n];
+};
 function screenView(G, ctx, myID, names) {
   const n = G.counts.length;
   const me = Number(myID);
   const nm = names || new Array(n).fill("");
+  const ord = orderOf(G, n);
+  const toScreen = (seat, _me, _n) => toScreenIn(ord, seat, me);
+  const toSeat = (pos, _me, _n) => toSeatIn(ord, pos, me);
   const seats = new Array(n);
   for (let seat = 0; seat < n; seat++) {
     const pos = toScreen(seat, me, n);
