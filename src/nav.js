@@ -126,8 +126,16 @@ export function initNav(){
     const lab = document.getElementById("cfgAcctL");
     const line = document.getElementById("cfgAcct");
     const row = document.getElementById("cfgLinkRow");
-    const btn = document.getElementById("cfgLink");
-    if (!lab || !line || !row || !btn) return;
+    let btn = document.getElementById("cfgLink");
+    if (!lab || !line || !row) return;
+    /* 고르는 중이면 그대로 둔다. 안 그러면 다시 그릴 때 선택지가 사라진다 */
+    if (conflictOn) return;
+    /* 충돌 안내로 바꿔 놨으면 원래 단추로 되돌린다. 그다음에 다시 찾는다 */
+    if (!row.querySelector("#cfgLink")){
+      row.innerHTML = '<button id="cfgLink"></button>';
+      btn = document.getElementById("cfgLink");
+    }
+    if (!btn) return;
     lab.textContent = ko ? "계정" : "Account";
     if (!a || !a.signedIn){
       line.textContent = ko ? "로그인하지 않았습니다" : "Not signed in";
@@ -146,10 +154,60 @@ export function initNav(){
         : (a.name || "") + " · on the leaderboard";
       row.hidden = true;
     }
+    /* 로그아웃 — 없으면 한 번 들어간 뒤로 아무것도 못 바꾼다 */
+    let out = document.getElementById("cfgOutRow");
+    if (!out){
+      out = document.createElement("div");
+      out.className = "cfg__row";
+      out.id = "cfgOutRow";
+      out.innerHTML = '<button id="cfgOut"></button>';
+      row.parentNode.insertBefore(out, row.nextSibling);
+    }
+    out.querySelector("#cfgOut").textContent = ko ? "로그아웃" : "Sign out";
+    out.hidden = false;
   }
   window.addEventListener("accountchange", () => {
     const c = document.getElementById("cfg");
     if (c && c.classList.contains("on")) paintAcct();
+  });
+
+  /* 이미 있는 구글 계정이라 이을 수 없을 때.
+     여기서 window.confirm 을 쓰면 안 된다 — 구글 창이 앞에 있어서
+     크롬이 "활성 탭이 아니다"라며 통째로 무시한다(실제로 그래서 아무 일도 안 났다).
+     화면 안에서 고르게 한다 */
+  let conflictOn = false;
+  function showConflict(){
+    conflictOn = true;
+    const ko = (window.__lang || "ko") === "ko";
+    const box = document.getElementById("cfgLinkRow");
+    if (!box) return;
+    box.hidden = false;
+    box.innerHTML =
+      '<p class="cfg__n" style="margin:0 0 8px">' +
+      (ko ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다."
+          : "That Google account already exists. Signing in will discard your guest progress.") +
+      '</p><button id="cfgSwitch">' +
+      (ko ? "기존 계정으로 들어가기" : "Sign in to that account") +
+      '</button><button id="cfgKeep">' + (ko ? "취소" : "Cancel") + '</button>';
+  }
+  window.__showLinkConflict = showConflict;
+
+  document.addEventListener("click", async e => {
+    if (e.target.closest("#cfgSwitch")){
+      conflictOn = false;
+      if (window.switchToGoogle) await window.switchToGoogle();
+      paintAcct();
+      return;
+    }
+    if (e.target.closest("#cfgKeep")){ conflictOn = false; paintAcct(); return; }
+    if (e.target.closest("#cfgOut")){
+      const ko2 = (window.__lang || "ko") === "ko";
+      conflictOn = false;
+      try { if (window.signOutNow) await window.signOutNow(); }
+      catch(err){ window.alert((ko2 ? "로그아웃에 실패했습니다\n" : "Sign out failed\n") + String(err && err.code || err)); }
+      document.getElementById("cfg").classList.remove("on");
+      go("entry");
+    }
   });
 
   /* 게스트 → 구글 잇기 */
@@ -165,10 +223,7 @@ export function initNav(){
       } else if (r && r.redirecting){
         /* 페이지가 넘어간다. 혹시 안 넘어가도 단추가 잠긴 채 남지 않게 둔다 */
       } else if (r && r.conflict){
-        const msg = ko
-          ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다. 계속할까요?"
-          : "That Google account already exists. Signing in will discard your guest progress. Continue?";
-        if (window.confirm(msg) && window.switchToGoogle) await window.switchToGoogle();
+        showConflict();
       }
     } catch(err){
       /* 조용히 넘어가면 원인을 알 수 없다. 이유를 그대로 보여준다 */
@@ -278,10 +333,12 @@ export function initNav(){
     }
   });
   /* 뒤로가기. 게임 도중에 나가면 완주 실패로 기록한다 */
-  document.querySelectorAll("[data-back]").forEach(b =>
-    b.addEventListener("click", () => {
-      if (b.closest("#table") && window.__quitGame) window.__quitGame();
-      go(b.dataset.back);
-    }));
+  /* 나중에 그려지는 화면(랭킹 등)도 걸리도록 문서 전체에서 받는다 */
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-back]");
+    if (!b) return;
+    if (b.closest("#table") && window.__quitGame) window.__quitGame();
+    go(b.dataset.back);
+  });
   
 }

@@ -106,7 +106,10 @@ export function mount(root){
       hint.className = "hint";
     } catch(err){
       hint.className = "hint hint--err";
-      hint.textContent = navigator.onLine ? T[lang].hintErr : T[lang].hintNet;
+      /* 이유를 그대로 보여준다. 조용히 넘어가면 원인을 알 수 없다 */
+      const code = String(err && err.code || "");
+      hint.textContent = (navigator.onLine ? T[lang].hintErr : T[lang].hintNet) +
+                         (code ? " (" + code + ")" : "");
       console.warn(err);
     }
     busy = false; paintEntry();
@@ -122,7 +125,7 @@ export function mount(root){
       catch(err){
         const hint = document.getElementById("hint");
         hint.className = "hint hint--err";
-        hint.textContent = String(err && err.message || err).slice(0, 60);
+        hint.textContent = String(err && err.code || err && err.message || err).slice(0, 60);
         console.warn(err);
       }
       busy = false; paintEntry();

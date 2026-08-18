@@ -102,13 +102,40 @@ q("#cfgLink").click(); await wait(150);
 check("실패하면 이유를 알려준다", alerted.includes("auth/popup-blocked"), alerted);
 window.linkGoogle = async () => { linkCalled++; return { linked: true }; };
 
+/* 이미 있는 구글 계정이면 화면 안에서 고르게 해야 한다.
+   confirm 을 쓰면 구글 창이 앞에 있을 때 크롬이 통째로 무시한다 */
+let confirmCalled = 0, switched = 0;
+window.confirm = () => { confirmCalled++; return true; };
+window.switchToGoogle = async () => { switched++; };
+window.linkGoogle = async () => ({ conflict: true });
+q("#cfgLink").click(); await wait(150);
+check("충돌이면 confirm 을 안 쓴다", confirmCalled === 0, confirmCalled + "번 불림");
+check("화면 안에 고르는 단추가 뜬다", Boolean(q("#cfgSwitch")) && Boolean(q("#cfgKeep")),
+      q("#cfgLinkRow").textContent.replace(/\s+/g, " ").slice(0, 40));
+if (q("#cfgSwitch")) q("#cfgSwitch").click();
+await wait(150);
+check("기존 계정으로 들어가기가 불린다", switched === 1);
+
 /* 구글로 들어온 사람에게는 안 보인다 */
-window.ACCOUNT = { signedIn: true, guest: false, name: "원규" };
+Object.assign(window.ACCOUNT, { signedIn: true, guest: false, name: "원규" });
 window.dispatchEvent(new Event("accountchange"));
 await wait(100);
 check("구글 사용자에게는 잇기 단추가 없다", q("#cfgLinkRow").hidden);
 check("구글 사용자에게는 랭킹에 오른다고 알린다",
       (q("#cfgAcct").textContent || "").includes("랭킹에 오릅니다"), q("#cfgAcct").textContent);
+
+/* 로그아웃 — 없어서 한 번 들어가면 아무것도 못 바꾸던 문제 */
+let outCalled = 0;
+window.signOutNow = async () => { outCalled++; window.ACCOUNT = { signedIn: false, guest: false, name: "" };
+  window.dispatchEvent(new Event("accountchange")); };
+Object.assign(window.ACCOUNT, { signedIn: true, guest: true, name: "손님123" });
+window.dispatchEvent(new Event("accountchange"));
+await wait(80);
+check("설정에 로그아웃 단추가 있다", Boolean(q("#cfgOut")), q("#cfgOut") ? q("#cfgOut").textContent : "없음");
+q("#cfgOut").click();
+await wait(150);
+check("로그아웃이 불린다", outCalled === 1);
+check("로그아웃하면 첫 화면으로", document.getElementById("entry").classList.contains("is-on"));
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);

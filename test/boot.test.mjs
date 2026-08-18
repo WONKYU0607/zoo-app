@@ -90,5 +90,15 @@ await wait(120);
 check("랭킹 단추를 누르면 열린다",
       document.getElementById("rank").classList.contains("is-on"));
 
+/* 랭킹에서 뒤로 나갈 수 있어야 한다 (없어서 튕긴 적 있음) */
+const back = document.querySelector("#rank [data-back]");
+check("랭킹에 뒤로가기가 있다", Boolean(back), back ? back.dataset.back : "없음");
+if (back){
+  back.click();
+  await wait(120);
+  check("뒤로 누르면 로비로 돌아간다",
+        document.getElementById("lobby").classList.contains("is-on"));
+}
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);

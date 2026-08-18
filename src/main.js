@@ -1,7 +1,7 @@
 import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR, CROWN } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -81,6 +81,7 @@ window.signInTest = signInTest;
 window.signInGuest = signInGuest;
 window.linkGoogle = linkGoogle;
 window.switchToGoogle = switchToGoogle;
+window.signOutNow = signOutNow;
 window.__isLocal = isLocal;
 
 watchAuth().then(() => {
@@ -88,11 +89,11 @@ watchAuth().then(() => {
   /* 팝업이 막혀 주소 이동으로 다녀온 경우의 뒤처리 */
   if (pending.conflict){
     pending.conflict = false;
-    const ko = (window.__lang || "ko") === "ko";
-    const msg = ko
-      ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다. 계속할까요?"
-      : "That Google account already exists. Signing in will discard your guest progress. Continue?";
-    if (window.confirm(msg)) switchToGoogle();
+    /* 설정 창을 열어 거기서 고르게 한다 (팝업 직후의 confirm 은 막힌다) */
+    if (window.__goto) window.__goto("lobby");
+    const cfg = document.getElementById("cfg");
+    if (cfg) cfg.classList.add("on");
+    if (window.__showLinkConflict) window.__showLinkConflict();
   } else if (pending.error){
     const code = pending.error; pending.error = "";
     console.warn("구글 잇기 실패:", code);

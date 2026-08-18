@@ -38,7 +38,10 @@ const T = {
 const HTML = `
 <div class="veil"></div>
 <main class="screen">
-  <div class="bar"><div class="view" id="lang"></div></div>
+  <div class="bar">
+    <button class="navback" data-back="lobby" aria-label="뒤로">‹</button>
+    <div class="bar__t" id="rkBar"></div>
+  </div>
   <div class="body">
     <div class="block__label" id="rkTitle"></div>
     <div class="cfg__row" id="rkTabs">
@@ -75,6 +78,7 @@ export function mount(root){
   function draw(){
     const t = T[lang];
     el("rkTitle").textContent = t.title;
+    if (el("rkBar")) el("rkBar").textContent = t.title;
     el("rkTabs").querySelectorAll("button").forEach(b => {
       b.textContent = t.tabs[b.dataset.k];
       b.setAttribute("aria-pressed", String(b.dataset.k === kind));

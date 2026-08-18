@@ -194,22 +194,28 @@ export async function linkGoogle(){
 }
 
 /* 위 충돌에서 "기존 구글 계정으로 들어간다"를 고른 경우.
-   게스트로 쌓은 점수는 버려진다. */
+   게스트를 먼저 내보내야 구글로 갈아탈 수 있다. 게스트 점수는 버려진다. */
 export async function switchToGoogle(){
+  try { await signOut(auth); } catch(e){}
   return signInGoogle();
 }
 
-export async function signInGoogleRedirect(){
-  const provider = new GoogleAuthProvider();
-  await signInWithRedirect(auth, provider);
-  return { redirecting: true };
-}
-
+/* 구글로 로그인. 팝업이 막히면(크롬이 자주 막는다) 주소 이동으로 넘어간다.
+   잇기와 같은 대비를 여기에도 해야 한다 — 한 군데만 고쳐서 겪은 문제다 */
 export async function signInGoogle(){
   if (!ready) throw new Error("Firebase 설정이 없습니다");
   const provider = new GoogleAuthProvider();
-  const cred = await signInWithPopup(auth, provider);
-  return loadProfile(cred.user);
+  try {
+    const cred = await signInWithPopup(auth, provider);
+    return loadProfile(cred.user);
+  } catch(err){
+    const code = String(err && err.code || "");
+    if (POPUP_FAIL.has(code)){
+      await signInWithRedirect(auth, provider);
+      return { redirecting: true };
+    }
+    throw err;
+  }
 }
 
 async function loadProfile(user){
