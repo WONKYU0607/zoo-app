@@ -17,6 +17,7 @@ let botTimer = null;
 /* 서버 대전 — 서버가 정한 자리와 자리표를 그대로 들고 있는다 */
 let net = null;            /* { code, matchID, playerID, credentials, numPlayers } */
 let pollId = null;
+let offView = null;        /* 엔진 상태 구독 해제 */
 
 const W = () => window;
 const D = () => window.document;
@@ -286,6 +287,20 @@ function ensureTaxGiven(){
 export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
   opt = { goto, myName, botJoinMs };
 
+  /* 화면이 보는 값을 엔진과 붙여 둔다.
+     전에는 판이 끝날 때만 갱신해서, 혁명을 선언해 세금이 사라져도
+     세금 화면은 한 판 내내 그 사실을 몰랐다 */
+  if (offView) offView();
+  offView = eng.onView(v => {
+    if (!v) return;
+    W().__taxCancelled = v.taxCancelled;
+    W().__revolution = v.revolution
+      ? { seat: v.revolution.seat, great: v.revolution.great, mine: v.revolution.mine }
+      : null;
+    W().__myNeedGive = v.taxGive;
+    W().__canDeclare = v.canDeclare;
+  });
+
   W().__createRoom = async () => {
     const o = W().__opts || {};
     if (lobby.online()){
@@ -398,6 +413,7 @@ export function teardown(){
   stopRoomCount();
   stopCount();
   pollStop();
+  if (offView){ offView(); offView = null; }
   net = null;
   eng.stop();
   myRoom = null;

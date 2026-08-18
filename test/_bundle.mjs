@@ -18128,6 +18128,7 @@ function screenView(G2, ctx, myID, names) {
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G2.taxOrder) return 0;
+      if (!G2.revDecided || G2.taxCancelled || !G2.taxOn) return 0;
       if (G2.given && G2.given[me] !== void 0) return 0;
       if (G2.taxOrder[0] === me) return 2;
       if (G2.taxOrder[1] === me) return 1;

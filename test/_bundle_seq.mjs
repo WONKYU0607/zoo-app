@@ -844,7 +844,7 @@ if (typeof window !== "undefined") {
 // src/nav.js
 var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
 var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
-var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
+var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgAcctL"></div><p class="cfg__n" id="cfgAcct"></p><div class="cfg__row" id="cfgLinkRow"hidden><button id="cfgLink"></button></div><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
 function initNav() {
   window.__lang = function() {
     try {
@@ -966,8 +966,54 @@ function initNav() {
     document.getElementById("cfgT").textContent = t2.title;
     document.getElementById("cfgLangL").textContent = t2.lang;
     document.getElementById("cfgNote").textContent = t2.note;
+    paintAcct();
     document.getElementById("cfg").classList.add("on");
   }
+  function paintAcct() {
+    const ko = (window.__lang || "ko") === "ko";
+    const a2 = window.ACCOUNT;
+    const lab = document.getElementById("cfgAcctL");
+    const line = document.getElementById("cfgAcct");
+    const row = document.getElementById("cfgLinkRow");
+    const btn = document.getElementById("cfgLink");
+    if (!lab || !line || !row || !btn) return;
+    lab.textContent = ko ? "\uACC4\uC815" : "Account";
+    if (!a2 || !a2.signedIn) {
+      line.textContent = ko ? "\uB85C\uADF8\uC778\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4" : "Not signed in";
+      row.hidden = true;
+      return;
+    }
+    if (a2.guest) {
+      line.textContent = ko ? (a2.name || "\uAC8C\uC2A4\uD2B8") + " \xB7 \uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : (a2.name || "Guest") + " \xB7 Guest \xB7 not on the leaderboard";
+      btn.textContent = ko ? "\uAD6C\uAE00 \uACC4\uC815 \uC787\uAE30" : "Link Google account";
+      row.hidden = false;
+    } else {
+      line.textContent = ko ? (a2.name || "") + " \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : (a2.name || "") + " \xB7 on the leaderboard";
+      row.hidden = true;
+    }
+  }
+  window.addEventListener("accountchange", () => {
+    const c2 = document.getElementById("cfg");
+    if (c2 && c2.classList.contains("on")) paintAcct();
+  });
+  document.addEventListener("click", async (e) => {
+    if (!e.target.closest("#cfgLink")) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const btn = document.getElementById("cfgLink");
+    btn.disabled = true;
+    try {
+      const r2 = window.linkGoogle ? await window.linkGoogle() : null;
+      if (r2 && r2.conflict) {
+        const msg = ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4. \uACC4\uC18D\uD560\uAE4C\uC694?" : "That Google account already exists. Signing in will discard your guest progress. Continue?";
+        if (window.confirm(msg) && window.switchToGoogle) await window.switchToGoogle();
+      }
+    } catch (err) {
+      window.alert(ko ? "\uC787\uAE30\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4" : "Linking failed");
+      console.warn(err);
+    }
+    btn.disabled = false;
+    paintAcct();
+  });
   window.addEventListener("langchange", () => {
     if (document.getElementById("cfg").classList.contains("on")) openCfg();
   });
@@ -19171,6 +19217,7 @@ function screenView(G2, ctx, myID, names) {
     /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
     taxGive: (() => {
       if (ctx.phase !== "tax" || !G2.taxOrder) return 0;
+      if (!G2.revDecided || G2.taxCancelled || !G2.taxOn) return 0;
       if (G2.given && G2.given[me] !== void 0) return 0;
       if (G2.taxOrder[0] === me) return 2;
       if (G2.taxOrder[1] === me) return 1;
@@ -20841,7 +20888,8 @@ function mount7(root) {
       start: "\uAD6C\uAE00\uB85C \uC2DC\uC791\uD558\uAE30",
       starting: "\uB4E4\uC5B4\uAC00\uB294 \uC911",
       enter: "\uAC8C\uC784 \uC2DC\uC791",
-      hintIn: "\uAD6C\uAE00 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD569\uB2C8\uB2E4",
+      guest: "\uAC8C\uC2A4\uD2B8\uB85C \uC2DC\uC791\uD558\uAE30",
+      hintIn: "\uAD6C\uAE00\uB85C \uB85C\uADF8\uC778\uD558\uBA74 \uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4",
       hintErr: "\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694",
       hintNet: "\uC778\uD130\uB137 \uC5F0\uACB0\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694"
     },
@@ -20852,7 +20900,8 @@ function mount7(root) {
       start: "Continue with Google",
       starting: "Signing in",
       enter: "Start game",
-      hintIn: "Sign in with your Google account",
+      guest: "Play as guest",
+      hintIn: "Sign in with Google to appear on the leaderboard",
       hintErr: "Sign-in failed. Please try again",
       hintNet: "Check your internet connection"
     }
@@ -20877,6 +20926,8 @@ function mount7(root) {
     document2.getElementById("wordmark").textContent = t2.wordmark;
     document2.getElementById("sub").textContent = t2.sub;
     document2.getElementById("start").textContent = t2.start;
+    const g2 = document2.getElementById("testin");
+    if (g2) g2.textContent = t2.guest;
     renderFan();
   }
   apply();
@@ -20938,12 +20989,10 @@ function mount7(root) {
   if (tb) {
     tb.addEventListener("click", async (e) => {
       e.stopImmediatePropagation();
-      const nm = prompt("\uC2DC\uD5D8\uC6A9 \uC774\uB984", "\uC2DC\uD5D8" + Math.floor(Math.random() * 900 + 100));
-      if (nm === null) return;
       busy = true;
       paintEntry();
       try {
-        await window.signInTest(nm);
+        await window.signInGuest();
       } catch (err) {
         const hint = document2.getElementById("hint");
         hint.className = "hint hint--err";
@@ -20957,7 +21006,8 @@ function mount7(root) {
   function showTest() {
     if (!tb) return;
     const a2 = window.ACCOUNT;
-    tb.hidden = !window.__isLocal || Boolean(a2 && a2.signedIn);
+    tb.textContent = T[lang].guest;
+    tb.hidden = Boolean(a2 && a2.signedIn);
   }
   window.addEventListener("accountready", showTest);
   window.addEventListener("accountchange", showTest);

@@ -419,7 +419,11 @@ export function mount(root){
   /* 다섯 단계를 전부 지나간다.
      혁명이 없으면 "일어나지 않았습니다"를, 세금은 남들끼리 주고받는 것도 보여준다.
      무슨 일이 있었는지 모른 채 다음 판이 시작되면 안 된다 */
-  function needStep(){ return true; }
+  function needStep(k){
+    /* 혁명으로 세금이 사라졌으면 세금 걷는 화면은 보여줄 것이 없다 */
+    if (k === 3) return !taxSkipped();
+    return true;
+  }
   
   /* 누를 것이 없는 단계는 저절로 넘어간다 */
   var autoId = null;   /* 선언 전에 부르는 곳이 있어 var 로 둔다 */
@@ -482,6 +486,15 @@ export function mount(root){
       if (step === 2 && online && revSeat === 0 && !declared && window.__passRev){
         window.__passRev();
       }
+      /* 세금이 사라졌는데 이 단계에 서 있으면 그냥 넘긴다.
+         (혁명을 선언한 순간과 화면이 그걸 아는 순간이 어긋날 수 있다) */
+      if (step === 3 && taxSkipped()){
+        step = 4;
+        G().order = order().slice();
+        draw();
+        setTimeout(() => { if (window.__toTable) window.__toTable(); }, 400);
+        return;
+      }
       /* 세금에서 안 고르고 시간을 넘기면 가장 나쁜 카드를 자동으로 준다 */
       if (step === 3){
         const g = giveCount();
@@ -511,9 +524,14 @@ export function mount(root){
         draw();
         document.querySelectorAll(".seat__r").forEach(x => x.classList.add("swap"));
         setTimeout(() => document.querySelectorAll(".seat__r").forEach(x => x.classList.remove("swap")), 750);
+        /* 선언하고 나면 단추가 사라진다. 여기서 다시 시간을 걸지 않으면
+           아무도 다음으로 넘길 수 없어 화면이 영영 멈춘다 */
+        autoNext();
         return;
       }
-      draw(); return;
+      draw();
+      autoNext();
+      return;
     }
     if (step === 3 && !taxSkipped()){
       window.__myGive = sel.map(i => myHand()[i]);
