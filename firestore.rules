@@ -6,7 +6,9 @@ service cloud.firestore {
        점수는 올릴 수만 있고 한 판 폭까지만 허용한다.
        나중에 서버로 옮기면 여기를 읽기 전용으로 바꾼다. */
     match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      /* 랭킹 때문에 로그인한 사람은 남의 것도 읽을 수 있어야 한다.
+         쓰기는 여전히 자기 것만 */
+      allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == uid
         && request.resource.data.score == 0;
       allow update: if request.auth != null && request.auth.uid == uid

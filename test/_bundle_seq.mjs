@@ -19575,7 +19575,7 @@ function mount3(root) {
   let SEATS = [];
   let hand = [];
   let finish = [];
-  let offView = null;
+  let offView2 = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
   function apply(v2) {
@@ -19673,7 +19673,7 @@ function mount3(root) {
     if (engine.auto) setAuto2(false);
   }
   function boot() {
-    if (offView) offView();
+    if (offView2) offView2();
     if (el("auto")) {
       el("auto").textContent = T[lang].autoOff;
       el("auto").classList.remove("on");
@@ -19693,7 +19693,7 @@ function mount3(root) {
     busy = false;
     animated = 0;
     spread = false;
-    offView = onView(apply);
+    offView2 = onView(apply);
     if (engine.view) apply(engine.view);
   }
   window.__bootTable = boot;
@@ -20476,7 +20476,8 @@ function mount4(root) {
   };
   boot();
   autoNext();
-  function needStep() {
+  function needStep(k2) {
+    if (k2 === 3) return !taxSkipped();
     return true;
   }
   var autoId = null;
@@ -20547,6 +20548,15 @@ function mount4(root) {
       if (step === 2 && online2 && revSeat === 0 && !declared && window.__passRev) {
         window.__passRev();
       }
+      if (step === 3 && taxSkipped()) {
+        step = 4;
+        G2().order = order().slice();
+        draw();
+        setTimeout(() => {
+          if (window.__toTable) window.__toTable();
+        }, 400);
+        return;
+      }
       if (step === 3) {
         const g2 = giveCount();
         if (g2 > 0 && sel.length < g2) {
@@ -20574,9 +20584,11 @@ function mount4(root) {
         draw();
         document2.querySelectorAll(".seat__r").forEach((x2) => x2.classList.add("swap"));
         setTimeout(() => document2.querySelectorAll(".seat__r").forEach((x2) => x2.classList.remove("swap")), 750);
+        autoNext();
         return;
       }
       draw();
+      autoNext();
       return;
     }
     if (step === 3 && !taxSkipped()) {
@@ -21095,6 +21107,7 @@ var myRoom = null;
 var botTimer2 = null;
 var net = null;
 var pollId = null;
+var offView = null;
 var W2 = () => window;
 var D2 = () => window.document;
 function emitRoom() {
@@ -21360,6 +21373,14 @@ function ensureTaxGiven() {
 }
 function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   opt = { goto, myName, botJoinMs };
+  if (offView) offView();
+  offView = onView((v2) => {
+    if (!v2) return;
+    W2().__taxCancelled = v2.taxCancelled;
+    W2().__revolution = v2.revolution ? { seat: v2.revolution.seat, great: v2.revolution.great, mine: v2.revolution.mine } : null;
+    W2().__myNeedGive = v2.taxGive;
+    W2().__canDeclare = v2.canDeclare;
+  });
   W2().__createRoom = async () => {
     const o2 = W2().__opts || {};
     if (online()) {
@@ -21492,6 +21513,10 @@ function teardown() {
   stopRoomCount();
   stopCount();
   pollStop();
+  if (offView) {
+    offView();
+    offView = null;
+  }
   net = null;
   stop();
   myRoom = null;

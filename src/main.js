@@ -1,7 +1,7 @@
 import "./state.js";
-import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
+import { initNav, OPT_HTML, CFG_HTML, GEAR, CROWN } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signInTest, isLocal, account, finishGame, useTicket, ticketLeft } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -11,13 +11,15 @@ import * as draw   from "./screens/draw.js";
 import * as table  from "./screens/table.js";
 import * as tax    from "./screens/tax.js";
 import * as result from "./screens/result.js";
+import * as rank   from "./screens/rank.js";
 
-const SCREENS = { entry, lobby, room, draw, table, tax, result };
+const SCREENS = { entry, lobby, room, draw, table, tax, result, rank };
 
 /* 화면마다 상단에 붙일 것 (뒤로 가기 / 설정 버튼) */
 const BAR = {
   lobby:  { back: "entry" },
   room:   { back: "lobby" },
+  rank:   { back: "lobby" },
   draw:   { back: "room" },
   tax:    { back: null },
   result: { back: null },
@@ -27,10 +29,10 @@ const BAR = {
 function build(){
   Object.keys(SCREENS).forEach(id => {
     const sec = document.getElementById(id);
-    let html = MARKUP[id];
+    let html = MARKUP[id] || "";        /* 화면이 자기 뼈대를 직접 그리는 경우도 있다 */
     const sw = BAR_SWAP[id];
-    if (sw) html = html.replace(sw[0], sw[1]);   /* 상단바에 뒤로/판 종료 붙이기 */
-    sec.innerHTML = html;
+    if (sw && html) html = html.replace(sw[0], sw[1]);   /* 상단바에 뒤로/판 종료 붙이기 */
+    if (html) sec.innerHTML = html;
     /* 언어 토글 자리를 설정 버튼으로 */
     sec.querySelectorAll('.lang, .view#lang').forEach(el => {
       if (el.id !== "lang") return;
@@ -41,6 +43,18 @@ function build(){
       b.innerHTML = GEAR;
       el.replaceWith(b);
     });
+    /* 로비 상단바 톱니 옆에 랭킹 단추를 붙인다 */
+    if (id === "lobby"){
+      const gear = sec.querySelector("[data-cfgopen]");
+      if (gear && !sec.querySelector("[data-rankopen]")){
+        const r = document.createElement("button");
+        r.className = gear.className || "top__cfg";
+        r.setAttribute("data-rankopen", "");
+        r.setAttribute("aria-label", "leaderboard");
+        r.innerHTML = CROWN;
+        gear.parentNode.insertBefore(r, gear.nextSibling);
+      }
+    }
   });
   const stage = document.getElementById("stage");
   stage.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML);
@@ -63,6 +77,18 @@ window.__isLocal = isLocal;
 
 watchAuth().then(() => {
   window.dispatchEvent(new Event("accountready"));
+  /* 팝업이 막혀 주소 이동으로 다녀온 경우의 뒤처리 */
+  if (pending.conflict){
+    pending.conflict = false;
+    const ko = (window.__lang || "ko") === "ko";
+    const msg = ko
+      ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다. 계속할까요?"
+      : "That Google account already exists. Signing in will discard your guest progress. Continue?";
+    if (window.confirm(msg)) switchToGoogle();
+  } else if (pending.error){
+    const code = pending.error; pending.error = "";
+    console.warn("구글 잇기 실패:", code);
+  }
   /* 판은 이 기기 안에서 도므로 새로고침하면 처음부터다.
      서버 대전을 붙이면 그때 방 복귀를 다시 넣는다 */
 });

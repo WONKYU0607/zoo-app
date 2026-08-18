@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "sync": "npm run build && npx cap sync android",
-    "test": "node test/engine.test.js && node test/roundend.test.mjs && node test/table.test.mjs && node test/room.test.mjs && node test/auto.test.mjs && node test/login.test.mjs && node test/sequence.test.mjs 2",
+    "test": "node test/engine.test.js && node test/roundend.test.mjs && node test/table.test.mjs && node test/room.test.mjs && node test/auto.test.mjs && node test/login.test.mjs && node test/rank.test.mjs && node test/sequence.test.mjs 2",
     "test:engine": "node test/engine.test.js",
     "test:table": "node test/table.test.mjs",
     "test:room": "node test/room.test.mjs",
@@ -16,7 +16,8 @@
     "test:seq": "node test/sequence.test.mjs 3",
     "test:auto": "node test/auto.test.mjs",
     "test:net": "node test/net.test.mjs",
-    "test:login": "node test/login.test.mjs"
+    "test:login": "node test/login.test.mjs",
+    "test:rank": "node test/rank.test.mjs"
   },
   "devDependencies": {
     "firebase-tools": "^15.27.0",

@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "wkKey", "order": "ASCENDING" },
+        { "fieldPath": "wk", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "moKey", "order": "ASCENDING" },
+        { "fieldPath": "mo", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

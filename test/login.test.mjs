@@ -44,7 +44,7 @@ IDS.forEach(id => {
 document.getElementById("stage").insertAdjacentHTML("beforeend", B.OPT_HTML + B.CFG_HTML);
 
 /* 가짜 계정 */
-let guestCalled = 0, linkCalled = 0, linkResult = { linked: true };
+let guestCalled = 0, linkCalled = 0, linkResult = { linked: true }, alerted = "";
 window.ACCOUNT = { signedIn: false, guest: false, name: "" };
 window.signInGoogle = async () => { window.ACCOUNT = { signedIn: true, guest: false, name: "원규" };
   window.dispatchEvent(new Event("accountchange")); };
@@ -53,7 +53,7 @@ window.signInGuest = async () => { guestCalled++; window.ACCOUNT = { signedIn: t
 window.linkGoogle = async () => { linkCalled++; return linkResult; };
 window.switchToGoogle = async () => {};
 window.confirm = () => true;
-window.alert = () => {};
+window.alert = m => { alerted = String(m); };
 
 B.mountEntry(document.getElementById("entry"));
 B.initNav();
@@ -89,6 +89,18 @@ check("잇기 단추가 보인다", !q("#cfgLinkRow").hidden && q("#cfgLink").te
 q("#cfgLink").click();
 await wait(200);
 check("잇기가 불렸다", linkCalled === 1);
+
+/* 팝업이 막혀 주소 이동으로 넘어가는 경우엔 아무 말도 하지 않는다 */
+alerted = ""; linkResult = { redirecting: true };
+q("#cfgLink").click(); await wait(150);
+check("주소 이동으로 넘어갈 때는 조용하다", alerted === "", alerted);
+
+/* 실패하면 이유를 그대로 보여준다 */
+alerted = "";
+window.linkGoogle = async () => { const e = new Error("x"); e.code = "auth/popup-blocked"; throw e; };
+q("#cfgLink").click(); await wait(150);
+check("실패하면 이유를 알려준다", alerted.includes("auth/popup-blocked"), alerted);
+window.linkGoogle = async () => { linkCalled++; return { linked: true }; };
 
 /* 구글로 들어온 사람에게는 안 보인다 */
 window.ACCOUNT = { signedIn: true, guest: false, name: "원규" };

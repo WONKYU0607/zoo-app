@@ -3,7 +3,8 @@ import "./state.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
 export const OPT_HTML = "<div class=\"opts\" id=\"opts\" role=\"dialog\" aria-modal=\"true\"><div class=\"opts__v\" data-optclose></div><div class=\"opts__p\"><div class=\"opts__h\"><span id=\"optT\"></span><button class=\"opts__x\" data-optclose aria-label=\"close\">×</button></div><div class=\"opts__b\" id=\"optBody\"></div><div class=\"opts__f\"><button class=\"opts__go\" id=\"optGo\"></button></div></div></div>";
-export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgAcctL\"></div><p class=\"cfg__n\" id=\"cfgAcct\"></p><div class=\"cfg__row\" id=\"cfgLinkRow\"hidden><button id=\"cfgLink\"></button></div><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
+export const CROWN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 17h16M4 17 3 7l4.5 3.5L12 5l4.5 5.5L21 7l-1 10"/></svg>';
+export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgAcctL\"></div><p class=\"cfg__n\" id=\"cfgAcct\"></p><div class=\"cfg__row\" id=\"cfgLinkRow\" hidden><button id=\"cfgLink\"></button></div><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
 
 export function initNav(){
   
@@ -25,6 +26,7 @@ export function initNav(){
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-l]");
     if (b) window.setLang(b.dataset.l);
+    if (e.target.closest("[data-rankopen]")) go("rank");
     if (e.target.closest("[data-cfgopen]")) openCfg();
     if (e.target.closest("[data-cfgclose]")) document.getElementById("cfg").classList.remove("on");
   });
@@ -158,14 +160,20 @@ export function initNav(){
     btn.disabled = true;
     try {
       const r = window.linkGoogle ? await window.linkGoogle() : null;
-      if (r && r.conflict){
+      if (r && r.already){
+        window.alert(ko ? "이미 구글 계정으로 로그인해 있습니다" : "Already signed in with Google");
+      } else if (r && r.redirecting){
+        /* 페이지가 넘어간다. 혹시 안 넘어가도 단추가 잠긴 채 남지 않게 둔다 */
+      } else if (r && r.conflict){
         const msg = ko
           ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다. 계속할까요?"
           : "That Google account already exists. Signing in will discard your guest progress. Continue?";
         if (window.confirm(msg) && window.switchToGoogle) await window.switchToGoogle();
       }
     } catch(err){
-      window.alert(ko ? "잇기에 실패했습니다" : "Linking failed");
+      /* 조용히 넘어가면 원인을 알 수 없다. 이유를 그대로 보여준다 */
+      const code = String(err && err.code || err && err.message || err);
+      window.alert((ko ? "잇기에 실패했습니다\n" : "Linking failed\n") + code);
       console.warn(err);
     }
     btn.disabled = false;
@@ -188,6 +196,7 @@ export function initNav(){
     }
     if (id === "tax"   && window.__bootTax)   window.__bootTax();
     if (id === "result" && window.__bootResult) window.__bootResult();
+    if (id === "rank"   && window.__bootRank)   window.__bootRank();
   
     document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));
     document.getElementById(id).classList.add("is-on");

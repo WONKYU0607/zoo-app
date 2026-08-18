@@ -177,3 +177,16 @@
 #lobby .top__cfg{width:26px;height:26px;flex:none;margin-left:auto;padding:0;border:none;
   background:url(/assets/ic_settings.webp) center/contain no-repeat;cursor:pointer}
 #lobby .top__cfg:active{transform:translateY(1px)}
+/* ---- 랭킹 ---- */
+#rank .rk{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+#rank .rk--me{margin-top:14px}
+#rank .rk__cap{font-size:11px;letter-spacing:.14em;color:#C6A867;margin:0 0 6px 2px}
+#rank .rk__r{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;
+  background:rgba(20,26,18,.55);border:1px solid rgba(198,168,103,.18)}
+#rank .rk__r--me{background:rgba(90,70,28,.5);border-color:rgba(240,209,140,.5)}
+#rank .rk__no{min-width:30px;text-align:right;font-weight:800;color:#F0D18C;font-size:14px}
+#rank .rk__t{min-width:46px;font-size:10px;letter-spacing:.06em;color:#9FB08A;
+  border:1px solid rgba(159,176,138,.35);border-radius:999px;padding:1px 5px;text-align:center}
+#rank .rk__n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+#rank .rk__s{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:#EADFC2}
+#rank #rkTabs button[aria-pressed="true"]{background:rgba(240,209,140,.18);color:#F0D18C}

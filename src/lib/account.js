@@ -6,18 +6,34 @@
    - 점수는 절대 깎이지 않는다. 상위 절반만 얻는다
    - 티어는 1000점 단위 숫자 */
 import { ready, auth, db } from "./firebase.js";
-import { GoogleAuthProvider, signInWithPopup, signInAnonymously, signOut,
-         linkWithPopup, updateProfile, onAuthStateChanged } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInAnonymously, signOut,
+         linkWithPopup, linkWithRedirect, getRedirectResult,
+         updateProfile, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, runTransaction,
+         collection, query, where, orderBy, limit, getDocs, getCountFromServer,
          increment, serverTimestamp } from "firebase/firestore";
 
 export const account = {
   uid: null, name: "", photo: "",
   score: 0, tier: 0, tickets: 5, ticketAt: 0, games: 0,
+  wk: 0, mo: 0, wkKey: "", moKey: "",
   loaded: false, signedIn: false,
   /* 게스트(익명)로 들어왔는가. 게임·점수는 같지만 랭킹에는 안 오른다 */
   guest: false,
 };
+
+/* 이번 주 / 이번 달 딱지. 주는 월요일 시작 */
+export function periodKeys(at){
+  const d = at ? new Date(at) : new Date();
+  const mo = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = (t.getUTCDay() + 6) % 7;            /* 월=0 */
+  t.setUTCDate(t.getUTCDate() - day + 3);         /* 그 주 목요일 */
+  const year = t.getUTCFullYear();
+  const first = new Date(Date.UTC(year, 0, 4));
+  const wkNo = 1 + Math.round(((t - first) / 86400000 - 3 + ((first.getUTCDay() + 6) % 7)) / 7);
+  return { wk: year + "-W" + String(wkNo).padStart(2, "0"), mo };
+}
 
 export const TIER_STEP = 5000;
 export function tierOf(score){ return Math.floor(score / TIER_STEP); }
@@ -127,9 +143,31 @@ export async function signInGuest(){
   return loadProfile(cred.user);
 }
 
+/* 팝업이 막혔거나 열 수 없는 경우 */
+const POPUP_FAIL = new Set([
+  "auth/popup-blocked",
+  "auth/popup-closed-by-user",
+  "auth/cancelled-popup-request",
+  "auth/operation-not-supported-in-this-environment",
+  "auth/web-storage-unsupported",
+]);
+const CONFLICT = new Set([
+  "auth/credential-already-in-use",
+  "auth/email-already-in-use",
+  "auth/account-exists-with-different-credential",
+]);
+
+async function markLinked(user){
+  try { await updateDoc(doc(db, "users", user.uid), { guest: false }); } catch(e){}
+  account.guest = false;
+  if (user.photoURL) account.photo = user.photoURL;
+  window.dispatchEvent(new Event("accountchange"));
+}
+
 /* 게스트 → 구글 잇기.
-   반드시 linkWithPopup 이어야 한다. signInWithPopup 을 부르면 새 계정으로
-   갈아타면서 게스트로 쌓은 점수가 통째로 버려진다. */
+   반드시 link… 여야 한다. signIn… 을 부르면 새 계정으로 갈아타면서
+   게스트로 쌓은 점수가 통째로 버려진다.
+   팝업이 막히면(크롬이 자주 막는다) 주소 이동 방식으로 넘어간다. */
 export async function linkGoogle(){
   if (!ready) throw new Error("Firebase 설정이 없습니다");
   const user = auth.currentUser;
@@ -139,18 +177,17 @@ export async function linkGoogle(){
   const provider = new GoogleAuthProvider();
   try {
     const cred = await linkWithPopup(user, provider);
-    await updateDoc(doc(db, "users", cred.user.uid), { guest: false });
-    account.guest = false;
-    if (cred.user.photoURL) account.photo = cred.user.photoURL;
-    window.dispatchEvent(new Event("accountchange"));
+    await markLinked(cred.user);
     return { linked: true };
   } catch(err){
     const code = String(err && err.code || "");
-    if (code === "auth/credential-already-in-use" ||
-        code === "auth/email-already-in-use" ||
-        code === "auth/account-exists-with-different-credential"){
-      /* 그 구글 계정이 이미 있다. 어느 쪽을 살릴지는 화면이 묻는다 */
-      return { conflict: true };
+    if (CONFLICT.has(code)) return { conflict: true };
+    if (POPUP_FAIL.has(code)){
+      /* 창을 못 여니 페이지를 통째로 넘겼다 돌아온다.
+         돌아온 뒤 처리는 watchAuth 안의 getRedirectResult 가 맡는다 */
+      try { sessionStorage.setItem("zoo_link", "1"); } catch(e){}
+      await linkWithRedirect(user, provider);
+      return { redirecting: true };
     }
     throw err;
   }
@@ -160,6 +197,12 @@ export async function linkGoogle(){
    게스트로 쌓은 점수는 버려진다. */
 export async function switchToGoogle(){
   return signInGoogle();
+}
+
+export async function signInGoogleRedirect(){
+  const provider = new GoogleAuthProvider();
+  await signInWithRedirect(auth, provider);
+  return { redirecting: true };
 }
 
 export async function signInGoogle(){
@@ -211,11 +254,31 @@ export async function signOutNow(){
 }
 
 /* 이미 로그인돼 있으면 그대로 이어간다 */
+/* 주소 이동으로 다녀온 결과. 잇기가 끝났으면 여기서 마무리된다.
+   충돌이면 화면이 물어볼 수 있게 남겨 둔다 */
+export const pending = { conflict: false, error: "" };
+
+async function takeRedirect(){
+  if (!ready) return;
+  let asked = false;
+  try { asked = sessionStorage.getItem("zoo_link") === "1"; } catch(e){}
+  try {
+    const res = await getRedirectResult(auth);
+    if (res && res.user && asked) await markLinked(res.user);
+  } catch(err){
+    const code = String(err && err.code || "");
+    if (CONFLICT.has(code)) pending.conflict = true;
+    else pending.error = code || String(err && err.message || err);
+  }
+  try { sessionStorage.removeItem("zoo_link"); } catch(e){}
+}
+
 export function watchAuth(){
   return new Promise(resolve => {
     if (!ready){ account.loaded = true; resolve(account); return; }
     const stop = onAuthStateChanged(auth, async user => {
       stop();
+      await takeRedirect();
       if (user){
         try { await loadProfile(user); } catch(e){ console.warn(e); }
       } else {
@@ -235,10 +298,68 @@ export async function finishGame(rank, players, earned, quit){
   account.score += gained;
   account.games += 1;
   account.tier = tierOf(account.score);
-  await updateDoc(doc(db, "users", account.uid), {
-    score: increment(gained), games: increment(1), lastPlayed: serverTimestamp() });
+
+  /* 주간·월간은 딱지가 바뀌면 0부터 다시 센다 */
+  const k = periodKeys();
+  const patch = {
+    score: increment(gained), games: increment(1), lastPlayed: serverTimestamp(),
+    guest: Boolean(account.guest),
+  };
+  patch.wkKey = k.wk;
+  patch.moKey = k.mo;
+  patch.wk = account.wkKey === k.wk ? increment(gained) : gained;
+  patch.mo = account.moKey === k.mo ? increment(gained) : gained;
+  account.wk = (account.wkKey === k.wk ? (account.wk || 0) : 0) + gained;
+  account.mo = (account.moKey === k.mo ? (account.mo || 0) : 0) + gained;
+  account.wkKey = k.wk; account.moKey = k.mo;
+
+  await updateDoc(doc(db, "users", account.uid), patch);
   window.dispatchEvent(new Event("accountchange"));
   return gained;
+}
+
+/* ---------- 랭킹 ---------- */
+/* 게스트는 목록에서 뺀다. 거르는 것은 받아온 뒤에 한다 —
+   그래야 색인(index)을 하나 덜 만들어도 된다 */
+const FIELD = { all: "score", week: "wk", month: "mo" };
+const KEYF  = { week: "wkKey", month: "moKey" };
+
+export async function topScores(kind = "all", want = 100){
+  if (!ready) return [];
+  const f = FIELD[kind] || "score";
+  const col = collection(db, "users");
+  const k = periodKeys();
+  const q = kind === "all"
+    ? query(col, orderBy(f, "desc"), limit(want + 60))
+    : query(col, where(KEYF[kind], "==", kind === "week" ? k.wk : k.mo),
+                 orderBy(f, "desc"), limit(want + 60));
+  const snap = await getDocs(q);
+  const out = [];
+  snap.forEach(d => {
+    const v = d.data() || {};
+    if (v.guest) return;                       /* 게스트는 랭킹에 안 오른다 */
+    const sc = Number(v[f] || 0);
+    if (sc <= 0) return;
+    out.push({ uid: d.id, name: v.name || "", score: sc, tier: tierOf(v.score || 0) });
+  });
+  return out.slice(0, want);
+}
+
+/* 내 순위 — 나보다 점수가 높은 사람 수 + 1 */
+export async function myRank(kind = "all"){
+  if (!ready || !account.signedIn || account.guest) return null;
+  const f = FIELD[kind] || "score";
+  const mine = Number(kind === "all" ? account.score : (kind === "week" ? account.wk : account.mo) || 0);
+  if (mine <= 0) return null;
+  const col = collection(db, "users");
+  const k = periodKeys();
+  const q = kind === "all"
+    ? query(col, where(f, ">", mine))
+    : query(col, where(KEYF[kind], "==", kind === "week" ? k.wk : k.mo), where(f, ">", mine));
+  try {
+    const c = await getCountFromServer(q);
+    return { rank: (c.data().count || 0) + 1, score: mine, tier: account.tier };
+  } catch(e){ return null; }
 }
 
 export async function useTicket(){
