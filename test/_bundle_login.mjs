@@ -190,7 +190,7 @@ if (typeof window !== "undefined") {
 // src/nav.js
 var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
 var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
-var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgAcctL"></div><p class="cfg__n" id="cfgAcct"></p><div class="cfg__row" id="cfgLinkRow"hidden><button id="cfgLink"></button></div><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
+var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgAcctL"></div><p class="cfg__n" id="cfgAcct"></p><div class="cfg__row" id="cfgLinkRow" hidden><button id="cfgLink"></button></div><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
 function initNav() {
   window.__lang = function() {
     try {
@@ -214,6 +214,7 @@ function initNav() {
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-l]");
     if (b) window.setLang(b.dataset.l);
+    if (e.target.closest("[data-rankopen]")) go("rank");
     if (e.target.closest("[data-cfgopen]")) openCfg();
     if (e.target.closest("[data-cfgclose]")) document.getElementById("cfg").classList.remove("on");
   });
@@ -349,12 +350,16 @@ function initNav() {
     btn.disabled = true;
     try {
       const r = window.linkGoogle ? await window.linkGoogle() : null;
-      if (r && r.conflict) {
+      if (r && r.already) {
+        window.alert(ko ? "\uC774\uBBF8 \uAD6C\uAE00 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD574 \uC788\uC2B5\uB2C8\uB2E4" : "Already signed in with Google");
+      } else if (r && r.redirecting) {
+      } else if (r && r.conflict) {
         const msg = ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4. \uACC4\uC18D\uD560\uAE4C\uC694?" : "That Google account already exists. Signing in will discard your guest progress. Continue?";
         if (window.confirm(msg) && window.switchToGoogle) await window.switchToGoogle();
       }
     } catch (err) {
-      window.alert(ko ? "\uC787\uAE30\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4" : "Linking failed");
+      const code = String(err && err.code || err && err.message || err);
+      window.alert((ko ? "\uC787\uAE30\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Linking failed\n") + code);
       console.warn(err);
     }
     btn.disabled = false;
@@ -377,6 +382,7 @@ function initNav() {
     }
     if (id === "tax" && window.__bootTax) window.__bootTax();
     if (id === "result" && window.__bootResult) window.__bootResult();
+    if (id === "rank" && window.__bootRank) window.__bootRank();
     document.querySelectorAll(".page").forEach((p) => p.classList.remove("is-on"));
     document.getElementById(id).classList.add("is-on");
     window.scrollTo(0, 0);

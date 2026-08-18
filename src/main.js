@@ -27,8 +27,17 @@ const BAR = {
 };
 
 function build(){
+  const stageEl = document.getElementById("stage");
   Object.keys(SCREENS).forEach(id => {
-    const sec = document.getElementById(id);
+    let sec = document.getElementById(id);
+    /* 화면 자리가 없으면 만들어 둔다. index.html 에 빠져도 앱이 통째로 죽지 않게 */
+    if (!sec && stageEl){
+      sec = document.createElement("section");
+      sec.className = "page";
+      sec.id = id;
+      stageEl.appendChild(sec);
+    }
+    if (!sec) return;
     let html = MARKUP[id] || "";        /* 화면이 자기 뼈대를 직접 그리는 경우도 있다 */
     const sw = BAR_SWAP[id];
     if (sw && html) html = html.replace(sw[0], sw[1]);   /* 상단바에 뒤로/판 종료 붙이기 */
@@ -56,8 +65,7 @@ function build(){
       }
     }
   });
-  const stage = document.getElementById("stage");
-  stage.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML);
+  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML);
 }
 
 build();
