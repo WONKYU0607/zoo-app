@@ -3,7 +3,7 @@ import "./state.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
 export const OPT_HTML = "<div class=\"opts\" id=\"opts\" role=\"dialog\" aria-modal=\"true\"><div class=\"opts__v\" data-optclose></div><div class=\"opts__p\"><div class=\"opts__h\"><span id=\"optT\"></span><button class=\"opts__x\" data-optclose aria-label=\"close\">×</button></div><div class=\"opts__b\" id=\"optBody\"></div><div class=\"opts__f\"><button class=\"opts__go\" id=\"optGo\"></button></div></div></div>";
-export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
+export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgAcctL\"></div><p class=\"cfg__n\" id=\"cfgAcct\"></p><div class=\"cfg__row\" id=\"cfgLinkRow\"hidden><button id=\"cfgLink\"></button></div><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
 
 export function initNav(){
   
@@ -113,8 +113,64 @@ export function initNav(){
     document.getElementById("cfgT").textContent = t.title;
     document.getElementById("cfgLangL").textContent = t.lang;
     document.getElementById("cfgNote").textContent = t.note;
+    paintAcct();
     document.getElementById("cfg").classList.add("on");
   }
+
+  /* 계정 칸 — 게스트에게는 랭킹 안내와 잇기 단추를 보여준다 */
+  function paintAcct(){
+    const ko = (window.__lang || "ko") === "ko";
+    const a = window.ACCOUNT;
+    const lab = document.getElementById("cfgAcctL");
+    const line = document.getElementById("cfgAcct");
+    const row = document.getElementById("cfgLinkRow");
+    const btn = document.getElementById("cfgLink");
+    if (!lab || !line || !row || !btn) return;
+    lab.textContent = ko ? "계정" : "Account";
+    if (!a || !a.signedIn){
+      line.textContent = ko ? "로그인하지 않았습니다" : "Not signed in";
+      row.hidden = true;
+      return;
+    }
+    if (a.guest){
+      line.textContent = ko
+        ? (a.name || "게스트") + " · 게스트 · 랭킹에 오르지 않습니다"
+        : (a.name || "Guest") + " · Guest · not on the leaderboard";
+      btn.textContent = ko ? "구글 계정 잇기" : "Link Google account";
+      row.hidden = false;
+    } else {
+      line.textContent = ko
+        ? (a.name || "") + " · 랭킹에 오릅니다"
+        : (a.name || "") + " · on the leaderboard";
+      row.hidden = true;
+    }
+  }
+  window.addEventListener("accountchange", () => {
+    const c = document.getElementById("cfg");
+    if (c && c.classList.contains("on")) paintAcct();
+  });
+
+  /* 게스트 → 구글 잇기 */
+  document.addEventListener("click", async e => {
+    if (!e.target.closest("#cfgLink")) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const btn = document.getElementById("cfgLink");
+    btn.disabled = true;
+    try {
+      const r = window.linkGoogle ? await window.linkGoogle() : null;
+      if (r && r.conflict){
+        const msg = ko
+          ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다. 계속할까요?"
+          : "That Google account already exists. Signing in will discard your guest progress. Continue?";
+        if (window.confirm(msg) && window.switchToGoogle) await window.switchToGoogle();
+      }
+    } catch(err){
+      window.alert(ko ? "잇기에 실패했습니다" : "Linking failed");
+      console.warn(err);
+    }
+    btn.disabled = false;
+    paintAcct();
+  });
   window.addEventListener("langchange", () => {
     if (document.getElementById("cfg").classList.contains("on")) openCfg();
   });

@@ -17,10 +17,12 @@ export function mount(root){
   const T = {
     ko:{eyebrow:"ZOO PRESIDENT", wordmark:"동물의 왕국", sub:"계급 카드게임",
         start:"구글로 시작하기", starting:"들어가는 중", enter:"게임 시작",
-        hintIn:"구글 계정으로 로그인합니다", hintErr:"로그인에 실패했습니다. 다시 시도해 주세요", hintNet:"인터넷 연결을 확인해 주세요"},
+        guest:"게스트로 시작하기",
+        hintIn:"구글로 로그인하면 랭킹에 오릅니다", hintErr:"로그인에 실패했습니다. 다시 시도해 주세요", hintNet:"인터넷 연결을 확인해 주세요"},
     en:{eyebrow:"CARD CLASH", wordmark:"Zoo President", sub:"Climbing card game",
         start:"Continue with Google", starting:"Signing in", enter:"Start game",
-        hintIn:"Sign in with your Google account", hintErr:"Sign-in failed. Please try again", hintNet:"Check your internet connection"}
+        guest:"Play as guest",
+        hintIn:"Sign in with Google to appear on the leaderboard", hintErr:"Sign-in failed. Please try again", hintNet:"Check your internet connection"}
   };
   let lang = window.__lang || "ko";
   
@@ -57,6 +59,8 @@ export function mount(root){
     document.getElementById("wordmark").textContent = t.wordmark;
     document.getElementById("sub").textContent = t.sub;
     document.getElementById("start").textContent = t.start;
+    const g = document.getElementById("testin");
+    if (g) g.textContent = t.guest;
     renderFan();
   }
   apply();
@@ -107,15 +111,14 @@ export function mount(root){
     }
     busy = false; paintEntry();
   }, true);
-  /* 시험용 로그인 — 내 컴퓨터에서만 */
+  /* 게스트로 시작 — 구글 계정 없이 바로 논다.
+     점수·티켓은 같지만 랭킹에는 안 오른다. 나중에 구글로 이으면 그대로 따라온다 */
   const tb = document.getElementById("testin");
   if (tb){
     tb.addEventListener("click", async e => {
       e.stopImmediatePropagation();
-      const nm = prompt("시험용 이름", "시험" + Math.floor(Math.random()*900+100));
-      if (nm === null) return;
       busy = true; paintEntry();
-      try { await window.signInTest(nm); }
+      try { await window.signInGuest(); }
       catch(err){
         const hint = document.getElementById("hint");
         hint.className = "hint hint--err";
@@ -128,7 +131,8 @@ export function mount(root){
   function showTest(){
     if (!tb) return;
     const a = window.ACCOUNT;
-    tb.hidden = !window.__isLocal || Boolean(a && a.signedIn);
+    tb.textContent = T[lang].guest;
+    tb.hidden = Boolean(a && a.signedIn);        /* 로그인하면 감춘다 */
   }
   window.addEventListener("accountready", showTest);
   window.addEventListener("accountchange", showTest);

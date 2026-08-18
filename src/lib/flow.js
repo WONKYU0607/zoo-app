@@ -270,7 +270,9 @@ function startCount(sec){
 function ensureTaxGiven(){
   const v = eng.engine.view;
   if (!v || v.phase !== "tax") return;
-  /* 선언을 안 하고 넘어가면 엔진이 계속 기다린다. 안 부른 것으로 처리한다 */
+  /* 선언을 안 하고 넘어가면 엔진이 계속 기다린다. 안 부른 것으로 처리한다.
+     엔진이 대신 정해 주지 않는 것은 일부러다 — 쥐고도 안 부르는 것이 전략이므로,
+     푸는 일은 화면(세금 화면 10초)과 여기(판으로 들어설 때)가 맡는다 */
   if (v.canDeclare) eng.passRev();
   if (!v.taxGive) return;
   const worst = c => (c >= 13 ? 99 : c);

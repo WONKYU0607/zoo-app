@@ -7,7 +7,7 @@
    - 티어는 1000점 단위 숫자 */
 import { ready, auth, db } from "./firebase.js";
 import { GoogleAuthProvider, signInWithPopup, signInAnonymously, signOut,
-         updateProfile, onAuthStateChanged } from "firebase/auth";
+         linkWithPopup, updateProfile, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, runTransaction,
          increment, serverTimestamp } from "firebase/firestore";
 
@@ -15,6 +15,8 @@ export const account = {
   uid: null, name: "", photo: "",
   score: 0, tier: 0, tickets: 5, ticketAt: 0, games: 0,
   loaded: false, signedIn: false,
+  /* 게스트(익명)로 들어왔는가. 게임·점수는 같지만 랭킹에는 안 오른다 */
+  guest: false,
 };
 
 export const TIER_STEP = 5000;
@@ -116,6 +118,50 @@ export async function signInTest(name){
   return loadProfile(Object.assign(cred.user, { displayName: want }));
 }
 
+/* 게스트로 시작 — 구글 계정 없이 바로 논다.
+   점수·티켓은 구글과 똑같이 쌓이지만 랭킹에는 안 오른다.
+   나중에 구글로 이으면 그동안의 점수를 그대로 가져간다. */
+export async function signInGuest(){
+  if (!ready) throw new Error("Firebase 설정이 없습니다");
+  const cred = await signInAnonymously(auth);
+  return loadProfile(cred.user);
+}
+
+/* 게스트 → 구글 잇기.
+   반드시 linkWithPopup 이어야 한다. signInWithPopup 을 부르면 새 계정으로
+   갈아타면서 게스트로 쌓은 점수가 통째로 버려진다. */
+export async function linkGoogle(){
+  if (!ready) throw new Error("Firebase 설정이 없습니다");
+  const user = auth.currentUser;
+  if (!user) throw new Error("로그인 상태가 아닙니다");
+  if (!user.isAnonymous) return { already: true };
+
+  const provider = new GoogleAuthProvider();
+  try {
+    const cred = await linkWithPopup(user, provider);
+    await updateDoc(doc(db, "users", cred.user.uid), { guest: false });
+    account.guest = false;
+    if (cred.user.photoURL) account.photo = cred.user.photoURL;
+    window.dispatchEvent(new Event("accountchange"));
+    return { linked: true };
+  } catch(err){
+    const code = String(err && err.code || "");
+    if (code === "auth/credential-already-in-use" ||
+        code === "auth/email-already-in-use" ||
+        code === "auth/account-exists-with-different-credential"){
+      /* 그 구글 계정이 이미 있다. 어느 쪽을 살릴지는 화면이 묻는다 */
+      return { conflict: true };
+    }
+    throw err;
+  }
+}
+
+/* 위 충돌에서 "기존 구글 계정으로 들어간다"를 고른 경우.
+   게스트로 쌓은 점수는 버려진다. */
+export async function switchToGoogle(){
+  return signInGoogle();
+}
+
 export async function signInGoogle(){
   if (!ready) throw new Error("Firebase 설정이 없습니다");
   const provider = new GoogleAuthProvider();
@@ -133,7 +179,8 @@ async function loadProfile(user){
   if (!snap.exists()){
     const name = await claimName(user.uid, user.displayName);
     const fresh = { name, score: 0, games: 0, tickets: TICKET_MAX,
-                    ticketAt: Date.now(), createdAt: serverTimestamp() };
+                    ticketAt: Date.now(), createdAt: serverTimestamp(),
+                    guest: Boolean(user.isAnonymous) };
     await setDoc(ref, fresh);
     Object.assign(account, fresh);
   } else {
@@ -148,6 +195,8 @@ async function loadProfile(user){
     account.ticketAt = r.at;
   }
   account.tier = tierOf(account.score);
+  /* 게스트인지는 로그인 상태가 진실이다. 문서 값은 따라온다 */
+  account.guest = Boolean(user.isAnonymous);
   account.signedIn = true;
   account.loaded = true;
   window.dispatchEvent(new Event("accountchange"));

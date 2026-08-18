@@ -3,7 +3,7 @@
 
    쓰는 법:  node test/engine.test.js [인원] [게임수]  */
 
-import { engine, onView, startLocal, stop, play, passTurn, give } from "../src/lib/engine.js";
+import { engine, onView, startLocal, stop, play, passTurn, give, declareRev, passRev } from "../src/lib/engine.js";
 
 const N     = Number(process.argv[2] || 6);
 const GAMES = Number(process.argv[3] || 5);
@@ -66,6 +66,12 @@ async function one(gi){
     const v = engine.view;
     if (!v){ await wait(5); continue; }
 
+    /* 혁명을 쥐었으면 정해야 한다. 안 정하면 엔진이 계속 기다린다
+       (쥐고도 안 부르는 것이 전략이라 엔진이 대신 정해 주지 않는다) */
+    if (v.canDeclare){
+      if (Math.random() < 0.5) declareRev(); else passRev();
+      await wait(5); continue;
+    }
     if (v.phase === "tax" && v.taxGive > 0){
       const hand = v.hand.slice().sort((a, b) => (isJ(b) ? 99 : b) - (isJ(a) ? 99 : a));
       give(hand.slice(0, v.taxGive));

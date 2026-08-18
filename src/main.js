@@ -1,7 +1,7 @@
 import "./state.js";
 import { initNav, OPT_HTML, CFG_HTML, GEAR } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, signInTest, isLocal, account, finishGame, useTicket, ticketLeft } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signInTest, isLocal, account, finishGame, useTicket, ticketLeft } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -56,6 +56,9 @@ initNav();
 window.ACCOUNT = account;
 window.signInGoogle = signInGoogle;
 window.signInTest = signInTest;
+window.signInGuest = signInGuest;
+window.linkGoogle = linkGoogle;
+window.switchToGoogle = switchToGoogle;
 window.__isLocal = isLocal;
 
 watchAuth().then(() => {
