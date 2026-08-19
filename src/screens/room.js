@@ -164,8 +164,7 @@ export function mount(root){
           (p.off || p.left ? '<span class="seat__off"></span>' : '') +
           '<span class="seat__n">' + p.name + '</span>' +
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
-        : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
-          '<span class="seat__n">' + L[lang].empty + '</span>';
+        : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>';
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");

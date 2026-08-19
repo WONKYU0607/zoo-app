@@ -3,8 +3,26 @@ import "./state.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
 export const OPT_HTML = "<div class=\"opts\" id=\"opts\" role=\"dialog\" aria-modal=\"true\"><div class=\"opts__v\" data-optclose></div><div class=\"opts__p\"><div class=\"opts__h\"><span id=\"optT\"></span><button class=\"opts__x\" data-optclose aria-label=\"close\">×</button></div><div class=\"opts__b\" id=\"optBody\"></div><div class=\"opts__f\"><button class=\"opts__go\" id=\"optGo\"></button></div></div></div>";
+export const PENCIL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" '
+  + 'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+  + '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>';
+
 export const CROWN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 17h16M4 17 3 7l4.5 3.5L12 5l4.5 5.5L21 7l-1 10"/></svg>';
-export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgAcctL\"></div><p class=\"cfg__n\" id=\"cfgAcct\"></p><div class=\"cfg__row\" id=\"cfgLinkRow\" hidden><button id=\"cfgLink\"></button></div><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
+/* 상단바 사자 프로필을 누르면 열리는 계정 창 */
+export const ACCT_HTML =
+  '<div class="cfg" id="acctBox" role="dialog" aria-modal="true">' +
+  '<div class="cfg__v" data-acctclose></div><div class="cfg__p">' +
+  '<div class="cfg__h"><span id="acBoxT"></span>' +
+  '<button class="cfg__x" data-acctclose aria-label="close">\u00D7</button></div>' +
+  '<div class="cfg__b">' +
+  '<div class="ac__name"><span id="acNick"></span>' +
+  '<button id="acName" class="ac__edit" aria-label="rename"></button></div>' +
+  '<p class="cfg__n" id="acLine"></p>' +
+  '<div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div>' +
+  '<div class="cfg__row"><button id="acOut"></button></div>' +
+  '</div></div></div>';
+
+export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
 
 export function initNav(){
   
@@ -114,8 +132,7 @@ export function initNav(){
     const t = CFG_T[window.__lang] || CFG_T.ko;
     document.getElementById("cfgT").textContent = t.title;
     document.getElementById("cfgLangL").textContent = t.lang;
-    document.getElementById("cfgNote").textContent = t.note;
-    paintAcct();
+    document.getElementById("cfgNote").textContent = "";   /* 설명글은 없앤다 */
     document.getElementById("cfg").classList.add("on");
   }
 
@@ -123,17 +140,17 @@ export function initNav(){
   function paintAcct(){
     const ko = (window.__lang || "ko") === "ko";
     const a = window.ACCOUNT;
-    const lab = document.getElementById("cfgAcctL");
-    const line = document.getElementById("cfgAcct");
-    const row = document.getElementById("cfgLinkRow");
-    let btn = document.getElementById("cfgLink");
+    const lab = document.getElementById("acBoxT");
+    const line = document.getElementById("acLine");
+    const row = document.getElementById("acLinkRow");
+    let btn = document.getElementById("acLink");
     if (!lab || !line || !row) return;
     /* 고르는 중이면 그대로 둔다. 안 그러면 다시 그릴 때 선택지가 사라진다 */
     if (conflictOn) return;
     /* 충돌 안내로 바꿔 놨으면 원래 단추로 되돌린다. 그다음에 다시 찾는다 */
-    if (!row.querySelector("#cfgLink")){
-      row.innerHTML = '<button id="cfgLink"></button>';
-      btn = document.getElementById("cfgLink");
+    if (!row.querySelector("#acLink")){
+      row.innerHTML = '<button id="acLink"></button>';
+      btn = document.getElementById("acLink");
     }
     if (!btn) return;
     lab.textContent = ko ? "계정" : "Account";
@@ -143,32 +160,25 @@ export function initNav(){
       return;
     }
     if (a.guest){
-      line.textContent = ko
-        ? (a.name || "게스트") + " · 게스트 · 랭킹에 오르지 않습니다"
-        : (a.name || "Guest") + " · Guest · not on the leaderboard";
+      line.textContent = ko ? "게스트 · 랭킹에 오르지 않습니다" : "Guest · not on the leaderboard";
       btn.textContent = ko ? "구글 계정 잇기" : "Link Google account";
       row.hidden = false;
     } else {
-      line.textContent = ko
-        ? (a.name || "") + " · 랭킹에 오릅니다"
-        : (a.name || "") + " · on the leaderboard";
+      line.textContent = ko ? "랭킹에 오릅니다" : "On the leaderboard";
       row.hidden = true;
     }
     /* 로그아웃 — 없으면 한 번 들어간 뒤로 아무것도 못 바꾼다 */
-    let out = document.getElementById("cfgOutRow");
-    if (!out){
-      out = document.createElement("div");
-      out.className = "cfg__row";
-      out.id = "cfgOutRow";
-      out.innerHTML = '<button id="cfgOut"></button>';
-      row.parentNode.insertBefore(out, row.nextSibling);
-    }
-    out.querySelector("#cfgOut").textContent = ko ? "로그아웃" : "Sign out";
-    out.hidden = false;
+    /* 이름 옆 연필을 눌러 바꾼다. 따로 단추를 두지 않는다 */
+    const nick = document.getElementById("acNick");
+    const pen = document.getElementById("acName");
+    if (nick) nick.textContent = a.name || (ko ? "이름없음" : "No name");
+    if (pen){ pen.innerHTML = PENCIL; pen.hidden = false; }
+    const outBtn = document.getElementById("acOut");
+    if (outBtn){ outBtn.textContent = ko ? "로그아웃" : "Sign out"; outBtn.hidden = false; }
   }
   window.addEventListener("accountchange", () => {
-    const c = document.getElementById("cfg");
-    if (c && c.classList.contains("on")) paintAcct();
+    const b = document.getElementById("acctBox");
+    if (b && b.classList.contains("on")) paintAcct();
   });
 
   /* 이미 있는 구글 계정이라 이을 수 없을 때.
@@ -179,42 +189,66 @@ export function initNav(){
   function showConflict(){
     conflictOn = true;
     const ko = (window.__lang || "ko") === "ko";
-    const box = document.getElementById("cfgLinkRow");
+    const box = document.getElementById("acLinkRow");
     if (!box) return;
     box.hidden = false;
     box.innerHTML =
       '<p class="cfg__n" style="margin:0 0 8px">' +
       (ko ? "이미 그 구글 계정이 있습니다. 그 계정으로 들어가면 게스트로 쌓은 점수는 사라집니다."
           : "That Google account already exists. Signing in will discard your guest progress.") +
-      '</p><button id="cfgSwitch">' +
+      '</p><button id="acSwitch">' +
       (ko ? "기존 계정으로 들어가기" : "Sign in to that account") +
-      '</button><button id="cfgKeep">' + (ko ? "취소" : "Cancel") + '</button>';
+      '</button><button id="acKeep">' + (ko ? "취소" : "Cancel") + '</button>';
   }
-  window.__showLinkConflict = showConflict;
+  window.__showLinkConflict = () => { openAcct(); showConflict(); };
+
+  /* 상단바 사자 프로필 → 계정 창 */
+  function openAcct(){
+    let box = document.getElementById("acctBox");
+    if (!box){
+      const st = document.getElementById("stage");
+      if (!st) return;
+      st.insertAdjacentHTML("beforeend", ACCT_HTML);
+      box = document.getElementById("acctBox");
+    }
+    paintAcct();
+    box.classList.add("on");
+  }
+  function closeAcct(){
+    const b = document.getElementById("acctBox");
+    if (b) b.classList.remove("on");
+  }
+  window.__openAcct = openAcct;
+
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-acctclose]")){ closeAcct(); return; }
+    if (e.target.closest("#acctProfile") || e.target.closest("[data-acctopen]")) openAcct();
+    if (e.target.closest("#acName") && window.__askName) window.__askName();
+  });
 
   document.addEventListener("click", async e => {
-    if (e.target.closest("#cfgSwitch")){
+    if (e.target.closest("#acSwitch")){
       conflictOn = false;
       if (window.switchToGoogle) await window.switchToGoogle();
       paintAcct();
       return;
     }
-    if (e.target.closest("#cfgKeep")){ conflictOn = false; paintAcct(); return; }
-    if (e.target.closest("#cfgOut")){
+    if (e.target.closest("#acKeep")){ conflictOn = false; paintAcct(); return; }
+    if (e.target.closest("#acOut")){
       const ko2 = (window.__lang || "ko") === "ko";
       conflictOn = false;
       try { if (window.signOutNow) await window.signOutNow(); }
       catch(err){ window.alert((ko2 ? "로그아웃에 실패했습니다\n" : "Sign out failed\n") + String(err && err.code || err)); }
-      document.getElementById("cfg").classList.remove("on");
+      closeAcct();
       go("entry");
     }
   });
 
   /* 게스트 → 구글 잇기 */
   document.addEventListener("click", async e => {
-    if (!e.target.closest("#cfgLink")) return;
+    if (!e.target.closest("#acLink")) return;
     const ko = (window.__lang || "ko") === "ko";
-    const btn = document.getElementById("cfgLink");
+    const btn = document.getElementById("acLink");
     btn.disabled = true;
     try {
       const r = window.linkGoogle ? await window.linkGoogle() : null;

@@ -10,7 +10,8 @@
 #room .btn-primary,#room .waiting,
 #draw .bt-main,#tax .bt-main,#tax .bt-ghost,
 #table .acts button,#result .bt-main,#result .bt-ghost,
-#opts .opts__go,#cfg .cfg__row button{
+#opts .opts__go,#cfg .cfg__row button,#acctBox .cfg__row button,
+#rank #rkTabs button,#lobby .bt-rank,#nkBox .cfg__row button{
   border:13px solid transparent !important;
   border-image:var(--fr-btn) 33 fill stretch !important;
   border-image-width:13px !important;
@@ -25,7 +26,8 @@
 #lobby .btn-primary:active,#lobby .btn-second:active,
 #room .btn-primary:active,#draw .bt-main:active,#tax .bt-main:active,
 #tax .bt-ghost:active,#table .acts button:active,#result .bt-main:active,
-#result .bt-ghost:active,#opts .opts__go:active{
+#result .bt-ghost:active,#opts .opts__go:active,
+#rank #rkTabs button:active,#lobby .bt-rank:active{
   border-image:var(--fr-btn-down) 33 fill stretch !important;
   transform:translateY(1px);
 }

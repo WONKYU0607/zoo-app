@@ -76,29 +76,29 @@ check("게스트 로그인이 불렸다", guestCalled === 1);
 check("들어가면 게스트 단추가 사라진다", q("#testin").hidden);
 
 /* 설정 창의 계정 칸 */
-document.body.insertAdjacentHTML("beforeend", "<button data-cfgopen>설정</button>");
-document.querySelector("[data-cfgopen]").click();
+document.body.insertAdjacentHTML("beforeend", "<button data-acctopen>계정</button>");
+document.querySelector("[data-acctopen]").click();
 await wait(100);
-check("설정에 계정 칸이 있다", (q("#cfgAcctL").textContent || "") === "계정", q("#cfgAcctL").textContent);
-check("게스트에게 랭킹 안내가 뜬다", (q("#cfgAcct").textContent || "").includes("랭킹에 오르지 않습니다"),
-      q("#cfgAcct").textContent);
-check("잇기 단추가 보인다", !q("#cfgLinkRow").hidden && q("#cfgLink").textContent.includes("구글"),
-      q("#cfgLink").textContent);
+check("계정 창이 열린다", (q("#acBoxT").textContent || "") === "계정", q("#acBoxT").textContent);
+check("게스트에게 랭킹 안내가 뜬다", (q("#acLine").textContent || "").includes("랭킹에 오르지 않습니다"),
+      q("#acLine").textContent);
+check("잇기 단추가 보인다", !q("#acLinkRow").hidden && q("#acLink").textContent.includes("구글"),
+      q("#acLink").textContent);
 
 /* 잇기 성공 */
-q("#cfgLink").click();
+q("#acLink").click();
 await wait(200);
 check("잇기가 불렸다", linkCalled === 1);
 
 /* 팝업이 막혀 주소 이동으로 넘어가는 경우엔 아무 말도 하지 않는다 */
 alerted = ""; linkResult = { redirecting: true };
-q("#cfgLink").click(); await wait(150);
+q("#acLink").click(); await wait(150);
 check("주소 이동으로 넘어갈 때는 조용하다", alerted === "", alerted);
 
 /* 실패하면 이유를 그대로 보여준다 */
 alerted = "";
 window.linkGoogle = async () => { const e = new Error("x"); e.code = "auth/popup-blocked"; throw e; };
-q("#cfgLink").click(); await wait(150);
+q("#acLink").click(); await wait(150);
 check("실패하면 이유를 알려준다", alerted.includes("auth/popup-blocked"), alerted);
 window.linkGoogle = async () => { linkCalled++; return { linked: true }; };
 
@@ -108,11 +108,11 @@ let confirmCalled = 0, switched = 0;
 window.confirm = () => { confirmCalled++; return true; };
 window.switchToGoogle = async () => { switched++; };
 window.linkGoogle = async () => ({ conflict: true });
-q("#cfgLink").click(); await wait(150);
+q("#acLink").click(); await wait(150);
 check("충돌이면 confirm 을 안 쓴다", confirmCalled === 0, confirmCalled + "번 불림");
-check("화면 안에 고르는 단추가 뜬다", Boolean(q("#cfgSwitch")) && Boolean(q("#cfgKeep")),
-      q("#cfgLinkRow").textContent.replace(/\s+/g, " ").slice(0, 40));
-if (q("#cfgSwitch")) q("#cfgSwitch").click();
+check("화면 안에 고르는 단추가 뜬다", Boolean(q("#acSwitch")) && Boolean(q("#acKeep")),
+      q("#acLinkRow").textContent.replace(/\s+/g, " ").slice(0, 40));
+if (q("#acSwitch")) q("#acSwitch").click();
 await wait(150);
 check("기존 계정으로 들어가기가 불린다", switched === 1);
 
@@ -120,9 +120,10 @@ check("기존 계정으로 들어가기가 불린다", switched === 1);
 Object.assign(window.ACCOUNT, { signedIn: true, guest: false, name: "원규" });
 window.dispatchEvent(new Event("accountchange"));
 await wait(100);
-check("구글 사용자에게는 잇기 단추가 없다", q("#cfgLinkRow").hidden);
+check("구글 사용자에게는 잇기 단추가 없다", q("#acLinkRow").hidden);
 check("구글 사용자에게는 랭킹에 오른다고 알린다",
-      (q("#cfgAcct").textContent || "").includes("랭킹에 오릅니다"), q("#cfgAcct").textContent);
+      (q("#acLine").textContent || "").includes("랭킹에 오릅니다"), q("#acLine").textContent);
+check("이름 옆에 연필이 있다", Boolean(q("#acName")) && q("#acName").innerHTML.includes("svg"));
 
 /* 로그아웃 — 없어서 한 번 들어가면 아무것도 못 바꾸던 문제 */
 let outCalled = 0;
@@ -131,8 +132,8 @@ window.signOutNow = async () => { outCalled++; window.ACCOUNT = { signedIn: fals
 Object.assign(window.ACCOUNT, { signedIn: true, guest: true, name: "손님123" });
 window.dispatchEvent(new Event("accountchange"));
 await wait(80);
-check("설정에 로그아웃 단추가 있다", Boolean(q("#cfgOut")), q("#cfgOut") ? q("#cfgOut").textContent : "없음");
-q("#cfgOut").click();
+check("계정 창에 로그아웃 단추가 있다", Boolean(q("#acOut")), q("#acOut") ? q("#acOut").textContent : "없음");
+q("#acOut").click();
 await wait(150);
 check("로그아웃이 불린다", outCalled === 1);
 check("로그아웃하면 첫 화면으로", document.getElementById("entry").classList.contains("is-on"));

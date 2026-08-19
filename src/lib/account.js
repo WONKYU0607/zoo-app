@@ -17,6 +17,7 @@ export const account = {
   uid: null, name: "", photo: "",
   score: 0, tier: 0, tickets: 5, ticketAt: 0, games: 0,
   wk: 0, mo: 0, wkKey: "", moKey: "",
+  needName: false,        /* 구글로 처음 들어왔으면 별명을 정해야 한다 */
   loaded: false, signedIn: false,
   /* 게스트(익명)로 들어왔는가. 게임·점수는 같지만 랭킹에는 안 오른다 */
   guest: false,
@@ -75,6 +76,73 @@ export function ticketLeft(){
 
 function today(){ return new Date().toISOString().slice(0, 10); }
 const key = s => s.trim().toLowerCase();
+
+/* ---------- 별명 규칙 ----------
+   한글만 쓰면 6자, 영문·숫자만 쓰면 8자. 섞으면 그 사이.
+   (한글 한 자 = 8/6 칸, 나머지 한 자 = 1칸, 총 8칸) */
+const HANGUL = /[\u3131-\u318E\uAC00-\uD7A3]/;
+export function nameCost(str){
+  let cost = 0;
+  for (const ch of String(str || "")){
+    cost += HANGUL.test(ch) ? (8 / 6) : 1;
+  }
+  return cost;
+}
+export const NAME_MAX = 8;
+
+/* 쓸 수 있는 이름인지. 안 되면 왜 안 되는지 돌려준다 */
+export function checkName(str){
+  const v = String(str || "").trim();
+  if (!v) return { ok: false, why: "empty" };
+  if (/\s/.test(v)) return { ok: false, why: "space" };
+  for (const ch of v){
+    if (!HANGUL.test(ch) && !/[A-Za-z0-9]/.test(ch)) return { ok: false, why: "char" };
+  }
+  if (nameCost(v) > NAME_MAX + 0.001) return { ok: false, why: "long" };
+  return { ok: true, name: v };
+}
+
+/* 게스트 번호. 들어온 순서대로 매긴다 — 게스트168 처럼 */
+async function nextGuestName(){
+  const ref = doc(db, "meta", "guest");
+  let no = 0;
+  await runTransaction(db, async tx => {
+    const got = await tx.get(ref);
+    no = ((got.exists() && Number(got.data().seq)) || 0) + 1;
+    tx.set(ref, { seq: no }, { merge: true });
+  });
+  return "게스트" + no;
+}
+
+/* 별명 정하기. 이미 쓰는 이름이면 taken 을 돌려준다 */
+export async function setNickname(wanted){
+  if (!ready || !account.uid) throw new Error("로그인 상태가 아닙니다");
+  const c = checkName(wanted);
+  if (!c.ok) return { ok: false, why: c.why };
+  const want = c.name;
+  const ref = doc(db, "names", key(want));
+  try {
+    await runTransaction(db, async tx => {
+      const got = await tx.get(ref);
+      if (got.exists() && got.data().uid !== account.uid) throw new Error("taken");
+      tx.set(ref, { uid: account.uid, name: want });
+    });
+  } catch(e){
+    if (String(e.message) === "taken") return { ok: false, why: "taken" };
+    throw e;
+  }
+  const old = account.name;
+  await updateDoc(doc(db, "users", account.uid), { name: want });
+  try { await updateProfile(auth.currentUser, { displayName: want }); } catch(e){}
+  account.name = want;
+  account.needName = false;
+  try { await updateDoc(doc(db, "users", account.uid), { needName: false }); } catch(e){}
+  if (old && key(old) !== key(want)){
+    try { await setDoc(doc(db, "names", key(old)), { uid: null, name: old }); } catch(e){}
+  }
+  window.dispatchEvent(new Event("accountchange"));
+  return { ok: true, name: want };
+}
 
 /* 이름을 선점한다. 이미 있으면 숫자를 늘려가며 다시 시도 */
 async function claimName(uid, wanted){
@@ -226,15 +294,26 @@ async function loadProfile(user){
   const snap = await getDoc(ref);
 
   if (!snap.exists()){
-    const name = await claimName(user.uid, user.displayName);
+    /* 게스트는 들어온 순서대로 번호를 매긴다.
+       구글은 이름을 직접 정하게 하므로 임시 이름만 걸어 둔다 */
+    const guest = Boolean(user.isAnonymous);
+    let name;
+    if (guest){
+      try { name = await nextGuestName(); }
+      catch(e){ name = "게스트" + Math.floor(Math.random() * 9000 + 1000); }
+      name = await claimName(user.uid, name);
+    } else {
+      name = await claimName(user.uid, "새사용자");
+    }
     const fresh = { name, score: 0, games: 0, tickets: TICKET_MAX,
                     ticketAt: Date.now(), createdAt: serverTimestamp(),
-                    guest: Boolean(user.isAnonymous) };
+                    guest, needName: !guest };
     await setDoc(ref, fresh);
     Object.assign(account, fresh);
   } else {
     const d = snap.data();
     Object.assign(account, d);
+    account.needName = Boolean(d.needName);
     /* 지난 시간만큼 티켓을 채운다 */
     const r = refill(d.tickets, d.ticketAt);
     if (r.tickets !== d.tickets || !d.ticketAt){
@@ -246,9 +325,13 @@ async function loadProfile(user){
   account.tier = tierOf(account.score);
   /* 게스트인지는 로그인 상태가 진실이다. 문서 값은 따라온다 */
   account.guest = Boolean(user.isAnonymous);
+  /* 구글인데 아직 별명을 안 정했으면 물어봐야 한다 */
+  account.needName = !account.guest && Boolean(account.needName);
   account.signedIn = true;
   account.loaded = true;
   window.dispatchEvent(new Event("accountchange"));
+  /* 구글로 처음 들어온 사람은 별명부터 정하게 한다 */
+  if (account.needName && typeof window !== "undefined" && window.__askName) window.__askName();
   return account;
 }
 

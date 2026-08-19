@@ -63,7 +63,7 @@ export function mount(root){
     /* 방금 끝난 판을 세워 두는 동안에는 새 판 상태를 그리지 않는다.
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over) return;
-    SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [] }));
+    SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -93,7 +93,9 @@ export function mount(root){
         ghost = (v.lastTable.length ? v.lastTable : trick).map(t => ({
           by: t.by, num: t.num, count: t.count, cards: t.cards.slice(),
         }));
-        animated = 0;
+        /* 이미 화면에 있던 것은 다시 날아오면 안 된다.
+           전원이 패스해 바닥이 비워질 때 앞서 낸 카드가 또 날아오던 문제 */
+        animated = Math.min(animated, ghost.length);
         if (holdPile) clearTimeout(holdPile);
         holdPile = setTimeout(() => { holdPile = null; ghost = []; draw(); }, 2000);
       }
@@ -131,12 +133,14 @@ export function mount(root){
     const lr = v.lastRound;
     SEATS = v.seats.map((x, i) => ({
       n: x.name, c: i === lr.order[lr.order.length - 1] ? x.c : 0, s: "", hold: [],
+      av: x.seat,
     }));
     hand = [];
     finish = lr.order.slice();
     turn = -1; busy = true;
     trick = lr.table.map(t => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
-    animated = 0; spread = false;
+    animated = Math.max(0, trick.length - 1);   /* 마지막 한 수만 날아온다 */
+    spread = false;
     draw();
     if (timerId) clearTimeout(timerId);
     setTimeout(() => {
@@ -312,7 +316,8 @@ export function mount(root){
       const tg = T[lang];
       const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";   /* 차례는 테두리로 알린다 */
       d.innerHTML = (tag ? '<span class="seat__tag">' + tag + '</span>' : '') +
-        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i] + ')"></span>' +
+        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
+          HEADS[(s.av == null ? i : s.av) % HEADS.length] + ')"></span>' +
         '<span class="seat__n">' + (s.n || "") + '</span>' +
         (i === 0 ? '' : fanHTML(s.c)) +
         '<span class="seat__c">' + T[lang].left(s.c) + '</span>';

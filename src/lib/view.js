@@ -39,6 +39,9 @@ export function screenView(G, ctx, myID, names){
   for (let seat = 0; seat < n; seat++){
     const pos = toScreen(seat, me, n);
     seats[pos] = {
+      /* 엔진 자리 번호. 얼굴 그림은 이 번호로 골라야 사람을 따라간다 —
+         화면 위치로 고르면 판이 바뀔 때 얼굴만 그 자리에 남는다 */
+      seat,
       name: nm[seat] || "",
       c: G.counts[seat],
       s: G.passed[seat] ? "pass" : "",

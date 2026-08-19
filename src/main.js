@@ -1,7 +1,7 @@
 import "./state.js";
-import { initNav, OPT_HTML, CFG_HTML, GEAR, CROWN } from "./nav.js";
+import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, GEAR, CROWN } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
-import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -52,20 +52,19 @@ function build(){
       b.innerHTML = GEAR;
       el.replaceWith(b);
     });
-    /* 로비 상단바 톱니 옆에 랭킹 단추를 붙인다 */
+    /* 로비 상단바 바로 아래에 랭킹 단추. 글자를 같이 넣는다 */
     if (id === "lobby"){
-      const gear = sec.querySelector("[data-cfgopen]");
-      if (gear && !sec.querySelector("[data-rankopen]")){
-        const r = document.createElement("button");
-        r.className = gear.className || "top__cfg";
-        r.setAttribute("data-rankopen", "");
-        r.setAttribute("aria-label", "leaderboard");
-        r.innerHTML = CROWN;
-        gear.parentNode.insertBefore(r, gear.nextSibling);
+      const bar = sec.querySelector(".bar");
+      if (bar && !sec.querySelector("[data-rankopen]")){
+        const wrap = document.createElement("div");
+        wrap.className = "rankbar";
+        wrap.innerHTML = '<button class="bt-rank" data-rankopen>' + CROWN +
+          '<span id="rankLabel">랭킹</span></button>';
+        bar.parentNode.insertBefore(wrap, bar.nextSibling);
       }
     }
   });
-  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML);
+  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML);
 }
 
 build();
@@ -82,10 +81,13 @@ window.signInGuest = signInGuest;
 window.linkGoogle = linkGoogle;
 window.switchToGoogle = switchToGoogle;
 window.signOutNow = signOutNow;
+window.setNickname = setNickname;
 window.__isLocal = isLocal;
 
 watchAuth().then(() => {
   window.dispatchEvent(new Event("accountready"));
+  /* 구글로 처음 들어왔으면 별명부터 정한다 */
+  if (account.needName && window.__askName) window.__askName();
   /* 팝업이 막혀 주소 이동으로 다녀온 경우의 뒤처리 */
   if (pending.conflict){
     pending.conflict = false;
