@@ -1,3017 +1,3 @@
-var __defProp = Object.defineProperty;
-var __export = (target, all) => {
-  for (var name4 in all)
-    __defProp(target, name4, { get: all[name4], enumerable: true });
-};
-
-// src/screens/_markup.js
-var MARKUP = {
-  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
-  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
-  "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
-  "table": `<main class="screen">
-  <div class="bar">
-    <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
-    <div class="bar__r" id="round"></div>
-    <div style="display:flex;align-items:center;gap:9px">
-      <div class="lang" id="lang">
-        <button data-l="ko" aria-pressed="true">\uD55C</button>
-        <button data-l="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="ring" id="ring">
-    <div class="stage"><div class="plane">
-      <div class="felt"></div>
-      <div class="pile" id="pile"></div>
-      <div id="seats"></div>
-    </div></div>
-  </div>
-
-  <div class="need" id="need"></div>
-  <div class="timer" id="timer"><i></i></div>
-  <div class="hand" id="hand"></div>
-  <div class="acts">
-    <button class="bt-pass" id="auto">\uC790\uB3D9</button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
-    <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
-  </div>
-</main>
-
-<div id="flash" style="position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);
-  padding:12px 22px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
-  font-family:'Gowun Batang',serif;font-weight:700;font-size:16px;opacity:0;pointer-events:none;
-  transition:opacity .2s ease;z-index:50"></div>`,
-  "tax": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div style="display:flex;gap:6px">\n      <div class="lang" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="ring">\n    <div class="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="fx" id="fx"></div>\n      <div class="flash" id="flash"></div>\n      <div class="mid" id="mid"></div>\n    </div>\n  </div>\n\n  <div class="hint" id="hint"></div>\n  <div class="hand" id="hand"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="back"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>',
-  "result": '<main class="screen">\n  <div class="lang" id="lang">\n    <button data-l="ko" aria-pressed="true">\uD55C</button>\n    <button data-l="en" aria-pressed="false">EN</button>\n  </div>\n  <div class="head">\n    <div class="head__k" id="kicker"></div>\n    <div class="head__t" id="title"></div>\n    <div class="head__s" id="sub"></div>\n  </div>\n  <div class="legend" id="legend"></div>\n  <div class="list" id="list"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="quit"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>'
-};
-
-// src/state.js
-var opts = { cap: 4, rounds: 3, tax: true, clear2: false, seated: 0 };
-var game = {
-  N: 6,
-  roundNo: 1,
-  names: [],
-  namesEn: [],
-  hold: null,
-  /* 자리별 손패 */
-  order: null,
-  /* 이번 판 순서 (앞이 선) */
-  finish: null,
-  /* 지난 판 완주 순서 */
-  score: []
-};
-if (typeof window !== "undefined") {
-  window.__opts = opts;
-  window.GAME = game;
-}
-
-// src/nav.js
-var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
-var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
-var PENCIL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>';
-var CROWN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 17h16M4 17 3 7l4.5 3.5L12 5l4.5 5.5L21 7l-1 10"/></svg>';
-var ACCT_HTML = '<div class="cfg" id="acctBox" role="dialog" aria-modal="true"><div class="cfg__v" data-acctclose></div><div class="cfg__p"><div class="cfg__h"><span id="acBoxT"></span><button class="cfg__x" data-acctclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="ac__name"><span id="acNick"></span><button id="acName" class="ac__edit" aria-label="rename"></button></div><p class="cfg__n" id="acLine"></p><div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div><div class="cfg__row"><button id="acOut"></button></div></div></div></div>';
-var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
-function initNav() {
-  window.__lang = function() {
-    try {
-      const v = localStorage.getItem("zk_lang");
-      if (v === "ko" || v === "en") return v;
-    } catch (e) {
-    }
-    const n = (navigator.language || navigator.userLanguage || "ko").toLowerCase();
-    return n.indexOf("ko") === 0 ? "ko" : "en";
-  }();
-  window.setLang = (l) => {
-    window.__lang = l;
-    try {
-      localStorage.setItem("zk_lang", l);
-    } catch (e) {
-    }
-    document.documentElement.lang = l;
-    document.querySelectorAll("[data-l]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.l === l)));
-    window.dispatchEvent(new Event("langchange"));
-  };
-  document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-l]");
-    if (b) window.setLang(b.dataset.l);
-    if (e.target.closest("[data-rankopen]")) go("rank");
-    if (e.target.closest("[data-cfgopen]")) openCfg();
-    if (e.target.closest("[data-cfgclose]")) document.getElementById("cfg").classList.remove("on");
-  });
-  window.__opts = window.__opts || { cap: 4, rounds: 3, tax: true, clear2: false };
-  let optMode = "create";
-  const OPT_T = {
-    ko: {
-      create: "\uBC29 \uB9CC\uB4E4\uAE30",
-      edit: "\uBC29 \uC124\uC815",
-      goCreate: "\uBC29 \uB9CC\uB4E4\uAE30",
-      goEdit: "\uD655\uC778",
-      cap: ["\uBC29 \uC778\uC6D0", "4\uBA85 \u2013 8\uBA85"],
-      rnd: ["\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815", "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791"],
-      tax: ["\uC138\uAE08\uACFC \uD601\uBA85", "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4."],
-      cut: ["2\uBC88 \uCEF7", "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4."],
-      unit: "\uD310"
-    },
-    en: {
-      create: "Create a room",
-      edit: "Room settings",
-      goCreate: "Create room",
-      goEdit: "Done",
-      cap: ["Table size", "4 \u2013 8 players"],
-      rnd: ["Number of rounds", "Three at least"],
-      tax: ["Tax and revolution", "Cards change hands by standing, and two jokers overturn it."],
-      cut: ["Two-cut", "Playing a 2 clears the pile and you lead again."],
-      unit: ""
-    }
-  };
-  function optRow(pair, right) {
-    return '<div class="mk__row"><div><div class="mk__t">' + pair[0] + '</div><div class="mk__d">' + pair[1] + "</div></div>" + right + "</div>";
-  }
-  function optStep(k2, v, lo, hi, unit) {
-    return '<div class="mk__st"><button data-opt="' + k2 + '-"' + (v <= lo ? " disabled" : "") + ">\u2212</button><span>" + v + (unit || "") + '</span><button data-opt="' + k2 + '+"' + (v >= hi ? " disabled" : "") + ">+</button></div>";
-  }
-  function optSw(k2, on2) {
-    return '<button class="mk__sw" data-opt="' + k2 + '" role="switch" aria-checked="' + on2 + '"></button>';
-  }
-  function optRender() {
-    const t = OPT_T[window.__lang] || OPT_T.ko, o = window.__opts;
-    const mk = optMode === "create";
-    document.getElementById("optT").textContent = mk ? t.create : t.edit;
-    document.getElementById("optGo").textContent = mk ? t.goCreate : t.goEdit;
-    document.getElementById("optBody").innerHTML = optRow(t.cap, optStep("cap", o.cap, 4, 8)) + optRow(t.rnd, optStep("rnd", o.rounds, 3, 99, t.unit)) + optRow(t.tax, optSw("tax", o.tax)) + optRow(t.cut, optSw("cut", o.clear2));
-  }
-  function openOpts(mode) {
-    optMode = mode;
-    optRender();
-    document.getElementById("opts").classList.add("on");
-  }
-  document.addEventListener("click", (e) => {
-    const k2 = e.target.closest("[data-opt]");
-    if (k2) {
-      const o = window.__opts, v = k2.dataset.opt;
-      if (v === "cap-") o.cap = Math.max(4, o.cap - 1);
-      if (v === "cap+") o.cap = Math.min(8, o.cap + 1);
-      if (v === "rnd-") o.rounds = Math.max(3, o.rounds - 1);
-      if (v === "rnd+") o.rounds = o.rounds + 1;
-      if (v === "tax") o.tax = !o.tax;
-      if (v === "cut") o.clear2 = !o.clear2;
-      optRender();
-    }
-    if (e.target.closest("[data-optclose]")) document.getElementById("opts").classList.remove("on");
-    if (e.target.closest("[data-optopen]")) openOpts("edit");
-  });
-  document.getElementById("optGo").addEventListener("click", () => {
-    document.getElementById("opts").classList.remove("on");
-    if (optMode === "create") {
-      if (window.__createRoom) {
-        window.__createRoom().then((code) => {
-          if (code) go("room");
-        });
-      } else setTimeout(() => go("room"), 80);
-    } else {
-      window.dispatchEvent(new Event("optschange"));
-      if (window.__saveOpts) window.__saveOpts();
-    }
-  });
-  window.addEventListener("langchange", () => {
-    if (document.getElementById("opts").classList.contains("on")) optRender();
-  });
-  const CFG_T = {
-    ko: {
-      title: "\uC124\uC815",
-      lang: "\uC5B8\uC5B4",
-      note: "\uCC98\uC74C \uB4E4\uC5B4\uC624\uBA74 \uAE30\uAE30 \uC5B8\uC5B4\uC5D0 \uB9DE\uCDB0 \uC790\uB3D9\uC73C\uB85C \uC815\uD574\uC9D1\uB2C8\uB2E4. \uC5EC\uAE30\uC11C \uBC14\uAFB8\uBA74 \uADF8 \uC120\uD0DD\uC744 \uAE30\uC5B5\uD569\uB2C8\uB2E4."
-    },
-    en: {
-      title: "Settings",
-      lang: "LANGUAGE",
-      note: "The game picks your device language on first visit. Changing it here is remembered."
-    }
-  };
-  function openCfg() {
-    const t = CFG_T[window.__lang] || CFG_T.ko;
-    document.getElementById("cfgT").textContent = t.title;
-    document.getElementById("cfgLangL").textContent = t.lang;
-    document.getElementById("cfgNote").textContent = "";
-    document.getElementById("cfg").classList.add("on");
-  }
-  function paintAcct() {
-    const ko = (window.__lang || "ko") === "ko";
-    const a = window.ACCOUNT;
-    const lab = document.getElementById("acBoxT");
-    const line = document.getElementById("acLine");
-    const row = document.getElementById("acLinkRow");
-    let btn = document.getElementById("acLink");
-    if (!lab || !line || !row) return;
-    if (conflictOn) return;
-    if (!row.querySelector("#acLink")) {
-      row.innerHTML = '<button id="acLink"></button>';
-      btn = document.getElementById("acLink");
-    }
-    if (!btn) return;
-    lab.textContent = ko ? "\uACC4\uC815" : "Account";
-    if (!a || !a.signedIn) {
-      line.textContent = ko ? "\uB85C\uADF8\uC778\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4" : "Not signed in";
-      row.hidden = true;
-      return;
-    }
-    if (a.guest) {
-      line.textContent = ko ? "\uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : "Guest \xB7 not on the leaderboard";
-      btn.textContent = ko ? "\uAD6C\uAE00 \uACC4\uC815 \uC787\uAE30" : "Link Google account";
-      row.hidden = false;
-    } else {
-      line.textContent = ko ? "\uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : "On the leaderboard";
-      row.hidden = true;
-    }
-    const nick = document.getElementById("acNick");
-    const pen = document.getElementById("acName");
-    if (nick) nick.textContent = a.name || (ko ? "\uC774\uB984\uC5C6\uC74C" : "No name");
-    if (pen) {
-      pen.innerHTML = PENCIL;
-      pen.hidden = false;
-    }
-    const outBtn = document.getElementById("acOut");
-    if (outBtn) {
-      outBtn.textContent = ko ? "\uB85C\uADF8\uC544\uC6C3" : "Sign out";
-      outBtn.hidden = false;
-    }
-  }
-  window.addEventListener("accountchange", () => {
-    const b = document.getElementById("acctBox");
-    if (b && b.classList.contains("on")) paintAcct();
-  });
-  let conflictOn = false;
-  function showConflict() {
-    conflictOn = true;
-    const ko = (window.__lang || "ko") === "ko";
-    const box = document.getElementById("acLinkRow");
-    if (!box) return;
-    box.hidden = false;
-    box.innerHTML = '<p class="cfg__n" style="margin:0 0 8px">' + (ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4." : "That Google account already exists. Signing in will discard your guest progress.") + '</p><button id="acSwitch">' + (ko ? "\uAE30\uC874 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uAE30" : "Sign in to that account") + '</button><button id="acKeep">' + (ko ? "\uCDE8\uC18C" : "Cancel") + "</button>";
-  }
-  window.__showLinkConflict = () => {
-    openAcct();
-    showConflict();
-  };
-  function openAcct() {
-    let box = document.getElementById("acctBox");
-    if (!box) {
-      const st2 = document.getElementById("stage");
-      if (!st2) return;
-      st2.insertAdjacentHTML("beforeend", ACCT_HTML);
-      box = document.getElementById("acctBox");
-    }
-    paintAcct();
-    box.classList.add("on");
-  }
-  function closeAcct() {
-    const b = document.getElementById("acctBox");
-    if (b) b.classList.remove("on");
-  }
-  window.__openAcct = openAcct;
-  document.addEventListener("click", (e) => {
-    if (e.target.closest("[data-acctclose]")) {
-      closeAcct();
-      return;
-    }
-    if (e.target.closest("#acctProfile") || e.target.closest("[data-acctopen]")) openAcct();
-    if (e.target.closest("#acName") && window.__askName) window.__askName();
-  });
-  document.addEventListener("click", async (e) => {
-    if (e.target.closest("#acSwitch")) {
-      conflictOn = false;
-      if (window.switchToGoogle) await window.switchToGoogle();
-      paintAcct();
-      return;
-    }
-    if (e.target.closest("#acKeep")) {
-      conflictOn = false;
-      paintAcct();
-      return;
-    }
-    if (e.target.closest("#acOut")) {
-      const ko2 = (window.__lang || "ko") === "ko";
-      conflictOn = false;
-      try {
-        if (window.signOutNow) await window.signOutNow();
-      } catch (err) {
-        window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
-      }
-      closeAcct();
-      go("entry");
-    }
-  });
-  document.addEventListener("click", async (e) => {
-    if (!e.target.closest("#acLink")) return;
-    const ko = (window.__lang || "ko") === "ko";
-    const btn = document.getElementById("acLink");
-    btn.disabled = true;
-    try {
-      const r = window.linkGoogle ? await window.linkGoogle() : null;
-      if (r && r.already) {
-        window.alert(ko ? "\uC774\uBBF8 \uAD6C\uAE00 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD574 \uC788\uC2B5\uB2C8\uB2E4" : "Already signed in with Google");
-      } else if (r && r.redirecting) {
-      } else if (r && r.conflict) {
-        showConflict();
-      }
-    } catch (err) {
-      const code = String(err && err.code || err && err.message || err);
-      window.alert((ko ? "\uC787\uAE30\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Linking failed\n") + code);
-      console.warn(err);
-    }
-    btn.disabled = false;
-    paintAcct();
-  });
-  window.addEventListener("langchange", () => {
-    if (document.getElementById("cfg").classList.contains("on")) openCfg();
-  });
-  window.setLang(window.__lang);
-  window.__goto = (id) => go(id);
-  window.__toTable = () => {
-    window.__fresh = false;
-    go("table");
-  };
-  function go(id) {
-    if (id === "draw" && window.__bootDraw) window.__bootDraw();
-    if (id === "table" && window.__bootTable) {
-      window.__bootTable(window.__fresh !== false);
-      window.__fresh = false;
-    }
-    if (id === "tax" && window.__bootTax) window.__bootTax();
-    if (id === "result" && window.__bootResult) window.__bootResult();
-    if (id === "rank" && window.__bootRank) window.__bootRank();
-    document.querySelectorAll(".page").forEach((p) => p.classList.remove("is-on"));
-    document.getElementById(id).classList.add("is-on");
-    window.scrollTo(0, 0);
-    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-  }
-  document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
-  document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
-    if (window.__createRoom) {
-      const code = await window.__createRoom();
-      if (!code) return;
-    }
-    go("room");
-  });
-  document.querySelector("#lobby #btJoin").addEventListener("click", async () => {
-    const inp = document.querySelector("#lobby #code");
-    const code = (inp && (inp.value || inp.textContent) || "").replace(/[^0-9]/g, "");
-    if (code.length !== 4) {
-      alert("\uB124 \uC790\uB9AC \uBC88\uD638\uB97C \uB123\uC5B4 \uC8FC\uC138\uC694");
-      return;
-    }
-    if (window.__joinRoom) {
-      const seat = await window.__joinRoom(code);
-      if (seat == null) return;
-    }
-    go("room");
-  });
-  document.querySelector("#lobby #btNew").addEventListener("click", () => openOpts("create"));
-  document.querySelector("#room #action").addEventListener("click", (e) => {
-    const b = e.target.closest(".btn-primary");
-    if (!b || b.disabled) return;
-    go("draw");
-  });
-  document.querySelector("#draw #go").addEventListener("click", (e) => {
-    if (!e.currentTarget.disabled) {
-      window.__fresh = true;
-      go("table");
-    }
-  });
-  window.__onRoundEnd = () => go("result");
-  document.querySelector("#table #endRound").addEventListener("click", () => {
-    if (window.__forceEnd) window.__forceEnd();
-  });
-  document.querySelector("#result #next").addEventListener("click", () => {
-    const G2 = window.GAME || {};
-    const rounds = window.__opts && window.__opts.rounds || 5;
-    if ((G2.roundNo || 1) >= rounds) {
-      if (window.__onRestart) {
-        window.__onRestart();
-        return;
-      }
-      window.__fresh = true;
-      go("draw");
-      return;
-    }
-    G2.roundNo = (G2.roundNo || 1) + 1;
-    window.__roundNo = G2.roundNo;
-    if (window.__opts && window.__opts.tax === false) {
-      window.__fresh = true;
-      go("table");
-    } else {
-      go("tax");
-    }
-  });
-  document.querySelector("#result #quit").addEventListener("click", () => go("lobby"));
-  window.__toResult = () => go("result");
-  document.querySelector("#tax #next").addEventListener("click", (e) => {
-    const label = e.currentTarget.textContent.trim();
-    if (label === "\uD310 \uC2DC\uC791" || label === "Start round") {
-      window.__fresh = false;
-      setTimeout(() => go("table"), 140);
-    }
-  });
-  document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-back]");
-    if (!b) return;
-    if (b.closest("#table") && window.__quitGame) window.__quitGame();
-    go(b.dataset.back);
-  });
-}
-
-// src/lib/bar.js
-var BAR_SWAP = {
-  "lobby": [
-    '<div class="bar">',
-    '<div class="bar">'
-  ],
-  "room": [
-    '<button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>',
-    '<button class="back" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2039</button>'
-  ],
-  "draw": [
-    '<div class="bar__t" id="step"></div>',
-    '<div style="display:flex;align-items:center;gap:6px"><button class="navback" data-back="room" aria-label="\uB4A4\uB85C">\u2039</button><div class="bar__t" id="step"></div></div>'
-  ],
-  "result": [
-    '<div class="head__k" id="kicker"></div>',
-    '<div class="head__k" id="kicker"></div>'
-  ],
-  "tax": [
-    '<div class="bar__t" id="step"></div>',
-    '<div style="display:flex;align-items:center;gap:6px"><button class="navback" data-back="room" aria-label="\uB4A4\uB85C">\u2039</button><div class="bar__t" id="step"></div></div>'
-  ],
-  "table": [
-    '<button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>',
-    '<div style="display:flex;align-items:center;gap:9px"><button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button><button id="endRound" style="font-size:10.5px;letter-spacing:.04em;color:#8FA898;border:1px solid #2E4436;border-radius:2px;padding:4px 8px;background:none;cursor:pointer"></button></div>'
-  ]
-};
-
-// src/screens/entry.js
-var entry_exports = {};
-__export(entry_exports, {
-  mount: () => mount
-});
-
-// src/lib/scoped.js
-function scoped(root) {
-  return {
-    getElementById: (id) => root.querySelector('[id="' + id + '"]'),
-    querySelector: (s) => root.querySelector(s),
-    querySelectorAll: (s) => root.querySelectorAll(s),
-    createElement: (t) => window.document.createElement(t),
-    get body() {
-      return window.document.body;
-    },
-    get documentElement() {
-      return window.document.documentElement;
-    },
-    addEventListener: (...a) => window.document.addEventListener(...a)
-  };
-}
-
-// src/lib/assets.js
-var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
-var LOBBY_ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
-var HERO = { "02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp" };
-var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
-
-// src/screens/entry.js
-function mount(root) {
-  const document2 = scoped(root);
-  const IMG = HERO;
-  const FAN = [
-    { key: "10", num: "10", ko: "\uD1A0\uB07C", en: "RABBIT" },
-    { key: "joker_a", joker: true, ko: "\uCE74\uBA5C\uB808\uC628", en: "CHAMELEON" },
-    { key: "02", num: "2", ko: "\uD638\uB791\uC774", en: "TIGER" },
-    { key: "05", num: "5", ko: "\uC545\uC5B4", en: "CROCODILE" },
-    { key: "04", num: "4", ko: "\uCF54\uB07C\uB9AC", en: "ELEPHANT" }
-  ];
-  const T2 = {
-    ko: {
-      eyebrow: "ZOO PRESIDENT",
-      wordmark: "\uB3D9\uBB3C\uC758 \uC655\uAD6D",
-      sub: "\uACC4\uAE09 \uCE74\uB4DC\uAC8C\uC784",
-      start: "\uAD6C\uAE00\uB85C \uC2DC\uC791\uD558\uAE30",
-      starting: "\uB4E4\uC5B4\uAC00\uB294 \uC911",
-      enter: "\uAC8C\uC784 \uC2DC\uC791",
-      guest: "\uAC8C\uC2A4\uD2B8\uB85C \uC2DC\uC791\uD558\uAE30",
-      hintIn: "\uAD6C\uAE00\uB85C \uB85C\uADF8\uC778\uD558\uBA74 \uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4",
-      hintErr: "\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694",
-      hintNet: "\uC778\uD130\uB137 \uC5F0\uACB0\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694"
-    },
-    en: {
-      eyebrow: "CARD CLASH",
-      wordmark: "Zoo President",
-      sub: "Climbing card game",
-      start: "Continue with Google",
-      starting: "Signing in",
-      enter: "Start game",
-      guest: "Play as guest",
-      hintIn: "Sign in with Google to appear on the leaderboard",
-      hintErr: "Sign-in failed. Please try again",
-      hintNet: "Check your internet connection"
-    }
-  };
-  let lang = window.__lang || "ko";
-  const fan = document2.getElementById("fan");
-  function renderFan() {
-    fan.innerHTML = "";
-    FAN.forEach((c, i) => {
-      const d = document2.createElement("div");
-      d.className = "card" + (c.joker ? " is-joker" : "");
-      d.dataset.i = i;
-      d.innerHTML = c.joker ? '<div class="card__band"><span class="card__name">' + c[lang] + '</span></div><div class="card__art"><img src="' + IMG[c.key] + '" alt=""></div><div class="card__band"><span class="card__mark">JOKER</span></div>' : '<div class="card__band"><span class="card__num">' + c.num + '</span><span class="card__name">' + c[lang] + '</span><span class="card__num">' + c.num + '</span></div><div class="card__art"><img src="' + IMG[c.key] + '" alt=""></div><div class="card__band"><span class="card__num">' + c.num + '</span><span class="card__num">' + c.num + "</span></div>";
-      fan.appendChild(d);
-    });
-  }
-  function apply() {
-    const t = T2[lang];
-    document2.body.dataset.lang = lang;
-    document2.documentElement.lang = lang;
-    document2.getElementById("eyebrow").textContent = t.eyebrow;
-    document2.getElementById("wordmark").textContent = t.wordmark;
-    document2.getElementById("sub").textContent = t.sub;
-    document2.getElementById("start").textContent = t.start;
-    const g = document2.getElementById("testin");
-    if (g) g.textContent = t.guest;
-    renderFan();
-  }
-  apply();
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      apply();
-    });
-  });
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    apply();
-  });
-  let busy = false;
-  function paintEntry() {
-    const t = T2[lang];
-    const a = window.ACCOUNT;
-    const b = document2.getElementById("start");
-    const hint = document2.getElementById("hint");
-    if (!b) return;
-    if (busy) {
-      b.textContent = t.starting;
-      b.disabled = true;
-      hint.textContent = "";
-      return;
-    }
-    b.disabled = false;
-    if (a && a.signedIn) {
-      b.textContent = t.enter;
-      hint.textContent = a.name || "";
-      hint.className = "hint";
-    } else {
-      b.textContent = t.start;
-      if (hint.className !== "hint hint--err") {
-        hint.textContent = t.hintIn;
-      }
-    }
-  }
-  document2.getElementById("start").addEventListener("click", async (e) => {
-    const a = window.ACCOUNT;
-    if (a && a.signedIn) return;
-    e.stopImmediatePropagation();
-    const hint = document2.getElementById("hint");
-    busy = true;
-    paintEntry();
-    try {
-      await window.signInGoogle();
-      hint.className = "hint";
-    } catch (err) {
-      hint.className = "hint hint--err";
-      const code = String(err && err.code || "");
-      hint.textContent = (navigator.onLine ? T2[lang].hintErr : T2[lang].hintNet) + (code ? " (" + code + ")" : "");
-      console.warn(err);
-    }
-    busy = false;
-    paintEntry();
-  }, true);
-  const tb = document2.getElementById("testin");
-  if (tb) {
-    tb.addEventListener("click", async (e) => {
-      e.stopImmediatePropagation();
-      busy = true;
-      paintEntry();
-      try {
-        await window.signInGuest();
-      } catch (err) {
-        const hint = document2.getElementById("hint");
-        hint.className = "hint hint--err";
-        hint.textContent = String(err && err.code || err && err.message || err).slice(0, 60);
-        console.warn(err);
-      }
-      busy = false;
-      paintEntry();
-    }, true);
-  }
-  function showTest() {
-    if (!tb) return;
-    const a = window.ACCOUNT;
-    tb.textContent = T2[lang].guest;
-    tb.hidden = Boolean(a && a.signedIn);
-  }
-  window.addEventListener("accountready", showTest);
-  window.addEventListener("accountchange", showTest);
-  setTimeout(showTest, 300);
-  window.addEventListener("accountready", paintEntry);
-  window.addEventListener("accountchange", paintEntry);
-  window.addEventListener("langchange", paintEntry);
-  paintEntry();
-}
-
-// src/screens/lobby.js
-var lobby_exports = {};
-__export(lobby_exports, {
-  mount: () => mount2
-});
-function mount2(root) {
-  const document2 = scoped(root);
-  const IMG = LOBBY_ART;
-  const T2 = {
-    ko: {
-      mark: "\uB3D9\uBB3C\uC758 \uC655\uAD6D",
-      lbQuick: "\uBC14\uB85C \uC2DC\uC791\uD558\uAE30",
-      btQuick: "\uBE60\uB978 \uCC38\uAC00",
-      hQuick: "\uAE30\uB2E4\uB9AC\uB294 \uBD84\uB4E4\uACFC \uC790\uB3D9\uC73C\uB85C \uC774\uC5B4 \uB4DC\uB9BD\uB2C8\uB2E4. \uC778\uC6D0\uC774 \uBAA8\uC774\uBA74 \uBC14\uB85C \uC2DC\uC791\uD569\uB2C8\uB2E4.",
-      lbNew: "\uCE5C\uAD6C\uC640 \uD558\uAE30",
-      btNew: "\uBC29 \uB9CC\uB4E4\uAE30",
-      hNew: "\uBC29\uC744 \uB9CC\uB4E4\uBA74 4\uC790\uB9AC \uBC88\uD638\uAC00 \uB098\uC635\uB2C8\uB2E4. \uCE5C\uAD6C\uC5D0\uAC8C \uBC88\uD638\uB97C \uC54C\uB824 \uC8FC\uC138\uC694. 4\uBA85\uBD80\uD130 8\uBA85\uAE4C\uC9C0 \uD568\uAED8\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
-      lbJoin: "\uBC88\uD638\uB85C \uB4E4\uC5B4\uAC00\uAE30",
-      btJoin: "\uCC38\uAC00",
-      mkTitle: "\uBC29 \uB9CC\uB4E4\uAE30",
-      mkGo: "\uBC29 \uB9CC\uB4E4\uAE30",
-      mkCap: ["\uBC29 \uC778\uC6D0", "4\uBA85 \u2013 8\uBA85"],
-      mkRnd: ["\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815", "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791"],
-      mkTax: ["\uC138\uAE08\uACFC \uD601\uBA85", "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4."],
-      mkCut: ["2\uBC88 \uCEF7", "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4."],
-      rules: "\uADDC\uCE59 \uBCF4\uAE30",
-      shTitle: "\uADDC\uCE59",
-      shLead: "\uC190\uC5D0 \uB4E0 \uCE74\uB4DC\uB97C <b>\uBA3C\uC800 \uB2E4 \uD138\uC5B4\uB0B4\uBA74</b> \uC774\uAE41\uB2C8\uB2E4. \uD575\uC2EC\uC740 \uD558\uB098\uC785\uB2C8\uB2E4 \u2014 <b>\uC22B\uC790\uAC00 \uB0AE\uC744\uC218\uB85D \uB192\uC740 \uACC4\uAE09</b>\uC774\uACE0, \uD574\uB2F9 \uC22B\uC790\uC640 \uB371\uC5D0 \uB4E4\uC5B4\uC788\uB294 \uCE74\uB4DC\uC758 \uC7A5 \uC218\uAC00 \uC77C\uCE58\uD569\uB2C8\uB2E4. \uC608) 1 \uC0AC\uC790 = 1\uC7A5, 12 \uC0DD\uC950 = 12\uC7A5.",
-      names: ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"],
-      count: function(n) {
-        return n + "\uC7A5";
-      },
-      items: [
-        ["\uB0B4\uB294 \uBC95", "\uC55E\uC0AC\uB78C\uC774 \uB0B8 \uAC83\uACFC <b>\uAC19\uC740 \uC7A5\uC218</b>\uB85C, <b>\uB354 \uB0AE\uC740 \uC22B\uC790</b>\uB9CC \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4. 8\uBC88 \uC138 \uC7A5 \uC704\uC5D0\uB294 7\uBC88 \uC774\uD558 \uC138 \uC7A5\uC744 \uB0C5\uB2C8\uB2E4."],
-        ["\uD328\uC2A4", "\uC5B8\uC81C\uB4E0 \uB118\uAE38 \uC218 \uC788\uACE0 \uB2E4\uC74C \uCC28\uB840\uC5D0 \uB2E4\uC2DC \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC804\uC6D0\uC774 \uB118\uAE30\uBA74 \uBC14\uB2E5\uC744 \uCE58\uC6B0\uACE0 \uB9C8\uC9C0\uB9C9\uC5D0 \uB0B8 \uBD84\uC774 \uC0C8\uB85C \uC2DC\uC791\uD569\uB2C8\uB2E4."],
-        ["\uC138\uAE08", "\uD310\uC774 \uB05D\uB098\uBA74 \uB4F1\uC218\uAC00 \uB2E4\uC74C \uD310\uC758 \uACC4\uAE09\uC774 \uB429\uB2C8\uB2E4. 1\uB4F1\uC740 \uAF34\uB4F1\uC758 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uB450 \uC7A5\uC744 \uAC00\uC838\uAC00\uACE0 \uC544\uBB34 \uCE74\uB4DC\uB098 \uB450 \uC7A5\uC744 \uC90D\uB2C8\uB2E4. 2\uB4F1\uC740 \uB4A4\uC5D0\uC11C \uB450 \uBC88\uC9F8\uC640 \uD55C \uC7A5\uC529 \uBC14\uAFC9\uB2C8\uB2E4."],
-        ["\uD601\uBA85", "\uD55C \uC0AC\uB78C\uC774 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uBAA8\uB450 \uC950\uBA74 \uADF8 \uD310\uC758 \uC138\uAE08\uC774 \uCDE8\uC18C\uB429\uB2C8\uB2E4. \uADF8 \uC0AC\uB78C\uC774 \uAF34\uB4F1\uC774\uBA74 \uB300\uD601\uBA85\uC774 \uB418\uC5B4 \uACC4\uAE09\uC774 \uD1B5\uC9F8\uB85C \uB4A4\uC9D1\uD799\uB2C8\uB2E4."],
-        ["\uC810\uC218\uC640 \uC2B9\uB9AC", "\uD55C \uD310\uC774 \uB05D\uB098\uBA74 1\uB4F1 100\uC810, 2\uB4F1 90\uC810\uCC98\uB7FC \uB4F1\uC218\uB9C8\uB2E4 \uC810\uC218\uB97C \uBC1B\uC2B5\uB2C8\uB2E4. \uBC29\uC7A5\uC774 \uC815\uD55C \uD310 \uC218\uB97C \uB2E4 \uCE58\uB974\uACE0 \uCD1D\uC810\uC774 \uAC00\uC7A5 \uB192\uC740 \uBD84\uC774 \uC6B0\uC2B9\uD569\uB2C8\uB2E4. \uC138\uAE08\uACFC \uD601\uBA85 \uAE30\uB2A5\uC740 \uBC29\uC5D0\uC11C \uB04C \uC218 \uC788\uC2B5\uB2C8\uB2E4."]
-      ],
-      joker: ["\uCE74\uBA5C\uB808\uC628", "\uB2E4\uB978 \uCE74\uB4DC\uC640 \uAC19\uC774 \uB0B4\uBA74 \uADF8 \uCE74\uB4DC\uB85C \uBCC0\uD569\uB2C8\uB2E4. 5\uBC88 \uB450 \uC7A5\uC5D0 \uCE74\uBA5C\uB808\uC628\uC744 \uC5B9\uC73C\uBA74 5\uBC88 \uC138 \uC7A5\uC774 \uB429\uB2C8\uB2E4. \uD63C\uC790 \uB0B4\uBA74 13\uBC88\uC73C\uB85C \uCDE8\uAE09\uB418\uC5B4 \uAC00\uC7A5 \uC57D\uD569\uB2C8\uB2E4. \uB371\uC5D0 \uCD1D \uB450 \uC7A5 \uC788\uC2B5\uB2C8\uB2E4."]
-    },
-    en: {
-      mark: "Zoo President",
-      lbQuick: "PLAY NOW",
-      btQuick: "Quick match",
-      hQuick: "We'll pair you with players already waiting. The game starts as soon as the table fills.",
-      lbNew: "PLAY WITH FRIENDS",
-      btNew: "Create room",
-      hNew: "You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
-      lbJoin: "JOIN BY NUMBER",
-      btJoin: "Join",
-      mkTitle: "Create a room",
-      mkGo: "Create room",
-      mkCap: ["Table size", "4 \u2013 8 players"],
-      mkRnd: ["Number of rounds", "Three at least"],
-      mkTax: ["Tax and revolution", "Cards change hands by standing, and two jokers overturn it."],
-      mkCut: ["Two-cut", "Playing a 2 clears the pile and you lead again."],
-      rules: "How to play",
-      shTitle: "How to play",
-      shLead: "<b>Empty your hand first</b> to win. One idea drives everything \u2014 <b>the lower the number, the higher the rank</b>, and that number is also how many of the card sit in the deck. 1 Lion means one card, 12 Mouse means twelve.",
-      names: ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"],
-      count: function(n) {
-        return n + (n === 1 ? " card" : " cards");
-      },
-      items: [
-        ["Playing", "Match the <b>same count</b> as the player before you, at a <b>lower number</b>. Three 8s must be answered with three cards of 7 or lower."],
-        ["Passing", "Pass any time and play again on your next turn. Once everyone passes, the pile is cleared and whoever played last leads."],
-        ["Tax", "Finishing order sets rank for the next round. First takes the last player's two best cards and hands back any two. Second swaps one card with the second from last."],
-        ["Revolution", "If one player holds both chameleons, tax is cancelled for that round. If that player finished last it becomes a great revolution and every rank reverses."],
-        ["Score and winning", "Each round pays out by place \u2014 100 for first, 90 for second, and so on down. After the number of rounds the host set, the highest total wins. Tax and revolution can be switched off in the room."]
-      ],
-      joker: ["Chameleon", "Played alongside other cards it becomes that card \u2014 two 5s plus a chameleon makes three 5s. Played alone it counts as 13, the weakest card of all. Two are in the deck."]
-    }
-  };
-  let lang = window.__lang || "ko";
-  function miniCard(key, num, name4) {
-    return '<div class="card"><div class="card__band"><span class="card__num">' + num + '</span><span class="card__name">' + name4 + '</span><span class="card__num">' + num + '</span></div><div class="card__art"><img src="' + IMG[key] + '" alt=""></div><div class="card__band"><span class="card__num">' + num + '</span><span class="card__num">' + num + "</span></div></div>";
-  }
-  function render() {
-    const t = T2[lang];
-    document2.body.dataset.lang = lang;
-    document2.documentElement.lang = lang;
-    const set = (id, v) => document2.getElementById(id).textContent = v;
-    set("lbQuick", t.lbQuick);
-    set("btQuick", t.btQuick);
-    set("hQuick", t.hQuick);
-    set("lbNew", t.lbNew);
-    set("btNew", t.btNew);
-    set("hNew", t.hNew);
-    set("lbJoin", t.lbJoin);
-    set("btJoin", t.btJoin);
-    set("btRules", t.rules);
-    set("shTitle", t.shTitle);
-    document2.getElementById("shLead").innerHTML = t.shLead;
-    document2.getElementById("grid").innerHTML = t.names.map((name4, i) => {
-      const n = i + 1;
-      const key = String(n).padStart(2, "0");
-      return '<div class="cell">' + miniCard(key, n, name4) + '<span class="cell__c">' + t.count(n) + "</span></div>";
-    }).join("");
-    const jk = '<div class="rule rule--joker"><div class="jk"><div class="card"><div class="card__band" style="justify-content:center"><span class="card__name">' + t.joker[0] + '</span></div><div class="card__art"><img src="' + IMG.joker + '" alt=""></div><div class="card__band"><span class="card__num">&nbsp;</span></div></div></div><div><h3>' + t.joker[0] + "</h3><p>" + t.joker[1] + "</p></div></div>";
-    document2.getElementById("rules").innerHTML = jk + t.items.map((it2) => '<div class="rule"><h3>' + it2[0] + "</h3><p>" + it2[1] + "</p></div>").join("");
-  }
-  render();
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      render();
-    });
-  });
-  const sheet = document2.getElementById("sheet");
-  document2.getElementById("btRules").addEventListener("click", () => sheet.classList.add("is-open"));
-  sheet.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", () => sheet.classList.remove("is-open")));
-  document2.getElementById("code").addEventListener("input", (e) => {
-    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
-  });
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    render();
-  });
-  function paintAcct() {
-    const a = window.ACCOUNT;
-    if (!a) return;
-    const t = document2.getElementById("acctTier");
-    const s = document2.getElementById("acctScore");
-    const k2 = document2.getElementById("acctTick");
-    const n = document2.getElementById("acctName");
-    if (n) n.textContent = a.name || "";
-    if (t) t.textContent = a.tier;
-    if (s) s.textContent = a.score.toLocaleString();
-    if (k2) k2.textContent = a.tickets;
-    paintTimer();
-  }
-  function paintTimer() {
-    const el2 = document2.getElementById("acctTimer");
-    if (!el2) return;
-    const ms = window.__ticketLeft ? window.__ticketLeft() : 0;
-    if (!ms || ms <= 0) {
-      el2.textContent = "";
-      return;
-    }
-    const s = Math.ceil(ms / 1e3);
-    const m = Math.floor(s / 60);
-    el2.textContent = m + ":" + String(s % 60).padStart(2, "0");
-  }
-  setInterval(paintTimer, 1e3);
-  window.addEventListener("accountready", paintAcct);
-  window.addEventListener("accountchange", paintAcct);
-  paintAcct();
-}
-
-// src/screens/room.js
-var room_exports = {};
-__export(room_exports, {
-  mount: () => mount3
-});
-function mount3(root) {
-  const document2 = scoped(root);
-  const HEADS2 = HEADS;
-  const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
-  const PLAYERS_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
-  const L2 = {
-    ko: {
-      title: "\uBC29 \uB300\uAE30\uC2E4",
-      roomL: "\uBC29 \uBC88\uD638",
-      copy: "\uBC88\uD638 \uBCF5\uC0AC",
-      host: "\uBC29\uC7A5",
-      guest: "\uCC38\uAC00\uC790",
-      count: (j2, c) => j2 + " / " + c + "\uBA85",
-      needMore: "4\uBA85\uBD80\uD130 \uC2DC\uC791\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4",
-      canStart: "\uC9C0\uAE08 \uC2DC\uC791\uD558\uAC70\uB098 \uB354 \uAE30\uB2E4\uB9AC\uC154\uB3C4 \uB429\uB2C8\uB2E4",
-      full: "\uC790\uB9AC\uAC00 \uB2E4 \uCC3C\uC2B5\uB2C8\uB2E4",
-      empty: "\uBE48 \uC790\uB9AC",
-      hostTag: "\uBC29\uC7A5",
-      capT: "\uBC29 \uC778\uC6D0",
-      capD: "4\uBA85 \u2013 8\uBA85",
-      capDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
-      rndT: "\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815",
-      rndD: "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791",
-      rndDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
-      rndU: (n) => n + "\uD310",
-      taxT: "\uC138\uAE08\uACFC \uD601\uBA85",
-      taxD: "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4.",
-      clrT: "2\uBC88 \uCEF7",
-      clrD: "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4.",
-      on: "\uCF1C\uC838 \uC788\uC2B5\uB2C8\uB2E4.",
-      off: "\uAEBC\uC838 \uC788\uC2B5\uB2C8\uB2E4.",
-      sumP: "\uBA85",
-      sumR: "\uD310",
-      sumT: "\uC138\uAE08",
-      sumC: "2\uBC88 \uCEF7",
-      on2: "\uCF2C",
-      off2: "\uB054",
-      edit: "\u203A \uBCC0\uACBD",
-      copied: "\uBCF5\uC0AC\uB428",
-      start: "\uC2DC\uC791\uD558\uAE30",
-      starting: "\uCE74\uB4DC\uB97C \uB098\uB204\uB294 \uC911",
-      needFour: "4\uBA85\uC774 \uBAA8\uC5EC\uC57C \uC2DC\uC791\uD569\uB2C8\uB2E4",
-      noTicket: "\uD2F0\uCF13\uC774 \uC5C6\uC2B5\uB2C8\uB2E4. \uB0B4\uC77C \uB2E4\uC2DC \uCC44\uC6CC\uC9D1\uB2C8\uB2E4",
-      wait: "\uBC29\uC7A5\uC774 \uC2DC\uC791\uD558\uAE30\uB97C \uAE30\uB2E4\uB9AC\uB294 \uC911\uC785\uB2C8\uB2E4"
-    },
-    en: {
-      title: "Waiting room",
-      roomL: "ROOM NUMBER",
-      copy: "Copy",
-      host: "Host",
-      guest: "Guest",
-      count: (j2, c) => j2 + " of " + c,
-      needMore: "Four players are needed to start",
-      canStart: "Start now, or wait for more",
-      full: "The table is full",
-      empty: "Open seat",
-      hostTag: "HOST",
-      capT: "Table size",
-      capD: "4 \u2013 8 players",
-      capDG: "The host decides.",
-      rndT: "Number of rounds",
-      rndD: "Three at least",
-      rndDG: "The host decides.",
-      rndU: (n) => n + "",
-      taxT: "Tax and revolution",
-      taxD: "Cards change hands by standing, and two jokers overturn it.",
-      clrT: "Two-cut",
-      clrD: "Playing a 2 clears the pile and you lead again.",
-      on: "On.",
-      off: "Off.",
-      sumP: " players",
-      sumR: " rounds",
-      sumT: "Tax",
-      sumC: "Two-cut",
-      on2: "on",
-      off2: "off",
-      edit: "\u203A Change",
-      copied: "Copied",
-      start: "Start",
-      starting: "Dealing",
-      needFour: "Four players are needed",
-      noTicket: "No tickets left. They refill tomorrow",
-      wait: "Waiting for the host to start"
-    }
-  };
-  let lang = window.__lang || "ko";
-  const PLAYERS = PLAYERS_KO;
-  let cap = 6;
-  let joined = 4;
-  let clear2 = false;
-  let rounds = 5;
-  let taxOn = true;
-  let role = "host";
-  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
-  function placeTable(sec, cyPct) {
-    const b = sec.getBoundingClientRect();
-    const W = b.width, H = b.height;
-    const scale = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = cyPct == null ? (H - dh) / 2 + OV.cy * dh : cyPct / 100 * H;
-    const ox = W / 2 - OV.cx * dw;
-    const oy = cy - OV.cy * dh;
-    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
-    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
-    return {
-      cx: (ox + OV.cx * dw) / W * 100,
-      cy: cy / H * 100,
-      rx: OV.rx * dw / W * 100,
-      ry: OV.ry * dh / H * 100
-    };
-  }
-  function ringBox() {
-    const sec = window.document.getElementById("room");
-    if (!sec) return RB;
-    const b = sec.getBoundingClientRect();
-    const H = b.height;
-    const base = placeTable(sec, null);
-    const ctrl = document2.getElementById("sum");
-    const limit2 = ctrl ? ctrl.getBoundingClientRect().top - b.top - 22 : H * 0.72;
-    const ryPx = base.ry / 100 * H;
-    const wantCy = Math.min(base.cy / 100 * H, limit2 - ryPx);
-    return placeTable(sec, wantCy / H * 100);
-  }
-  let RB = { cx: 49, cy: 34, rx: 35, ry: 11.5 };
-  function anchorSeats(box, limitBottom) {
-    const root2 = window.document.documentElement;
-    const W = (window.document.getElementById("stage") || root2).getBoundingClientRect();
-    box.querySelectorAll(".seat").forEach((s) => {
-      const av = s.querySelector(".seat__av");
-      if (!av) return;
-      const dy = av.offsetTop + av.offsetHeight / 2;
-      s.style.transform = "translate(-50%," + -dy + "px)";
-      const r = s.getBoundingClientRect();
-      let ox = 0, oy = 0;
-      if (r.left < W.left + 3) ox = W.left + 3 - r.left;
-      else if (r.right > W.right - 3) ox = W.right - 3 - r.right;
-      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
-      if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
-    });
-  }
-  function asArray(raw2, n) {
-    const out = new Array(n).fill(null);
-    if (!raw2) return out;
-    if (Array.isArray(raw2)) raw2.forEach((v, i) => {
-      if (i < n) out[i] = v || null;
-    });
-    else Object.keys(raw2).forEach((k2) => {
-      const i = +k2;
-      if (i >= 0 && i < n) out[i] = raw2[k2] || null;
-    });
-    return out;
-  }
-  function seatList() {
-    const R = window.__room;
-    if (R && R.seats) {
-      return asArray(R.seats, R.cap || cap).map((s, i) => s ? {
-        name: s.name || "",
-        me: i === R.me,
-        host: s.uid && s.uid === R.host,
-        off: Boolean(s.off),
-        left: Boolean(s.left)
-      } : null);
-    }
-    const KO = lang === "ko" ? PLAYERS_KO : PLAYERS_EN;
-    return Array.from({ length: joined }, (_, i) => ({
-      name: KO[i],
-      me: i === 0,
-      host: i === 0 && role === "host",
-      off: false,
-      left: false
-    }));
-  }
-  function renderSeats() {
-    RB = ringBox();
-    const box = document2.getElementById("seats");
-    box.innerHTML = "";
-    const list = seatList();
-    const R = window.__room;
-    if (R) cap = R.cap || cap;
-    for (let i = 0; i < cap; i++) {
-      const a = Math.PI / 2 + i * 2 * Math.PI / cap;
-      const sy = Math.sin(a);
-      const bias = sy > 0.25 ? 3.4 * sy : 0;
-      const left = RB.cx + Math.cos(a) * -RB.rx;
-      const top = RB.cy + sy * RB.ry + bias;
-      const p = list[i] || null;
-      const filled = Boolean(p);
-      const el = document2.createElement("div");
-      el.className = "seat" + (filled ? "" : " seat--empty") + (p && p.me ? " seat--me" : "") + (p && (p.off || p.left) ? " seat--off" : "");
-      el.style.left = left.toFixed(2) + "%";
-      el.style.top = top.toFixed(2) + "%";
-      const big = cap <= 6;
-      el.style.setProperty("--av", (big ? 46 : 36) + "px");
-      el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
-      box.appendChild(el);
-    }
-    const sm = document2.getElementById("sum");
-    anchorSeats(box, sm ? sm.getBoundingClientRect().top - 6 : 0);
-    const t = L2[lang];
-    document2.getElementById("bt").textContent = t.title;
-    document2.getElementById("rl").textContent = t.roomL;
-    document2.getElementById("rc").textContent = t.copy;
-    document2.querySelector('#view [data-v="host"]').textContent = t.host;
-    document2.querySelector('#view [data-v="guest"]').textContent = t.guest;
-    const fc = document2.querySelector(".felt__c");
-    if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
-    const R2 = window.__room;
-    const now = R2 && R2.seats ? asArray(R2.seats, R2.cap || cap).filter((s) => s && !s.left).length : joined;
-    document2.getElementById("feltN").textContent = t.count(now, cap);
-    document2.getElementById("feltS").textContent = now < 4 ? t.needMore : now < cap ? t.canStart : t.full;
-  }
-  function syncOpts() {
-    const o = window.__opts || {};
-    cap = o.cap || cap;
-    rounds = o.rounds || rounds;
-    taxOn = o.tax !== false;
-    clear2 = !!o.clear2;
-    if (joined > cap) joined = cap;
-  }
-  function renderControls() {
-    const t = L2[lang];
-    const R = window.__room;
-    const arr = R ? asArray(R.seats, R.cap || cap) : null;
-    const now = arr ? arr.filter((s) => s && !s.left).length : joined;
-    const iamHost = R ? Boolean(arr && arr[R.me] && arr[R.me].uid === R.host) : role === "host";
-    const sm = document2.getElementById("sum");
-    sm.innerHTML = "<b>" + cap + "</b>" + t.sumP + " \xB7 <b>" + rounds + "</b>" + t.sumR + " \xB7 " + t.sumT + " " + (taxOn ? t.on2 : t.off2) + " \xB7 " + t.sumC + " " + (clear2 ? t.on2 : t.off2) + (iamHost ? '  <span style="color:#E3C67C">' + t.edit + "</span>" : "");
-    sm.disabled = !iamHost;
-    const a = document2.getElementById("action");
-    if (iamHost) {
-      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + ">" + (now < 4 ? t.needFour : t.start) + "</button>";
-    } else {
-      a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
-    }
-  }
-  function draw() {
-    syncOpts();
-    renderSeats();
-    renderControls();
-    const sm2 = document2.getElementById("sum");
-    anchorSeats(document2.getElementById("seats"), sm2 ? sm2.getBoundingClientRect().top - 6 : 0);
-  }
-  draw();
-  window.addEventListener("resize", draw);
-  window.addEventListener("optschange", draw);
-  window.addEventListener("roomchange", draw);
-  function paintCode() {
-    const el2 = document2.getElementById("roomNo");
-    if (el2 && window.__roomCode) el2.textContent = window.__roomCode() || "----";
-  }
-  window.addEventListener("roomchange", paintCode);
-  paintCode();
-  const rcBtn = document2.getElementById("rc");
-  if (rcBtn) rcBtn.addEventListener("click", () => {
-    const code = window.__roomCode && window.__roomCode() || "";
-    if (!code) return;
-    try {
-      navigator.clipboard.writeText(code);
-    } catch (e) {
-    }
-    const old = rcBtn.textContent;
-    rcBtn.textContent = L2[lang].copied;
-    setTimeout(() => {
-      rcBtn.textContent = old;
-    }, 1200);
-  });
-  document2.getElementById("action").addEventListener("click", async (e) => {
-    const b = e.target.closest(".btn-primary");
-    if (!b || b.disabled) return;
-    const R = window.__room;
-    if (window.spendTicket) {
-      const ok = await window.spendTicket();
-      if (!ok) {
-        e.stopImmediatePropagation();
-        const sm = document2.getElementById("sum");
-        if (sm) sm.textContent = L2[lang].noTicket;
-        return;
-      }
-    }
-    window.__scored = false;
-    if (R) {
-      e.stopImmediatePropagation();
-      b.disabled = true;
-      b.textContent = L2[lang].starting;
-      try {
-        await window.__startRound();
-      } catch (err) {
-        b.disabled = false;
-        b.textContent = L2[lang].start;
-        alert("\uC2DC\uC791\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4 : " + (err && (err.message || err.code) || err));
-      }
-      return;
-    }
-    if (window.__opts) window.__opts.seated = joined;
-  }, true);
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  document2.querySelectorAll("#view button").forEach((b) => {
-    b.addEventListener("click", () => {
-      role = b.dataset.v;
-      document2.querySelectorAll("#view button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  setInterval(() => {
-    if (window.__room) return;
-    joined = joined < cap ? joined + 1 : 2;
-    draw();
-  }, 3400);
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    draw();
-  });
-}
-
-// src/screens/draw.js
-var draw_exports = {};
-__export(draw_exports, {
-  mount: () => mount4
-});
-function mount4(root) {
-  const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
-  const el = (id) => document2.getElementById(id);
-  const isJ = (c) => c >= 13;
-  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
-  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
-  const NAMES_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
-  const NAMES_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
-  const T2 = {
-    ko: {
-      step: "\uCCAB \uC21C\uC11C \uC815\uD558\uAE30",
-      h: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC73C\uC138\uC694",
-      s: "\uC22B\uC790\uAC00 \uAC00\uC7A5 \uB0AE\uC740 \uBD84\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uAC70\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC73C\uB85C \uB3D5\uB2C8\uB2E4. \uCE74\uBA5C\uB808\uC628\uC740 13\uC73C\uB85C \uCE69\uB2C8\uB2E4.",
-      waitH: "\uBF51\uB294 \uC911",
-      waitS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uACE0\uB974\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
-      settling: "\uBF51\uC740 \uCE74\uB4DC\uB97C \uB9DE\uCDB0 \uBCF4\uB294 \uC911\uC785\uB2C8\uB2E4.",
-      doneH: "\uC21C\uC11C\uAC00 \uC815\uD574\uC84C\uC2B5\uB2C8\uB2E4",
-      first: "\uC120",
-      doneS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uC5EC\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC785\uB2C8\uB2E4.",
-      note: "\uCCAB \uD310\uC740 \uACC4\uAE09\uB3C4 \uC138\uAE08\uB3C4 \uC5C6\uC2B5\uB2C8\uB2E4.",
-      goIn: (n) => n + "\uCD08 \uB4A4 \uC2DC\uC791\uD569\uB2C8\uB2E4",
-      picking: "\uACE0\uB974\uB294 \uC911"
-    },
-    en: {
-      step: "Opening draw",
-      h: "Draw one card",
-      s: "The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
-      waitH: "Drawing",
-      waitS: (n) => "<b>" + n + "</b> is choosing.",
-      settling: "Comparing the draws.",
-      doneH: "Turn order is set",
-      first: "LEAD",
-      doneS: (n) => "<b>" + n + "</b> leads. Turns run clockwise from there.",
-      note: "The first round has no ranks and no tax.",
-      goIn: (n) => "Starting in " + n,
-      picking: "Choosing"
-    }
-  };
-  let lang = window.__lang || "ko";
-  let online = false;
-  let N2 = 6;
-  const nameOf = (i) => (lang === "ko" ? NAMES_KO : NAMES_EN)[i];
-  const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
-  const val = (c) => isJ(c) ? 13 : c;
-  let drawn = Array(N2).fill(null);
-  let pool = [];
-  let takenK = [];
-  let plan = null;
-  let waiting = [];
-  let phase = "pick";
-  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
-  function placeTable(sec, cyPct) {
-    const b = sec.getBoundingClientRect();
-    const W = b.width, H = b.height;
-    const scale = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = cyPct == null ? (H - dh) / 2 + OV.cy * dh : cyPct / 100 * H;
-    const ox = W / 2 - OV.cx * dw;
-    const oy = cy - OV.cy * dh;
-    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
-    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
-    return {
-      cx: (ox + OV.cx * dw) / W * 100,
-      cy: cy / H * 100,
-      rx: OV.rx * dw / W * 100,
-      ry: OV.ry * dh / H * 100
-    };
-  }
-  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
-  function syncRing() {
-    const sec = window.document.getElementById("draw");
-    if (!sec) return;
-    RING = placeTable(sec, null);
-    const d = el("deck");
-    if (d) {
-      d.style.left = RING.cx + "%";
-      d.style.top = RING.cy + "%";
-    }
-  }
-  function seatPos(i) {
-    const a = Math.PI / 2 + i * 2 * Math.PI / N2;
-    const s = Math.sin(a);
-    const bias = s > 0.25 ? 3.4 * s : 0;
-    return { x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias };
-  }
-  function cardFace(c) {
-    const n = isJ(c) ? 13 : c;
-    return '<div class="card"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(c) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
-  }
-  function makeDeck2() {
-    const d = [];
-    for (let n = 1; n <= 12; n++) for (let i = 0; i < n; i++) d.push(n);
-    d.push(13, 14);
-    for (let i = d.length - 1; i > 0; i--) {
-      const k2 = Math.floor(Math.random() * (i + 1));
-      [d[i], d[k2]] = [d[k2], d[i]];
-    }
-    return d;
-  }
-  let pickOrder = [];
-  function winner() {
-    let best = null;
-    pickOrder.forEach((i) => {
-      if (drawn[i] == null) return;
-      if (best === null || val(drawn[i]) < val(drawn[best])) best = i;
-    });
-    return best === null ? 0 : best;
-  }
-  function ranking() {
-    const w = winner();
-    return Array.from({ length: N2 }, (_, k2) => ({ i: (w + k2) % N2 }));
-  }
-  function layout(players) {
-    const d = makeDeck2();
-    pool = d.slice(0, players.length);
-    plan = null;
-    if (online && typeof window.__leadSeat === "number") {
-      const cand = [];
-      for (let v = 1; v <= 12; v++) cand.push(v);
-      for (let i = cand.length - 1; i > 0; i--) {
-        const k2 = Math.floor(Math.random() * (i + 1));
-        const t = cand[i];
-        cand[i] = cand[k2];
-        cand[k2] = t;
-      }
-      const use = cand.slice(0, N2).sort((a, b) => a - b);
-      const lead = window.__leadSeat;
-      plan = new Array(N2).fill(0);
-      plan[lead] = use[0];
-      let j2 = 1;
-      for (let i = 0; i < N2; i++) if (i !== lead) plan[i] = use[j2++];
-      pool = plan.slice();
-    }
-    waiting = players.slice();
-    const deck = el("deck");
-    deck.innerHTML = "";
-    const n = pool.length;
-    const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
-    const avail = (el("ring").clientWidth || 360) - 48;
-    const pw = Math.max(26, Math.min(34, Math.floor((avail - (cols - 1) * 9) / cols)));
-    deck.style.setProperty("--cols", cols);
-    deck.style.setProperty("--pw", pw + "px");
-    pool.forEach((c, k2) => {
-      const w = document2.createElement("div");
-      w.className = "pk";
-      w.dataset.k = k2;
-      w.innerHTML = '<div class="pk__in"><div class="pk__f pk__f--b"><img src="' + ART2.back + '" alt=""></div><div class="pk__f pk__f--a">' + cardFace(c) + "</div></div>";
-      w.onclick = () => {
-        if (waiting[0] === 0) pick(0, k2);
-      };
-      deck.appendChild(w);
-    });
-  }
-  const PICK_SEC = 5;
-  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null;
-  function armPickTimer() {
-    stopPickTimer();
-    if (phase !== "pick") return;
-    startBotLoop();
-    if (waiting.indexOf(0) < 0) return;
-    pickLeft = PICK_SEC;
-    draw();
-    pickTickId = setInterval(() => {
-      pickLeft--;
-      if (pickLeft < 0) pickLeft = 0;
-      draw();
-    }, 1e3);
-    pickTimer = setTimeout(() => {
-      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
-      const free = el("deck").querySelectorAll(".pk:not(.taken)");
-      if (free.length) free[Math.floor(Math.random() * free.length)].click();
-    }, PICK_SEC * 1e3);
-  }
-  function stopPickTimer() {
-    if (pickTimer) {
-      clearTimeout(pickTimer);
-      pickTimer = null;
-    }
-    if (pickTickId) {
-      clearInterval(pickTickId);
-      pickTickId = null;
-    }
-    pickLeft = 0;
-  }
-  function startBotLoop() {
-    if (botLoopId) return;
-    botLoopId = setInterval(() => {
-      if (phase !== "pick") {
-        stopBotLoop();
-        return;
-      }
-      const others = waiting.filter((x2) => x2 !== 0);
-      if (!others.length) {
-        stopBotLoop();
-        return;
-      }
-      botPick2();
-    }, 900);
-  }
-  function stopBotLoop() {
-    if (botLoopId) {
-      clearInterval(botLoopId);
-      botLoopId = null;
-    }
-  }
-  function pick(seat, k2) {
-    const w = el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)');
-    if (!w) return;
-    takenK.push(k2);
-    if (online && plan) {
-      pool[k2] = plan[seat];
-      const face = w.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(pool[k2]);
-    }
-    drawn[seat] = pool[k2];
-    pickOrder.push(seat);
-    waiting = waiting.filter((x2) => x2 !== seat);
-    w.classList.add("flip", "taken");
-    w.dataset.seat = seat;
-    draw();
-    if (seat === 0) stopPickTimer();
-    if (!waiting.length) {
-      stopBotLoop();
-      setTimeout(settle, 1e3);
-    }
-  }
-  function botPick2() {
-    const seat = waiting.find((x2) => x2 !== 0);
-    if (seat === void 0) return;
-    const free = pool.map((_, k2) => k2).filter((k2) => el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)'));
-    pick(seat, free[Math.floor(Math.random() * free.length)]);
-  }
-  let cd = 5, cdId = null;
-  function startCountdown() {
-    cd = 5;
-    draw();
-    if (cdId) clearInterval(cdId);
-    cdId = setInterval(() => {
-      const sec = window.document.getElementById("draw");
-      if (sec && !sec.classList.contains("is-on")) {
-        clearInterval(cdId);
-        cdId = null;
-        return;
-      }
-      cd--;
-      draw();
-      if (cd <= 0) {
-        clearInterval(cdId);
-        cdId = null;
-        const g = el("go");
-        if (g && !g.disabled) g.click();
-      }
-    }, 1e3);
-  }
-  function settle() {
-    phase = "done";
-    const w = online && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
-    window.GAME = window.GAME || {};
-    window.GAME.N = N2;
-    window.GAME.roundNo = 1;
-    window.GAME.score = Array(N2).fill(0);
-    window.GAME.order = Array.from({ length: N2 }, (_, k2) => (w + k2) % N2);
-    if (!online) {
-      window.GAME.finish = null;
-      window.GAME.hold = null;
-    }
-    draw();
-    startCountdown();
-  }
-  function anchorSeats(box, limitBottom) {
-    const root2 = window.document.documentElement;
-    const W = (window.document.getElementById("stage") || root2).getBoundingClientRect();
-    box.querySelectorAll(".seat").forEach((s) => {
-      const av = s.querySelector(".seat__av");
-      if (!av) return;
-      const dy = av.offsetTop + av.offsetHeight / 2;
-      s.style.transform = "translate(-50%," + -dy + "px)";
-      const r = s.getBoundingClientRect();
-      let ox = 0, oy = 0;
-      if (r.left < W.left + 3) ox = W.left + 3 - r.left;
-      else if (r.right > W.right - 3) ox = W.right - 3 - r.right;
-      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
-      if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
-    });
-  }
-  function renderSeats() {
-    syncRing();
-    const box = el("seats");
-    box.innerHTML = "";
-    const order = phase === "done" ? ranking().map((x2) => x2.i) : [];
-    for (let i = 0; i < N2; i++) {
-      const a = Math.PI / 2 + i * 2 * Math.PI / N2;
-      const p = seatPos(i);
-      const d = document2.createElement("div");
-      const r = order.indexOf(i);
-      d.className = "seat" + (i === 0 ? " seat--me" : "") + (waiting[0] === i && phase === "pick" ? " seat--turn" : "");
-      d.style.left = p.x.toFixed(1) + "%";
-      d.style.top = p.y.toFixed(1) + "%";
-      const big = N2 <= 6;
-      d.style.setProperty("--av", (big ? 42 : 33) + "px");
-      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      const first = phase === "done" && i === winner();
-      const dv = drawn[i] == null ? "" : val(drawn[i]);
-      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
-      const upper = Math.sin(Math.PI / 2 + i * 2 * Math.PI / N2) < 0;
-      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
-      box.appendChild(d);
-    }
-    const md = el("mid");
-    anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
-  }
-  function draw() {
-    const t = T2[lang];
-    el("step").textContent = t.step;
-    renderSeats();
-    const m = el("mid");
-    if (phase === "done") {
-      m.innerHTML = '<div class="mid__h">' + t.doneH + '</div><div class="mid__s">' + t.doneS(nameOf(winner())) + "<br>" + t.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
-    } else if (!waiting.length) {
-      m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.settling + "</div>";
-    } else if (waiting.indexOf(0) >= 0) {
-      m.innerHTML = '<div class="mid__h">' + t.h + '</div><div class="mid__s">' + t.s + '</div><div class="cd">' + Math.max(pickLeft, 0) + "</div>";
-    } else {
-      m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.waitS(nameOf(waiting[0])) + "</div>";
-    }
-    const g = el("go");
-    g.textContent = phase === "done" ? t.goIn(cd) : t.picking;
-    g.disabled = phase !== "done";
-    const md = el("mid");
-    anchorSeats(el("seats"), md ? md.getBoundingClientRect().top - 4 : 0);
-  }
-  function boot() {
-    const sbox0 = el("seats");
-    if (sbox0) sbox0.innerHTML = "";
-    const dbox0 = el("deck");
-    if (dbox0) dbox0.innerHTML = "";
-    online = Boolean(window.__net);
-    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
-    if (cdId) {
-      clearInterval(cdId);
-      cdId = null;
-    }
-    cd = 5;
-    drawn = Array(N2).fill(null);
-    pickOrder = [];
-    takenK = [];
-    window.__roundNo = 1;
-    window.__myRankIdx = null;
-    if (!online) {
-      window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
-    }
-    phase = "pick";
-    layout(Array.from({ length: N2 }, (_, i) => i));
-    draw();
-  }
-  window.__bootDraw = () => {
-    boot();
-    armPickTimer();
-  };
-  boot();
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  el("go").addEventListener("click", () => {
-    if (cdId) {
-      clearInterval(cdId);
-      cdId = null;
-    }
-  });
-  window.addEventListener("resize", draw);
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    draw();
-  });
-}
-
-// src/screens/table.js
-var table_exports = {};
-__export(table_exports, {
-  mount: () => mount5
-});
-
-// src/lib/deck.js
-var isJoker = (c) => c >= 13;
-
-// src/lib/view.js
-var orderOf = (G2, n) => G2 && G2.seatOrder && G2.seatOrder.length === n ? G2.seatOrder : Array.from({ length: n }, (_, i) => i);
-var toScreenIn = (order, seat, me2) => {
-  const n = order.length;
-  return ((order.indexOf(seat) - order.indexOf(me2)) % n + n) % n;
-};
-var toSeatIn = (order, pos, me2) => {
-  const n = order.length;
-  return order[((order.indexOf(me2) + pos) % n + n) % n];
-};
-function screenView(G2, ctx, myID, names) {
-  const n = G2.counts.length;
-  const me2 = Number(myID);
-  const nm = names || new Array(n).fill("");
-  const ord = orderOf(G2, n);
-  const toScreen = (seat, _me, _n2) => toScreenIn(ord, seat, me2);
-  const toSeat = (pos, _me, _n2) => toSeatIn(ord, pos, me2);
-  const seats = new Array(n);
-  for (let seat = 0; seat < n; seat++) {
-    const pos = toScreen(seat, me2, n);
-    seats[pos] = {
-      /* 엔진 자리 번호. 얼굴 그림은 이 번호로 골라야 사람을 따라간다 —
-         화면 위치로 고르면 판이 바뀔 때 얼굴만 그 자리에 남는다 */
-      seat,
-      name: nm[seat] || "",
-      c: G2.counts[seat],
-      s: G2.passed[seat] ? "pass" : "",
-      out: G2.counts[seat] === 0,
-      hold: seat === me2 ? (G2.hands[seat] || []).slice() : null
-    };
-  }
-  const table = (G2.table || []).map((t) => ({
-    by: toScreen(t.by, me2, n),
-    num: t.num,
-    count: t.count,
-    cards: new Array(t.count).fill(t.num)
-    /* 남의 카드는 숫자만 안다 */
-  }));
-  return {
-    N: n,
-    me: 0,
-    /* 화면에서 나는 언제나 0 */
-    names: seats.map((s) => s.name),
-    seats,
-    hand: (G2.hands[me2] || []).slice(),
-    turn: ctx.phase === "play" ? toScreen(Number(ctx.currentPlayer), me2, n) : -1,
-    myTurn: ctx.phase === "play" && Number(ctx.currentPlayer) === me2,
-    table,
-    pile: G2.pile ? { by: toScreen(G2.pile.by, me2, n), num: G2.pile.num, count: G2.pile.count } : null,
-    /* 바닥을 치우기 직전 모습. 1번으로 엎거나 마지막 카드로 완주하면
-       올리기와 치우기가 한 수 안에서 끝나므로, 이걸 넘겨야 화면이 보여줄 수 있다 */
-    lastTable: (G2.shown || []).map((t) => ({
-      by: toScreen(t.by, me2, n),
-      num: t.num,
-      count: t.count,
-      cards: new Array(t.count).fill(t.num)
-    })),
-    finish: (G2.finished || []).map((s) => toScreen(s, me2, n)),
-    score: G2.counts.map((_, seat) => G2.score[toSeat(seat, me2, n)]),
-    roundNo: G2.roundNo,
-    totalRounds: G2.totalRounds,
-    phase: ctx.phase,
-    revolution: G2.revolution ? {
-      seat: toScreen(G2.revolution.seat, me2, n),
-      great: G2.revolution.great,
-      mine: G2.revolution.seat === me2,
-      decided: Boolean(G2.revDecided),
-      declared: Boolean(G2.revDeclared)
-    } : null,
-    /* 내가 지금 선언할 수 있는가 */
-    canDeclare: Boolean(G2.revolution && !G2.revDecided && G2.revolution.seat === me2),
-    taxCancelled: Boolean(G2.taxCancelled),
-    /* 세금 단계에서 내가 내야 할 장수 (0이면 낼 것 없음) */
-    taxGive: (() => {
-      if (ctx.phase !== "tax" || !G2.taxOrder) return 0;
-      if (!G2.revDecided || G2.taxCancelled || !G2.taxOn) return 0;
-      if (G2.given && G2.given[me2] !== void 0) return 0;
-      if (G2.taxOrder[0] === me2) return 2;
-      if (G2.taxOrder[1] === me2) return 1;
-      return 0;
-    })(),
-    /* 세금 상대 (화면 자리) */
-    taxWith: (() => {
-      if (ctx.phase !== "tax" || !G2.taxOrder) return -1;
-      const o = G2.taxOrder, last = o.length - 1;
-      if (o[0] === me2) return toScreen(o[last], me2, n);
-      if (o[1] === me2) return toScreen(o[last - 1], me2, n);
-      if (o[last] === me2) return toScreen(o[0], me2, n);
-      if (o[last - 1] === me2) return toScreen(o[1], me2, n);
-      return -1;
-    })(),
-    /* 방금 끝난 판의 마지막 장면과 등수 */
-    lastRound: G2.lastRound ? {
-      roundNo: G2.lastRound.roundNo,
-      order: G2.lastRound.order.map((s) => toScreen(s, me2, n)),
-      points: G2.lastRound.points.slice(),
-      table: G2.lastRound.table.map((t) => ({
-        by: toScreen(t.by, me2, n),
-        num: t.num,
-        count: t.count,
-        cards: new Array(t.count).fill(t.num)
-      }))
-    } : null,
-    over: ctx.gameover ? {
-      score: G2.counts.map((_, seat) => ctx.gameover.score[toSeat(seat, me2, n)]),
-      order: (ctx.gameover.order || []).map((s) => toScreen(s, me2, n))
-    } : null
-  };
-}
-
-// src/lib/engine.js
-var engine = {
-  mode: null,
-  /* "local" | "online" */
-  client: null,
-  myID: "0",
-  names: [],
-  bots: [],
-  /* 봇이 앉은 자리 (엔진 자리 번호) */
-  view: null,
-  paused: false,
-  /* 결과를 보는 동안 다음 판을 멈춘다 */
-  auto: false,
-  /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
-  botMs: 3e3
-  /* 봇이 생각하는 척하는 시간 */
-};
-var listeners = [];
-var botTimer = null;
-var gen = 0;
-function onView(fn) {
-  listeners.push(fn);
-  if (engine.view) fn(engine.view);
-  return () => {
-    listeners = listeners.filter((f) => f !== fn);
-  };
-}
-function raw() {
-  if (!engine.client) return null;
-  return engine.mode === "local" ? engine.client.store.getState() : engine.client.getState();
-}
-function push() {
-  const st2 = raw();
-  if (!st2) return;
-  engine.view = screenView(st2.G, st2.ctx, engine.myID, engine.names);
-  listeners.forEach((f) => {
-    try {
-      f(engine.view);
-    } catch (e) {
-      console.error(e);
-    }
-  });
-  if (engine.mode === "local") scheduleBot();
-}
-function botPick(hand, pile) {
-  const cnt = {};
-  let jok = 0;
-  hand.forEach((c) => {
-    if (isJoker(c)) jok++;
-    else cnt[c] = (cnt[c] || 0) + 1;
-  });
-  const opts2 = [];
-  const maxN = pile ? pile.num - 1 : 12;
-  for (let num = 1; num <= maxN; num++) {
-    const same = cnt[num] || 0;
-    if (!same) continue;
-    if (pile) {
-      const need = pile.count - same;
-      if (need > jok) continue;
-      opts2.push({ num, count: pile.count, useJok: Math.max(0, need), own: same });
-    } else opts2.push({ num, count: same, useJok: 0, own: same });
-  }
-  if (!opts2.length) return !pile && jok > 0 ? { num: 13, count: 1 } : null;
-  opts2.forEach((o) => {
-    let s = o.num * 2;
-    s -= o.useJok * 10;
-    if (pile && o.own > o.count) s -= 24;
-    o.s = s;
-  });
-  opts2.sort((a, b) => b.s - a.s);
-  if (opts2.length > 1 && Math.random() < 0.1) return opts2[1];
-  return opts2[0];
-}
-var worstFirst = (a, b) => (isJoker(b) ? 99 : b) - (isJoker(a) ? 99 : a);
-var actsFor = (seat) => engine.bots.includes(seat) || engine.auto && seat === Number(engine.myID);
-function scheduleBot() {
-  if (botTimer) return;
-  const st2 = raw();
-  if (!st2 || st2.ctx.gameover) return;
-  const G2 = st2.G, ctx = st2.ctx;
-  if (ctx.phase === "tax") {
-    const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
-    const revTodo = revSeat >= 0 && actsFor(revSeat);
-    const o = G2.taxOrder;
-    const canGive = G2.revDecided && !G2.taxCancelled && G2.taxOn;
-    const todo = canGive ? [o[0], o[1]].filter((seat2) => actsFor(seat2) && G2.given[seat2] === void 0) : [];
-    if (!revTodo && !todo.length) return;
-    const g2 = ++gen;
-    botTimer = setTimeout(() => {
-      botTimer = null;
-      if (g2 !== gen) return;
-      const s2 = raw();
-      if (!s2 || s2.ctx.phase !== "tax") {
-        push();
-        return;
-      }
-      if (revTodo && s2.G.revolution && !s2.G.revDecided) {
-        engine.client.updatePlayerID(String(s2.G.revolution.seat));
-        engine.client.moves.declare();
-      }
-      const s3 = raw();
-      if (s3 && s3.ctx.phase === "tax" && s3.G.revDecided && !s3.G.taxCancelled && s3.G.taxOn) {
-        for (const seat2 of [s3.G.taxOrder[0], s3.G.taxOrder[1]]) {
-          if (!actsFor(seat2) || s3.G.given[seat2] !== void 0) continue;
-          const hand = (s3.G.hands[seat2] || []).slice().sort(worstFirst);
-          const need = seat2 === s3.G.taxOrder[0] ? 2 : 1;
-          if (hand.length < need) continue;
-          engine.client.updatePlayerID(String(seat2));
-          engine.client.moves.give(hand.slice(0, need));
-        }
-      }
-      engine.client.updatePlayerID(engine.myID);
-      push();
-    }, 700);
-    return;
-  }
-  if (engine.paused) return;
-  const seat = Number(ctx.currentPlayer);
-  if (!actsFor(seat)) return;
-  const g = ++gen;
-  botTimer = setTimeout(() => {
-    botTimer = null;
-    if (g !== gen) return;
-    const s2 = raw();
-    if (!s2 || s2.ctx.gameover || s2.ctx.phase !== "play") {
-      push();
-      return;
-    }
-    const now = Number(s2.ctx.currentPlayer);
-    if (!actsFor(now)) {
-      push();
-      return;
-    }
-    const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
-    engine.client.updatePlayerID(String(now));
-    if (mv) engine.client.moves.play(mv.num, mv.count);
-    else engine.client.moves.pass();
-    engine.client.updatePlayerID(engine.myID);
-    push();
-  }, engine.botMs);
-}
-function setAuto(on2) {
-  engine.auto = Boolean(on2);
-  gen++;
-  if (botTimer) {
-    clearTimeout(botTimer);
-    botTimer = null;
-  }
-  scheduleBot();
-}
-function play(num, count2) {
-  if (!engine.client) return false;
-  engine.client.updatePlayerID(engine.myID);
-  engine.client.moves.play(num, count2);
-  return true;
-}
-function passTurn() {
-  if (!engine.client) return false;
-  engine.client.updatePlayerID(engine.myID);
-  engine.client.moves.pass();
-  return true;
-}
-
-// src/screens/table.js
-function mount5(root) {
-  const document2 = scoped(root);
-  const HEADS2 = HEADS, ART2 = ART;
-  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
-  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
-  const T2 = {
-    ko: {
-      roundN: (n) => "ROUND " + n,
-      joker: "\uCE74\uBA5C\uB808\uC628",
-      myTurn: "\uB0B4 \uCC28\uB840",
-      theirTurn: (n) => n + " \uCC28\uB840",
-      left: (c) => "\uB0A8\uC740 <b>" + c + "</b>\uC7A5",
-      tagTurn: "\uCC28\uB840",
-      tagPass: "\uD328\uC2A4",
-      tagOut: "\uC644\uC8FC",
-      lead: "\uC6D0\uD558\uB294 \uC7A5\uC218\uB85C \uC2DC\uC791\uD558\uC138\uC694",
-      top1: "<b>1\uBC88</b>\uC774 \uB098\uC654\uC2B5\uB2C8\uB2E4. \uC544\uBB34\uB3C4 \uBC1B\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4",
-      need: (c, n) => "<b>" + c + "\uC7A5</b>\uC744 <b>" + n + "\uBC88 \uC774\uD558</b>\uB85C \uBC1B\uC73C\uC138\uC694",
-      emptyPile: "\uBC14\uB2E5\uC774 \uBE44\uC5C8\uC2B5\uB2C8\uB2E4<br>\uC6D0\uD558\uB294 \uCE74\uB4DC\uB97C \uB0B4\uC138\uC694",
-      pass: "\uD328\uC2A4",
-      pick: "\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694",
-      play: (n) => n + "\uC7A5 \uB0B4\uAE30",
-      notTurn: "\uC0C1\uB300 \uCC28\uB840\uC785\uB2C8\uB2E4",
-      mix: "\uAC19\uC740 \uC22B\uC790\uB9CC \uD568\uAED8 \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4",
-      cnt: (n) => n + "\uC7A5\uC744 \uB9DE\uCDB0 \uC8FC\uC138\uC694",
-      lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
-      autoOff: "\uC790\uB3D9",
-      autoOn: "\uC790\uB3D9 \uB044\uAE30",
-      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4 \xB7 \uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
-      autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
-      left2: (n) => n + "\uCD08",
-      cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
-      endR: "\uD310 \uC885\uB8CC",
-      close: "\uB2E4\uC2DC \uB204\uB974\uBA74 \uC811\uD799\uB2C8\uB2E4"
-    },
-    en: {
-      roundN: (n) => "ROUND " + n,
-      joker: "CHAMELEON",
-      myTurn: "Your turn",
-      theirTurn: (n) => n + "'s turn",
-      left: (c) => "<b>" + c + "</b> left",
-      tagTurn: "turn",
-      tagPass: "passed",
-      tagOut: "done",
-      lead: "Lead with any number of cards",
-      top1: "<b>1</b> is out. Nobody can beat it",
-      need: (c, n) => "Beat with <b>" + c + (c === 1 ? " card" : " cards") + "</b> of <b>" + n + " or lower</b>",
-      emptyPile: "The pile is empty<br>Play anything you like",
-      pass: "Pass",
-      pick: "Select cards",
-      play: (n) => "Play " + n,
-      notTurn: "Opponent's turn",
-      mix: "Cards must share one number",
-      cnt: (n) => "Play exactly " + n,
-      lower: "Play a lower number",
-      autoOff: "Auto",
-      autoOn: "Auto off",
-      autoOnMsg: "Auto play on \xB7 tap a card to take over",
-      autoPass: "Time up \u2014 passed for you",
-      left2: (n) => n + "s",
-      cleared: "Pile cleared \xB7 you lead again",
-      endR: "End round",
-      close: "Tap again to close"
-    }
-  };
-  let lang = window.__lang || "ko";
-  const NAMES = KO_N;
-  const el = (id) => document2.getElementById(id);
-  const isJ = (c) => c >= 13;
-  const ALL = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
-  const ALL_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
-  let SEATS = [];
-  let hand = [];
-  let finish = [];
-  let offView = null;
-  let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
-  let holdingEnd = false;
-  function apply(v) {
-    if (!v) return;
-    if (holdingEnd && !v.over) return;
-    SEATS = v.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat }));
-    hand = v.hand.slice();
-    if (SEATS[0]) SEATS[0].hold = hand;
-    finish = v.finish.slice();
-    turn = v.turn;
-    busy = !v.myTurn;
-    if (v.roundNo !== lastRound) {
-      const first = lastRound < 0;
-      lastRound = v.roundNo;
-      sel = [];
-      animated = 0;
-      spread = false;
-      window.__roundNo = v.roundNo;
-      if (!first && !v.over && v.lastRound && window.__onRoundEnd) {
-        showLastRound(v);
-        return;
-      }
-    }
-    if (v.table.length === 0 && !v.over && (v.lastTable.length || trick.length)) {
-      const gsig = v.lastTable.map((t) => t.by + ":" + t.num + "x" + t.count).join("|");
-      if (gsig !== ghostSig) {
-        ghostSig = gsig;
-        ghost = (v.lastTable.length ? v.lastTable : trick).map((t) => ({
-          by: t.by,
-          num: t.num,
-          count: t.count,
-          cards: t.cards.slice()
-        }));
-        animated = Math.min(animated, ghost.length);
-        if (holdPile) clearTimeout(holdPile);
-        holdPile = setTimeout(() => {
-          holdPile = null;
-          ghost = [];
-          draw();
-        }, 2e3);
-      }
-    } else if (v.table.length) {
-      if (holdPile) {
-        clearTimeout(holdPile);
-        holdPile = null;
-      }
-      ghost = [];
-      ghostSig = "";
-    }
-    if (v.table.length < trick.length) {
-      animated = 0;
-      spread = false;
-    }
-    trick = v.table.map((t) => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
-    sel = sel.filter((i) => i < hand.length);
-    const me2 = finish.indexOf(0);
-    window.__myRankIdx = me2 >= 0 ? me2 : null;
-    if (v.over && !overSent) {
-      overSent = true;
-      window.__gameOver = v.over;
-      window.GAME = window.GAME || {};
-      window.GAME.score = v.over.score.slice();
-      window.GAME.finish = v.over.order.slice();
-      window.GAME.names = SEATS.map((x2) => x2.n);
-      if (window.__onGameOver) setTimeout(window.__onGameOver, 900);
-    }
-    if (v.phase === "tax" && window.__onTax) window.__onTax(v);
-    draw();
-    resetTimer();
-  }
-  function showLastRound(v) {
-    holdingEnd = true;
-    const lr = v.lastRound;
-    SEATS = v.seats.map((x2, i) => ({
-      n: x2.name,
-      c: i === lr.order[lr.order.length - 1] ? x2.c : 0,
-      s: "",
-      hold: [],
-      av: x2.seat
-    }));
-    hand = [];
-    finish = lr.order.slice();
-    turn = -1;
-    busy = true;
-    trick = lr.table.map((t) => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
-    animated = Math.max(0, trick.length - 1);
-    spread = false;
-    draw();
-    if (timerId) clearTimeout(timerId);
-    setTimeout(() => {
-      holdingEnd = false;
-      window.__onRoundEnd && window.__onRoundEnd(v);
-    }, 2e3);
-  }
-  function handTouched() {
-    if (engine.auto) setAuto2(false);
-  }
-  function boot() {
-    if (offView) offView();
-    if (el("auto")) {
-      el("auto").textContent = T2[lang].autoOff;
-      el("auto").classList.remove("on");
-    }
-    setAuto(false);
-    if (holdPile) {
-      clearTimeout(holdPile);
-      holdPile = null;
-    }
-    ghost = [];
-    ghostSig = "";
-    holdingEnd = false;
-    lastRound = -1;
-    overSent = false;
-    trick = [];
-    sel = [];
-    busy = false;
-    animated = 0;
-    spread = false;
-    offView = onView(apply);
-    if (engine.view) apply(engine.view);
-  }
-  window.__bootTable = boot;
-  window.__forceEnd = () => {
-    const left = SEATS.map((s, i) => i).filter((i) => !finish.includes(i));
-    left.sort((a, b) => SEATS[a].c - SEATS[b].c);
-    finish = finish.concat(left);
-    endRound();
-  };
-  let sel = [];
-  let trick = [];
-  let turn = 0;
-  let lastPlayer = null;
-  let busy = false;
-  let animated = 0;
-  let spread = false;
-  const cur = () => trick.length ? trick[trick.length - 1] : null;
-  const label = (n) => isJ(n) ? T2[lang].joker : (lang === "ko" ? KO_N : EN_N)[n - 1];
-  const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
-  function cardHTML(n, w) {
-    if (isJ(n)) return '<div class="card is-joker" style="--w:' + w + 'px"><div class="card__band"><span class="card__name">\uCE74\uBA5C\uB808\uC628</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"></div></div>';
-    return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + label(n) + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
-  }
-  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
-  function placeTable(sec, cyPct) {
-    const b = sec.getBoundingClientRect();
-    const W = b.width, H = b.height;
-    const scale = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = cyPct == null ? (H - dh) / 2 + OV.cy * dh : cyPct / 100 * H;
-    const ox = W / 2 - OV.cx * dw;
-    const oy = cy - OV.cy * dh;
-    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
-    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
-    return {
-      cx: (ox + OV.cx * dw) / W * 100,
-      cy: cy / H * 100,
-      rx: OV.rx * dw / W * 100,
-      ry: OV.ry * dh / H * 100
-    };
-  }
-  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
-  function syncRing() {
-    const sec = window.document.getElementById("table");
-    if (!sec) return;
-    RING = placeTable(sec, null);
-    const p = el("pile");
-    if (p) {
-      p.style.left = RING.cx + "%";
-      p.style.top = RING.cy + "%";
-    }
-    const ph = el("ring") && el("ring").querySelector(".pile__hint");
-    if (ph) {
-      ph.style.left = RING.cx + "%";
-      ph.style.top = RING.cy + "%";
-    }
-  }
-  function seatPos(i) {
-    const a = Math.PI / 2 + i * 2 * Math.PI / SEATS.length;
-    const s = Math.sin(a);
-    const bias = 0;
-    const side = Math.abs(s) < 0.05;
-    const nudge = s > 0.9 ? 9 : side ? 4 : s > 0.25 ? 2 : 0;
-    const nudgeX = side ? Math.cos(a) < 0 ? 2 : -2 : 0;
-    return {
-      x: RING.cx + Math.cos(a) * -RING.rx,
-      y: RING.cy + s * RING.ry + bias,
-      nudge,
-      nudgeX
-    };
-  }
-  function maxCount(n) {
-    const j2 = hand.filter(isJ).length;
-    return isJ(n) ? j2 : hand.filter((x2) => x2 === n).length + j2;
-  }
-  function isDead(n) {
-    const c = cur();
-    if (!c) return false;
-    if (isJ(n)) return !KO_N.some((_, i) => i + 1 < c.num && maxCount(i + 1) >= c.count);
-    return !(n < c.num && maxCount(n) >= c.count);
-  }
-  function effective(l) {
-    const r = l.filter((x2) => !isJ(x2));
-    if (!r.length) return 13;
-    return r.every((x2) => x2 === r[0]) ? r[0] : null;
-  }
-  function legal(l) {
-    if (!l.length) return false;
-    const e = effective(l);
-    if (e === null) return false;
-    const c = cur();
-    if (!c) return true;
-    return l.length === c.count && e < c.num;
-  }
-  function fanHTML(c) {
-    if (!c) return '<div class="fan"></div>';
-    const shown = Math.min(c, 7), step = 5;
-    const w = 13 + (shown - 1) * step;
-    let s = '<div class="fan" style="width:' + w + 'px">';
-    for (let i = 0; i < shown; i++)
-      s += '<i style="left:' + i * step + "px;z-index:" + i + '"></i>';
-    return s + "</div>";
-  }
-  function anchorSeats(box, limitBottom) {
-    const root2 = window.document.documentElement;
-    const W = (window.document.getElementById("stage") || root2).getBoundingClientRect();
-    box.querySelectorAll(".seat").forEach((s) => {
-      const av = s.querySelector(".seat__av");
-      if (!av) return;
-      const nudge = +(s.dataset.nudge || 0), nx = +(s.dataset.nudgex || 0);
-      const dy = av.offsetTop + av.offsetHeight / 2 + nudge;
-      s.style.transform = "translate(calc(-50% + " + nx + "px)," + -dy + "px)";
-      const r = s.getBoundingClientRect();
-      let ox = nx, oy = 0;
-      if (r.left < W.left + 1) ox = nx + (W.left + 1 - r.left);
-      else if (r.right > W.right - 1) ox = nx + (W.right - 1 - r.right);
-      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
-      if (ox !== nx || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
-    });
-  }
-  function renderSeats() {
-    syncRing();
-    const box = el("seats");
-    box.innerHTML = "";
-    SEATS.forEach((s, i) => {
-      const p = seatPos(i);
-      const d = document2.createElement("div");
-      d.className = "seat" + (i === 0 ? " seat--me" : "") + (turn === i && SEATS[i].c > 0 ? " seat--turn" : "") + /* 봇 차례에도 표시 */
-      (s.s === "pass" ? " seat--pass" : "") + (s.c === 0 ? " seat--out" : "");
-      d.style.left = p.x.toFixed(1) + "%";
-      d.style.top = p.y.toFixed(1) + "%";
-      d.dataset.nudge = p.nudge || 0;
-      d.dataset.nudgex = p.nudgeX || 0;
-      const big = SEATS.length <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
-      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      d.style.zIndex = 6 + Math.round(p.y);
-      const tg = T2[lang];
-      const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";
-      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s.n || "") + "</span>" + (i === 0 ? "" : fanHTML(s.c)) + '<span class="seat__c">' + T2[lang].left(s.c) + "</span>";
-      box.appendChild(d);
-    });
-    const nd = el("need");
-    anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
-  }
-  const outerTrick = () => trick;
-  function renderPile() {
-    const p = el("pile");
-    p.innerHTML = "";
-    const shown = outerTrick().length ? outerTrick() : ghost;
-    const trick2 = shown;
-    if (spread && trick2.length) {
-      const t = T2[lang];
-      const maxC = Math.min(6, Math.max(...trick2.map((x2) => x2.count)));
-      const cw = Math.max(18, Math.min(32, Math.floor((196 - (maxC - 1) * 3) / maxC)));
-      p.innerHTML = '<div class="spread">' + trick2.slice().reverse().map((x2, idx) => '<div class="srow' + (idx === 0 ? " srow--new" : "") + '"><span class="srow__w">' + (SEATS[x2.by] && SEATS[x2.by].n || "") + '</span><span class="srow__c">' + (x2.cards || Array.from({ length: x2.count }, () => x2.num)).slice(0, 6).map((cc) => cardHTML(cc, cw, isJ(cc) ? x2.num : null)).join("") + (x2.count > 6 ? '<span class="srow__p">+' + (x2.count - 6) + "</span>" : "") + "</span></div>").join("") + '<div class="spread__t">' + t.close + "</div></div>";
-      return;
-    }
-    if (!trick2.length) {
-      p.innerHTML = '<div class="pile__hint">' + T2[lang].emptyPile + "</div>";
-      animated = 0;
-      return;
-    }
-    const rect = el("ring").getBoundingClientRect();
-    trick2.slice(-4).forEach((t, kk) => {
-      const k2 = trick2.length - Math.min(trick2.length, 4) + kk;
-      const from = seatPos(t.by);
-      const g = document2.createElement("div");
-      g.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
-      const d = trick2.length - 1 - k2;
-      g.style.setProperty("--r", d === 0 ? "0deg" : k2 * 37 % 19 - 9 - d * 3 + "deg");
-      g.style.setProperty("--dy", -Math.min(d, 3) * 6 + "px");
-      g.style.setProperty("--sc", (1 - Math.min(d, 3) * 0.05).toFixed(3));
-      g.style.setProperty("--fx", ((from.x - 50) / 100 * rect.width).toFixed(0) + "px");
-      g.style.setProperty("--fy", ((from.y - 50) / 100 * rect.height).toFixed(0) + "px");
-      g.style.zIndex = k2;
-      const cw = Math.max(18, Math.min(44, Math.floor((rect.width * 0.44 - (t.count - 1) * 4) / t.count)));
-      g.innerHTML = (t.cards || Array.from({ length: t.count }, () => t.num)).map((cc) => cardHTML(cc, cw, isJ(cc) ? t.num : null)).join("");
-      p.appendChild(g);
-    });
-    animated = trick2.length;
-  }
-  function renderHand() {
-    const h = el("hand");
-    h.innerHTML = "";
-    const w = 60, n = hand.length;
-    const step = n > 1 ? Math.min(36, (h.clientWidth - w) / (n - 1)) : 0;
-    const total = w + step * (n - 1);
-    hand.forEach((c, i) => {
-      const s = document2.createElement("div");
-      s.className = "slot" + (sel.includes(i) ? " slot--sel" : "") + (isDead(c) ? " slot--dead" : "");
-      s.style.left = (h.clientWidth - total) / 2 + i * step + "px";
-      s.style.zIndex = i;
-      s.innerHTML = cardHTML(c, w);
-      s.onclick = () => {
-        handTouched();
-        if (turn !== 0 || busy) return;
-        const k2 = sel.indexOf(i);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else sel.push(i);
-        draw();
-      };
-      h.appendChild(s);
-    });
-    if (SEATS[0]) SEATS[0].c = hand.length;
-  }
-  function renderBottom() {
-    const c = cur();
-    const t = T2[lang];
-    const mine = turn === 0 && !busy;
-    const who = turn === 0 ? "" : t.theirTurn(SEATS[turn] && SEATS[turn].n || "") + " \xB7 ";
-    const left = mine && tLeft > 0 ? ' \xB7 <span class="count' + (tLeft <= 5 ? " warn" : "") + '">' + t.left2(tLeft) + "</span>" : "";
-    el("need").innerHTML = who + (c ? c.num === 1 ? t.top1 : t.need(c.count, c.num - 1) : turn === 0 ? t.lead : "") + left;
-    const rn2 = window.__roundNo || 1;
-    const NM = lang === "ko" ? KO_N : EN_N;
-    const ri = window.__myRankIdx;
-    const ord = (x2) => {
-      const s = ["th", "st", "nd", "rd"], v = x2 % 100;
-      return x2 + (s[(v - 20) % 10] || s[v] || s[0]);
-    };
-    const rname = ri == null ? "" : lang === "ko" ? ri + 1 + "\uB4F1" : ord(ri + 1);
-    el("round").textContent = t.roundN(rn2) + (rname ? " \xB7 " + rname : "");
-    const eb = el("endRound");
-    if (eb) eb.textContent = t.endR;
-    el("pass").textContent = t.pass;
-    const list = sel.map((i) => hand[i]);
-    const ok = legal(list) && turn === 0 && !busy;
-    const b = el("play");
-    b.disabled = !ok;
-    b.textContent = turn !== 0 ? t.notTurn : !list.length ? t.pick : ok ? t.play(list.length) : effective(list) === null ? t.mix : cur() && list.length !== cur().count ? t.cnt(cur().count) : t.lower;
-    el("pass").disabled = turn !== 0 || busy || !cur();
-  }
-  function draw() {
-    if (!SEATS.length) return;
-    renderSeats();
-    renderPile();
-    renderHand();
-    renderBottom();
-    const nd = el("need");
-    anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
-  }
-  let timerId = null, tickId = null, tLeft = 0;
-  let myGen = 0, botGen = 0;
-  const TURN_SEC = 15;
-  const turnSec = () => Number(window.__turnSec) || TURN_SEC;
-  function watchDeadline() {
-  }
-  function resetTimer() {
-    el("timer").innerHTML = "<i></i>";
-    el("timer").classList.toggle("mine", turn === 0 && !busy);
-    if (timerId) clearTimeout(timerId);
-    if (tickId) clearInterval(tickId);
-    tLeft = 0;
-    if (turn === 0 && !busy) {
-      tLeft = turnSec();
-      renderBottom();
-      tickId = setInterval(() => {
-        tLeft--;
-        if (tLeft <= 0) {
-          clearInterval(tickId);
-          tickId = null;
-        }
-        renderBottom();
-      }, 1e3);
-      timerId = setTimeout(() => {
-        if (turn === 0 && !busy) doPass(true);
-      }, turnSec() * 1e3);
-    }
-  }
-  function quitGame() {
-    if (window.__scored) return;
-    window.__scored = true;
-    const G2 = window.GAME || {};
-    const sc = G2.score || [];
-    const order = sc.map((_, i) => i).sort((a, b) => (sc[b] || 0) - (sc[a] || 0));
-    if (window.reportGame) window.reportGame(order.indexOf(0), sc.length || SEATS.length, sc[0] || 0, true);
-  }
-  window.__quitGame = quitGame;
-  function clearsPile(numValue) {
-    if (numValue === 1) return true;
-    return numValue === 2 && window.__opts && window.__opts.clear2;
-  }
-  el("play").onclick = () => {
-    const list = sel.map((i) => hand[i]);
-    if (!legal(list) || turn !== 0 || busy) return;
-    const e = effective(list);
-    sel = [];
-    busy = true;
-    play(e, list.length);
-    iMoved();
-    unlockLater();
-  };
-  let unlockId = null;
-  function unlockLater() {
-    if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
-      unlockId = null;
-      const v = engine.view;
-      if (v && v.myTurn && busy) {
-        busy = false;
-        draw();
-      }
-    }, 1200);
-  }
-  function iMoved() {
-    if (window.__iMoved) window.__iMoved();
-  }
-  function doPass(auto) {
-    if (turn !== 0 || busy) return;
-    if (timerId) clearTimeout(timerId);
-    if (!cur()) {
-      if (!auto) return;
-      const w = weakest();
-      if (!w) return;
-      sel = [];
-      busy = true;
-      flash(T2[lang].autoPass, true);
-      play(w.num, w.count);
-      if (auto) toAuto();
-      return;
-    }
-    sel = [];
-    busy = true;
-    if (auto) flash(T2[lang].autoPass, true);
-    if (!auto) iMoved();
-    passTurn();
-    unlockLater();
-    if (auto) toAuto();
-  }
-  function toAuto() {
-    if (engine.auto) return;
-    setTimeout(() => {
-      setAuto2(true);
-      flash(T2[lang].autoOnMsg, true);
-    }, 400);
-  }
-  function weakest() {
-    let best = null;
-    for (const c of hand) if (!isJ(c) && (best === null || c > best)) best = c;
-    if (best !== null) return { num: best, count: 1 };
-    return hand.some(isJ) ? { num: 13, count: 1 } : null;
-  }
-  el("pass").onclick = () => doPass(false);
-  function setAuto2(on2) {
-    setAuto(on2);
-    const b = el("auto");
-    b.textContent = on2 ? T2[lang].autoOn : T2[lang].autoOff;
-    b.classList.toggle("on", on2);
-    if (on2) {
-      sel = [];
-      renderHand();
-      renderBottom();
-    }
-  }
-  el("auto").onclick = () => setAuto2(!engine.auto);
-  function flash(msg, msLong) {
-    const f = el("flash");
-    f.textContent = msg;
-    f.style.opacity = 1;
-    setTimeout(() => f.style.opacity = 0, msLong ? 2200 : 1200);
-  }
-  el("ring").addEventListener("click", (e) => {
-    if (!trick.length) return;
-    if (e.target.closest(".play, .spread")) {
-      spread = !spread;
-      renderPile();
-    }
-  });
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  boot();
-  window.addEventListener("resize", draw);
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    draw();
-  });
-}
-
-// src/screens/tax.js
-var tax_exports = {};
-__export(tax_exports, {
-  mount: () => mount6
-});
-function mount6(root) {
-  const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
-  const el = (id) => document2.getElementById(id);
-  const isJ = (c) => c >= 13;
-  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
-  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
-  const T2 = {
-    ko: {
-      steps: ["\uB4F1\uC218 \uBC1C\uD45C", "\uD328 \uB098\uB204\uAE30", "\uD601\uBA85", "\uC138\uAE08", "\uC2DC\uC791"],
-      dealH: "\uD328 \uB098\uB204\uAE30",
-      dealS: "80\uC7A5\uC744 \uACE8\uACE0\uB8E8 \uB098\uB215\uB2C8\uB2E4. \uC774 \uC21C\uAC04 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC774 \uD55C \uC0AC\uB78C\uC5D0\uAC8C \uBAB0\uB9AC\uBA74 \uD601\uBA85\uC774 \uC5F4\uB9BD\uB2C8\uB2E4.",
-      rankH: "\uC774\uBC88 \uD310\uC758 \uB4F1\uC218",
-      rankS: "\uC9C0\uB09C \uD310\uC5D0\uC11C \uC190\uC744 \uD134 \uC21C\uC11C\uAC00 \uADF8\uB300\uB85C \uC774\uBC88 \uD310 \uB4F1\uC218\uAC00 \uB429\uB2C8\uB2E4.",
-      revH: "\uD601\uBA85",
-      revNone: "\uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uBAA8\uB450 \uC954 \uC0AC\uB78C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.",
-      revMine: "\uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC774 \uBAA8\uB450 \uC190\uC5D0 \uB4E4\uC5B4\uC654\uC2B5\uB2C8\uB2E4. \uD601\uBA85\uC744 \uC120\uC5B8\uD558\uBA74 \uC774\uBC88 \uD310 \uC138\uAE08\uC774 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4.",
-      revOther: (n) => n + "\uB2D8\uC774 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uC950\uACE0 \uD601\uBA85\uC744 \uC120\uC5B8\uD588\uC2B5\uB2C8\uB2E4. \uC774\uBC88 \uD310 \uC138\uAE08\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.",
-      revGreatOther: (n) => n + "\uB2D8\uC774 \uAF34\uB4F1\uC73C\uB85C \uB300\uD601\uBA85\uC744 \uC120\uC5B8\uD588\uC2B5\uB2C8\uB2E4. \uC138\uAE08\uC774 \uC0AC\uB77C\uC9C0\uACE0 \uB4F1\uC218\uAC00 \uD1B5\uC9F8\uB85C \uB4A4\uC9D1\uD799\uB2C8\uB2E4.",
-      revGreatMine: "\uAF34\uB4F1\uC778\uB370 \uCE74\uBA5C\uB808\uC628 \uB450 \uC7A5\uC744 \uBAA8\uB450 \uC950\uC5C8\uC2B5\uB2C8\uB2E4. \uB300\uD601\uBA85\uC744 \uC120\uC5B8\uD558\uBA74 \uC138\uAE08\uC774 \uC0AC\uB77C\uC9C0\uACE0 \uACC4\uAE09\uC774 \uD1B5\uC9F8\uB85C \uB4A4\uC9D1\uD799\uB2C8\uB2E4.",
-      revGreatDone: "\uB300\uD601\uBA85. \uACC4\uAE09\uC774 \uB4A4\uC9D1\uD614\uC2B5\uB2C8\uB2E4.",
-      revDone: "\uD601\uBA85. \uC774\uBC88 \uD310 \uC138\uAE08\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.",
-      taxH: "\uC138\uAE08",
-      taxSkip: "\uD601\uBA85\uC73C\uB85C \uC774\uBC88 \uD310 \uC138\uAE08\uC740 \uAC77\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
-      taxMineTop: (n) => "\uAF34\uB4F1 <b>" + n + "</b>\uB2D8\uC758 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uB450 \uC7A5\uC744 \uAC00\uC838\uC635\uB2C8\uB2E4. \uB300\uC2E0 \uC544\uBB34 \uCE74\uB4DC\uB098 \uB450 \uC7A5\uC744 \uC8FC\uC138\uC694.",
-      taxMineTop2: (n) => "\uB4A4\uC5D0\uC11C \uB450 \uBC88\uC9F8 <b>" + n + "</b>\uB2D8\uACFC \uD55C \uC7A5\uC529 \uBC14\uAFC9\uB2C8\uB2E4. \uC904 \uCE74\uB4DC \uD55C \uC7A5\uC744 \uACE0\uB974\uC138\uC694.",
-      taxMineBot: (n) => "1\uB4F1 <b>" + n + "</b>\uB2D8\uC774 \uB0B4 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uB450 \uC7A5\uC744 \uAC00\uC838\uAC11\uB2C8\uB2E4.",
-      taxMineBot2: (n) => "2\uB4F1 <b>" + n + "</b>\uB2D8\uC774 \uB0B4 \uAC00\uC7A5 \uC88B\uC740 \uCE74\uB4DC \uD55C \uC7A5\uC744 \uAC00\uC838\uAC11\uB2C8\uB2E4.",
-      taxMid: "1\uB4F1\uACFC \uAF34\uB4F1\uC774 \uCE74\uB4DC\uB97C \uC8FC\uACE0\uBC1B\uC2B5\uB2C8\uB2E4.",
-      give: (n) => n + "\uC7A5 \uC8FC\uAE30",
-      giveNeed: (n) => "\uC904 \uCE74\uB4DC " + n + "\uC7A5\uC744 \uACE0\uB974\uC138\uC694",
-      take: "\uAC00\uC838\uC634",
-      gave: "\uC90C",
-      doneH: "\uC900\uBE44 \uC644\uB8CC",
-      doneS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uCCAB \uD310\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
-      declare: "\uD601\uBA85 \uC120\uC5B8",
-      declareG: "\uB300\uD601\uBA85 \uC120\uC5B8",
-      skip: "\uB118\uAE30\uAE30",
-      waitSec: (n) => n + "\uCD08 \uD6C4 \uB2E4\uC74C\uC73C\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4",
-      next: "\uB2E4\uC74C",
-      back: "\uCC98\uC74C\uBD80\uD130",
-      start: "\uD310 \uC2DC\uC791",
-      joker: "\uCE74\uBA5C\uB808\uC628"
-    },
-    en: {
-      steps: ["Standings", "Deal", "Revolution", "Tax", "Start"],
-      dealH: "Dealing",
-      dealS: "All 80 cards go out. If both chameleons land in one hand, a revolution opens up.",
-      rankH: "Standings for this round",
-      rankS: "Last round's finishing order becomes this round's standing.",
-      revH: "Revolution",
-      revNone: "Nobody holds both chameleons.",
-      revMine: "Both chameleons are in your hand. Declare a revolution and this round's tax is cancelled.",
-      revOther: (n) => n + " holds both chameleons and declared a revolution. No tax this round.",
-      revGreatOther: (n) => n + " declared a great revolution from last place. Tax is cancelled and every standing reverses.",
-      revGreatMine: "You are last and hold both chameleons. A great revolution cancels tax and reverses every rank.",
-      revGreatDone: "Great revolution. Every rank is reversed.",
-      revDone: "Revolution. No tax this round.",
-      taxH: "Tax",
-      taxSkip: "The revolution cancels tax for this round.",
-      taxMineTop: (n) => "You take the two best cards from <b>" + n + "</b>, last place. Hand back any two.",
-      taxMineTop2: (n) => "You swap one card with <b>" + n + "</b>, second from last. Pick one to give.",
-      taxMineBot: (n) => "<b>" + n + "</b>, in first place, takes your two best cards.",
-      taxMineBot2: (n) => "<b>" + n + "</b>, in second place, takes your best card.",
-      taxMid: "The top and bottom players exchange cards.",
-      give: (n) => "Give " + n,
-      giveNeed: (n) => "Pick " + n + " to give",
-      take: "taken",
-      gave: "given",
-      doneH: "Ready",
-      doneS: (n) => "<b>" + n + "</b> leads the first trick.",
-      declare: "Declare",
-      declareG: "Declare great revolution",
-      skip: "Skip",
-      waitSec: (n) => "Next in " + n + "s",
-      next: "Next",
-      back: "Restart",
-      start: "Start round",
-      joker: "CHAMELEON"
-    }
-  };
-  let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
-  let N2 = 6;
-  let online = false;
-  let ranks = [];
-  let wasGreat = false;
-  const G2 = () => window.GAME = window.GAME || {};
-  const holds = () => G2().hold || [];
-  const holdOf = (i) => {
-    const h = holds()[i];
-    return Array.isArray(h) ? h : [];
-  };
-  const myHand = () => holdOf(0);
-  const nameOf = (i) => ((lang === "ko" ? G2().names : G2().namesEn) || G2().names || [])[i] || "";
-  const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
-  function cardHTML(n, w) {
-    if (isJ(n)) return '<div class="card" style="--w:' + w + 'px"><div class="card__band"></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"></div></div>';
-    return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
-  }
-  function order() {
-    return reversed ? ranks.slice().reverse() : ranks;
-  }
-  function rankOf(seat) {
-    return order().indexOf(seat);
-  }
-  function ordEn(n) {
-    const s = ["th", "st", "nd", "rd"], v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  }
-  function rankLabel(r) {
-    return lang === "ko" ? r + 1 + "\uB4F1" : ordEn(r + 1);
-  }
-  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
-  function placeTable(sec, cyPct) {
-    const b = sec.getBoundingClientRect();
-    const W = b.width, H = b.height;
-    const scale = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = cyPct == null ? (H - dh) / 2 + OV.cy * dh : cyPct / 100 * H;
-    const ox = W / 2 - OV.cx * dw;
-    const oy = cy - OV.cy * dh;
-    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
-    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
-    return {
-      cx: (ox + OV.cx * dw) / W * 100,
-      cy: cy / H * 100,
-      rx: OV.rx * dw / W * 100,
-      ry: OV.ry * dh / H * 100
-    };
-  }
-  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
-  function syncRing() {
-    const sec = window.document.getElementById("tax");
-    if (!sec) return;
-    RING = placeTable(sec, null);
-    const m = el("mid");
-    if (m) {
-      m.style.left = RING.cx + "%";
-      m.style.top = RING.cy + "%";
-    }
-  }
-  function seatPos(i) {
-    const a = Math.PI / 2 + i * 2 * Math.PI / N2;
-    const s = Math.sin(a);
-    const bias = s > 0.25 ? 3.4 * s : 0;
-    return { x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias };
-  }
-  function flyCard(from, to, card, delay, faceDown) {
-    const a = from < 0 ? { x: 50, y: 50 } : seatPos(from);
-    const b = to < 0 ? { x: 50, y: 50 } : seatPos(to);
-    const d = document2.createElement("div");
-    d.className = "fly";
-    d.style.left = a.x + "%";
-    d.style.top = a.y + "%";
-    d.style.transform = "translate(-50%,-50%) scale(.7)";
-    d.style.opacity = 0;
-    d.innerHTML = faceDown ? backHTML(32) : cardHTML(card, 32);
-    el("fx").appendChild(d);
-    setTimeout(() => {
-      d.style.opacity = 1;
-      d.style.left = b.x + "%";
-      d.style.top = b.y + "%";
-      d.style.transform = "translate(-50%,-50%) scale(1) rotate(" + (Math.random() * 20 - 10).toFixed(0) + "deg)";
-    }, delay + 20);
-    setTimeout(() => {
-      d.style.opacity = 0;
-    }, delay + 620);
-    setTimeout(() => d.remove(), delay + 950);
-  }
-  function backHTML(w) {
-    return '<div class="card" style="--w:' + w + 'px;padding:2px"><div class="card__art" style="border-width:1px"><img src="' + ART2.back + '" alt=""></div></div>';
-  }
-  function clearFx() {
-    el("fx").innerHTML = "";
-  }
-  function dealAll() {
-    if (online) {
-      const rv = window.__revolution;
-      revSeat = rv ? rv.seat : null;
-      return;
-    }
-    const d = [];
-    for (let n = 1; n <= 12; n++) for (let i = 0; i < n; i++) d.push(n);
-    d.push(13, 14);
-    for (let i = d.length - 1; i > 0; i--) {
-      const k2 = Math.floor(Math.random() * (i + 1));
-      [d[i], d[k2]] = [d[k2], d[i]];
-    }
-    const hands = Array.from({ length: N2 }, () => []);
-    d.forEach((c, i) => hands[i % N2].push(c));
-    hands.forEach((x2) => x2.sort((a, b) => a - b));
-    G2().hold = hands;
-    const w = hands.findIndex((x2) => x2.filter((c) => c >= 13).length === 2);
-    revSeat = w < 0 ? null : w;
-  }
-  function applyTax(myGive) {
-    if (online) {
-      if (window.__setTaxGive) window.__setTaxGive(myGive || null);
-      return;
-    }
-    const hh = holds(), o = order();
-    [[o[0], o[N2 - 1], 2], [o[1], o[N2 - 2], 1]].forEach(([hi, lo, k2]) => {
-      const best = hh[lo].slice().sort((a, b) => a - b).slice(0, k2);
-      best.forEach((c) => hh[lo].splice(hh[lo].indexOf(c), 1));
-      const give = hi === 0 ? myGive.slice(0, k2) : hh[hi].slice().sort((a, b) => b - a).slice(0, k2);
-      give.forEach((c) => hh[hi].splice(hh[hi].indexOf(c), 1));
-      hh[hi].push(...best);
-      hh[lo].push(...give);
-      hh[hi].sort((a, b) => a - b);
-      hh[lo].sort((a, b) => a - b);
-    });
-  }
-  function runDeal() {
-    clearFx();
-    for (let round = 0; round < 3; round++)
-      for (let i = 0; i < N2; i++)
-        flyCard(-1, i, 0, (round * 6 + i) * 55, true);
-  }
-  function runTax() {
-    window.__myGive = window.__myGive || [];
-    clearFx();
-    const o = order(), n = N2;
-    const pairs = [[o[0], o[n - 1], 2], [o[1], o[n - 2], 1]];
-    let t = 0;
-    pairs.forEach(([hi, lo, k2]) => {
-      const mine = hi === 0 || lo === 0;
-      const best = holdOf(lo).slice().sort((a, b) => a - b).slice(0, k2);
-      for (let j2 = 0; j2 < k2; j2++) {
-        flyCard(lo, hi, best[j2], t, !mine);
-        t += 150;
-      }
-      for (let j2 = 0; j2 < k2; j2++) {
-        flyCard(hi, lo, hi === 0 ? window.__myGive[j2] : 12, t, !mine);
-        t += 150;
-      }
-    });
-  }
-  function anchorSeats(box, limitBottom) {
-    const root2 = window.document.documentElement;
-    const W = (window.document.getElementById("stage") || root2).getBoundingClientRect();
-    box.querySelectorAll(".seat").forEach((s) => {
-      const av = s.querySelector(".seat__av");
-      if (!av) return;
-      const dy = av.offsetTop + av.offsetHeight / 2;
-      s.style.transform = "translate(-50%," + -dy + "px)";
-      const r = s.getBoundingClientRect();
-      let ox = 0, oy = 0;
-      if (r.left < W.left + 3) ox = W.left + 3 - r.left;
-      else if (r.right > W.right - 3) ox = W.right - 3 - r.right;
-      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
-      if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
-    });
-  }
-  function renderSeats() {
-    syncRing();
-    const box = el("seats");
-    box.innerHTML = "";
-    for (let i = 0; i < N2; i++) {
-      const p = seatPos(i), r = rankOf(i), n = N2;
-      const d = document2.createElement("div");
-      d.className = "seat" + (i === 0 ? " seat--me" : "") + (r <= 1 ? " seat--top" : "") + (r >= n - 2 ? " seat--bot" : "");
-      d.style.left = p.x.toFixed(1) + "%";
-      d.style.top = p.y.toFixed(1) + "%";
-      const big = N2 <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
-      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      d.innerHTML = '<span class="seat__r on">' + rankLabel(r) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>";
-      box.appendChild(d);
-    }
-    const hn = el("hint");
-    anchorSeats(box, hn ? hn.getBoundingClientRect().top - 4 : 0);
-  }
-  function renderHand() {
-    const h = el("hand");
-    h.innerHTML = "";
-    const hand = myHand(), w = 54, n = hand.length;
-    const step2 = n > 1 ? Math.min(40, (h.clientWidth - w) / (n - 1)) : 0;
-    const total = w + step2 * (n - 1);
-    const taken = takenIdx();
-    hand.forEach((c, i) => {
-      const s = document2.createElement("div");
-      s.className = "slot" + (sel.includes(i) ? " slot--sel" : "") + (taken.includes(i) ? " slot--take" : "");
-      s.style.left = (h.clientWidth - total) / 2 + i * step2 + "px";
-      s.style.zIndex = i;
-      s.innerHTML = cardHTML(c, w);
-      s.onclick = () => {
-        if (!giveCount()) return;
-        const k2 = sel.indexOf(i);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else if (sel.length < giveCount()) sel.push(i);
-        draw();
-      };
-      h.appendChild(s);
-    });
-  }
-  function giveCount() {
-    if (step !== 3 || taxSkipped()) return 0;
-    const r = rankOf(0), n = N2;
-    return r === 0 ? 2 : r === 1 ? 1 : 0;
-  }
-  function takenIdx() {
-    if (step !== 3 || taxSkipped()) return [];
-    const r = rankOf(0), n = N2;
-    const k2 = r === n - 1 ? 2 : r === n - 2 ? 1 : 0;
-    return myHand().map((c, i) => i).sort((a, b) => myHand()[a] - myHand()[b]).slice(0, k2);
-  }
-  function taxSkipped() {
-    if (online && window.__taxCancelled !== void 0) return Boolean(window.__taxCancelled);
-    return revSeat !== null && declared;
-  }
-  function renderMid() {
-    const t = T2[lang], m = el("mid"), r = rankOf(0), n = N2, o = order();
-    let html = "";
-    if (step === 0) {
-      html = '<div class="mid__h">' + t.rankH + "</div>";
-    } else if (step === 1) {
-      html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + t.dealS + "</div>";
-    } else if (step === 2) {
-      const great = revSeat !== null && rankOf(revSeat) === n - 1;
-      html = '<div class="mid__h">' + t.revH + '</div><div class="mid__s">' + (revSeat === null ? t.revNone : declared ? wasGreat ? t.revGreatDone : t.revDone : revSeat === 0 ? great ? t.revGreatMine : t.revMine : great ? t.revGreatOther(nameOf(revSeat)) : t.revOther(nameOf(revSeat))) + "</div>";
-      if (revSeat === 0 && !declared)
-        html += '<div class="flow rev"><div class="frow"><span class="frow__c">' + cardHTML(13, 40) + cardHTML(14, 40) + "</span></div></div>";
-    } else if (step === 3) {
-      html = '<div class="mid__h">' + t.taxH + '</div><div class="mid__s">' + (taxSkipped() ? t.taxSkip : r === 0 ? t.taxMineTop(nameOf(o[n - 1])) : r === 1 ? t.taxMineTop2(nameOf(o[n - 2])) : r === n - 1 ? t.taxMineBot(nameOf(o[0])) : r === n - 2 ? t.taxMineBot2(nameOf(o[1])) : t.taxMid) + "</div>";
-      if (!taxSkipped()) {
-        const partner = r === 0 ? o[n - 1] : r === 1 ? o[n - 2] : null;
-        const inC = partner === null ? [] : holdOf(partner).slice().sort((a, b) => a - b).slice(0, r === 0 ? 2 : 1);
-        const outC = takenIdx().map((i) => myHand()[i]);
-        let rows = "";
-        if (inC.length) rows += '<div class="frow frow--in"><span class="frow__w">' + nameOf(partner) + ' \u2192</span><span class="frow__c">' + inC.map((c) => cardHTML(c, 34)).join("") + "</span></div>";
-        if (outC.length) rows += '<div class="frow frow--out"><span class="frow__w">\u2192 ' + nameOf(o[r === n - 1 ? 0 : 1]) + '</span><span class="frow__c">' + outC.map((c) => cardHTML(c, 34)).join("") + "</span></div>";
-        if (sel.length) rows += '<div class="frow frow--out"><span class="frow__w">\u2192 ' + nameOf(partner) + '</span><span class="frow__c">' + sel.map((i) => cardHTML(myHand()[i], 34)).join("") + "</span></div>";
-        if (rows) html += '<div class="flow">' + rows + "</div>";
-      }
-    } else {
-      html = '<div class="mid__h">' + t.doneH + '</div><div class="mid__s">' + t.doneS(nameOf(order()[0])) + "</div>";
-    }
-    m.innerHTML = html;
-  }
-  function renderBottom() {
-    const t = T2[lang], great = revSeat !== null && rankOf(revSeat) === N2 - 1;
-    el("step").textContent = step + 1 + ". " + t.steps[step];
-    const bk = el("back");
-    if (bk) bk.style.display = "none";
-    const g = giveCount();
-    const b = el("next");
-    if (tickBase) tickBase = "";
-    const bar = b.parentElement;
-    const mine = step === 0 ? false : step === 2 ? revSeat === 0 && !declared : step === 3 ? g > 0 && !taxSkipped() : true;
-    if (bar) bar.style.visibility = mine ? "" : "hidden";
-    el("hint").innerHTML = step === 3 && g && mine ? sel.length < g ? t.giveNeed(g - sel.length) : "" : !mine && (step === 2 || step === 3) && tickLeft > 0 ? t.waitSec(tickLeft) : "";
-    if (step === 2 && revSeat === 0 && !declared) {
-      b.className = "bt-rev";
-      b.textContent = great ? t.declareG : t.declare;
-      b.disabled = false;
-    } else {
-      b.className = "bt-main";
-      b.textContent = step === 4 ? t.start : step === 3 && g ? t.give(g) : t.next;
-      b.disabled = step === 3 && g > 0 && sel.length < g;
-    }
-  }
-  function draw() {
-    renderSeats();
-    renderMid();
-    renderHand();
-    renderBottom();
-    const hn = el("hint");
-    anchorSeats(el("seats"), hn ? hn.getBoundingClientRect().top - 4 : 0);
-    if (step >= 1) window.__myRankIdx = rankOf(0);
-  }
-  function boot() {
-    if (window.__net) {
-      online = true;
-    }
-    const g = G2();
-    N2 = g.N || 6;
-    ranks = g.finish && g.finish.length === N2 ? g.finish.slice() : Array.from({ length: N2 }, (_, i) => i);
-    step = 0;
-    sel = [];
-    declared = false;
-    reversed = false;
-    revSeat = null;
-    wasGreat = false;
-    waitOn = 0;
-    clearFx();
-    draw();
-  }
-  window.__bootTax = () => {
-    boot();
-    autoNext();
-  };
-  boot();
-  autoNext();
-  function needStep(k2) {
-    if (k2 === 3) return !taxSkipped();
-    return true;
-  }
-  var autoId = null;
-  var tickId = null, tickLeft = 0, tickBase = "";
-  function stopTick() {
-    if (tickId) {
-      clearInterval(tickId);
-      tickId = null;
-    }
-    const b = el("next");
-    if (b && tickBase) b.textContent = tickBase;
-    tickBase = "";
-  }
-  function startTick(ms) {
-    stopTick();
-    if (step !== 2 && step !== 3) return;
-    const b = el("next");
-    if (!b) return;
-    tickBase = (b.textContent || "").replace(/\s*\(\d+\)$/, "");
-    tickLeft = Math.round(ms / 1e3);
-    const paint = () => {
-      const bb = el("next");
-      if (!bb) return;
-      bb.textContent = tickBase + (tickLeft > 0 ? " (" + tickLeft + ")" : "");
-      const bar2 = bb.parentElement;
-      const h = el("hint");
-      if (h && bar2 && bar2.style.visibility === "hidden")
-        h.textContent = tickLeft > 0 ? T2[lang].waitSec(tickLeft) : "";
-    };
-    paint();
-    tickId = setInterval(() => {
-      tickLeft--;
-      if (tickLeft < 0) {
-        stopTick();
-        return;
-      }
-      paint();
-    }, 1e3);
-  }
-  var waitOn = 0;
-  function autoNext() {
-    if (autoId) {
-      clearTimeout(autoId);
-      autoId = null;
-    }
-    stopTick();
-    if (step >= 4) return;
-    const sec = window.document.getElementById("tax");
-    if (!sec || !sec.classList.contains("is-on")) {
-      if (waitOn++ > 40) return;
-      autoId = setTimeout(autoNext, 120);
-      return;
-    }
-    waitOn = 0;
-    let wait = 0;
-    if (step === 0) wait = 3e3;
-    else if (step === 1) wait = 3e3;
-    else if (step === 2) wait = 1e4;
-    else if (step === 3) wait = 1e4;
-    if (!wait) return;
-    startTick(wait);
-    autoId = setTimeout(() => {
-      const sec2 = window.document.getElementById("tax");
-      if (!sec2 || !sec2.classList.contains("is-on")) {
-        autoNext();
-        return;
-      }
-      if (step === 2 && online && revSeat === 0 && !declared && window.__passRev) {
-        window.__passRev();
-      }
-      if (step === 3 && taxSkipped()) {
-        step = 4;
-        G2().order = order().slice();
-        draw();
-        setTimeout(() => {
-          if (window.__toTable) window.__toTable();
-        }, 400);
-        return;
-      }
-      if (step === 3) {
-        const g = giveCount();
-        if (g > 0 && sel.length < g) {
-          const mine = myHand();
-          const idx = mine.map((c, i) => i).sort((a, b2) => (mine[b2] >= 13 ? 99 : mine[b2]) - (mine[a] >= 13 ? 99 : mine[a]));
-          sel = idx.slice(0, g);
-          draw();
-        }
-      }
-      const b = el("next");
-      if (b && !b.disabled) b.click();
-    }, wait);
-  }
-  el("next").onclick = () => {
-    const great = revSeat !== null && rankOf(revSeat) === N2 - 1;
-    if (step === 2 && revSeat !== null && !declared) {
-      declared = true;
-      wasGreat = great;
-      if (online && revSeat === 0 && window.__declareRev) window.__declareRev();
-      if (great) {
-        reversed = true;
-        el("flash").classList.remove("go");
-        void el("flash").offsetWidth;
-        el("flash").classList.add("go");
-        draw();
-        document2.querySelectorAll(".seat__r").forEach((x2) => x2.classList.add("swap"));
-        setTimeout(() => document2.querySelectorAll(".seat__r").forEach((x2) => x2.classList.remove("swap")), 750);
-        autoNext();
-        return;
-      }
-      draw();
-      autoNext();
-      return;
-    }
-    if (step === 3 && !taxSkipped()) {
-      window.__myGive = sel.map((i) => myHand()[i]);
-      runTax();
-      applyTax(window.__myGive);
-      sel = [];
-    }
-    if (step < 4) step++;
-    while (step < 4 && !needStep(step)) step++;
-    if (step === 1) {
-      dealAll();
-    }
-    draw();
-    if (step === 1) runDeal();
-    if (step === 4) {
-      G2().order = order().slice();
-      if (autoId) {
-        clearTimeout(autoId);
-        autoId = null;
-      }
-      setTimeout(() => {
-        if (window.__toTable) window.__toTable();
-      }, 400);
-      return;
-    }
-    autoNext();
-  };
-  if (el("back")) el("back").onclick = () => {
-    if (window.__toResult) window.__toResult();
-  };
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  window.addEventListener("resize", draw);
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    draw();
-  });
-}
-
-// src/screens/result.js
-var result_exports = {};
-__export(result_exports, {
-  mount: () => mount7
-});
-function mount7(root) {
-  const document2 = scoped(root);
-  const HEADS2 = HEADS;
-  const el = (id) => document2.getElementById(id);
-  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
-  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
-  const T2 = {
-    ko: {
-      kickR: (n) => n + "\uD310 \uACB0\uACFC",
-      kickF: "\uCD5C\uC885 \uACB0\uACFC",
-      titleR: "\uC774\uBC88 \uD310 \uB4F1\uC218",
-      titleF: "\uC6B0\uC2B9",
-      subR: (a, b) => a + "\uD310\uAE4C\uC9C0 \uB05D\uB0AC\uC2B5\uB2C8\uB2E4. " + b + "\uD310 \uB0A8\uC558\uC2B5\uB2C8\uB2E4.",
-      subLast: "\uB9C8\uC9C0\uB9C9 \uD310\uC785\uB2C8\uB2E4.",
-      subF: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uAC00\uC7A5 \uB192\uC740 \uC810\uC218\uB85C \uC774\uACBC\uC2B5\uB2C8\uB2E4.",
-      colP: "\uB4F1\uC218",
-      colG: "\uC774\uBC88 \uD310",
-      colT: "\uCD1D\uC810",
-      next: "\uB2E4\uC74C \uD310",
-      nextF: "\uB2E4\uC2DC \uD558\uAE30",
-      quit: "\uB098\uAC00\uAE30",
-      tie: "\uB3D9\uC810\uC785\uB2C8\uB2E4. \uC0AC\uC790\uB97C \uB354 \uB9CE\uC774 \uD55C \uBD84\uC774 \uC55E\uC12D\uB2C8\uB2E4."
-    },
-    en: {
-      kickR: (n) => "Round " + n,
-      kickF: "Final",
-      titleR: "This round",
-      titleF: "Winner",
-      subR: (a, b) => a + " rounds played, " + b + " to go.",
-      subLast: "Last round.",
-      subF: (n) => "<b>" + n + "</b> finishes with the highest score.",
-      colP: "Place",
-      colG: "Round",
-      colT: "Total",
-      next: "Next round",
-      nextF: "Play again",
-      quit: "Leave",
-      tie: "Tied on points. More Lion finishes ranks higher."
-    }
-  };
-  let lang = window.__lang || "ko";
-  function ordEn(n) {
-    const s = ["th", "st", "nd", "rd"], v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  }
-  function rankLabel(r) {
-    return lang === "ko" ? r + 1 + "\uB4F1" : ordEn(r + 1);
-  }
-  function render() {
-    const G2 = window.GAME || {};
-    const n = G2.N || 6;
-    const names = (lang === "ko" ? G2.names : G2.namesEn) || G2.names || [];
-    const finish = G2.finish || [];
-    const score = G2.score || [];
-    const rounds = window.__opts && window.__opts.rounds || 5;
-    const played = G2.roundNo || 1;
-    const last = played >= rounds;
-    const t = T2[lang];
-    const rows = last ? names.map((_, i) => i).sort((a, b) => (score[b] || 0) - (score[a] || 0)) : finish.slice();
-    el("kicker").textContent = last ? t.kickF : t.kickR(played);
-    el("title").innerHTML = last ? '<span class="crown">\u265B</span><br>' + t.titleF : t.titleR;
-    el("sub").innerHTML = last ? t.subF(names[rows[0]] || "") : played + 1 > rounds ? t.subLast : t.subR(played, rounds - played);
-    el("legend").innerHTML = "<span>" + t.colP + "</span><span>" + t.colG + " \xB7 " + t.colT + "</span>";
-    if (last && !window.__scored) {
-      window.__scored = true;
-      const myRank2 = rows.indexOf(0);
-      const earned = score[0] || 0;
-      if (window.reportGame) window.reportGame(myRank2, names.length, earned, false);
-    }
-    const cut = Math.floor(names.length / 2);
-    el("list").innerHTML = rows.map((seat, idx) => {
-      const place = last ? idx : finish.indexOf(seat);
-      const gained = place < cut ? 100 - place * 10 : 0;
-      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + (!last && idx === cut - 1 ? " row--cut" : "") + (gained === 0 ? " row--none" : "") + '"><span class="row__p">' + (idx + 1) + '</span><img class="row__av" src="' + HEADS2[seat % HEADS2.length] + '" alt=""><span class="row__n">' + (names[seat] || "") + '</span><span class="row__r">' + rankLabel(place) + '</span><span class="row__g">+' + gained + '</span><span class="row__t">' + (score[seat] || 0) + "</span></div>";
-    }).join("");
-    el("next").textContent = last ? t.nextF : t.next;
-    el("quit").textContent = t.quit;
-  }
-  window.__bootResult = render;
-  render();
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    render();
-  });
-}
-
-// src/screens/rank.js
-var rank_exports = {};
-__export(rank_exports, {
-  mount: () => mount8
-});
-
 // node_modules/@firebase/util/dist/postinstall.mjs
 var getDefaultsFromPostinstall = () => void 0;
 
@@ -4036,9 +1022,9 @@ var Provider = class {
   getOptions(identifier = DEFAULT_ENTRY_NAME) {
     return this.instancesOptions.get(identifier) || {};
   }
-  initialize(opts2 = {}) {
-    const { options = {} } = opts2;
-    const normalizedIdentifier = this.normalizeInstanceIdentifier(opts2.instanceIdentifier);
+  initialize(opts = {}) {
+    const { options = {} } = opts;
+    const normalizedIdentifier = this.normalizeInstanceIdentifier(opts.instanceIdentifier);
     if (this.isInitialized(normalizedIdentifier)) {
       throw Error(`${this.name}(${normalizedIdentifier}) has already been initialized`);
     }
@@ -8763,9 +5749,9 @@ var BrowserLocalPersistence = class extends BrowserPersistenceClass {
   }
   notifyListeners(key, value) {
     this.localCache[key] = value;
-    const listeners2 = this.listeners[key];
-    if (listeners2) {
-      for (const listener of Array.from(listeners2)) {
+    const listeners = this.listeners[key];
+    if (listeners) {
+      for (const listener of Array.from(listeners)) {
         listener(value ? JSON.parse(value) : value);
       }
     }
@@ -9468,9 +6454,9 @@ var IndexedDBLocalPersistence = class {
   }
   notifyListeners(key, newValue) {
     this.localCache[key] = newValue;
-    const listeners2 = this.listeners[key];
-    if (listeners2) {
-      for (const listener of Array.from(listeners2)) {
+    const listeners = this.listeners[key];
+    if (listeners) {
+      for (const listener of Array.from(listeners)) {
         listener(newValue);
       }
     }
@@ -11333,7 +8319,7 @@ var Md5;
     }
     return d;
   }
-  var w = u(0), z2 = u(1), A = u(16777216);
+  var w = u(0), z = u(1), A = u(16777216);
   h = t.prototype;
   h.m = function() {
     if (B2(this)) return -x2(this).m();
@@ -11376,7 +8362,7 @@ var Md5;
   };
   function x2(f) {
     for (var a = f.g.length, c = [], d = 0; d < a; d++) c[d] = ~f.g[d];
-    return new t(c, ~f.h).add(z2);
+    return new t(c, ~f.h).add(z);
   }
   h.abs = function() {
     return B2(this) ? x2(this) : this;
@@ -11429,7 +8415,7 @@ var Md5;
     if (B2(a)) return a = D(f, x2(a)), new H(x2(a.g), a.h);
     if (30 < f.g.length) {
       if (B2(f) || B2(a)) throw Error("slowDivide_ only works with positive integers.");
-      for (var c = z2, d = a; 0 >= d.l(f); ) c = I(c), d = I(d);
+      for (var c = z, d = a; 0 >= d.l(f); ) c = I(c), d = I(d);
       var e = J2(c, 1), g = J2(d, 1);
       d = J2(d, 2);
       for (c = J2(c, 2); !C(d); ) {
@@ -11447,7 +8433,7 @@ var Md5;
       d = 48 >= d ? 1 : Math.pow(2, d - 48);
       g = v(c);
       for (b = g.j(a); B2(b) || 0 < b.l(f); ) c -= d, g = v(c), b = g.j(a);
-      C(g) && (g = z2);
+      C(g) && (g = z);
       e = e.add(g);
       f = F2(f, b);
     }
@@ -11738,15 +8724,15 @@ var createWebChannelTransport;
     }
     y = false;
   };
-  function z2() {
+  function z() {
     this.s = this.s;
     this.C = this.C;
   }
-  z2.prototype.s = false;
-  z2.prototype.ma = function() {
+  z.prototype.s = false;
+  z.prototype.ma = function() {
     this.s || (this.s = true, this.N());
   };
-  z2.prototype.N = function() {
+  z.prototype.N = function() {
     if (this.C) for (; this.C.length; ) this.C.shift()();
   };
   function A(a, b) {
@@ -11950,12 +8936,12 @@ var createWebChannelTransport;
     return a[$a];
   }
   function E() {
-    z2.call(this);
+    z.call(this);
     this.i = new Ka(this);
     this.M = this;
     this.F = null;
   }
-  r(E, z2);
+  r(E, z);
   E.prototype[D] = true;
   E.prototype.removeEventListener = function(a, b, c, d) {
     Ya(this, a, b, c, d);
@@ -12029,7 +9015,7 @@ var createWebChannelTransport;
     a.h = null;
     a.m.apply(null, b);
   }
-  class eb extends z2 {
+  class eb extends z {
     constructor(a, b) {
       super();
       this.m = a;
@@ -12048,11 +9034,11 @@ var createWebChannelTransport;
     }
   }
   function G2(a) {
-    z2.call(this);
+    z.call(this);
     this.h = a;
     this.g = {};
   }
-  r(G2, z2);
+  r(G2, z);
   var fb = [];
   function gb(a) {
     qa(a.g, function(b, c) {
@@ -12582,12 +9568,12 @@ var createWebChannelTransport;
       }
     }
   }
-  function T2(a) {
+  function T(a) {
     this.g = this.o = this.j = "";
     this.s = null;
     this.m = this.l = "";
     this.h = false;
-    if (a instanceof T2) {
+    if (a instanceof T) {
       this.h = a.h;
       qc(this, a.j);
       this.o = a.o;
@@ -12602,7 +9588,7 @@ var createWebChannelTransport;
       this.m = a.m;
     } else a && (b = String(a).match(oc)) ? (this.h = false, qc(this, b[1] || "", true), this.o = uc(b[2] || ""), this.g = uc(b[3] || "", true), rc(this, b[4]), this.l = uc(b[5] || "", true), tc(this, b[6] || "", true), this.m = uc(b[7] || "")) : (this.h = false, this.i = new sc(null, this.h));
   }
-  T2.prototype.toString = function() {
+  T.prototype.toString = function() {
     var a = [], b = this.j;
     b && a.push(vc(b, wc, true), ":");
     var c = this.g;
@@ -12613,7 +9599,7 @@ var createWebChannelTransport;
     return a.join("");
   };
   function N2(a) {
-    return new T2(a);
+    return new T(a);
   }
   function qc(a, b, c) {
     a.j = c ? uc(b, true) : b;
@@ -13451,7 +10437,7 @@ var createWebChannelTransport;
     if (2 == b) {
       var c = p(a.fb, a), d = a.Xa;
       const e = !d;
-      d = new T2(d || "//www.google.com/images/cleardot.gif");
+      d = new T(d || "//www.google.com/images/cleardot.gif");
       k2.location && "http" == k2.location.protocol || qc(d, "https");
       Ib(d);
       e ? Fc(d.toString(), c) : Gc(d.toString(), c);
@@ -13474,14 +10460,14 @@ var createWebChannelTransport;
     }
   }
   function cc(a, b, c) {
-    var d = c instanceof T2 ? N2(c) : new T2(c);
+    var d = c instanceof T ? N2(c) : new T(c);
     if ("" != d.g) b && (d.g = b + "." + d.g), rc(d, d.s);
     else {
       var e = k2.location;
       d = e.protocol;
       b = b ? b + "." + e.hostname : e.hostname;
       e = +e.port;
-      var f = new T2(null);
+      var f = new T(null);
       d && qc(f, d);
       b && (f.g = b);
       e && rc(f, e);
@@ -14327,14 +11313,8 @@ var DocumentKey = class _DocumentKey {
     return new _DocumentKey(new ResourcePath(e.slice()));
   }
 };
-function __PRIVATE_validateNonEmptyArgument(e, t, n) {
-  if (!n) throw new FirestoreError(N.INVALID_ARGUMENT, `Function ${e}() cannot be called with an empty ${t}.`);
-}
 function __PRIVATE_validateIsNotUsedTogether(e, t, n, r) {
   if (true === t && true === r) throw new FirestoreError(N.INVALID_ARGUMENT, `${e} and ${n} cannot be used together.`);
-}
-function __PRIVATE_validateCollectionPath(e) {
-  if (DocumentKey.isDocumentKey(e)) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid collection reference. Collection references must have an odd number of segments, but ${e} has ${e.length}.`);
 }
 function __PRIVATE_isPlainObject(e) {
   return "object" == typeof e && null !== e && (Object.getPrototypeOf(e) === Object.prototype || null === Object.getPrototypeOf(e));
@@ -14372,9 +11352,6 @@ function __PRIVATE_cast(e, t) {
     }
   }
   return e;
-}
-function __PRIVATE_validatePositiveNumber(e, t) {
-  if (t <= 0) throw new FirestoreError(N.INVALID_ARGUMENT, `Function ${e}() requires a positive number, but it was: ${t}.`);
 }
 function property(e, t) {
   const n = {
@@ -14584,7 +11561,6 @@ function __PRIVATE_indexOffsetComparator(e, t) {
   let n = e.readTime.compareTo(t.readTime);
   return 0 !== n ? n : (n = DocumentKey.comparator(e.documentKey, t.documentKey), 0 !== n ? n : __PRIVATE_primitiveComparator(e.largestBatchId, t.largestBatchId));
 }
-var $ = "The current tab is not in the required state to perform this operation. It might be necessary to refresh the browser tab.";
 var PersistenceTransaction = class {
   constructor() {
     this.onCommittedListeners = [];
@@ -14596,10 +11572,6 @@ var PersistenceTransaction = class {
     this.onCommittedListeners.forEach((e) => e());
   }
 };
-async function __PRIVATE_ignoreIfPrimaryLeaseLoss(e) {
-  if (e.code !== N.FAILED_PRECONDITION || e.message !== $) throw e;
-  __PRIVATE_logDebug("LocalStore", "Unexpectedly lost primary lease");
-}
 var PersistencePromise = class _PersistencePromise {
   constructor(e) {
     this.nextCallback = null, this.catchCallback = null, // When the operation resolves, we'll set result or error and mark isDone.
@@ -14740,36 +11712,6 @@ function __PRIVATE_isNullOrUndefined(e) {
 function __PRIVATE_isNegativeZero(e) {
   return 0 === e && 1 / e == -1 / 0;
 }
-function isSafeInteger(e) {
-  return "number" == typeof e && Number.isInteger(e) && !__PRIVATE_isNegativeZero(e) && e <= Number.MAX_SAFE_INTEGER && e >= Number.MIN_SAFE_INTEGER;
-}
-var z = "";
-function __PRIVATE_encodeResourcePath(e) {
-  let t = "";
-  for (let n = 0; n < e.length; n++) t.length > 0 && (t = __PRIVATE_encodeSeparator(t)), t = __PRIVATE_encodeSegment(e.get(n), t);
-  return __PRIVATE_encodeSeparator(t);
-}
-function __PRIVATE_encodeSegment(e, t) {
-  let n = t;
-  const r = e.length;
-  for (let t2 = 0; t2 < r; t2++) {
-    const r2 = e.charAt(t2);
-    switch (r2) {
-      case "\0":
-        n += "";
-        break;
-      case z:
-        n += "";
-        break;
-      default:
-        n += r2;
-    }
-  }
-  return n;
-}
-function __PRIVATE_encodeSeparator(e) {
-  return e + z + "";
-}
 var j = "remoteDocuments";
 var J = "owner";
 var Y = "mutationQueues";
@@ -14802,11 +11744,6 @@ function __PRIVATE_objectSize(e) {
 }
 function forEach(e, t) {
   for (const n in e) Object.prototype.hasOwnProperty.call(e, n) && t(n, e[n]);
-}
-function __PRIVATE_mapToArray(e, t) {
-  const n = [];
-  for (const r in e) Object.prototype.hasOwnProperty.call(e, r) && n.push(t(e[r], r, e));
-  return n;
 }
 function isEmpty2(e) {
   for (const t in e) if (Object.prototype.hasOwnProperty.call(e, t)) return false;
@@ -15354,29 +12291,6 @@ function __PRIVATE_getLocalWriteTime(e) {
   const t = __PRIVATE_normalizeTimestamp(e.mapValue.fields[at].timestampValue);
   return new Timestamp(t.seconds, t.nanos);
 }
-var DatabaseInfo = class {
-  /**
-   * Constructs a DatabaseInfo using the provided host, databaseId and
-   * persistenceKey.
-   *
-   * @param databaseId - The database to use.
-   * @param appId - The Firebase App Id.
-   * @param persistenceKey - A unique identifier for this Firestore's local
-   * storage (used in conjunction with the databaseId).
-   * @param host - The Firestore backend host to connect to.
-   * @param ssl - Whether to use SSL when connecting.
-   * @param forceLongPolling - Whether to use the forceLongPolling option
-   * when using WebChannel as the network transport.
-   * @param autoDetectLongPolling - Whether to use the detectBufferingProxy
-   * option when using WebChannel as the network transport.
-   * @param longPollingOptions Options that configure long-polling.
-   * @param useFetchStreams Whether to use the Fetch API instead of
-   * XMLHTTPRequest
-   */
-  constructor(e, t, n, r, i, s, o, _, a, u) {
-    this.databaseId = e, this.appId = t, this.persistenceKey = n, this.host = r, this.ssl = i, this.forceLongPolling = s, this.autoDetectLongPolling = o, this.longPollingOptions = _, this.useFetchStreams = a, this.isUsingEmulator = u;
-  }
-};
 var ut = "(default)";
 var DatabaseId = class _DatabaseId {
   constructor(e, t) {
@@ -15582,59 +12496,11 @@ function __PRIVATE_canonifyValue(e) {
     value: e
   });
 }
-function __PRIVATE_estimateByteSize(e) {
-  switch (__PRIVATE_typeOrder(e)) {
-    case 0:
-    case 1:
-      return 4;
-    case 2:
-      return 8;
-    case 3:
-    case 8:
-      return 16;
-    case 4:
-      const t = __PRIVATE_getPreviousValue(e);
-      return t ? 16 + __PRIVATE_estimateByteSize(t) : 16;
-    case 5:
-      return 2 * e.stringValue.length;
-    case 6:
-      return __PRIVATE_normalizeByteString(e.bytesValue).approximateByteSize();
-    case 7:
-      return e.referenceValue.length;
-    case 9:
-      return function __PRIVATE_estimateArrayByteSize(e2) {
-        return (e2.values || []).reduce((e3, t2) => e3 + __PRIVATE_estimateByteSize(t2), 0);
-      }(e.arrayValue);
-    case 10:
-    case 11:
-      return function __PRIVATE_estimateMapByteSize(e2) {
-        let t2 = 0;
-        return forEach(e2.fields, (e3, n) => {
-          t2 += e3.length + __PRIVATE_estimateByteSize(n);
-        }), t2;
-      }(e.mapValue);
-    default:
-      throw fail(13486, {
-        value: e
-      });
-  }
-}
-function __PRIVATE_refValue(e, t) {
-  return {
-    referenceValue: `projects/${e.projectId}/databases/${e.database}/documents/${t.path.canonicalString()}`
-  };
-}
 function isInteger(e) {
   return !!e && "integerValue" in e;
 }
 function isArray(e) {
   return !!e && "arrayValue" in e;
-}
-function __PRIVATE_isNullValue(e) {
-  return !!e && "nullValue" in e;
-}
-function __PRIVATE_isNanValue(e) {
-  return !!e && "doubleValue" in e && isNaN(Number(e.doubleValue));
 }
 function __PRIVATE_isMapValue(e) {
   return !!e && "mapValue" in e;
@@ -16160,9 +13026,6 @@ function __PRIVATE_targetEquals(e, t) {
   for (let n = 0; n < e.filters.length; n++) if (!__PRIVATE_filterEquals(e.filters[n], t.filters[n])) return false;
   return e.collectionGroup === t.collectionGroup && (!!e.path.isEqual(t.path) && (!!__PRIVATE_boundEquals(e.startAt, t.startAt) && __PRIVATE_boundEquals(e.endAt, t.endAt)));
 }
-function __PRIVATE_targetIsDocumentTarget(e) {
-  return DocumentKey.isDocumentKey(e.path) && null === e.collectionGroup && 0 === e.filters.length;
-}
 var __PRIVATE_QueryImpl = class {
   /**
    * Initializes a Query with a path and optional additional query constraints.
@@ -16215,11 +13078,6 @@ function __PRIVATE_queryToTarget(e) {
   const t = __PRIVATE_debugCast(e);
   return t.Ie || (t.Ie = __PRIVATE__queryToTarget(t, __PRIVATE_queryNormalizedOrderBy(e))), t.Ie;
 }
-function __PRIVATE_queryToAggregateTarget(e) {
-  const t = __PRIVATE_debugCast(e);
-  return t.de || // Do not include implicit order-bys for aggregate queries.
-  (t.de = __PRIVATE__queryToTarget(t, e.explicitOrderBy)), t.de;
-}
 function __PRIVATE__queryToTarget(e, t) {
   if ("F" === e.limitType) return __PRIVATE_newTarget(e.path, e.collectionGroup, t, e.filters, e.limit, e.startAt, e.endAt);
   {
@@ -16230,10 +13088,6 @@ function __PRIVATE__queryToTarget(e, t) {
     const n = e.endAt ? new Bound(e.endAt.position, e.endAt.inclusive) : null, r = e.startAt ? new Bound(e.startAt.position, e.startAt.inclusive) : null;
     return __PRIVATE_newTarget(e.path, e.collectionGroup, t, e.filters, e.limit, n, r);
   }
-}
-function __PRIVATE_queryWithAddedFilter(e, t) {
-  const n = e.filters.concat([t]);
-  return new __PRIVATE_QueryImpl(e.path, e.collectionGroup, e.explicitOrderBy.slice(), n, e.limit, e.limitType, e.startAt, e.endAt);
 }
 function __PRIVATE_queryWithLimit(e, t, n) {
   return new __PRIVATE_QueryImpl(e.path, e.collectionGroup, e.explicitOrderBy.slice(), e.filters.slice(), t, n, e.startAt, e.endAt);
@@ -16278,9 +13132,6 @@ function __PRIVATE_queryMatches(e, t) {
     }(e2.endAt, __PRIVATE_queryNormalizedOrderBy(e2), t2)) return false;
     return true;
   }(e, t);
-}
-function __PRIVATE_queryCollectionGroup(e) {
-  return e.collectionGroup || (e.path.length % 2 == 1 ? e.path.lastSegment() : e.path.get(e.path.length - 2));
 }
 function __PRIVATE_newQueryComparator(e) {
   return (t, n) => {
@@ -16413,9 +13264,6 @@ function __PRIVATE_toInteger(e) {
   return {
     integerValue: "" + e
   };
-}
-function toNumber(e, t) {
-  return isSafeInteger(t) ? __PRIVATE_toInteger(t) : __PRIVATE_toDouble(e, t);
 }
 var TransformOperation = class {
   constructor() {
@@ -16719,16 +13567,6 @@ var Overlay = class {
     }`;
   }
 };
-var __PRIVATE_AggregateImpl = class {
-  constructor(e, t, n) {
-    this.alias = e, this.aggregateType = t, this.fieldPath = n;
-  }
-};
-var ExistenceFilter = class {
-  constructor(e, t) {
-    this.count = e, this.unchangedNames = t;
-  }
-};
 var ft;
 var gt;
 function __PRIVATE_mapCodeFromRpcCode(e) {
@@ -16776,576 +13614,17 @@ function __PRIVATE_mapCodeFromRpcCode(e) {
   }
 }
 (gt = ft || (ft = {}))[gt.OK = 0] = "OK", gt[gt.CANCELLED = 1] = "CANCELLED", gt[gt.UNKNOWN = 2] = "UNKNOWN", gt[gt.INVALID_ARGUMENT = 3] = "INVALID_ARGUMENT", gt[gt.DEADLINE_EXCEEDED = 4] = "DEADLINE_EXCEEDED", gt[gt.NOT_FOUND = 5] = "NOT_FOUND", gt[gt.ALREADY_EXISTS = 6] = "ALREADY_EXISTS", gt[gt.PERMISSION_DENIED = 7] = "PERMISSION_DENIED", gt[gt.UNAUTHENTICATED = 16] = "UNAUTHENTICATED", gt[gt.RESOURCE_EXHAUSTED = 8] = "RESOURCE_EXHAUSTED", gt[gt.FAILED_PRECONDITION = 9] = "FAILED_PRECONDITION", gt[gt.ABORTED = 10] = "ABORTED", gt[gt.OUT_OF_RANGE = 11] = "OUT_OF_RANGE", gt[gt.UNIMPLEMENTED = 12] = "UNIMPLEMENTED", gt[gt.INTERNAL = 13] = "INTERNAL", gt[gt.UNAVAILABLE = 14] = "UNAVAILABLE", gt[gt.DATA_LOSS = 15] = "DATA_LOSS";
-var pt = null;
 var yt = new Integer([4294967295, 4294967295], 0);
-function __PRIVATE_getMd5HashValue(e) {
-  const t = __PRIVATE_newTextEncoder().encode(e), n = new Md5();
-  return n.update(t), new Uint8Array(n.digest());
-}
-function __PRIVATE_get64BitUints(e) {
-  const t = new DataView(e.buffer), n = t.getUint32(
-    0,
-    /* littleEndian= */
-    true
-  ), r = t.getUint32(
-    4,
-    /* littleEndian= */
-    true
-  ), i = t.getUint32(
-    8,
-    /* littleEndian= */
-    true
-  ), s = t.getUint32(
-    12,
-    /* littleEndian= */
-    true
-  );
-  return [new Integer([n, r], 0), new Integer([i, s], 0)];
-}
-var BloomFilter = class _BloomFilter {
-  constructor(e, t, n) {
-    if (this.bitmap = e, this.padding = t, this.hashCount = n, t < 0 || t >= 8) throw new __PRIVATE_BloomFilterError(`Invalid padding: ${t}`);
-    if (n < 0) throw new __PRIVATE_BloomFilterError(`Invalid hash count: ${n}`);
-    if (e.length > 0 && 0 === this.hashCount)
-      throw new __PRIVATE_BloomFilterError(`Invalid hash count: ${n}`);
-    if (0 === e.length && 0 !== t)
-      throw new __PRIVATE_BloomFilterError(`Invalid padding when bitmap length is 0: ${t}`);
-    this.fe = 8 * e.length - t, // Set the bit count in Integer to avoid repetition in mightContain().
-    this.ge = Integer.fromNumber(this.fe);
-  }
-  // Calculate the ith hash value based on the hashed 64bit integers,
-  // and calculate its corresponding bit index in the bitmap to be checked.
-  pe(e, t, n) {
-    let r = e.add(t.multiply(Integer.fromNumber(n)));
-    return 1 === r.compare(yt) && (r = new Integer([r.getBits(0), r.getBits(1)], 0)), r.modulo(this.ge).toNumber();
-  }
-  // Return whether the bit on the given index in the bitmap is set to 1.
-  ye(e) {
-    return !!(this.bitmap[Math.floor(e / 8)] & 1 << e % 8);
-  }
-  mightContain(e) {
-    if (0 === this.fe) return false;
-    const t = __PRIVATE_getMd5HashValue(e), [n, r] = __PRIVATE_get64BitUints(t);
-    for (let e2 = 0; e2 < this.hashCount; e2++) {
-      const t2 = this.pe(n, r, e2);
-      if (!this.ye(t2)) return false;
-    }
-    return true;
-  }
-  /** Create bloom filter for testing purposes only. */
-  static create(e, t, n) {
-    const r = e % 8 == 0 ? 0 : 8 - e % 8, i = new Uint8Array(Math.ceil(e / 8)), s = new _BloomFilter(i, r, t);
-    return n.forEach((e2) => s.insert(e2)), s;
-  }
-  insert(e) {
-    if (0 === this.fe) return;
-    const t = __PRIVATE_getMd5HashValue(e), [n, r] = __PRIVATE_get64BitUints(t);
-    for (let e2 = 0; e2 < this.hashCount; e2++) {
-      const t2 = this.pe(n, r, e2);
-      this.we(t2);
-    }
-  }
-  we(e) {
-    const t = Math.floor(e / 8), n = e % 8;
-    this.bitmap[t] |= 1 << n;
-  }
-};
-var __PRIVATE_BloomFilterError = class extends Error {
-  constructor() {
-    super(...arguments), this.name = "BloomFilterError";
-  }
-};
-var RemoteEvent = class _RemoteEvent {
-  constructor(e, t, n, r, i) {
-    this.snapshotVersion = e, this.targetChanges = t, this.targetMismatches = n, this.documentUpdates = r, this.resolvedLimboDocuments = i;
-  }
-  /**
-   * HACK: Views require RemoteEvents in order to determine whether the view is
-   * CURRENT, but secondary tabs don't receive remote events. So this method is
-   * used to create a synthesized RemoteEvent that can be used to apply a
-   * CURRENT status change to a View, for queries executed in a different tab.
-   */
-  // PORTING NOTE: Multi-tab only
-  static createSynthesizedRemoteEventForCurrentChange(e, t, n) {
-    const r = /* @__PURE__ */ new Map();
-    return r.set(e, TargetChange.createSynthesizedTargetChangeForCurrentChange(e, t, n)), new _RemoteEvent(SnapshotVersion.min(), r, new SortedMap(__PRIVATE_primitiveComparator), __PRIVATE_mutableDocumentMap(), __PRIVATE_documentKeySet());
-  }
-};
-var TargetChange = class _TargetChange {
-  constructor(e, t, n, r, i) {
-    this.resumeToken = e, this.current = t, this.addedDocuments = n, this.modifiedDocuments = r, this.removedDocuments = i;
-  }
-  /**
-   * This method is used to create a synthesized TargetChanges that can be used to
-   * apply a CURRENT status change to a View (for queries executed in a different
-   * tab) or for new queries (to raise snapshots with correct CURRENT status).
-   */
-  static createSynthesizedTargetChangeForCurrentChange(e, t, n) {
-    return new _TargetChange(n, t, __PRIVATE_documentKeySet(), __PRIVATE_documentKeySet(), __PRIVATE_documentKeySet());
-  }
-};
-var __PRIVATE_DocumentWatchChange = class {
-  constructor(e, t, n, r) {
-    this.Se = e, this.removedTargetIds = t, this.key = n, this.be = r;
-  }
-};
-var __PRIVATE_ExistenceFilterChange = class {
-  constructor(e, t) {
-    this.targetId = e, this.De = t;
-  }
-};
-var __PRIVATE_WatchTargetChange = class {
-  constructor(e, t, n = ByteString.EMPTY_BYTE_STRING, r = null) {
-    this.state = e, this.targetIds = t, this.resumeToken = n, this.cause = r;
-  }
-};
-var __PRIVATE_TargetState = class {
-  constructor() {
-    this.ve = 0, /**
-     * Keeps track of the document changes since the last raised snapshot.
-     *
-     * These changes are continuously updated as we receive document updates and
-     * always reflect the current set of changes against the last issued snapshot.
-     */
-    this.Ce = __PRIVATE_snapshotChangesMap(), /** See public getters for explanations of these fields. */
-    this.Fe = ByteString.EMPTY_BYTE_STRING, this.Me = false, /**
-     * Whether this target state should be included in the next snapshot. We
-     * initialize to true so that newly-added targets are included in the next
-     * RemoteEvent.
-     */
-    this.xe = true;
-  }
-  /**
-   * Whether this target has been marked 'current'.
-   *
-   * 'Current' has special meaning in the RPC protocol: It implies that the
-   * Watch backend has sent us all changes up to the point at which the target
-   * was added and that the target is consistent with the rest of the watch
-   * stream.
-   */
-  get current() {
-    return this.Me;
-  }
-  /** The last resume token sent to us for this target. */
-  get resumeToken() {
-    return this.Fe;
-  }
-  /** Whether this target has pending target adds or target removes. */
-  get Oe() {
-    return 0 !== this.ve;
-  }
-  /** Whether we have modified any state that should trigger a snapshot. */
-  get Ne() {
-    return this.xe;
-  }
-  /**
-   * Applies the resume token to the TargetChange, but only when it has a new
-   * value. Empty resumeTokens are discarded.
-   */
-  Be(e) {
-    e.approximateByteSize() > 0 && (this.xe = true, this.Fe = e);
-  }
-  /**
-   * Creates a target change from the current set of changes.
-   *
-   * To reset the document changes after raising this snapshot, call
-   * `clearPendingChanges()`.
-   */
-  Le() {
-    let e = __PRIVATE_documentKeySet(), t = __PRIVATE_documentKeySet(), n = __PRIVATE_documentKeySet();
-    return this.Ce.forEach((r, i) => {
-      switch (i) {
-        case 0:
-          e = e.add(r);
-          break;
-        case 2:
-          t = t.add(r);
-          break;
-        case 1:
-          n = n.add(r);
-          break;
-        default:
-          fail(38017, {
-            changeType: i
-          });
-      }
-    }), new TargetChange(this.Fe, this.Me, e, t, n);
-  }
-  /**
-   * Resets the document changes and sets `hasPendingChanges` to false.
-   */
-  ke() {
-    this.xe = false, this.Ce = __PRIVATE_snapshotChangesMap();
-  }
-  qe(e, t) {
-    this.xe = true, this.Ce = this.Ce.insert(e, t);
-  }
-  Qe(e) {
-    this.xe = true, this.Ce = this.Ce.remove(e);
-  }
-  $e() {
-    this.ve += 1;
-  }
-  Ue() {
-    this.ve -= 1, __PRIVATE_hardAssert(this.ve >= 0, 3241, {
-      ve: this.ve
-    });
-  }
-  Ke() {
-    this.xe = true, this.Me = true;
-  }
-};
-var __PRIVATE_WatchChangeAggregator = class {
-  constructor(e) {
-    this.We = e, /** The internal state of all tracked targets. */
-    this.Ge = /* @__PURE__ */ new Map(), /** Keeps track of the documents to update since the last raised snapshot. */
-    this.ze = __PRIVATE_mutableDocumentMap(), this.je = __PRIVATE_documentTargetMap(), /** A mapping of document keys to their set of target IDs. */
-    this.Je = __PRIVATE_documentTargetMap(), /**
-     * A map of targets with existence filter mismatches. These targets are
-     * known to be inconsistent and their listens needs to be re-established by
-     * RemoteStore.
-     */
-    this.He = new SortedMap(__PRIVATE_primitiveComparator);
-  }
-  /**
-   * Processes and adds the DocumentWatchChange to the current set of changes.
-   */
-  Ye(e) {
-    for (const t of e.Se) e.be && e.be.isFoundDocument() ? this.Ze(t, e.be) : this.Xe(t, e.key, e.be);
-    for (const t of e.removedTargetIds) this.Xe(t, e.key, e.be);
-  }
-  /** Processes and adds the WatchTargetChange to the current set of changes. */
-  et(e) {
-    this.forEachTarget(e, (t) => {
-      const n = this.tt(t);
-      switch (e.state) {
-        case 0:
-          this.nt(t) && n.Be(e.resumeToken);
-          break;
-        case 1:
-          n.Ue(), n.Oe || // We have a freshly added target, so we need to reset any state
-          // that we had previously. This can happen e.g. when remove and add
-          // back a target for existence filter mismatches.
-          n.ke(), n.Be(e.resumeToken);
-          break;
-        case 2:
-          n.Ue(), n.Oe || this.removeTarget(t);
-          break;
-        case 3:
-          this.nt(t) && (n.Ke(), n.Be(e.resumeToken));
-          break;
-        case 4:
-          this.nt(t) && // Reset the target and synthesizes removes for all existing
-          // documents. The backend will re-add any documents that still
-          // match the target before it sends the next global snapshot.
-          (this.rt(t), n.Be(e.resumeToken));
-          break;
-        default:
-          fail(56790, {
-            state: e.state
-          });
-      }
-    });
-  }
-  /**
-   * Iterates over all targetIds that the watch change applies to: either the
-   * targetIds explicitly listed in the change or the targetIds of all currently
-   * active targets.
-   */
-  forEachTarget(e, t) {
-    e.targetIds.length > 0 ? e.targetIds.forEach(t) : this.Ge.forEach((e2, n) => {
-      this.nt(n) && t(n);
-    });
-  }
-  /**
-   * Handles existence filters and synthesizes deletes for filter mismatches.
-   * Targets that are invalidated by filter mismatches are added to
-   * `pendingTargetResets`.
-   */
-  it(e) {
-    const t = e.targetId, n = e.De.count, r = this.st(t);
-    if (r) {
-      const i = r.target;
-      if (__PRIVATE_targetIsDocumentTarget(i)) if (0 === n) {
-        const e2 = new DocumentKey(i.path);
-        this.Xe(t, e2, MutableDocument.newNoDocument(e2, SnapshotVersion.min()));
-      } else __PRIVATE_hardAssert(1 === n, 20013, {
-        expectedCount: n
-      });
-      else {
-        const r2 = this.ot(t);
-        if (r2 !== n) {
-          const n2 = this._t(e), i2 = n2 ? this.ut(n2, e, r2) : 1;
-          if (0 !== i2) {
-            this.rt(t);
-            const e2 = 2 === i2 ? "TargetPurposeExistenceFilterMismatchBloom" : "TargetPurposeExistenceFilterMismatch";
-            this.He = this.He.insert(t, e2);
-          }
-          null == pt || pt.ct(function __PRIVATE_createExistenceFilterMismatchInfoForTestingHooks(e2, t2, n3, r3, i3) {
-            var s, o, _, a, u, c;
-            const l = {
-              localCacheCount: e2,
-              existenceFilterCount: t2.count,
-              databaseId: n3.database,
-              projectId: n3.projectId
-            }, h = t2.unchangedNames;
-            h && (l.bloomFilter = {
-              applied: 0 === i3,
-              hashCount: null !== (s = null == h ? void 0 : h.hashCount) && void 0 !== s ? s : 0,
-              bitmapLength: null !== (a = null === (_ = null === (o = null == h ? void 0 : h.bits) || void 0 === o ? void 0 : o.bitmap) || void 0 === _ ? void 0 : _.length) && void 0 !== a ? a : 0,
-              padding: null !== (c = null === (u = null == h ? void 0 : h.bits) || void 0 === u ? void 0 : u.padding) && void 0 !== c ? c : 0,
-              mightContain: (e3) => {
-                var t3;
-                return null !== (t3 = null == r3 ? void 0 : r3.mightContain(e3)) && void 0 !== t3 && t3;
-              }
-            });
-            return l;
-          }(r2, e.De, this.We.lt(), n2, i2));
-        }
-      }
-    }
-  }
-  /**
-   * Parse the bloom filter from the "unchanged_names" field of an existence
-   * filter.
-   */
-  _t(e) {
-    const t = e.De.unchangedNames;
-    if (!t || !t.bits) return null;
-    const { bits: { bitmap: n = "", padding: r = 0 }, hashCount: i = 0 } = t;
-    let s, o;
-    try {
-      s = __PRIVATE_normalizeByteString(n).toUint8Array();
-    } catch (e2) {
-      if (e2 instanceof __PRIVATE_Base64DecodeError) return __PRIVATE_logWarn("Decoding the base64 bloom filter in existence filter failed (" + e2.message + "); ignoring the bloom filter and falling back to full re-query."), null;
-      throw e2;
-    }
-    try {
-      o = new BloomFilter(s, r, i);
-    } catch (e2) {
-      return __PRIVATE_logWarn(e2 instanceof __PRIVATE_BloomFilterError ? "BloomFilter error: " : "Applying bloom filter failed: ", e2), null;
-    }
-    return 0 === o.fe ? null : o;
-  }
-  /**
-   * Apply bloom filter to remove the deleted documents, and return the
-   * application status.
-   */
-  ut(e, t, n) {
-    return t.De.count === n - this.ht(e, t.targetId) ? 0 : 2;
-  }
-  /**
-   * Filter out removed documents based on bloom filter membership result and
-   * return number of documents removed.
-   */
-  ht(e, t) {
-    const n = this.We.getRemoteKeysForTarget(t);
-    let r = 0;
-    return n.forEach((n2) => {
-      const i = this.We.lt(), s = `projects/${i.projectId}/databases/${i.database}/documents/${n2.path.canonicalString()}`;
-      e.mightContain(s) || (this.Xe(
-        t,
-        n2,
-        /*updatedDocument=*/
-        null
-      ), r++);
-    }), r;
-  }
-  /**
-   * Converts the currently accumulated state into a remote event at the
-   * provided snapshot version. Resets the accumulated changes before returning.
-   */
-  Pt(e) {
-    const t = /* @__PURE__ */ new Map();
-    this.Ge.forEach((n2, r2) => {
-      const i = this.st(r2);
-      if (i) {
-        if (n2.current && __PRIVATE_targetIsDocumentTarget(i.target)) {
-          const t2 = new DocumentKey(i.target.path);
-          this.Tt(t2).has(r2) || this.It(r2, t2) || this.Xe(r2, t2, MutableDocument.newNoDocument(t2, e));
-        }
-        n2.Ne && (t.set(r2, n2.Le()), n2.ke());
-      }
-    });
-    let n = __PRIVATE_documentKeySet();
-    this.Je.forEach((e2, t2) => {
-      let r2 = true;
-      t2.forEachWhile((e3) => {
-        const t3 = this.st(e3);
-        return !t3 || "TargetPurposeLimboResolution" === t3.purpose || (r2 = false, false);
-      }), r2 && (n = n.add(e2));
-    }), this.ze.forEach((t2, n2) => n2.setReadTime(e));
-    const r = new RemoteEvent(e, t, this.He, this.ze, n);
-    return this.ze = __PRIVATE_mutableDocumentMap(), this.je = __PRIVATE_documentTargetMap(), this.Je = __PRIVATE_documentTargetMap(), this.He = new SortedMap(__PRIVATE_primitiveComparator), r;
-  }
-  /**
-   * Adds the provided document to the internal list of document updates and
-   * its document key to the given target's mapping.
-   */
-  // Visible for testing.
-  Ze(e, t) {
-    if (!this.nt(e)) return;
-    const n = this.It(e, t.key) ? 2 : 0;
-    this.tt(e).qe(t.key, n), this.ze = this.ze.insert(t.key, t), this.je = this.je.insert(t.key, this.Tt(t.key).add(e)), this.Je = this.Je.insert(t.key, this.dt(t.key).add(e));
-  }
-  /**
-   * Removes the provided document from the target mapping. If the
-   * document no longer matches the target, but the document's state is still
-   * known (e.g. we know that the document was deleted or we received the change
-   * that caused the filter mismatch), the new document can be provided
-   * to update the remote document cache.
-   */
-  // Visible for testing.
-  Xe(e, t, n) {
-    if (!this.nt(e)) return;
-    const r = this.tt(e);
-    this.It(e, t) ? r.qe(
-      t,
-      1
-      /* ChangeType.Removed */
-    ) : (
-      // The document may have entered and left the target before we raised a
-      // snapshot, so we can just ignore the change.
-      r.Qe(t)
-    ), this.Je = this.Je.insert(t, this.dt(t).delete(e)), this.Je = this.Je.insert(t, this.dt(t).add(e)), n && (this.ze = this.ze.insert(t, n));
-  }
-  removeTarget(e) {
-    this.Ge.delete(e);
-  }
-  /**
-   * Returns the current count of documents in the target. This includes both
-   * the number of documents that the LocalStore considers to be part of the
-   * target as well as any accumulated changes.
-   */
-  ot(e) {
-    const t = this.tt(e).Le();
-    return this.We.getRemoteKeysForTarget(e).size + t.addedDocuments.size - t.removedDocuments.size;
-  }
-  /**
-   * Increment the number of acks needed from watch before we can consider the
-   * server to be 'in-sync' with the client's active targets.
-   */
-  $e(e) {
-    this.tt(e).$e();
-  }
-  tt(e) {
-    let t = this.Ge.get(e);
-    return t || (t = new __PRIVATE_TargetState(), this.Ge.set(e, t)), t;
-  }
-  dt(e) {
-    let t = this.Je.get(e);
-    return t || (t = new SortedSet(__PRIVATE_primitiveComparator), this.Je = this.Je.insert(e, t)), t;
-  }
-  Tt(e) {
-    let t = this.je.get(e);
-    return t || (t = new SortedSet(__PRIVATE_primitiveComparator), this.je = this.je.insert(e, t)), t;
-  }
-  /**
-   * Verifies that the user is still interested in this target (by calling
-   * `getTargetDataForTarget()`) and that we are not waiting for pending ADDs
-   * from watch.
-   */
-  nt(e) {
-    const t = null !== this.st(e);
-    return t || __PRIVATE_logDebug("WatchChangeAggregator", "Detected inactive target", e), t;
-  }
-  /**
-   * Returns the TargetData for an active target (i.e. a target that the user
-   * is still interested in that has no outstanding target change requests).
-   */
-  st(e) {
-    const t = this.Ge.get(e);
-    return t && t.Oe ? null : this.We.Et(e);
-  }
-  /**
-   * Resets the state of a Watch target to its initial state (e.g. sets
-   * 'current' to false, clears the resume token and removes its target mapping
-   * from all documents).
-   */
-  rt(e) {
-    this.Ge.set(e, new __PRIVATE_TargetState());
-    this.We.getRemoteKeysForTarget(e).forEach((t) => {
-      this.Xe(
-        e,
-        t,
-        /*updatedDocument=*/
-        null
-      );
-    });
-  }
-  /**
-   * Returns whether the LocalStore considers the document to be part of the
-   * specified target.
-   */
-  It(e, t) {
-    return this.We.getRemoteKeysForTarget(e).has(t);
-  }
-};
-function __PRIVATE_documentTargetMap() {
-  return new SortedMap(DocumentKey.comparator);
-}
-function __PRIVATE_snapshotChangesMap() {
-  return new SortedMap(DocumentKey.comparator);
-}
-var wt = /* @__PURE__ */ (() => {
-  const e = {
-    asc: "ASCENDING",
-    desc: "DESCENDING"
-  };
-  return e;
-})();
-var St = /* @__PURE__ */ (() => {
-  const e = {
-    "<": "LESS_THAN",
-    "<=": "LESS_THAN_OR_EQUAL",
-    ">": "GREATER_THAN",
-    ">=": "GREATER_THAN_OR_EQUAL",
-    "==": "EQUAL",
-    "!=": "NOT_EQUAL",
-    "array-contains": "ARRAY_CONTAINS",
-    in: "IN",
-    "not-in": "NOT_IN",
-    "array-contains-any": "ARRAY_CONTAINS_ANY"
-  };
-  return e;
-})();
-var bt = /* @__PURE__ */ (() => {
-  const e = {
-    and: "AND",
-    or: "OR"
-  };
-  return e;
-})();
 var JsonProtoSerializer = class {
   constructor(e, t) {
     this.databaseId = e, this.useProto3Json = t;
   }
 };
-function __PRIVATE_toInt32Proto(e, t) {
-  return e.useProto3Json || __PRIVATE_isNullOrUndefined(t) ? t : {
-    value: t
-  };
-}
-function toTimestamp(e, t) {
-  if (e.useProto3Json) {
-    return `${new Date(1e3 * t.seconds).toISOString().replace(/\.\d*/, "").replace("Z", "")}.${("000000000" + t.nanoseconds).slice(-9)}Z`;
-  }
-  return {
-    seconds: "" + t.seconds,
-    nanos: t.nanoseconds
-  };
-}
-function __PRIVATE_toBytes(e, t) {
-  return e.useProto3Json ? t.toBase64() : t.toUint8Array();
-}
 function __PRIVATE_fromVersion(e) {
   return __PRIVATE_hardAssert(!!e, 49232), SnapshotVersion.fromTimestamp(function fromTimestamp(e2) {
     const t = __PRIVATE_normalizeTimestamp(e2);
     return new Timestamp(t.seconds, t.nanos);
   }(e));
-}
-function __PRIVATE_toResourceName(e, t) {
-  return __PRIVATE_toResourcePath(e, t).canonicalString();
 }
 function __PRIVATE_toResourcePath(e, t) {
   const n = function __PRIVATE_fullyQualifiedPrefixPath(e2) {
@@ -17359,166 +13638,14 @@ function __PRIVATE_fromResourceName(e) {
     key: t.toString()
   }), t;
 }
-function fromName(e, t) {
-  const n = __PRIVATE_fromResourceName(t);
-  if (n.get(1) !== e.databaseId.projectId) throw new FirestoreError(N.INVALID_ARGUMENT, "Tried to deserialize key from different project: " + n.get(1) + " vs " + e.databaseId.projectId);
-  if (n.get(3) !== e.databaseId.database) throw new FirestoreError(N.INVALID_ARGUMENT, "Tried to deserialize key from different database: " + n.get(3) + " vs " + e.databaseId.database);
-  return new DocumentKey(__PRIVATE_extractLocalPathFromResourceName(n));
-}
-function __PRIVATE_toQueryPath(e, t) {
-  return __PRIVATE_toResourceName(e.databaseId, t);
-}
 function __PRIVATE_fromQueryPath(e) {
   const t = __PRIVATE_fromResourceName(e);
   return 4 === t.length ? ResourcePath.emptyPath() : __PRIVATE_extractLocalPathFromResourceName(t);
-}
-function __PRIVATE_getEncodedDatabaseId(e) {
-  return new ResourcePath(["projects", e.databaseId.projectId, "databases", e.databaseId.database]).canonicalString();
 }
 function __PRIVATE_extractLocalPathFromResourceName(e) {
   return __PRIVATE_hardAssert(e.length > 4 && "documents" === e.get(4), 29091, {
     key: e.toString()
   }), e.popFirst(5);
-}
-function __PRIVATE_fromWatchChange(e, t) {
-  let n;
-  if ("targetChange" in t) {
-    t.targetChange;
-    const r = function __PRIVATE_fromWatchTargetChangeState(e2) {
-      return "NO_CHANGE" === e2 ? 0 : "ADD" === e2 ? 1 : "REMOVE" === e2 ? 2 : "CURRENT" === e2 ? 3 : "RESET" === e2 ? 4 : fail(39313, {
-        state: e2
-      });
-    }(t.targetChange.targetChangeType || "NO_CHANGE"), i = t.targetChange.targetIds || [], s = function __PRIVATE_fromBytes(e2, t2) {
-      return e2.useProto3Json ? (__PRIVATE_hardAssert(void 0 === t2 || "string" == typeof t2, 58123), ByteString.fromBase64String(t2 || "")) : (__PRIVATE_hardAssert(void 0 === t2 || // Check if the value is an instance of both Buffer and Uint8Array,
-      // despite the fact that Buffer extends Uint8Array. In some
-      // environments, such as jsdom, the prototype chain of Buffer
-      // does not indicate that it extends Uint8Array.
-      t2 instanceof Buffer || t2 instanceof Uint8Array, 16193), ByteString.fromUint8Array(t2 || new Uint8Array()));
-    }(e, t.targetChange.resumeToken), o = t.targetChange.cause, _ = o && function __PRIVATE_fromRpcStatus(e2) {
-      const t2 = void 0 === e2.code ? N.UNKNOWN : __PRIVATE_mapCodeFromRpcCode(e2.code);
-      return new FirestoreError(t2, e2.message || "");
-    }(o);
-    n = new __PRIVATE_WatchTargetChange(r, i, s, _ || null);
-  } else if ("documentChange" in t) {
-    t.documentChange;
-    const r = t.documentChange;
-    r.document, r.document.name, r.document.updateTime;
-    const i = fromName(e, r.document.name), s = __PRIVATE_fromVersion(r.document.updateTime), o = r.document.createTime ? __PRIVATE_fromVersion(r.document.createTime) : SnapshotVersion.min(), _ = new ObjectValue({
-      mapValue: {
-        fields: r.document.fields
-      }
-    }), a = MutableDocument.newFoundDocument(i, s, o, _), u = r.targetIds || [], c = r.removedTargetIds || [];
-    n = new __PRIVATE_DocumentWatchChange(u, c, a.key, a);
-  } else if ("documentDelete" in t) {
-    t.documentDelete;
-    const r = t.documentDelete;
-    r.document;
-    const i = fromName(e, r.document), s = r.readTime ? __PRIVATE_fromVersion(r.readTime) : SnapshotVersion.min(), o = MutableDocument.newNoDocument(i, s), _ = r.removedTargetIds || [];
-    n = new __PRIVATE_DocumentWatchChange([], _, o.key, o);
-  } else if ("documentRemove" in t) {
-    t.documentRemove;
-    const r = t.documentRemove;
-    r.document;
-    const i = fromName(e, r.document), s = r.removedTargetIds || [];
-    n = new __PRIVATE_DocumentWatchChange([], s, i, null);
-  } else {
-    if (!("filter" in t)) return fail(11601, {
-      At: t
-    });
-    {
-      t.filter;
-      const e2 = t.filter;
-      e2.targetId;
-      const { count: r = 0, unchangedNames: i } = e2, s = new ExistenceFilter(r, i), o = e2.targetId;
-      n = new __PRIVATE_ExistenceFilterChange(o, s);
-    }
-  }
-  return n;
-}
-function __PRIVATE_toDocumentsTarget(e, t) {
-  return {
-    documents: [__PRIVATE_toQueryPath(e, t.path)]
-  };
-}
-function __PRIVATE_toQueryTarget(e, t) {
-  const n = {
-    structuredQuery: {}
-  }, r = t.path;
-  let i;
-  null !== t.collectionGroup ? (i = r, n.structuredQuery.from = [{
-    collectionId: t.collectionGroup,
-    allDescendants: true
-  }]) : (i = r.popLast(), n.structuredQuery.from = [{
-    collectionId: r.lastSegment()
-  }]), n.parent = __PRIVATE_toQueryPath(e, i);
-  const s = function __PRIVATE_toFilters(e2) {
-    if (0 === e2.length) return;
-    return __PRIVATE_toFilter(CompositeFilter.create(
-      e2,
-      "and"
-      /* CompositeOperator.AND */
-    ));
-  }(t.filters);
-  s && (n.structuredQuery.where = s);
-  const o = function __PRIVATE_toOrder(e2) {
-    if (0 === e2.length) return;
-    return e2.map((e3) => (
-      // visible for testing
-      function __PRIVATE_toPropertyOrder(e4) {
-        return {
-          field: __PRIVATE_toFieldPathReference(e4.field),
-          direction: __PRIVATE_toDirection(e4.dir)
-        };
-      }(e3)
-    ));
-  }(t.orderBy);
-  o && (n.structuredQuery.orderBy = o);
-  const _ = __PRIVATE_toInt32Proto(e, t.limit);
-  return null !== _ && (n.structuredQuery.limit = _), t.startAt && (n.structuredQuery.startAt = function __PRIVATE_toStartAtCursor(e2) {
-    return {
-      before: e2.inclusive,
-      values: e2.position
-    };
-  }(t.startAt)), t.endAt && (n.structuredQuery.endAt = function __PRIVATE_toEndAtCursor(e2) {
-    return {
-      before: !e2.inclusive,
-      values: e2.position
-    };
-  }(t.endAt)), {
-    Vt: n,
-    parent: i
-  };
-}
-function __PRIVATE_toRunAggregationQueryRequest(e, t, n, r) {
-  const { Vt: i, parent: s } = __PRIVATE_toQueryTarget(e, t), o = {}, _ = [];
-  let a = 0;
-  return n.forEach((e2) => {
-    const t2 = r ? e2.alias : "aggregate_" + a++;
-    o[t2] = e2.alias, "count" === e2.aggregateType ? _.push({
-      alias: t2,
-      count: {}
-    }) : "avg" === e2.aggregateType ? _.push({
-      alias: t2,
-      avg: {
-        field: __PRIVATE_toFieldPathReference(e2.fieldPath)
-      }
-    }) : "sum" === e2.aggregateType && _.push({
-      alias: t2,
-      sum: {
-        field: __PRIVATE_toFieldPathReference(e2.fieldPath)
-      }
-    });
-  }), {
-    request: {
-      structuredAggregationQuery: {
-        aggregations: _,
-        structuredQuery: i.structuredQuery
-      },
-      parent: i.parent
-    },
-    ft: o,
-    parent: s
-  };
 }
 function __PRIVATE_convertQueryTargetToQuery(e) {
   let t = __PRIVATE_fromQueryPath(e.parent);
@@ -17569,27 +13696,6 @@ function __PRIVATE_convertQueryTargetToQuery(e) {
     const t2 = !e2.before, n2 = e2.values || [];
     return new Bound(n2, t2);
   }(n.endAt)), __PRIVATE_newQuery(t, i, o, s, _, "F", a, u);
-}
-function __PRIVATE_toListenRequestLabels(e, t) {
-  const n = function __PRIVATE_toLabel(e2) {
-    switch (e2) {
-      case "TargetPurposeListen":
-        return null;
-      case "TargetPurposeExistenceFilterMismatch":
-        return "existence-filter-mismatch";
-      case "TargetPurposeExistenceFilterMismatchBloom":
-        return "existence-filter-mismatch-bloom";
-      case "TargetPurposeLimboResolution":
-        return "limbo-document";
-      default:
-        return fail(28987, {
-          purpose: e2
-        });
-    }
-  }(t.purpose);
-  return null == n ? null : {
-    "goog-listen-tags": n
-  };
 }
 function __PRIVATE_fromFilter(e) {
   return void 0 !== e.unaryFilter ? function __PRIVATE_fromUnaryFilter(e2) {
@@ -17663,114 +13769,12 @@ function __PRIVATE_fromFilter(e) {
     filter: e
   });
 }
-function __PRIVATE_toDirection(e) {
-  return wt[e];
-}
-function __PRIVATE_toOperatorName(e) {
-  return St[e];
-}
-function __PRIVATE_toCompositeOperatorName(e) {
-  return bt[e];
-}
-function __PRIVATE_toFieldPathReference(e) {
-  return {
-    fieldPath: e.canonicalString()
-  };
-}
 function __PRIVATE_fromFieldPathReference(e) {
   return FieldPath$1.fromServerFormat(e.fieldPath);
-}
-function __PRIVATE_toFilter(e) {
-  return e instanceof FieldFilter ? function __PRIVATE_toUnaryOrFieldFilter(e2) {
-    if ("==" === e2.op) {
-      if (__PRIVATE_isNanValue(e2.value)) return {
-        unaryFilter: {
-          field: __PRIVATE_toFieldPathReference(e2.field),
-          op: "IS_NAN"
-        }
-      };
-      if (__PRIVATE_isNullValue(e2.value)) return {
-        unaryFilter: {
-          field: __PRIVATE_toFieldPathReference(e2.field),
-          op: "IS_NULL"
-        }
-      };
-    } else if ("!=" === e2.op) {
-      if (__PRIVATE_isNanValue(e2.value)) return {
-        unaryFilter: {
-          field: __PRIVATE_toFieldPathReference(e2.field),
-          op: "IS_NOT_NAN"
-        }
-      };
-      if (__PRIVATE_isNullValue(e2.value)) return {
-        unaryFilter: {
-          field: __PRIVATE_toFieldPathReference(e2.field),
-          op: "IS_NOT_NULL"
-        }
-      };
-    }
-    return {
-      fieldFilter: {
-        field: __PRIVATE_toFieldPathReference(e2.field),
-        op: __PRIVATE_toOperatorName(e2.op),
-        value: e2.value
-      }
-    };
-  }(e) : e instanceof CompositeFilter ? function __PRIVATE_toCompositeFilter(e2) {
-    const t = e2.getFilters().map((e3) => __PRIVATE_toFilter(e3));
-    if (1 === t.length) return t[0];
-    return {
-      compositeFilter: {
-        op: __PRIVATE_toCompositeOperatorName(e2.op),
-        filters: t
-      }
-    };
-  }(e) : fail(54877, {
-    filter: e
-  });
 }
 function __PRIVATE_isValidResourceName(e) {
   return e.length >= 4 && "projects" === e.get(0) && "databases" === e.get(2);
 }
-var TargetData = class _TargetData {
-  constructor(e, t, n, r, i = SnapshotVersion.min(), s = SnapshotVersion.min(), o = ByteString.EMPTY_BYTE_STRING, _ = null) {
-    this.target = e, this.targetId = t, this.purpose = n, this.sequenceNumber = r, this.snapshotVersion = i, this.lastLimboFreeSnapshotVersion = s, this.resumeToken = o, this.expectedCount = _;
-  }
-  /** Creates a new target data instance with an updated sequence number. */
-  withSequenceNumber(e) {
-    return new _TargetData(this.target, this.targetId, this.purpose, e, this.snapshotVersion, this.lastLimboFreeSnapshotVersion, this.resumeToken, this.expectedCount);
-  }
-  /**
-   * Creates a new target data instance with an updated resume token and
-   * snapshot version.
-   */
-  withResumeToken(e, t) {
-    return new _TargetData(
-      this.target,
-      this.targetId,
-      this.purpose,
-      this.sequenceNumber,
-      t,
-      this.lastLimboFreeSnapshotVersion,
-      e,
-      /* expectedCount= */
-      null
-    );
-  }
-  /**
-   * Creates a new target data instance with an updated expected count.
-   */
-  withExpectedCount(e) {
-    return new _TargetData(this.target, this.targetId, this.purpose, this.sequenceNumber, this.snapshotVersion, this.lastLimboFreeSnapshotVersion, this.resumeToken, e);
-  }
-  /**
-   * Creates a new target data instance with an updated last limbo free
-   * snapshot version number.
-   */
-  withLastLimboFreeSnapshotVersion(e) {
-    return new _TargetData(this.target, this.targetId, this.purpose, this.sequenceNumber, this.snapshotVersion, e, this.resumeToken, this.expectedCount);
-  }
-};
 var __PRIVATE_LocalSerializer = class {
   constructor(e) {
     this.gt = e;
@@ -17932,12 +13936,6 @@ var __PRIVATE_MemoryCollectionParentIndex = class {
   }
 };
 var Ct = new Uint8Array(0);
-var Ft = {
-  didRun: false,
-  sequenceNumbersCollected: 0,
-  targetsRemoved: 0,
-  documentsRemoved: 0
-};
 var Mt = 41943040;
 var LruParams = class _LruParams {
   static withCacheSize(e) {
@@ -17962,107 +13960,7 @@ var __PRIVATE_TargetIdGenerator = class ___PRIVATE_TargetIdGenerator {
     return new ___PRIVATE_TargetIdGenerator(-1);
   }
 };
-var xt = "LruGarbageCollector";
 var Ot = 1048576;
-function __PRIVATE_bufferEntryComparator([e, t], [n, r]) {
-  const i = __PRIVATE_primitiveComparator(e, n);
-  return 0 === i ? __PRIVATE_primitiveComparator(t, r) : i;
-}
-var __PRIVATE_RollingSequenceNumberBuffer = class {
-  constructor(e) {
-    this.Tr = e, this.buffer = new SortedSet(__PRIVATE_bufferEntryComparator), this.Ir = 0;
-  }
-  dr() {
-    return ++this.Ir;
-  }
-  Er(e) {
-    const t = [e, this.dr()];
-    if (this.buffer.size < this.Tr) this.buffer = this.buffer.add(t);
-    else {
-      const e2 = this.buffer.last();
-      __PRIVATE_bufferEntryComparator(t, e2) < 0 && (this.buffer = this.buffer.delete(e2).add(t));
-    }
-  }
-  get maxValue() {
-    return this.buffer.last()[0];
-  }
-};
-var __PRIVATE_LruScheduler = class {
-  constructor(e, t, n) {
-    this.garbageCollector = e, this.asyncQueue = t, this.localStore = n, this.Ar = null;
-  }
-  start() {
-    -1 !== this.garbageCollector.params.cacheSizeCollectionThreshold && this.Rr(6e4);
-  }
-  stop() {
-    this.Ar && (this.Ar.cancel(), this.Ar = null);
-  }
-  get started() {
-    return null !== this.Ar;
-  }
-  Rr(e) {
-    __PRIVATE_logDebug(xt, `Garbage collection scheduled in ${e}ms`), this.Ar = this.asyncQueue.enqueueAfterDelay("lru_garbage_collection", e, async () => {
-      this.Ar = null;
-      try {
-        await this.localStore.collectGarbage(this.garbageCollector);
-      } catch (e2) {
-        __PRIVATE_isIndexedDbTransactionError(e2) ? __PRIVATE_logDebug(xt, "Ignoring IndexedDB error during garbage collection: ", e2) : await __PRIVATE_ignoreIfPrimaryLeaseLoss(e2);
-      }
-      await this.Rr(3e5);
-    });
-  }
-};
-var __PRIVATE_LruGarbageCollectorImpl = class {
-  constructor(e, t) {
-    this.Vr = e, this.params = t;
-  }
-  calculateTargetCount(e, t) {
-    return this.Vr.mr(e).next((e2) => Math.floor(t / 100 * e2));
-  }
-  nthSequenceNumber(e, t) {
-    if (0 === t) return PersistencePromise.resolve(__PRIVATE_ListenSequence.ue);
-    const n = new __PRIVATE_RollingSequenceNumberBuffer(t);
-    return this.Vr.forEachTarget(e, (e2) => n.Er(e2.sequenceNumber)).next(() => this.Vr.gr(e, (e2) => n.Er(e2))).next(() => n.maxValue);
-  }
-  removeTargets(e, t, n) {
-    return this.Vr.removeTargets(e, t, n);
-  }
-  removeOrphanedDocuments(e, t) {
-    return this.Vr.removeOrphanedDocuments(e, t);
-  }
-  collect(e, t) {
-    return -1 === this.params.cacheSizeCollectionThreshold ? (__PRIVATE_logDebug("LruGarbageCollector", "Garbage collection skipped; disabled"), PersistencePromise.resolve(Ft)) : this.getCacheSize(e).next((n) => n < this.params.cacheSizeCollectionThreshold ? (__PRIVATE_logDebug("LruGarbageCollector", `Garbage collection skipped; Cache size ${n} is lower than threshold ${this.params.cacheSizeCollectionThreshold}`), Ft) : this.pr(e, t));
-  }
-  getCacheSize(e) {
-    return this.Vr.getCacheSize(e);
-  }
-  pr(e, t) {
-    let n, r, i, s, o, _, u;
-    const c = Date.now();
-    return this.calculateTargetCount(e, this.params.percentileToCollect).next((t2) => (
-      // Cap at the configured max
-      (t2 > this.params.maximumSequenceNumbersToCollect ? (__PRIVATE_logDebug("LruGarbageCollector", `Capping sequence numbers to collect down to the maximum of ${this.params.maximumSequenceNumbersToCollect} from ${t2}`), r = this.params.maximumSequenceNumbersToCollect) : r = t2, s = Date.now(), this.nthSequenceNumber(e, r))
-    )).next((r2) => (n = r2, o = Date.now(), this.removeTargets(e, n, t))).next((t2) => (i = t2, _ = Date.now(), this.removeOrphanedDocuments(e, n))).next((e2) => {
-      if (u = Date.now(), __PRIVATE_getLogLevel() <= LogLevel.DEBUG) {
-        __PRIVATE_logDebug("LruGarbageCollector", `LRU Garbage Collection
-	Counted targets in ${s - c}ms
-	Determined least recently used ${r} in ` + (o - s) + `ms
-	Removed ${i} targets in ` + (_ - o) + `ms
-	Removed ${e2} documents in ` + (u - _) + `ms
-Total Duration: ${u - c}ms`);
-      }
-      return PersistencePromise.resolve({
-        didRun: true,
-        sequenceNumbersCollected: r,
-        targetsRemoved: i,
-        documentsRemoved: e2
-      });
-    });
-  }
-};
-function __PRIVATE_newLruGarbageCollector(e, t) {
-  return new __PRIVATE_LruGarbageCollectorImpl(e, t);
-}
 var RemoteDocumentChangeBuffer = class {
   constructor() {
     this.changes = new ObjectMap((e) => e.toString(), (e, t) => e.isEqual(t)), this.changesApplied = false;
@@ -18926,76 +14824,6 @@ var __PRIVATE_MemoryEagerDelegate = class ___PRIVATE_MemoryEagerDelegate {
     return PersistencePromise.or([() => PersistencePromise.resolve(this.Ai.containsKey(t)), () => this.persistence.getTargetCache().containsKey(e, t), () => this.persistence.Ei(e, t)]);
   }
 };
-var __PRIVATE_MemoryLruDelegate = class ___PRIVATE_MemoryLruDelegate {
-  constructor(e, t) {
-    this.persistence = e, this.gi = new ObjectMap((e2) => __PRIVATE_encodeResourcePath(e2.path), (e2, t2) => e2.isEqual(t2)), this.garbageCollector = __PRIVATE_newLruGarbageCollector(this, t);
-  }
-  static Vi(e, t) {
-    return new ___PRIVATE_MemoryLruDelegate(e, t);
-  }
-  // No-ops, present so memory persistence doesn't have to care which delegate
-  // it has.
-  Ii() {
-  }
-  di(e) {
-    return PersistencePromise.resolve();
-  }
-  forEachTarget(e, t) {
-    return this.persistence.getTargetCache().forEachTarget(e, t);
-  }
-  mr(e) {
-    const t = this.yr(e);
-    return this.persistence.getTargetCache().getTargetCount(e).next((e2) => t.next((t2) => e2 + t2));
-  }
-  yr(e) {
-    let t = 0;
-    return this.gr(e, (e2) => {
-      t++;
-    }).next(() => t);
-  }
-  gr(e, t) {
-    return PersistencePromise.forEach(this.gi, (n, r) => this.Sr(e, n, r).next((e2) => e2 ? PersistencePromise.resolve() : t(r)));
-  }
-  removeTargets(e, t, n) {
-    return this.persistence.getTargetCache().removeTargets(e, t, n);
-  }
-  removeOrphanedDocuments(e, t) {
-    let n = 0;
-    const r = this.persistence.getRemoteDocumentCache(), i = r.newChangeBuffer();
-    return r.ri(e, (r2) => this.Sr(e, r2, t).next((e2) => {
-      e2 || (n++, i.removeEntry(r2, SnapshotVersion.min()));
-    })).next(() => i.apply(e)).next(() => n);
-  }
-  markPotentiallyOrphaned(e, t) {
-    return this.gi.set(t, e.currentSequenceNumber), PersistencePromise.resolve();
-  }
-  removeTarget(e, t) {
-    const n = t.withSequenceNumber(e.currentSequenceNumber);
-    return this.persistence.getTargetCache().updateTargetData(e, n);
-  }
-  addReference(e, t, n) {
-    return this.gi.set(n, e.currentSequenceNumber), PersistencePromise.resolve();
-  }
-  removeReference(e, t, n) {
-    return this.gi.set(n, e.currentSequenceNumber), PersistencePromise.resolve();
-  }
-  updateLimboDocument(e, t) {
-    return this.gi.set(t, e.currentSequenceNumber), PersistencePromise.resolve();
-  }
-  Pi(e) {
-    let t = e.key.toString().length;
-    return e.isFoundDocument() && (t += __PRIVATE_estimateByteSize(e.data.value)), t;
-  }
-  Sr(e, t, n) {
-    return PersistencePromise.or([() => this.persistence.Ei(e, t), () => this.persistence.getTargetCache().containsKey(e, t), () => {
-      const e2 = this.gi.get(t);
-      return PersistencePromise.resolve(void 0 !== e2 && e2 > n);
-    }]);
-  }
-  getCacheSize(e) {
-    return this.persistence.getRemoteDocumentCache().getSize(e);
-  }
-};
 var __PRIVATE_LocalViewChanges = class ___PRIVATE_LocalViewChanges {
   constructor(e, t, n, r) {
     this.targetId = e, this.fromCache = t, this.Is = n, this.ds = r;
@@ -19152,7 +14980,6 @@ var __PRIVATE_QueryEngine = class {
   }
 };
 var Qt = "LocalStore";
-var $t = 3e8;
 var __PRIVATE_LocalStoreImpl = class {
   constructor(e, t, n, r) {
     this.persistence = e, this.Cs = t, this.serializer = r, /**
@@ -19203,133 +15030,6 @@ async function __PRIVATE_localStoreHandleUserChange(e, t) {
       }));
     });
   });
-}
-function __PRIVATE_localStoreGetLastRemoteSnapshotVersion(e) {
-  const t = __PRIVATE_debugCast(e);
-  return t.persistence.runTransaction("Get last remote snapshot version", "readonly", (e2) => t.hi.getLastRemoteSnapshotVersion(e2));
-}
-function __PRIVATE_localStoreApplyRemoteEventToLocalCache(e, t) {
-  const n = __PRIVATE_debugCast(e), r = t.snapshotVersion;
-  let i = n.Fs;
-  return n.persistence.runTransaction("Apply remote event", "readwrite-primary", (e2) => {
-    const s = n.Os.newChangeBuffer({
-      trackRemovals: true
-    });
-    i = n.Fs;
-    const o = [];
-    t.targetChanges.forEach((s2, _2) => {
-      const a2 = i.get(_2);
-      if (!a2) return;
-      o.push(n.hi.removeMatchingKeys(e2, s2.removedDocuments, _2).next(() => n.hi.addMatchingKeys(e2, s2.addedDocuments, _2)));
-      let u = a2.withSequenceNumber(e2.currentSequenceNumber);
-      null !== t.targetMismatches.get(_2) ? u = u.withResumeToken(ByteString.EMPTY_BYTE_STRING, SnapshotVersion.min()).withLastLimboFreeSnapshotVersion(SnapshotVersion.min()) : s2.resumeToken.approximateByteSize() > 0 && (u = u.withResumeToken(s2.resumeToken, r)), i = i.insert(_2, u), // Update the target data if there are target changes (or if
-      // sufficient time has passed since the last update).
-      /**
-      * Returns true if the newTargetData should be persisted during an update of
-      * an active target. TargetData should always be persisted when a target is
-      * being released and should not call this function.
-      *
-      * While the target is active, TargetData updates can be omitted when nothing
-      * about the target has changed except metadata like the resume token or
-      * snapshot version. Occasionally it's worth the extra write to prevent these
-      * values from getting too stale after a crash, but this doesn't have to be
-      * too frequent.
-      */
-      function __PRIVATE_shouldPersistTargetData(e3, t2, n2) {
-        if (0 === e3.resumeToken.approximateByteSize()) return true;
-        const r2 = t2.snapshotVersion.toMicroseconds() - e3.snapshotVersion.toMicroseconds();
-        if (r2 >= $t) return true;
-        const i2 = n2.addedDocuments.size + n2.modifiedDocuments.size + n2.removedDocuments.size;
-        return i2 > 0;
-      }(a2, u, s2) && o.push(n.hi.updateTargetData(e2, u));
-    });
-    let _ = __PRIVATE_mutableDocumentMap(), a = __PRIVATE_documentKeySet();
-    if (t.documentUpdates.forEach((r2) => {
-      t.resolvedLimboDocuments.has(r2) && o.push(n.persistence.referenceDelegate.updateLimboDocument(e2, r2));
-    }), // Each loop iteration only affects its "own" doc, so it's safe to get all
-    // the remote documents in advance in a single call.
-    o.push(__PRIVATE_populateDocumentChangeBuffer(e2, s, t.documentUpdates).next((e3) => {
-      _ = e3.Ls, a = e3.ks;
-    })), !r.isEqual(SnapshotVersion.min())) {
-      const t2 = n.hi.getLastRemoteSnapshotVersion(e2).next((t3) => n.hi.setTargetsMetadata(e2, e2.currentSequenceNumber, r));
-      o.push(t2);
-    }
-    return PersistencePromise.waitFor(o).next(() => s.apply(e2)).next(() => n.localDocuments.getLocalViewOfDocuments(e2, _, a)).next(() => _);
-  }).then((e2) => (n.Fs = i, e2));
-}
-function __PRIVATE_populateDocumentChangeBuffer(e, t, n) {
-  let r = __PRIVATE_documentKeySet(), i = __PRIVATE_documentKeySet();
-  return n.forEach((e2) => r = r.add(e2)), t.getEntries(e, r).next((e2) => {
-    let r2 = __PRIVATE_mutableDocumentMap();
-    return n.forEach((n2, s) => {
-      const o = e2.get(n2);
-      s.isFoundDocument() !== o.isFoundDocument() && (i = i.add(n2)), // Note: The order of the steps below is important, since we want
-      // to ensure that rejected limbo resolutions (which fabricate
-      // NoDocuments with SnapshotVersion.min()) never add documents to
-      // cache.
-      s.isNoDocument() && s.version.isEqual(SnapshotVersion.min()) ? (
-        // NoDocuments with SnapshotVersion.min() are used in manufactured
-        // events. We remove these documents from cache since we lost
-        // access.
-        (t.removeEntry(n2, s.readTime), r2 = r2.insert(n2, s))
-      ) : !o.isValidDocument() || s.version.compareTo(o.version) > 0 || 0 === s.version.compareTo(o.version) && o.hasPendingWrites ? (t.addEntry(s), r2 = r2.insert(n2, s)) : __PRIVATE_logDebug(Qt, "Ignoring outdated watch update for ", n2, ". Current version:", o.version, " Watch version:", s.version);
-    }), {
-      Ls: r2,
-      ks: i
-    };
-  });
-}
-function __PRIVATE_localStoreAllocateTarget(e, t) {
-  const n = __PRIVATE_debugCast(e);
-  return n.persistence.runTransaction("Allocate target", "readwrite", (e2) => {
-    let r;
-    return n.hi.getTargetData(e2, t).next((i) => i ? (
-      // This target has been listened to previously, so reuse the
-      // previous targetID.
-      // TODO(mcg): freshen last accessed date?
-      (r = i, PersistencePromise.resolve(r))
-    ) : n.hi.allocateTargetId(e2).next((i2) => (r = new TargetData(t, i2, "TargetPurposeListen", e2.currentSequenceNumber), n.hi.addTargetData(e2, r).next(() => r))));
-  }).then((e2) => {
-    const r = n.Fs.get(e2.targetId);
-    return (null === r || e2.snapshotVersion.compareTo(r.snapshotVersion) > 0) && (n.Fs = n.Fs.insert(e2.targetId, e2), n.Ms.set(t, e2.targetId)), e2;
-  });
-}
-async function __PRIVATE_localStoreReleaseTarget(e, t, n) {
-  const r = __PRIVATE_debugCast(e), i = r.Fs.get(t), s = n ? "readwrite" : "readwrite-primary";
-  try {
-    n || await r.persistence.runTransaction("Release target", s, (e2) => r.persistence.referenceDelegate.removeTarget(e2, i));
-  } catch (e2) {
-    if (!__PRIVATE_isIndexedDbTransactionError(e2)) throw e2;
-    __PRIVATE_logDebug(Qt, `Failed to update sequence numbers for target ${t}: ${e2}`);
-  }
-  r.Fs = r.Fs.remove(t), r.Ms.delete(i.target);
-}
-function __PRIVATE_localStoreExecuteQuery(e, t, n) {
-  const r = __PRIVATE_debugCast(e);
-  let i = SnapshotVersion.min(), s = __PRIVATE_documentKeySet();
-  return r.persistence.runTransaction(
-    "Execute query",
-    "readwrite",
-    // Use readwrite instead of readonly so indexes can be created
-    // Use readwrite instead of readonly so indexes can be created
-    (e2) => function __PRIVATE_localStoreGetTargetData(e3, t2, n2) {
-      const r2 = __PRIVATE_debugCast(e3), i2 = r2.Ms.get(n2);
-      return void 0 !== i2 ? PersistencePromise.resolve(r2.Fs.get(i2)) : r2.hi.getTargetData(t2, n2);
-    }(r, e2, __PRIVATE_queryToTarget(t)).next((t2) => {
-      if (t2) return i = t2.lastLimboFreeSnapshotVersion, r.hi.getMatchingKeysForTargetId(e2, t2.targetId).next((e3) => {
-        s = e3;
-      });
-    }).next(() => r.Cs.getDocumentsMatchingQuery(e2, t, n ? i : SnapshotVersion.min(), n ? s : __PRIVATE_documentKeySet())).next((e3) => (__PRIVATE_setMaxReadTime(r, __PRIVATE_queryCollectionGroup(t), e3), {
-      documents: e3,
-      qs: s
-    }))
-  );
-}
-function __PRIVATE_setMaxReadTime(e, t, n) {
-  let r = e.xs.get(t) || SnapshotVersion.min();
-  n.forEach((e2, t2) => {
-    t2.readTime.compareTo(r) > 0 && (r = t2.readTime);
-  }), e.xs.set(t, r);
 }
 var __PRIVATE_LocalClientState = class {
   constructor() {
@@ -19758,247 +15458,6 @@ var __PRIVATE_ExponentialBackoff = class {
     return (Math.random() - 0.5) * this.R_;
   }
 };
-var Zt = "PersistentStream";
-var __PRIVATE_PersistentStream = class {
-  constructor(e, t, n, r, i, s, o, _) {
-    this.Fi = e, this.w_ = n, this.S_ = r, this.connection = i, this.authCredentialsProvider = s, this.appCheckCredentialsProvider = o, this.listener = _, this.state = 0, /**
-     * A close count that's incremented every time the stream is closed; used by
-     * getCloseGuardedDispatcher() to invalidate callbacks that happen after
-     * close.
-     */
-    this.b_ = 0, this.D_ = null, this.v_ = null, this.stream = null, /**
-     * Count of response messages received.
-     */
-    this.C_ = 0, this.F_ = new __PRIVATE_ExponentialBackoff(e, t);
-  }
-  /**
-   * Returns true if start() has been called and no error has occurred. True
-   * indicates the stream is open or in the process of opening (which
-   * encompasses respecting backoff, getting auth tokens, and starting the
-   * actual RPC). Use isOpen() to determine if the stream is open and ready for
-   * outbound requests.
-   */
-  M_() {
-    return 1 === this.state || 5 === this.state || this.x_();
-  }
-  /**
-   * Returns true if the underlying RPC is open (the onOpen() listener has been
-   * called) and the stream is ready for outbound requests.
-   */
-  x_() {
-    return 2 === this.state || 3 === this.state;
-  }
-  /**
-   * Starts the RPC. Only allowed if isStarted() returns false. The stream is
-   * not immediately ready for use: onOpen() will be invoked when the RPC is
-   * ready for outbound requests, at which point isOpen() will return true.
-   *
-   * When start returns, isStarted() will return true.
-   */
-  start() {
-    this.C_ = 0, 4 !== this.state ? this.auth() : this.O_();
-  }
-  /**
-   * Stops the RPC. This call is idempotent and allowed regardless of the
-   * current isStarted() state.
-   *
-   * When stop returns, isStarted() and isOpen() will both return false.
-   */
-  async stop() {
-    this.M_() && await this.close(
-      0
-      /* PersistentStreamState.Initial */
-    );
-  }
-  /**
-   * After an error the stream will usually back off on the next attempt to
-   * start it. If the error warrants an immediate restart of the stream, the
-   * sender can use this to indicate that the receiver should not back off.
-   *
-   * Each error will call the onClose() listener. That function can decide to
-   * inhibit backoff if required.
-   */
-  N_() {
-    this.state = 0, this.F_.reset();
-  }
-  /**
-   * Marks this stream as idle. If no further actions are performed on the
-   * stream for one minute, the stream will automatically close itself and
-   * notify the stream's onClose() handler with Status.OK. The stream will then
-   * be in a !isStarted() state, requiring the caller to start the stream again
-   * before further use.
-   *
-   * Only streams that are in state 'Open' can be marked idle, as all other
-   * states imply pending network operations.
-   */
-  B_() {
-    this.x_() && null === this.D_ && (this.D_ = this.Fi.enqueueAfterDelay(this.w_, 6e4, () => this.L_()));
-  }
-  /** Sends a message to the underlying stream. */
-  k_(e) {
-    this.q_(), this.stream.send(e);
-  }
-  /** Called by the idle timer when the stream should close due to inactivity. */
-  async L_() {
-    if (this.x_())
-      return this.close(
-        0
-        /* PersistentStreamState.Initial */
-      );
-  }
-  /** Marks the stream as active again. */
-  q_() {
-    this.D_ && (this.D_.cancel(), this.D_ = null);
-  }
-  /** Cancels the health check delayed operation. */
-  Q_() {
-    this.v_ && (this.v_.cancel(), this.v_ = null);
-  }
-  /**
-   * Closes the stream and cleans up as necessary:
-   *
-   * * closes the underlying GRPC stream;
-   * * calls the onClose handler with the given 'error';
-   * * sets internal stream state to 'finalState';
-   * * adjusts the backoff timer based on the error
-   *
-   * A new stream can be opened by calling start().
-   *
-   * @param finalState - the intended state of the stream after closing.
-   * @param error - the error the connection was closed with.
-   */
-  async close(e, t) {
-    this.q_(), this.Q_(), this.F_.cancel(), // Invalidates any stream-related callbacks (e.g. from auth or the
-    // underlying stream), guaranteeing they won't execute.
-    this.b_++, 4 !== e ? (
-      // If this is an intentional close ensure we don't delay our next connection attempt.
-      this.F_.reset()
-    ) : t && t.code === N.RESOURCE_EXHAUSTED ? (
-      // Log the error. (Probably either 'quota exceeded' or 'max queue length reached'.)
-      (__PRIVATE_logError(t.toString()), __PRIVATE_logError("Using maximum backoff delay to prevent overloading the backend."), this.F_.f_())
-    ) : t && t.code === N.UNAUTHENTICATED && 3 !== this.state && // "unauthenticated" error means the token was rejected. This should rarely
-    // happen since both Auth and AppCheck ensure a sufficient TTL when we
-    // request a token. If a user manually resets their system clock this can
-    // fail, however. In this case, we should get a Code.UNAUTHENTICATED error
-    // before we received the first message and we need to invalidate the token
-    // to ensure that we fetch a new token.
-    (this.authCredentialsProvider.invalidateToken(), this.appCheckCredentialsProvider.invalidateToken()), // Clean up the underlying stream because we are no longer interested in events.
-    null !== this.stream && (this.U_(), this.stream.close(), this.stream = null), // This state must be assigned before calling onClose() to allow the callback to
-    // inhibit backoff or otherwise manipulate the state in its non-started state.
-    this.state = e, // Notify the listener that the stream closed.
-    await this.listener.n_(t);
-  }
-  /**
-   * Can be overridden to perform additional cleanup before the stream is closed.
-   * Calling super.tearDown() is not required.
-   */
-  U_() {
-  }
-  auth() {
-    this.state = 1;
-    const e = this.K_(this.b_), t = this.b_;
-    Promise.all([this.authCredentialsProvider.getToken(), this.appCheckCredentialsProvider.getToken()]).then(([e2, n]) => {
-      this.b_ === t && // Normally we'd have to schedule the callback on the AsyncQueue.
-      // However, the following calls are safe to be called outside the
-      // AsyncQueue since they don't chain asynchronous calls
-      this.W_(e2, n);
-    }, (t2) => {
-      e(() => {
-        const e2 = new FirestoreError(N.UNKNOWN, "Fetching auth token failed: " + t2.message);
-        return this.G_(e2);
-      });
-    });
-  }
-  W_(e, t) {
-    const n = this.K_(this.b_);
-    this.stream = this.z_(e, t), this.stream.Zo(() => {
-      n(() => this.listener.Zo());
-    }), this.stream.e_(() => {
-      n(() => (this.state = 2, this.v_ = this.Fi.enqueueAfterDelay(this.S_, 1e4, () => (this.x_() && (this.state = 3), Promise.resolve())), this.listener.e_()));
-    }), this.stream.n_((e2) => {
-      n(() => this.G_(e2));
-    }), this.stream.onMessage((e2) => {
-      n(() => 1 == ++this.C_ ? this.j_(e2) : this.onNext(e2));
-    });
-  }
-  O_() {
-    this.state = 5, this.F_.g_(async () => {
-      this.state = 0, this.start();
-    });
-  }
-  // Visible for tests
-  G_(e) {
-    return __PRIVATE_logDebug(Zt, `close with error: ${e}`), this.stream = null, this.close(4, e);
-  }
-  /**
-   * Returns a "dispatcher" function that dispatches operations onto the
-   * AsyncQueue but only runs them if closeCount remains unchanged. This allows
-   * us to turn auth / stream callbacks into no-ops if the stream is closed /
-   * re-opened, etc.
-   */
-  K_(e) {
-    return (t) => {
-      this.Fi.enqueueAndForget(() => this.b_ === e ? t() : (__PRIVATE_logDebug(Zt, "stream callback skipped by getCloseGuardedDispatcher."), Promise.resolve()));
-    };
-  }
-};
-var __PRIVATE_PersistentListenStream = class extends __PRIVATE_PersistentStream {
-  constructor(e, t, n, r, i, s) {
-    super(e, "listen_stream_connection_backoff", "listen_stream_idle", "health_check_timeout", t, n, r, s), this.serializer = i;
-  }
-  z_(e, t) {
-    return this.connection.P_("Listen", e, t);
-  }
-  j_(e) {
-    return this.onNext(e);
-  }
-  onNext(e) {
-    this.F_.reset();
-    const t = __PRIVATE_fromWatchChange(this.serializer, e), n = function __PRIVATE_versionFromListenResponse(e2) {
-      if (!("targetChange" in e2)) return SnapshotVersion.min();
-      const t2 = e2.targetChange;
-      return t2.targetIds && t2.targetIds.length ? SnapshotVersion.min() : t2.readTime ? __PRIVATE_fromVersion(t2.readTime) : SnapshotVersion.min();
-    }(e);
-    return this.listener.J_(t, n);
-  }
-  /**
-   * Registers interest in the results of the given target. If the target
-   * includes a resumeToken it will be included in the request. Results that
-   * affect the target will be streamed back as WatchChange messages that
-   * reference the targetId.
-   */
-  H_(e) {
-    const t = {};
-    t.database = __PRIVATE_getEncodedDatabaseId(this.serializer), t.addTarget = function __PRIVATE_toTarget(e2, t2) {
-      let n2;
-      const r = t2.target;
-      if (n2 = __PRIVATE_targetIsDocumentTarget(r) ? {
-        documents: __PRIVATE_toDocumentsTarget(e2, r)
-      } : {
-        query: __PRIVATE_toQueryTarget(e2, r).Vt
-      }, n2.targetId = t2.targetId, t2.resumeToken.approximateByteSize() > 0) {
-        n2.resumeToken = __PRIVATE_toBytes(e2, t2.resumeToken);
-        const r2 = __PRIVATE_toInt32Proto(e2, t2.expectedCount);
-        null !== r2 && (n2.expectedCount = r2);
-      } else if (t2.snapshotVersion.compareTo(SnapshotVersion.min()) > 0) {
-        n2.readTime = toTimestamp(e2, t2.snapshotVersion.toTimestamp());
-        const r2 = __PRIVATE_toInt32Proto(e2, t2.expectedCount);
-        null !== r2 && (n2.expectedCount = r2);
-      }
-      return n2;
-    }(this.serializer, e);
-    const n = __PRIVATE_toListenRequestLabels(this.serializer, e);
-    n && (t.labels = n), this.k_(t);
-  }
-  /**
-   * Unregisters interest in the results of the target associated with the
-   * given targetId.
-   */
-  Y_(e) {
-    const t = {};
-    t.database = __PRIVATE_getEncodedDatabaseId(this.serializer), t.removeTarget = e, this.k_(t);
-  }
-};
 var Datastore = class {
 };
 var __PRIVATE_DatastoreImpl = class extends Datastore {
@@ -20170,158 +15629,8 @@ async function __PRIVATE_disableNetworkInternal(e) {
     false
   );
 }
-function __PRIVATE_remoteStoreListen(e, t) {
-  const n = __PRIVATE_debugCast(e);
-  n.Ta.has(t.targetId) || // Mark this as something the client is currently listening for.
-  (n.Ta.set(t.targetId, t), __PRIVATE_shouldStartWatchStream(n) ? (
-    // The listen will be sent in onWatchStreamOpen
-    __PRIVATE_startWatchStream(n)
-  ) : __PRIVATE_ensureWatchStream(n).x_() && __PRIVATE_sendWatchRequest(n, t));
-}
-function __PRIVATE_remoteStoreUnlisten(e, t) {
-  const n = __PRIVATE_debugCast(e), r = __PRIVATE_ensureWatchStream(n);
-  n.Ta.delete(t), r.x_() && __PRIVATE_sendUnwatchRequest(n, t), 0 === n.Ta.size && (r.x_() ? r.B_() : __PRIVATE_canUseNetwork(n) && // Revert to OnlineState.Unknown if the watch stream is not open and we
-  // have no listeners, since without any listens to send we cannot
-  // confirm if the stream is healthy and upgrade to OnlineState.Online.
-  n.Aa.set(
-    "Unknown"
-    /* OnlineState.Unknown */
-  ));
-}
-function __PRIVATE_sendWatchRequest(e, t) {
-  if (e.Ra.$e(t.targetId), t.resumeToken.approximateByteSize() > 0 || t.snapshotVersion.compareTo(SnapshotVersion.min()) > 0) {
-    const n = e.remoteSyncer.getRemoteKeysForTarget(t.targetId).size;
-    t = t.withExpectedCount(n);
-  }
-  __PRIVATE_ensureWatchStream(e).H_(t);
-}
-function __PRIVATE_sendUnwatchRequest(e, t) {
-  e.Ra.$e(t), __PRIVATE_ensureWatchStream(e).Y_(t);
-}
-function __PRIVATE_startWatchStream(e) {
-  e.Ra = new __PRIVATE_WatchChangeAggregator({
-    getRemoteKeysForTarget: (t) => e.remoteSyncer.getRemoteKeysForTarget(t),
-    Et: (t) => e.Ta.get(t) || null,
-    lt: () => e.datastore.serializer.databaseId
-  }), __PRIVATE_ensureWatchStream(e).start(), e.Aa.aa();
-}
-function __PRIVATE_shouldStartWatchStream(e) {
-  return __PRIVATE_canUseNetwork(e) && !__PRIVATE_ensureWatchStream(e).M_() && e.Ta.size > 0;
-}
 function __PRIVATE_canUseNetwork(e) {
   return 0 === __PRIVATE_debugCast(e).Ia.size;
-}
-function __PRIVATE_cleanUpWatchStreamState(e) {
-  e.Ra = void 0;
-}
-async function __PRIVATE_onWatchStreamConnected(e) {
-  e.Aa.set(
-    "Online"
-    /* OnlineState.Online */
-  );
-}
-async function __PRIVATE_onWatchStreamOpen(e) {
-  e.Ta.forEach((t, n) => {
-    __PRIVATE_sendWatchRequest(e, t);
-  });
-}
-async function __PRIVATE_onWatchStreamClose(e, t) {
-  __PRIVATE_cleanUpWatchStreamState(e), // If we still need the watch stream, retry the connection.
-  __PRIVATE_shouldStartWatchStream(e) ? (e.Aa.la(t), __PRIVATE_startWatchStream(e)) : (
-    // No need to restart watch stream because there are no active targets.
-    // The online state is set to unknown because there is no active attempt
-    // at establishing a connection
-    e.Aa.set(
-      "Unknown"
-      /* OnlineState.Unknown */
-    )
-  );
-}
-async function __PRIVATE_onWatchStreamChange(e, t, n) {
-  if (
-    // Mark the client as online since we got a message from the server
-    e.Aa.set(
-      "Online"
-      /* OnlineState.Online */
-    ), t instanceof __PRIVATE_WatchTargetChange && 2 === t.state && t.cause
-  )
-    try {
-      await async function __PRIVATE_handleTargetError(e2, t2) {
-        const n2 = t2.cause;
-        for (const r of t2.targetIds)
-          e2.Ta.has(r) && (await e2.remoteSyncer.rejectListen(r, n2), e2.Ta.delete(r), e2.Ra.removeTarget(r));
-      }(e, t);
-    } catch (n2) {
-      __PRIVATE_logDebug(Xt, "Failed to remove targets %s: %s ", t.targetIds.join(","), n2), await __PRIVATE_disableNetworkUntilRecovery(e, n2);
-    }
-  else if (t instanceof __PRIVATE_DocumentWatchChange ? e.Ra.Ye(t) : t instanceof __PRIVATE_ExistenceFilterChange ? e.Ra.it(t) : e.Ra.et(t), !n.isEqual(SnapshotVersion.min())) try {
-    const t2 = await __PRIVATE_localStoreGetLastRemoteSnapshotVersion(e.localStore);
-    n.compareTo(t2) >= 0 && // We have received a target change with a global snapshot if the snapshot
-    // version is not equal to SnapshotVersion.min().
-    /**
-    * Takes a batch of changes from the Datastore, repackages them as a
-    * RemoteEvent, and passes that on to the listener, which is typically the
-    * SyncEngine.
-    */
-    await function __PRIVATE_raiseWatchSnapshot(e2, t3) {
-      const n2 = e2.Ra.Pt(t3);
-      return n2.targetChanges.forEach((n3, r) => {
-        if (n3.resumeToken.approximateByteSize() > 0) {
-          const i = e2.Ta.get(r);
-          i && e2.Ta.set(r, i.withResumeToken(n3.resumeToken, t3));
-        }
-      }), // Re-establish listens for the targets that have been invalidated by
-      // existence filter mismatches.
-      n2.targetMismatches.forEach((t4, n3) => {
-        const r = e2.Ta.get(t4);
-        if (!r)
-          return;
-        e2.Ta.set(t4, r.withResumeToken(ByteString.EMPTY_BYTE_STRING, r.snapshotVersion)), // Cause a hard reset by unwatching and rewatching immediately, but
-        // deliberately don't send a resume token so that we get a full update.
-        __PRIVATE_sendUnwatchRequest(e2, t4);
-        const i = new TargetData(r.target, t4, n3, r.sequenceNumber);
-        __PRIVATE_sendWatchRequest(e2, i);
-      }), e2.remoteSyncer.applyRemoteEvent(n2);
-    }(e, n);
-  } catch (t2) {
-    __PRIVATE_logDebug(Xt, "Failed to raise snapshot:", t2), await __PRIVATE_disableNetworkUntilRecovery(e, t2);
-  }
-}
-async function __PRIVATE_disableNetworkUntilRecovery(e, t, n) {
-  if (!__PRIVATE_isIndexedDbTransactionError(t)) throw t;
-  e.Ia.add(
-    1
-    /* OfflineCause.IndexedDbFailed */
-  ), // Disable network and raise offline snapshots
-  await __PRIVATE_disableNetworkInternal(e), e.Aa.set(
-    "Offline"
-    /* OnlineState.Offline */
-  ), n || // Use a simple read operation to determine if IndexedDB recovered.
-  // Ideally, we would expose a health check directly on SimpleDb, but
-  // RemoteStore only has access to persistence through LocalStore.
-  (n = () => __PRIVATE_localStoreGetLastRemoteSnapshotVersion(e.localStore)), // Probe IndexedDB periodically and re-enable network
-  e.asyncQueue.enqueueRetryable(async () => {
-    __PRIVATE_logDebug(Xt, "Retrying IndexedDB access"), await n(), e.Ia.delete(
-      1
-      /* OfflineCause.IndexedDbFailed */
-    ), await __PRIVATE_enableNetworkInternal(e);
-  });
-}
-async function __PRIVATE_remoteStoreHandleCredentialChange(e, t) {
-  const n = __PRIVATE_debugCast(e);
-  n.asyncQueue.verifyOperationInProgress(), __PRIVATE_logDebug(Xt, "RemoteStore received new credentials");
-  const r = __PRIVATE_canUseNetwork(n);
-  n.Ia.add(
-    3
-    /* OfflineCause.CredentialChange */
-  ), await __PRIVATE_disableNetworkInternal(n), r && // Don't set the network status to Unknown if we are offline.
-  n.Aa.set(
-    "Unknown"
-    /* OnlineState.Unknown */
-  ), await n.remoteSyncer.handleCredentialChange(t), n.Ia.delete(
-    3
-    /* OfflineCause.CredentialChange */
-  ), await __PRIVATE_enableNetworkInternal(n);
 }
 async function __PRIVATE_remoteStoreApplyPrimaryState(e, t) {
   const n = __PRIVATE_debugCast(e);
@@ -20335,23 +15644,6 @@ async function __PRIVATE_remoteStoreApplyPrimaryState(e, t) {
     "Unknown"
     /* OnlineState.Unknown */
   ));
-}
-function __PRIVATE_ensureWatchStream(e) {
-  return e.Va || // Create stream (but note that it is not started yet).
-  (e.Va = function __PRIVATE_newPersistentWatchStream(e2, t, n) {
-    const r = __PRIVATE_debugCast(e2);
-    return r.ia(), new __PRIVATE_PersistentListenStream(t, r.connection, r.authCredentials, r.appCheckCredentials, r.serializer, n);
-  }(e.datastore, e.asyncQueue, {
-    Zo: __PRIVATE_onWatchStreamConnected.bind(null, e),
-    e_: __PRIVATE_onWatchStreamOpen.bind(null, e),
-    n_: __PRIVATE_onWatchStreamClose.bind(null, e),
-    J_: __PRIVATE_onWatchStreamChange.bind(null, e)
-  }), e.da.push(async (t) => {
-    t ? (e.Va.N_(), __PRIVATE_shouldStartWatchStream(e) ? __PRIVATE_startWatchStream(e) : e.Aa.set(
-      "Unknown"
-      /* OnlineState.Unknown */
-    )) : (await e.Va.stop(), __PRIVATE_cleanUpWatchStreamState(e));
-  })), e.Va;
 }
 var DelayedOperation = class _DelayedOperation {
   constructor(e, t, n, r, i) {
@@ -20413,174 +15705,6 @@ var DelayedOperation = class _DelayedOperation {
     null !== this.timerHandle && (this.removalCallback(this), clearTimeout(this.timerHandle), this.timerHandle = null);
   }
 };
-function __PRIVATE_wrapInUserErrorIfRecoverable(e, t) {
-  if (__PRIVATE_logError("AsyncQueue", `${t}: ${e}`), __PRIVATE_isIndexedDbTransactionError(e)) return new FirestoreError(N.UNAVAILABLE, `${t}: ${e}`);
-  throw e;
-}
-var DocumentSet = class _DocumentSet {
-  /**
-   * Returns an empty copy of the existing DocumentSet, using the same
-   * comparator.
-   */
-  static emptySet(e) {
-    return new _DocumentSet(e.comparator);
-  }
-  /** The default ordering is by key if the comparator is omitted */
-  constructor(e) {
-    this.comparator = e ? (t, n) => e(t, n) || DocumentKey.comparator(t.key, n.key) : (e2, t) => DocumentKey.comparator(e2.key, t.key), this.keyedMap = documentMap(), this.sortedSet = new SortedMap(this.comparator);
-  }
-  has(e) {
-    return null != this.keyedMap.get(e);
-  }
-  get(e) {
-    return this.keyedMap.get(e);
-  }
-  first() {
-    return this.sortedSet.minKey();
-  }
-  last() {
-    return this.sortedSet.maxKey();
-  }
-  isEmpty() {
-    return this.sortedSet.isEmpty();
-  }
-  /**
-   * Returns the index of the provided key in the document set, or -1 if the
-   * document key is not present in the set;
-   */
-  indexOf(e) {
-    const t = this.keyedMap.get(e);
-    return t ? this.sortedSet.indexOf(t) : -1;
-  }
-  get size() {
-    return this.sortedSet.size;
-  }
-  /** Iterates documents in order defined by "comparator" */
-  forEach(e) {
-    this.sortedSet.inorderTraversal((t, n) => (e(t), false));
-  }
-  /** Inserts or updates a document with the same key */
-  add(e) {
-    const t = this.delete(e.key);
-    return t.copy(t.keyedMap.insert(e.key, e), t.sortedSet.insert(e, null));
-  }
-  /** Deletes a document with a given key */
-  delete(e) {
-    const t = this.get(e);
-    return t ? this.copy(this.keyedMap.remove(e), this.sortedSet.remove(t)) : this;
-  }
-  isEqual(e) {
-    if (!(e instanceof _DocumentSet)) return false;
-    if (this.size !== e.size) return false;
-    const t = this.sortedSet.getIterator(), n = e.sortedSet.getIterator();
-    for (; t.hasNext(); ) {
-      const e2 = t.getNext().key, r = n.getNext().key;
-      if (!e2.isEqual(r)) return false;
-    }
-    return true;
-  }
-  toString() {
-    const e = [];
-    return this.forEach((t) => {
-      e.push(t.toString());
-    }), 0 === e.length ? "DocumentSet ()" : "DocumentSet (\n  " + e.join("  \n") + "\n)";
-  }
-  copy(e, t) {
-    const n = new _DocumentSet();
-    return n.comparator = this.comparator, n.keyedMap = e, n.sortedSet = t, n;
-  }
-};
-var __PRIVATE_DocumentChangeSet = class {
-  constructor() {
-    this.fa = new SortedMap(DocumentKey.comparator);
-  }
-  track(e) {
-    const t = e.doc.key, n = this.fa.get(t);
-    n ? (
-      // Merge the new change with the existing change.
-      0 !== e.type && 3 === n.type ? this.fa = this.fa.insert(t, e) : 3 === e.type && 1 !== n.type ? this.fa = this.fa.insert(t, {
-        type: n.type,
-        doc: e.doc
-      }) : 2 === e.type && 2 === n.type ? this.fa = this.fa.insert(t, {
-        type: 2,
-        doc: e.doc
-      }) : 2 === e.type && 0 === n.type ? this.fa = this.fa.insert(t, {
-        type: 0,
-        doc: e.doc
-      }) : 1 === e.type && 0 === n.type ? this.fa = this.fa.remove(t) : 1 === e.type && 2 === n.type ? this.fa = this.fa.insert(t, {
-        type: 1,
-        doc: n.doc
-      }) : 0 === e.type && 1 === n.type ? this.fa = this.fa.insert(t, {
-        type: 2,
-        doc: e.doc
-      }) : (
-        // This includes these cases, which don't make sense:
-        // Added->Added
-        // Removed->Removed
-        // Modified->Added
-        // Removed->Modified
-        // Metadata->Added
-        // Removed->Metadata
-        fail(63341, {
-          At: e,
-          ga: n
-        })
-      )
-    ) : this.fa = this.fa.insert(t, e);
-  }
-  pa() {
-    const e = [];
-    return this.fa.inorderTraversal((t, n) => {
-      e.push(n);
-    }), e;
-  }
-};
-var ViewSnapshot = class _ViewSnapshot {
-  constructor(e, t, n, r, i, s, o, _, a) {
-    this.query = e, this.docs = t, this.oldDocs = n, this.docChanges = r, this.mutatedKeys = i, this.fromCache = s, this.syncStateChanged = o, this.excludesMetadataChanges = _, this.hasCachedResults = a;
-  }
-  /** Returns a view snapshot as if all documents in the snapshot were added. */
-  static fromInitialDocuments(e, t, n, r, i) {
-    const s = [];
-    return t.forEach((e2) => {
-      s.push({
-        type: 0,
-        doc: e2
-      });
-    }), new _ViewSnapshot(
-      e,
-      t,
-      DocumentSet.emptySet(t),
-      s,
-      n,
-      r,
-      /* syncStateChanged= */
-      true,
-      /* excludesMetadataChanges= */
-      false,
-      i
-    );
-  }
-  get hasPendingWrites() {
-    return !this.mutatedKeys.isEmpty();
-  }
-  isEqual(e) {
-    if (!(this.fromCache === e.fromCache && this.hasCachedResults === e.hasCachedResults && this.syncStateChanged === e.syncStateChanged && this.mutatedKeys.isEqual(e.mutatedKeys) && __PRIVATE_queryEquals(this.query, e.query) && this.docs.isEqual(e.docs) && this.oldDocs.isEqual(e.oldDocs))) return false;
-    const t = this.docChanges, n = e.docChanges;
-    if (t.length !== n.length) return false;
-    for (let e2 = 0; e2 < t.length; e2++) if (t[e2].type !== n[e2].type || !t[e2].doc.isEqual(n[e2].doc)) return false;
-    return true;
-  }
-};
-var __PRIVATE_QueryListenersInfo = class {
-  constructor() {
-    this.ya = void 0, this.wa = [];
-  }
-  // Helper methods that checks if the query has listeners that listening to remote store
-  Sa() {
-    return this.wa.some((e) => e.ba());
-  }
-};
 var __PRIVATE_EventManagerImpl = class {
   constructor() {
     this.queries = __PRIVATE_newQueriesObjectMap(), this.onlineState = "Unknown", this.Da = /* @__PURE__ */ new Set();
@@ -20597,86 +15721,6 @@ var __PRIVATE_EventManagerImpl = class {
 function __PRIVATE_newQueriesObjectMap() {
   return new ObjectMap((e) => __PRIVATE_canonifyQuery(e), __PRIVATE_queryEquals);
 }
-async function __PRIVATE_eventManagerListen(e, t) {
-  const n = __PRIVATE_debugCast(e);
-  let r = 3;
-  const i = t.query;
-  let s = n.queries.get(i);
-  s ? !s.Sa() && t.ba() && // Query has been listening to local cache, and tries to add a new listener sourced from watch.
-  (r = 2) : (s = new __PRIVATE_QueryListenersInfo(), r = t.ba() ? 0 : 1);
-  try {
-    switch (r) {
-      case 0:
-        s.ya = await n.onListen(
-          i,
-          /** enableRemoteListen= */
-          true
-        );
-        break;
-      case 1:
-        s.ya = await n.onListen(
-          i,
-          /** enableRemoteListen= */
-          false
-        );
-        break;
-      case 2:
-        await n.onFirstRemoteStoreListen(i);
-    }
-  } catch (e2) {
-    const n2 = __PRIVATE_wrapInUserErrorIfRecoverable(e2, `Initialization of query '${__PRIVATE_stringifyQuery(t.query)}' failed`);
-    return void t.onError(n2);
-  }
-  if (n.queries.set(i, s), s.wa.push(t), // Run global snapshot listeners if a consistent snapshot has been emitted.
-  t.va(n.onlineState), s.ya) {
-    t.Ca(s.ya) && __PRIVATE_raiseSnapshotsInSyncEvent(n);
-  }
-}
-async function __PRIVATE_eventManagerUnlisten(e, t) {
-  const n = __PRIVATE_debugCast(e), r = t.query;
-  let i = 3;
-  const s = n.queries.get(r);
-  if (s) {
-    const e2 = s.wa.indexOf(t);
-    e2 >= 0 && (s.wa.splice(e2, 1), 0 === s.wa.length ? i = t.ba() ? 0 : 1 : !s.Sa() && t.ba() && // The removed listener is the last one that sourced from watch.
-    (i = 2));
-  }
-  switch (i) {
-    case 0:
-      return n.queries.delete(r), n.onUnlisten(
-        r,
-        /** disableRemoteListen= */
-        true
-      );
-    case 1:
-      return n.queries.delete(r), n.onUnlisten(
-        r,
-        /** disableRemoteListen= */
-        false
-      );
-    case 2:
-      return n.onLastRemoteStoreUnlisten(r);
-    default:
-      return;
-  }
-}
-function __PRIVATE_eventManagerOnWatchChange(e, t) {
-  const n = __PRIVATE_debugCast(e);
-  let r = false;
-  for (const e2 of t) {
-    const t2 = e2.query, i = n.queries.get(t2);
-    if (i) {
-      for (const t3 of i.wa) t3.Ca(e2) && (r = true);
-      i.ya = e2;
-    }
-  }
-  r && __PRIVATE_raiseSnapshotsInSyncEvent(n);
-}
-function __PRIVATE_eventManagerOnWatchError(e, t, n) {
-  const r = __PRIVATE_debugCast(e), i = r.queries.get(t);
-  if (i) for (const e2 of i.wa) e2.onError(n);
-  r.queries.delete(t);
-}
 function __PRIVATE_raiseSnapshotsInSyncEvent(e) {
   e.Da.forEach((e2) => {
     e2.next();
@@ -20686,320 +15730,7 @@ var en;
 var tn;
 (tn = en || (en = {})).Fa = "default", /** Listen to changes in cache only */
 tn.Cache = "cache";
-var __PRIVATE_QueryListener = class {
-  constructor(e, t, n) {
-    this.query = e, this.Ma = t, /**
-     * Initial snapshots (e.g. from cache) may not be propagated to the wrapped
-     * observer. This flag is set to true once we've actually raised an event.
-     */
-    this.xa = false, this.Oa = null, this.onlineState = "Unknown", this.options = n || {};
-  }
-  /**
-   * Applies the new ViewSnapshot to this listener, raising a user-facing event
-   * if applicable (depending on what changed, whether the user has opted into
-   * metadata-only changes, etc.). Returns true if a user-facing event was
-   * indeed raised.
-   */
-  Ca(e) {
-    if (!this.options.includeMetadataChanges) {
-      const t2 = [];
-      for (const n of e.docChanges) 3 !== n.type && t2.push(n);
-      e = new ViewSnapshot(
-        e.query,
-        e.docs,
-        e.oldDocs,
-        t2,
-        e.mutatedKeys,
-        e.fromCache,
-        e.syncStateChanged,
-        /* excludesMetadataChanges= */
-        true,
-        e.hasCachedResults
-      );
-    }
-    let t = false;
-    return this.xa ? this.Na(e) && (this.Ma.next(e), t = true) : this.Ba(e, this.onlineState) && (this.La(e), t = true), this.Oa = e, t;
-  }
-  onError(e) {
-    this.Ma.error(e);
-  }
-  /** Returns whether a snapshot was raised. */
-  va(e) {
-    this.onlineState = e;
-    let t = false;
-    return this.Oa && !this.xa && this.Ba(this.Oa, e) && (this.La(this.Oa), t = true), t;
-  }
-  Ba(e, t) {
-    if (!e.fromCache) return true;
-    if (!this.ba()) return true;
-    const n = "Offline" !== t;
-    return (!this.options.ka || !n) && (!e.docs.isEmpty() || e.hasCachedResults || "Offline" === t);
-  }
-  Na(e) {
-    if (e.docChanges.length > 0) return true;
-    const t = this.Oa && this.Oa.hasPendingWrites !== e.hasPendingWrites;
-    return !(!e.syncStateChanged && !t) && true === this.options.includeMetadataChanges;
-  }
-  La(e) {
-    e = ViewSnapshot.fromInitialDocuments(e.query, e.docs, e.mutatedKeys, e.fromCache, e.hasCachedResults), this.xa = true, this.Ma.next(e);
-  }
-  ba() {
-    return this.options.source !== en.Cache;
-  }
-};
-var __PRIVATE_AddedLimboDocument = class {
-  constructor(e) {
-    this.key = e;
-  }
-};
-var __PRIVATE_RemovedLimboDocument = class {
-  constructor(e) {
-    this.key = e;
-  }
-};
-var __PRIVATE_View = class {
-  constructor(e, t) {
-    this.query = e, this.Ha = t, this.Ya = null, this.hasCachedResults = false, /**
-     * A flag whether the view is current with the backend. A view is considered
-     * current after it has seen the current flag from the backend and did not
-     * lose consistency within the watch stream (e.g. because of an existence
-     * filter mismatch).
-     */
-    this.current = false, /** Documents in the view but not in the remote target */
-    this.Za = __PRIVATE_documentKeySet(), /** Document Keys that have local changes */
-    this.mutatedKeys = __PRIVATE_documentKeySet(), this.Xa = __PRIVATE_newQueryComparator(e), this.eu = new DocumentSet(this.Xa);
-  }
-  /**
-   * The set of remote documents that the server has told us belongs to the target associated with
-   * this view.
-   */
-  get tu() {
-    return this.Ha;
-  }
-  /**
-   * Iterates over a set of doc changes, applies the query limit, and computes
-   * what the new results should be, what the changes were, and whether we may
-   * need to go back to the local cache for more results. Does not make any
-   * changes to the view.
-   * @param docChanges - The doc changes to apply to this view.
-   * @param previousChanges - If this is being called with a refill, then start
-   *        with this set of docs and changes instead of the current view.
-   * @returns a new set of docs, changes, and refill flag.
-   */
-  nu(e, t) {
-    const n = t ? t.ru : new __PRIVATE_DocumentChangeSet(), r = t ? t.eu : this.eu;
-    let i = t ? t.mutatedKeys : this.mutatedKeys, s = r, o = false;
-    const _ = "F" === this.query.limitType && r.size === this.query.limit ? r.last() : null, a = "L" === this.query.limitType && r.size === this.query.limit ? r.first() : null;
-    if (e.inorderTraversal((e2, t2) => {
-      const u = r.get(e2), c = __PRIVATE_queryMatches(this.query, t2) ? t2 : null, l = !!u && this.mutatedKeys.has(u.key), h = !!c && (c.hasLocalMutations || // We only consider committed mutations for documents that were
-      // mutated during the lifetime of the view.
-      this.mutatedKeys.has(c.key) && c.hasCommittedMutations);
-      let P = false;
-      if (u && c) {
-        u.data.isEqual(c.data) ? l !== h && (n.track({
-          type: 3,
-          doc: c
-        }), P = true) : this.iu(u, c) || (n.track({
-          type: 2,
-          doc: c
-        }), P = true, (_ && this.Xa(c, _) > 0 || a && this.Xa(c, a) < 0) && // This doc moved from inside the limit to outside the limit.
-        // That means there may be some other doc in the local cache
-        // that should be included instead.
-        (o = true));
-      } else !u && c ? (n.track({
-        type: 0,
-        doc: c
-      }), P = true) : u && !c && (n.track({
-        type: 1,
-        doc: u
-      }), P = true, (_ || a) && // A doc was removed from a full limit query. We'll need to
-      // requery from the local cache to see if we know about some other
-      // doc that should be in the results.
-      (o = true));
-      P && (c ? (s = s.add(c), i = h ? i.add(e2) : i.delete(e2)) : (s = s.delete(e2), i = i.delete(e2)));
-    }), null !== this.query.limit) for (; s.size > this.query.limit; ) {
-      const e2 = "F" === this.query.limitType ? s.last() : s.first();
-      s = s.delete(e2.key), i = i.delete(e2.key), n.track({
-        type: 1,
-        doc: e2
-      });
-    }
-    return {
-      eu: s,
-      ru: n,
-      Ds: o,
-      mutatedKeys: i
-    };
-  }
-  iu(e, t) {
-    return e.hasLocalMutations && t.hasCommittedMutations && !t.hasLocalMutations;
-  }
-  /**
-   * Updates the view with the given ViewDocumentChanges and optionally updates
-   * limbo docs and sync state from the provided target change.
-   * @param docChanges - The set of changes to make to the view's docs.
-   * @param limboResolutionEnabled - Whether to update limbo documents based on
-   *        this change.
-   * @param targetChange - A target change to apply for computing limbo docs and
-   *        sync state.
-   * @param targetIsPendingReset - Whether the target is pending to reset due to
-   *        existence filter mismatch. If not explicitly specified, it is treated
-   *        equivalently to `false`.
-   * @returns A new ViewChange with the given docs, changes, and sync state.
-   */
-  // PORTING NOTE: The iOS/Android clients always compute limbo document changes.
-  applyChanges(e, t, n, r) {
-    const i = this.eu;
-    this.eu = e.eu, this.mutatedKeys = e.mutatedKeys;
-    const s = e.ru.pa();
-    s.sort((e2, t2) => function __PRIVATE_compareChangeType(e3, t3) {
-      const order = (e4) => {
-        switch (e4) {
-          case 0:
-            return 1;
-          case 2:
-          case 3:
-            return 2;
-          case 1:
-            return 0;
-          default:
-            return fail(20277, {
-              At: e4
-            });
-        }
-      };
-      return order(e3) - order(t3);
-    }(e2.type, t2.type) || this.Xa(e2.doc, t2.doc)), this.su(n), r = null != r && r;
-    const o = t && !r ? this.ou() : [], _ = 0 === this.Za.size && this.current && !r ? 1 : 0, a = _ !== this.Ya;
-    if (this.Ya = _, 0 !== s.length || a) {
-      return {
-        snapshot: new ViewSnapshot(
-          this.query,
-          e.eu,
-          i,
-          s,
-          e.mutatedKeys,
-          0 === _,
-          a,
-          /* excludesMetadataChanges= */
-          false,
-          !!n && n.resumeToken.approximateByteSize() > 0
-        ),
-        _u: o
-      };
-    }
-    return {
-      _u: o
-    };
-  }
-  /**
-   * Applies an OnlineState change to the view, potentially generating a
-   * ViewChange if the view's syncState changes as a result.
-   */
-  va(e) {
-    return this.current && "Offline" === e ? (
-      // If we're offline, set `current` to false and then call applyChanges()
-      // to refresh our syncState and generate a ViewChange as appropriate. We
-      // are guaranteed to get a new TargetChange that sets `current` back to
-      // true once the client is back online.
-      (this.current = false, this.applyChanges(
-        {
-          eu: this.eu,
-          ru: new __PRIVATE_DocumentChangeSet(),
-          mutatedKeys: this.mutatedKeys,
-          Ds: false
-        },
-        /* limboResolutionEnabled= */
-        false
-      ))
-    ) : {
-      _u: []
-    };
-  }
-  /**
-   * Returns whether the doc for the given key should be in limbo.
-   */
-  au(e) {
-    return !this.Ha.has(e) && // The local store doesn't think it's a result, so it shouldn't be in limbo.
-    (!!this.eu.has(e) && !this.eu.get(e).hasLocalMutations);
-  }
-  /**
-   * Updates syncedDocuments, current, and limbo docs based on the given change.
-   * Returns the list of changes to which docs are in limbo.
-   */
-  su(e) {
-    e && (e.addedDocuments.forEach((e2) => this.Ha = this.Ha.add(e2)), e.modifiedDocuments.forEach((e2) => {
-    }), e.removedDocuments.forEach((e2) => this.Ha = this.Ha.delete(e2)), this.current = e.current);
-  }
-  ou() {
-    if (!this.current) return [];
-    const e = this.Za;
-    this.Za = __PRIVATE_documentKeySet(), this.eu.forEach((e2) => {
-      this.au(e2.key) && (this.Za = this.Za.add(e2.key));
-    });
-    const t = [];
-    return e.forEach((e2) => {
-      this.Za.has(e2) || t.push(new __PRIVATE_RemovedLimboDocument(e2));
-    }), this.Za.forEach((n) => {
-      e.has(n) || t.push(new __PRIVATE_AddedLimboDocument(n));
-    }), t;
-  }
-  /**
-   * Update the in-memory state of the current view with the state read from
-   * persistence.
-   *
-   * We update the query view whenever a client's primary status changes:
-   * - When a client transitions from primary to secondary, it can miss
-   *   LocalStorage updates and its query views may temporarily not be
-   *   synchronized with the state on disk.
-   * - For secondary to primary transitions, the client needs to update the list
-   *   of `syncedDocuments` since secondary clients update their query views
-   *   based purely on synthesized RemoteEvents.
-   *
-   * @param queryResult.documents - The documents that match the query according
-   * to the LocalStore.
-   * @param queryResult.remoteKeys - The keys of the documents that match the
-   * query according to the backend.
-   *
-   * @returns The ViewChange that resulted from this synchronization.
-   */
-  // PORTING NOTE: Multi-tab only.
-  uu(e) {
-    this.Ha = e.qs, this.Za = __PRIVATE_documentKeySet();
-    const t = this.nu(e.documents);
-    return this.applyChanges(
-      t,
-      /* limboResolutionEnabled= */
-      true
-    );
-  }
-  /**
-   * Returns a view snapshot as if this query was just listened to. Contains
-   * a document add for every existing document and the `fromCache` and
-   * `hasPendingWrites` status of the already established view.
-   */
-  // PORTING NOTE: Multi-tab only.
-  cu() {
-    return ViewSnapshot.fromInitialDocuments(this.query, this.eu, this.mutatedKeys, 0 === this.Ya, this.hasCachedResults);
-  }
-};
 var nn = "SyncEngine";
-var __PRIVATE_QueryView = class {
-  constructor(e, t, n) {
-    this.query = e, this.targetId = t, this.view = n;
-  }
-};
-var LimboResolution = class {
-  constructor(e) {
-    this.key = e, /**
-     * Set to true once we've received a document. This is used in
-     * getRemoteKeysForTarget() and ultimately used by WatchChangeAggregator to
-     * decide whether it needs to manufacture a delete event for the target once
-     * the target is CURRENT.
-     */
-    this.lu = false;
-  }
-};
 var __PRIVATE_SyncEngineImpl = class {
   constructor(e, t, n, r, i, s) {
     this.localStore = e, this.remoteStore = t, this.eventManager = n, this.sharedClientState = r, this.currentUser = i, this.maxConcurrentLimboResolutions = s, this.hu = {}, this.Pu = new ObjectMap((e2) => __PRIVATE_canonifyQuery(e2), __PRIVATE_queryEquals), this.Tu = /* @__PURE__ */ new Map(), /**
@@ -21030,118 +15761,6 @@ var __PRIVATE_SyncEngineImpl = class {
     return true === this.fu;
   }
 };
-async function __PRIVATE_syncEngineListen(e, t, n = true) {
-  const r = __PRIVATE_ensureWatchCallbacks(e);
-  let i;
-  const s = r.Pu.get(t);
-  return s ? (
-    // PORTING NOTE: With Multi-Tab Web, it is possible that a query view
-    // already exists when EventManager calls us for the first time. This
-    // happens when the primary tab is already listening to this query on
-    // behalf of another tab and the user of the primary also starts listening
-    // to the query. EventManager will not have an assigned target ID in this
-    // case and calls `listen` to obtain this ID.
-    (r.sharedClientState.addLocalQueryTarget(s.targetId), i = s.view.cu())
-  ) : i = await __PRIVATE_allocateTargetAndMaybeListen(
-    r,
-    t,
-    n,
-    /** shouldInitializeView= */
-    true
-  ), i;
-}
-async function __PRIVATE_triggerRemoteStoreListen(e, t) {
-  const n = __PRIVATE_ensureWatchCallbacks(e);
-  await __PRIVATE_allocateTargetAndMaybeListen(
-    n,
-    t,
-    /** shouldListenToRemote= */
-    true,
-    /** shouldInitializeView= */
-    false
-  );
-}
-async function __PRIVATE_allocateTargetAndMaybeListen(e, t, n, r) {
-  const i = await __PRIVATE_localStoreAllocateTarget(e.localStore, __PRIVATE_queryToTarget(t)), s = i.targetId, o = e.sharedClientState.addLocalQueryTarget(s, n);
-  let _;
-  return r && (_ = await __PRIVATE_initializeViewAndComputeSnapshot(e, t, s, "current" === o, i.resumeToken)), e.isPrimaryClient && n && __PRIVATE_remoteStoreListen(e.remoteStore, i), _;
-}
-async function __PRIVATE_initializeViewAndComputeSnapshot(e, t, n, r, i) {
-  e.gu = (t2, n2, r2) => async function __PRIVATE_applyDocChanges(e2, t3, n3, r3) {
-    let i2 = t3.view.nu(n3);
-    i2.Ds && // The query has a limit and some docs were removed, so we need
-    // to re-run the query against the local store to make sure we
-    // didn't lose any good docs that had been past the limit.
-    (i2 = await __PRIVATE_localStoreExecuteQuery(
-      e2.localStore,
-      t3.query,
-      /* usePreviousResults= */
-      false
-    ).then(({ documents: e3 }) => t3.view.nu(e3, i2)));
-    const s2 = r3 && r3.targetChanges.get(t3.targetId), o2 = r3 && null != r3.targetMismatches.get(t3.targetId), _2 = t3.view.applyChanges(
-      i2,
-      /* limboResolutionEnabled= */
-      e2.isPrimaryClient,
-      s2,
-      o2
-    );
-    return __PRIVATE_updateTrackedLimbos(e2, t3.targetId, _2._u), _2.snapshot;
-  }(e, t2, n2, r2);
-  const s = await __PRIVATE_localStoreExecuteQuery(
-    e.localStore,
-    t,
-    /* usePreviousResults= */
-    true
-  ), o = new __PRIVATE_View(t, s.qs), _ = o.nu(s.documents), a = TargetChange.createSynthesizedTargetChangeForCurrentChange(n, r && "Offline" !== e.onlineState, i), u = o.applyChanges(
-    _,
-    /* limboResolutionEnabled= */
-    e.isPrimaryClient,
-    a
-  );
-  __PRIVATE_updateTrackedLimbos(e, n, u._u);
-  const c = new __PRIVATE_QueryView(t, n, o);
-  return e.Pu.set(t, c), e.Tu.has(n) ? e.Tu.get(n).push(t) : e.Tu.set(n, [t]), u.snapshot;
-}
-async function __PRIVATE_syncEngineUnlisten(e, t, n) {
-  const r = __PRIVATE_debugCast(e), i = r.Pu.get(t), s = r.Tu.get(i.targetId);
-  if (s.length > 1) return r.Tu.set(i.targetId, s.filter((e2) => !__PRIVATE_queryEquals(e2, t))), void r.Pu.delete(t);
-  if (r.isPrimaryClient) {
-    r.sharedClientState.removeLocalQueryTarget(i.targetId);
-    r.sharedClientState.isActiveQueryTarget(i.targetId) || await __PRIVATE_localStoreReleaseTarget(
-      r.localStore,
-      i.targetId,
-      /*keepPersistedTargetData=*/
-      false
-    ).then(() => {
-      r.sharedClientState.clearQueryState(i.targetId), n && __PRIVATE_remoteStoreUnlisten(r.remoteStore, i.targetId), __PRIVATE_removeAndCleanupTarget(r, i.targetId);
-    }).catch(__PRIVATE_ignoreIfPrimaryLeaseLoss);
-  } else __PRIVATE_removeAndCleanupTarget(r, i.targetId), await __PRIVATE_localStoreReleaseTarget(
-    r.localStore,
-    i.targetId,
-    /*keepPersistedTargetData=*/
-    true
-  );
-}
-async function __PRIVATE_triggerRemoteStoreUnlisten(e, t) {
-  const n = __PRIVATE_debugCast(e), r = n.Pu.get(t), i = n.Tu.get(r.targetId);
-  n.isPrimaryClient && 1 === i.length && // PORTING NOTE: Unregister the target ID with local Firestore client as
-  // watch target.
-  (n.sharedClientState.removeLocalQueryTarget(r.targetId), __PRIVATE_remoteStoreUnlisten(n.remoteStore, r.targetId));
-}
-async function __PRIVATE_syncEngineApplyRemoteEvent(e, t) {
-  const n = __PRIVATE_debugCast(e);
-  try {
-    const e2 = await __PRIVATE_localStoreApplyRemoteEventToLocalCache(n.localStore, t);
-    t.targetChanges.forEach((e3, t2) => {
-      const r = n.Eu.get(t2);
-      r && // Since this is a limbo resolution lookup, it's for a single document
-      // and it could be added, modified, or removed, but not a combination.
-      (__PRIVATE_hardAssert(e3.addedDocuments.size + e3.modifiedDocuments.size + e3.removedDocuments.size <= 1, 22616), e3.addedDocuments.size > 0 ? r.lu = true : e3.modifiedDocuments.size > 0 ? __PRIVATE_hardAssert(r.lu, 14607) : e3.removedDocuments.size > 0 && (__PRIVATE_hardAssert(r.lu, 42227), r.lu = false));
-    }), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(n, e2, t);
-  } catch (e2) {
-    await __PRIVATE_ignoreIfPrimaryLeaseLoss(e2);
-  }
-}
 function __PRIVATE_syncEngineApplyOnlineStateChange(e, t, n) {
   const r = __PRIVATE_debugCast(e);
   if (r.isPrimaryClient && 0 === n || !r.isPrimaryClient && 1 === n) {
@@ -21158,72 +15777,6 @@ function __PRIVATE_syncEngineApplyOnlineStateChange(e, t, n) {
           e5.va(t2) && (r2 = true);
       }), r2 && __PRIVATE_raiseSnapshotsInSyncEvent(n2);
     }(r.eventManager, t), e2.length && r.hu.J_(e2), r.onlineState = t, r.isPrimaryClient && r.sharedClientState.setOnlineState(t);
-  }
-}
-async function __PRIVATE_syncEngineRejectListen(e, t, n) {
-  const r = __PRIVATE_debugCast(e);
-  r.sharedClientState.updateQueryState(t, "rejected", n);
-  const i = r.Eu.get(t), s = i && i.key;
-  if (s) {
-    let e2 = new SortedMap(DocumentKey.comparator);
-    e2 = e2.insert(s, MutableDocument.newNoDocument(s, SnapshotVersion.min()));
-    const n2 = __PRIVATE_documentKeySet().add(s), i2 = new RemoteEvent(
-      SnapshotVersion.min(),
-      /* targetChanges= */
-      /* @__PURE__ */ new Map(),
-      /* targetMismatches= */
-      new SortedMap(__PRIVATE_primitiveComparator),
-      e2,
-      n2
-    );
-    await __PRIVATE_syncEngineApplyRemoteEvent(r, i2), // Since this query failed, we won't want to manually unlisten to it.
-    // We only remove it from bookkeeping after we successfully applied the
-    // RemoteEvent. If `applyRemoteEvent()` throws, we want to re-listen to
-    // this query when the RemoteStore restarts the Watch stream, which should
-    // re-trigger the target failure.
-    r.du = r.du.remove(s), r.Eu.delete(t), __PRIVATE_pumpEnqueuedLimboResolutions(r);
-  } else await __PRIVATE_localStoreReleaseTarget(
-    r.localStore,
-    t,
-    /* keepPersistedTargetData */
-    false
-  ).then(() => __PRIVATE_removeAndCleanupTarget(r, t, n)).catch(__PRIVATE_ignoreIfPrimaryLeaseLoss);
-}
-function __PRIVATE_removeAndCleanupTarget(e, t, n = null) {
-  e.sharedClientState.removeLocalQueryTarget(t);
-  for (const r of e.Tu.get(t)) e.Pu.delete(r), n && e.hu.pu(r, n);
-  if (e.Tu.delete(t), e.isPrimaryClient) {
-    e.Au.zr(t).forEach((t2) => {
-      e.Au.containsKey(t2) || // We removed the last reference for this key
-      __PRIVATE_removeLimboTarget(e, t2);
-    });
-  }
-}
-function __PRIVATE_removeLimboTarget(e, t) {
-  e.Iu.delete(t.path.canonicalString());
-  const n = e.du.get(t);
-  null !== n && (__PRIVATE_remoteStoreUnlisten(e.remoteStore, n), e.du = e.du.remove(t), e.Eu.delete(n), __PRIVATE_pumpEnqueuedLimboResolutions(e));
-}
-function __PRIVATE_updateTrackedLimbos(e, t, n) {
-  for (const r of n) if (r instanceof __PRIVATE_AddedLimboDocument) e.Au.addReference(r.key, t), __PRIVATE_trackLimboChange(e, r);
-  else if (r instanceof __PRIVATE_RemovedLimboDocument) {
-    __PRIVATE_logDebug(nn, "Document no longer in limbo: " + r.key), e.Au.removeReference(r.key, t);
-    e.Au.containsKey(r.key) || // We removed the last reference for this key
-    __PRIVATE_removeLimboTarget(e, r.key);
-  } else fail(19791, {
-    yu: r
-  });
-}
-function __PRIVATE_trackLimboChange(e, t) {
-  const n = t.key, r = n.path.canonicalString();
-  e.du.get(n) || e.Iu.has(r) || (__PRIVATE_logDebug(nn, "New document in limbo: " + n), e.Iu.add(r), __PRIVATE_pumpEnqueuedLimboResolutions(e));
-}
-function __PRIVATE_pumpEnqueuedLimboResolutions(e) {
-  for (; e.Iu.size > 0 && e.du.size < e.maxConcurrentLimboResolutions; ) {
-    const t = e.Iu.values().next().value;
-    e.Iu.delete(t);
-    const n = new DocumentKey(ResourcePath.fromString(t)), r = e.mu.next();
-    e.Eu.set(r, new LimboResolution(n)), e.du = e.du.insert(n, r), __PRIVATE_remoteStoreListen(e.remoteStore, new TargetData(__PRIVATE_queryToTarget(__PRIVATE_newQueryForPath(n.path)), r, "TargetPurposeLimboResolution", __PRIVATE_ListenSequence.ue));
   }
 }
 async function __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(e, t, n) {
@@ -21274,24 +15827,6 @@ async function __PRIVATE_syncEngineHandleCredentialChange(e, t) {
     n.sharedClientState.handleUserChange(t, e2.removedBatchIds, e2.addedBatchIds), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(n, e2.Bs);
   }
 }
-function __PRIVATE_syncEngineGetRemoteKeysForTarget(e, t) {
-  const n = __PRIVATE_debugCast(e), r = n.Eu.get(t);
-  if (r && r.lu) return __PRIVATE_documentKeySet().add(r.key);
-  {
-    let e2 = __PRIVATE_documentKeySet();
-    const r2 = n.Tu.get(t);
-    if (!r2) return e2;
-    for (const t2 of r2) {
-      const r3 = n.Pu.get(t2);
-      e2 = e2.unionWith(r3.view.tu);
-    }
-    return e2;
-  }
-}
-function __PRIVATE_ensureWatchCallbacks(e) {
-  const t = __PRIVATE_debugCast(e);
-  return t.remoteStore.remoteSyncer.applyRemoteEvent = __PRIVATE_syncEngineApplyRemoteEvent.bind(null, t), t.remoteStore.remoteSyncer.getRemoteKeysForTarget = __PRIVATE_syncEngineGetRemoteKeysForTarget.bind(null, t), t.remoteStore.remoteSyncer.rejectListen = __PRIVATE_syncEngineRejectListen.bind(null, t), t.hu.J_ = __PRIVATE_eventManagerOnWatchChange.bind(null, t.eventManager), t.hu.pu = __PRIVATE_eventManagerOnWatchError.bind(null, t.eventManager), t;
-}
 var __PRIVATE_MemoryOfflineComponentProvider = class {
   constructor() {
     this.kind = "memory", this.synchronizeTabs = false;
@@ -21321,20 +15856,6 @@ var __PRIVATE_MemoryOfflineComponentProvider = class {
 };
 __PRIVATE_MemoryOfflineComponentProvider.provider = {
   build: () => new __PRIVATE_MemoryOfflineComponentProvider()
-};
-var __PRIVATE_LruGcMemoryOfflineComponentProvider = class extends __PRIVATE_MemoryOfflineComponentProvider {
-  constructor(e) {
-    super(), this.cacheSizeBytes = e;
-  }
-  Cu(e, t) {
-    __PRIVATE_hardAssert(this.persistence.referenceDelegate instanceof __PRIVATE_MemoryLruDelegate, 46915);
-    const n = this.persistence.referenceDelegate.garbageCollector;
-    return new __PRIVATE_LruScheduler(n, e.asyncQueue, t);
-  }
-  Du(e) {
-    const t = void 0 !== this.cacheSizeBytes ? LruParams.withCacheSize(this.cacheSizeBytes) : LruParams.DEFAULT;
-    return new __PRIVATE_MemoryPersistence((e2) => __PRIVATE_MemoryLruDelegate.Vi(e2, t), this.serializer);
-  }
 };
 var OnlineComponentProvider = class {
   async initialize(e, t) {
@@ -21399,162 +15920,6 @@ var OnlineComponentProvider = class {
 OnlineComponentProvider.provider = {
   build: () => new OnlineComponentProvider()
 };
-var __PRIVATE_AsyncObserver = class {
-  constructor(e) {
-    this.observer = e, /**
-     * When set to true, will not raise future events. Necessary to deal with
-     * async detachment of listener.
-     */
-    this.muted = false;
-  }
-  next(e) {
-    this.muted || this.observer.next && this.xu(this.observer.next, e);
-  }
-  error(e) {
-    this.muted || (this.observer.error ? this.xu(this.observer.error, e) : __PRIVATE_logError("Uncaught Error in snapshot listener:", e.toString()));
-  }
-  Ou() {
-    this.muted = true;
-  }
-  xu(e, t) {
-    setTimeout(() => {
-      this.muted || e(t);
-    }, 0);
-  }
-};
-var rn = "FirestoreClient";
-var FirestoreClient = class {
-  constructor(e, t, n, r, i) {
-    this.authCredentials = e, this.appCheckCredentials = t, this.asyncQueue = n, this.databaseInfo = r, this.user = User.UNAUTHENTICATED, this.clientId = __PRIVATE_AutoId.newId(), this.authCredentialListener = () => Promise.resolve(), this.appCheckCredentialListener = () => Promise.resolve(), this._uninitializedComponentsProvider = i, this.authCredentials.start(n, async (e2) => {
-      __PRIVATE_logDebug(rn, "Received user=", e2.uid), await this.authCredentialListener(e2), this.user = e2;
-    }), this.appCheckCredentials.start(n, (e2) => (__PRIVATE_logDebug(rn, "Received new app check token=", e2), this.appCheckCredentialListener(e2, this.user)));
-  }
-  get configuration() {
-    return {
-      asyncQueue: this.asyncQueue,
-      databaseInfo: this.databaseInfo,
-      clientId: this.clientId,
-      authCredentials: this.authCredentials,
-      appCheckCredentials: this.appCheckCredentials,
-      initialUser: this.user,
-      maxConcurrentLimboResolutions: 100
-    };
-  }
-  setCredentialChangeListener(e) {
-    this.authCredentialListener = e;
-  }
-  setAppCheckTokenChangeListener(e) {
-    this.appCheckCredentialListener = e;
-  }
-  terminate() {
-    this.asyncQueue.enterRestrictedMode();
-    const e = new __PRIVATE_Deferred();
-    return this.asyncQueue.enqueueAndForgetEvenWhileRestricted(async () => {
-      try {
-        this._onlineComponents && await this._onlineComponents.terminate(), this._offlineComponents && await this._offlineComponents.terminate(), // The credentials provider must be terminated after shutting down the
-        // RemoteStore as it will prevent the RemoteStore from retrieving auth
-        // tokens.
-        this.authCredentials.shutdown(), this.appCheckCredentials.shutdown(), e.resolve();
-      } catch (t) {
-        const n = __PRIVATE_wrapInUserErrorIfRecoverable(t, "Failed to shutdown persistence");
-        e.reject(n);
-      }
-    }), e.promise;
-  }
-};
-async function __PRIVATE_setOfflineComponentProvider(e, t) {
-  e.asyncQueue.verifyOperationInProgress(), __PRIVATE_logDebug(rn, "Initializing OfflineComponentProvider");
-  const n = e.configuration;
-  await t.initialize(n);
-  let r = n.initialUser;
-  e.setCredentialChangeListener(async (e2) => {
-    r.isEqual(e2) || (await __PRIVATE_localStoreHandleUserChange(t.localStore, e2), r = e2);
-  }), t.persistence.setDatabaseDeletedListener(() => {
-    __PRIVATE_logWarn("Terminating Firestore due to IndexedDb database deletion"), e.terminate().then(() => {
-      __PRIVATE_logDebug("Terminating Firestore due to IndexedDb database deletion completed successfully");
-    }).catch((e2) => {
-      __PRIVATE_logWarn("Terminating Firestore due to IndexedDb database deletion failed", e2);
-    });
-  }), e._offlineComponents = t;
-}
-async function __PRIVATE_setOnlineComponentProvider(e, t) {
-  e.asyncQueue.verifyOperationInProgress();
-  const n = await __PRIVATE_ensureOfflineComponents(e);
-  __PRIVATE_logDebug(rn, "Initializing OnlineComponentProvider"), await t.initialize(n, e.configuration), // The CredentialChangeListener of the online component provider takes
-  // precedence over the offline component provider.
-  e.setCredentialChangeListener((e2) => __PRIVATE_remoteStoreHandleCredentialChange(t.remoteStore, e2)), e.setAppCheckTokenChangeListener((e2, n2) => __PRIVATE_remoteStoreHandleCredentialChange(t.remoteStore, n2)), e._onlineComponents = t;
-}
-async function __PRIVATE_ensureOfflineComponents(e) {
-  if (!e._offlineComponents) if (e._uninitializedComponentsProvider) {
-    __PRIVATE_logDebug(rn, "Using user provided OfflineComponentProvider");
-    try {
-      await __PRIVATE_setOfflineComponentProvider(e, e._uninitializedComponentsProvider._offline);
-    } catch (t) {
-      const n = t;
-      if (!function __PRIVATE_canFallbackFromIndexedDbError(e2) {
-        return "FirebaseError" === e2.name ? e2.code === N.FAILED_PRECONDITION || e2.code === N.UNIMPLEMENTED : !("undefined" != typeof DOMException && e2 instanceof DOMException) || // When the browser is out of quota we could get either quota exceeded
-        // or an aborted error depending on whether the error happened during
-        // schema migration.
-        22 === e2.code || 20 === e2.code || // Firefox Private Browsing mode disables IndexedDb and returns
-        // INVALID_STATE for any usage.
-        11 === e2.code;
-      }(n)) throw n;
-      __PRIVATE_logWarn("Error using user provided cache. Falling back to memory cache: " + n), await __PRIVATE_setOfflineComponentProvider(e, new __PRIVATE_MemoryOfflineComponentProvider());
-    }
-  } else __PRIVATE_logDebug(rn, "Using default OfflineComponentProvider"), await __PRIVATE_setOfflineComponentProvider(e, new __PRIVATE_LruGcMemoryOfflineComponentProvider(void 0));
-  return e._offlineComponents;
-}
-async function __PRIVATE_ensureOnlineComponents(e) {
-  return e._onlineComponents || (e._uninitializedComponentsProvider ? (__PRIVATE_logDebug(rn, "Using user provided OnlineComponentProvider"), await __PRIVATE_setOnlineComponentProvider(e, e._uninitializedComponentsProvider._online)) : (__PRIVATE_logDebug(rn, "Using default OnlineComponentProvider"), await __PRIVATE_setOnlineComponentProvider(e, new OnlineComponentProvider()))), e._onlineComponents;
-}
-function __PRIVATE_getDatastore(e) {
-  return __PRIVATE_ensureOnlineComponents(e).then((e2) => e2.datastore);
-}
-async function __PRIVATE_getEventManager(e) {
-  const t = await __PRIVATE_ensureOnlineComponents(e), n = t.eventManager;
-  return n.onListen = __PRIVATE_syncEngineListen.bind(null, t.syncEngine), n.onUnlisten = __PRIVATE_syncEngineUnlisten.bind(null, t.syncEngine), n.onFirstRemoteStoreListen = __PRIVATE_triggerRemoteStoreListen.bind(null, t.syncEngine), n.onLastRemoteStoreUnlisten = __PRIVATE_triggerRemoteStoreUnlisten.bind(null, t.syncEngine), n;
-}
-function __PRIVATE_firestoreClientGetDocumentsViaSnapshotListener(e, t, n = {}) {
-  const r = new __PRIVATE_Deferred();
-  return e.asyncQueue.enqueueAndForget(async () => function __PRIVATE_executeQueryViaSnapshotListener(e2, t2, n2, r2, i) {
-    const s = new __PRIVATE_AsyncObserver({
-      next: (n3) => {
-        s.Ou(), t2.enqueueAndForget(() => __PRIVATE_eventManagerUnlisten(e2, o)), n3.fromCache && "server" === r2.source ? i.reject(new FirestoreError(N.UNAVAILABLE, 'Failed to get documents from server. (However, these documents may exist in the local cache. Run again without setting source to "server" to retrieve the cached documents.)')) : i.resolve(n3);
-      },
-      error: (e3) => i.reject(e3)
-    }), o = new __PRIVATE_QueryListener(n2, s, {
-      includeMetadataChanges: true,
-      ka: true
-    });
-    return __PRIVATE_eventManagerListen(e2, o);
-  }(await __PRIVATE_getEventManager(e), e.asyncQueue, t, n, r)), r.promise;
-}
-function __PRIVATE_firestoreClientRunAggregateQuery(e, t, n) {
-  const r = new __PRIVATE_Deferred();
-  return e.asyncQueue.enqueueAndForget(async () => {
-    try {
-      const i = await __PRIVATE_getDatastore(e);
-      r.resolve(async function __PRIVATE_invokeRunAggregationQueryRpc(e2, t2, n2) {
-        var r2;
-        const i2 = __PRIVATE_debugCast(e2), { request: s, ft: o, parent: _ } = __PRIVATE_toRunAggregationQueryRequest(i2.serializer, __PRIVATE_queryToAggregateTarget(t2), n2);
-        i2.connection.Qo || delete s.parent;
-        const a = (await i2.Jo(
-          "RunAggregationQuery",
-          i2.serializer.databaseId,
-          _,
-          s,
-          /*expectedResponseCount=*/
-          1
-        )).filter((e3) => !!e3.result);
-        __PRIVATE_hardAssert(1 === a.length, 64727);
-        const u = null === (r2 = a[0].result) || void 0 === r2 ? void 0 : r2.aggregateFields;
-        return Object.keys(u).reduce((e3, t3) => (e3[o[t3]] = u[t3], e3), {});
-      }(i, t, n));
-    } catch (e2) {
-      r.reject(e2);
-    }
-  }), r.promise;
-}
 function __PRIVATE_cloneLongPollingOptions(e) {
   const t = {};
   return void 0 !== e.timeoutSeconds && (t.timeoutSeconds = e.timeoutSeconds), t;
@@ -21789,27 +16154,6 @@ var CollectionReference = class _CollectionReference extends Query {
     return new _CollectionReference(this.firestore, e, this._path);
   }
 };
-function collection(e, t, ...n) {
-  if (e = getModularInstance(e), __PRIVATE_validateNonEmptyArgument("collection", "path", t), e instanceof Firestore$1) {
-    const r = ResourcePath.fromString(t, ...n);
-    return __PRIVATE_validateCollectionPath(r), new CollectionReference(
-      e,
-      /* converter= */
-      null,
-      r
-    );
-  }
-  {
-    if (!(e instanceof DocumentReference || e instanceof CollectionReference)) throw new FirestoreError(N.INVALID_ARGUMENT, "Expected first argument to collection() to be a CollectionReference, a DocumentReference or FirebaseFirestore");
-    const r = e._path.child(ResourcePath.fromString(t, ...n));
-    return __PRIVATE_validateCollectionPath(r), new CollectionReference(
-      e.firestore,
-      /* converter= */
-      null,
-      r
-    );
-  }
-}
 var an = "AsyncQueue";
 var __PRIVATE_AsyncQueueImpl = class {
   constructor(e = Promise.resolve()) {
@@ -21986,59 +16330,6 @@ function getFirestore(e, n) {
   }
   return s;
 }
-function ensureFirestoreConfigured(e) {
-  if (e._terminated) throw new FirestoreError(N.FAILED_PRECONDITION, "The client has already been terminated.");
-  return e._firestoreClient || __PRIVATE_configureFirestore(e), e._firestoreClient;
-}
-function __PRIVATE_configureFirestore(e) {
-  var t, n, r;
-  const i = e._freezeSettings(), s = function __PRIVATE_makeDatabaseInfo(e2, t2, n2, r2) {
-    return new DatabaseInfo(e2, t2, n2, r2.host, r2.ssl, r2.experimentalForceLongPolling, r2.experimentalAutoDetectLongPolling, __PRIVATE_cloneLongPollingOptions(r2.experimentalLongPollingOptions), r2.useFetchStreams, r2.isUsingEmulator);
-  }(e._databaseId, (null === (t = e._app) || void 0 === t ? void 0 : t.options.appId) || "", e._persistenceKey, i);
-  e._componentsProvider || (null === (n = i.localCache) || void 0 === n ? void 0 : n._offlineComponentProvider) && (null === (r = i.localCache) || void 0 === r ? void 0 : r._onlineComponentProvider) && (e._componentsProvider = {
-    _offline: i.localCache._offlineComponentProvider,
-    _online: i.localCache._onlineComponentProvider
-  }), e._firestoreClient = new FirestoreClient(e._authCredentials, e._appCheckCredentials, e._queue, s, e._componentsProvider && function __PRIVATE_buildComponentProvider(e2) {
-    const t2 = null == e2 ? void 0 : e2._online.build();
-    return {
-      _offline: null == e2 ? void 0 : e2._offline.build(t2),
-      _online: t2
-    };
-  }(e._componentsProvider));
-}
-var AggregateField = class {
-  /**
-   * Create a new AggregateField<T>
-   * @param aggregateType Specifies the type of aggregation operation to perform.
-   * @param _internalFieldPath Optionally specifies the field that is aggregated.
-   * @internal
-   */
-  constructor(e = "count", t) {
-    this._internalFieldPath = t, /** A type string to uniquely identify instances of this class. */
-    this.type = "AggregateField", this.aggregateType = e;
-  }
-};
-var AggregateQuerySnapshot = class {
-  /** @hideconstructor */
-  constructor(e, t, n) {
-    this._userDataWriter = t, this._data = n, /** A type string to uniquely identify instances of this class. */
-    this.type = "AggregateQuerySnapshot", this.query = e;
-  }
-  /**
-   * Returns the results of the aggregations performed over the underlying
-   * query.
-   *
-   * The keys of the returned object will be the same as those of the
-   * `AggregateSpec` object specified to the aggregation method, and the values
-   * will be the corresponding aggregation result.
-   *
-   * @returns The results of the aggregations performed over the underlying
-   * query.
-   */
-  data() {
-    return this._userDataWriter.convertObjectMap(this._data);
-  }
-};
 var Bytes = class _Bytes {
   /** @hideconstructor */
   constructor(e) {
@@ -22143,15 +16434,6 @@ var FieldPath = class {
    */
   isEqual(e) {
     return this._internalPath.isEqual(e._internalPath);
-  }
-};
-var FieldValue = class {
-  /**
-   * @param _methodName - The public API endpoint that returns this class.
-   * @hideconstructor
-   */
-  constructor(e) {
-    this._methodName = e;
   }
 };
 var GeoPoint = class _GeoPoint {
@@ -22275,242 +16557,6 @@ VectorValue._jsonSchemaVersion = "firestore/vectorValue/1.0", VectorValue._jsonS
   type: property("string", VectorValue._jsonSchemaVersion),
   vectorValues: property("object")
 };
-var cn = /^__.*__$/;
-function __PRIVATE_isWrite(e) {
-  switch (e) {
-    case 0:
-    case 2:
-    case 1:
-      return true;
-    case 3:
-    case 4:
-      return false;
-    default:
-      throw fail(40011, {
-        Ec: e
-      });
-  }
-}
-var __PRIVATE_ParseContextImpl = class ___PRIVATE_ParseContextImpl {
-  /**
-   * Initializes a ParseContext with the given source and path.
-   *
-   * @param settings - The settings for the parser.
-   * @param databaseId - The database ID of the Firestore instance.
-   * @param serializer - The serializer to use to generate the Value proto.
-   * @param ignoreUndefinedProperties - Whether to ignore undefined properties
-   * rather than throw.
-   * @param fieldTransforms - A mutable list of field transforms encountered
-   * while parsing the data.
-   * @param fieldMask - A mutable list of field paths encountered while parsing
-   * the data.
-   *
-   * TODO(b/34871131): We don't support array paths right now, so path can be
-   * null to indicate the context represents any location within an array (in
-   * which case certain features will not work and errors will be somewhat
-   * compromised).
-   */
-  constructor(e, t, n, r, i, s) {
-    this.settings = e, this.databaseId = t, this.serializer = n, this.ignoreUndefinedProperties = r, // Minor hack: If fieldTransforms is undefined, we assume this is an
-    // external call and we need to validate the entire path.
-    void 0 === i && this.Ac(), this.fieldTransforms = i || [], this.fieldMask = s || [];
-  }
-  get path() {
-    return this.settings.path;
-  }
-  get Ec() {
-    return this.settings.Ec;
-  }
-  /** Returns a new context with the specified settings overwritten. */
-  Rc(e) {
-    return new ___PRIVATE_ParseContextImpl(Object.assign(Object.assign({}, this.settings), e), this.databaseId, this.serializer, this.ignoreUndefinedProperties, this.fieldTransforms, this.fieldMask);
-  }
-  Vc(e) {
-    var t;
-    const n = null === (t = this.path) || void 0 === t ? void 0 : t.child(e), r = this.Rc({
-      path: n,
-      mc: false
-    });
-    return r.fc(e), r;
-  }
-  gc(e) {
-    var t;
-    const n = null === (t = this.path) || void 0 === t ? void 0 : t.child(e), r = this.Rc({
-      path: n,
-      mc: false
-    });
-    return r.Ac(), r;
-  }
-  yc(e) {
-    return this.Rc({
-      path: void 0,
-      mc: true
-    });
-  }
-  wc(e) {
-    return __PRIVATE_createError(e, this.settings.methodName, this.settings.Sc || false, this.path, this.settings.bc);
-  }
-  /** Returns 'true' if 'fieldPath' was traversed when creating this context. */
-  contains(e) {
-    return void 0 !== this.fieldMask.find((t) => e.isPrefixOf(t)) || void 0 !== this.fieldTransforms.find((t) => e.isPrefixOf(t.field));
-  }
-  Ac() {
-    if (this.path) for (let e = 0; e < this.path.length; e++) this.fc(this.path.get(e));
-  }
-  fc(e) {
-    if (0 === e.length) throw this.wc("Document fields must not be empty");
-    if (__PRIVATE_isWrite(this.Ec) && cn.test(e)) throw this.wc('Document fields cannot begin and end with "__"');
-  }
-};
-var __PRIVATE_UserDataReader = class {
-  constructor(e, t, n) {
-    this.databaseId = e, this.ignoreUndefinedProperties = t, this.serializer = n || __PRIVATE_newSerializer(e);
-  }
-  /** Creates a new top-level parse context. */
-  Dc(e, t, n, r = false) {
-    return new __PRIVATE_ParseContextImpl({
-      Ec: e,
-      methodName: t,
-      bc: n,
-      path: FieldPath$1.emptyPath(),
-      mc: false,
-      Sc: r
-    }, this.databaseId, this.serializer, this.ignoreUndefinedProperties);
-  }
-};
-function __PRIVATE_newUserDataReader(e) {
-  const t = e._freezeSettings(), n = __PRIVATE_newSerializer(e._databaseId);
-  return new __PRIVATE_UserDataReader(e._databaseId, !!t.ignoreUndefinedProperties, n);
-}
-function __PRIVATE_parseQueryValue(e, t, n, r = false) {
-  return __PRIVATE_parseData(n, e.Dc(r ? 4 : 3, t));
-}
-function __PRIVATE_parseData(e, t) {
-  if (__PRIVATE_looksLikeJsonObject(
-    // Unwrap the API type from the Compat SDK. This will return the API type
-    // from firestore-exp.
-    e = getModularInstance(e)
-  )) return __PRIVATE_validatePlainObject("Unsupported field value:", t, e), __PRIVATE_parseObject(e, t);
-  if (e instanceof FieldValue)
-    return function __PRIVATE_parseSentinelFieldValue(e2, t2) {
-      if (!__PRIVATE_isWrite(t2.Ec)) throw t2.wc(`${e2._methodName}() can only be used with update() and set()`);
-      if (!t2.path) throw t2.wc(`${e2._methodName}() is not currently supported inside arrays`);
-      const n = e2._toFieldTransform(t2);
-      n && t2.fieldTransforms.push(n);
-    }(e, t), null;
-  if (void 0 === e && t.ignoreUndefinedProperties)
-    return null;
-  if (
-    // If context.path is null we are inside an array and we don't support
-    // field mask paths more granular than the top-level array.
-    t.path && t.fieldMask.push(t.path), e instanceof Array
-  ) {
-    if (t.settings.mc && 4 !== t.Ec) throw t.wc("Nested arrays are not supported");
-    return function __PRIVATE_parseArray(e2, t2) {
-      const n = [];
-      let r = 0;
-      for (const i of e2) {
-        let e3 = __PRIVATE_parseData(i, t2.yc(r));
-        null == e3 && // Just include nulls in the array for fields being replaced with a
-        // sentinel.
-        (e3 = {
-          nullValue: "NULL_VALUE"
-        }), n.push(e3), r++;
-      }
-      return {
-        arrayValue: {
-          values: n
-        }
-      };
-    }(e, t);
-  }
-  return function __PRIVATE_parseScalarValue(e2, t2) {
-    if (null === (e2 = getModularInstance(e2))) return {
-      nullValue: "NULL_VALUE"
-    };
-    if ("number" == typeof e2) return toNumber(t2.serializer, e2);
-    if ("boolean" == typeof e2) return {
-      booleanValue: e2
-    };
-    if ("string" == typeof e2) return {
-      stringValue: e2
-    };
-    if (e2 instanceof Date) {
-      const n = Timestamp.fromDate(e2);
-      return {
-        timestampValue: toTimestamp(t2.serializer, n)
-      };
-    }
-    if (e2 instanceof Timestamp) {
-      const n = new Timestamp(e2.seconds, 1e3 * Math.floor(e2.nanoseconds / 1e3));
-      return {
-        timestampValue: toTimestamp(t2.serializer, n)
-      };
-    }
-    if (e2 instanceof GeoPoint) return {
-      geoPointValue: {
-        latitude: e2.latitude,
-        longitude: e2.longitude
-      }
-    };
-    if (e2 instanceof Bytes) return {
-      bytesValue: __PRIVATE_toBytes(t2.serializer, e2._byteString)
-    };
-    if (e2 instanceof DocumentReference) {
-      const n = t2.databaseId, r = e2.firestore._databaseId;
-      if (!r.isEqual(n)) throw t2.wc(`Document reference is for database ${r.projectId}/${r.database} but should be for database ${n.projectId}/${n.database}`);
-      return {
-        referenceValue: __PRIVATE_toResourceName(e2.firestore._databaseId || t2.databaseId, e2._key.path)
-      };
-    }
-    if (e2 instanceof VectorValue)
-      return function __PRIVATE_parseVectorValue(e3, t3) {
-        const n = {
-          fields: {
-            [ct]: {
-              stringValue: Pt
-            },
-            [Tt]: {
-              arrayValue: {
-                values: e3.toArray().map((e4) => {
-                  if ("number" != typeof e4) throw t3.wc("VectorValues must only contain numeric values.");
-                  return __PRIVATE_toDouble(t3.serializer, e4);
-                })
-              }
-            }
-          }
-        };
-        return {
-          mapValue: n
-        };
-      }(e2, t2);
-    throw t2.wc(`Unsupported field value: ${__PRIVATE_valueDescription(e2)}`);
-  }(e, t);
-}
-function __PRIVATE_parseObject(e, t) {
-  const n = {};
-  return isEmpty2(e) ? (
-    // If we encounter an empty object, we explicitly add it to the update
-    // mask to ensure that the server creates a map entry.
-    t.path && t.path.length > 0 && t.fieldMask.push(t.path)
-  ) : forEach(e, (e2, r) => {
-    const i = __PRIVATE_parseData(r, t.Vc(e2));
-    null != i && (n[e2] = i);
-  }), {
-    mapValue: {
-      fields: n
-    }
-  };
-}
-function __PRIVATE_looksLikeJsonObject(e) {
-  return !("object" != typeof e || null === e || e instanceof Array || e instanceof Date || e instanceof Timestamp || e instanceof GeoPoint || e instanceof Bytes || e instanceof DocumentReference || e instanceof FieldValue || e instanceof VectorValue);
-}
-function __PRIVATE_validatePlainObject(e, t, n) {
-  if (!__PRIVATE_looksLikeJsonObject(n) || !__PRIVATE_isPlainObject(n)) {
-    const r = __PRIVATE_valueDescription(n);
-    throw "an object" === r ? t.wc(e + " a custom object") : t.wc(e + " " + r);
-  }
-}
 var ln = new RegExp("[~\\*/\\[\\]]");
 function __PRIVATE_fieldPathFromDotSeparatedString(e, t, n) {
   if (t.search(ln) >= 0) throw __PRIVATE_createError(
@@ -22624,282 +16670,6 @@ var QueryDocumentSnapshot$1 = class extends DocumentSnapshot$1 {
 };
 function __PRIVATE_fieldPathFromArgument(e, t) {
   return "string" == typeof t ? __PRIVATE_fieldPathFromDotSeparatedString(e, t) : t instanceof FieldPath ? t._internalPath : t._delegate._internalPath;
-}
-function __PRIVATE_validateHasExplicitOrderByForLimitToLast(e) {
-  if ("L" === e.limitType && 0 === e.explicitOrderBy.length) throw new FirestoreError(N.UNIMPLEMENTED, "limitToLast() queries require specifying at least one orderBy() clause");
-}
-var AppliableConstraint = class {
-};
-var QueryConstraint = class extends AppliableConstraint {
-};
-function query(e, t, ...n) {
-  let r = [];
-  t instanceof AppliableConstraint && r.push(t), r = r.concat(n), function __PRIVATE_validateQueryConstraintArray(e2) {
-    const t2 = e2.filter((e3) => e3 instanceof QueryCompositeFilterConstraint).length, n2 = e2.filter((e3) => e3 instanceof QueryFieldFilterConstraint).length;
-    if (t2 > 1 || t2 > 0 && n2 > 0) throw new FirestoreError(N.INVALID_ARGUMENT, "InvalidQuery. When using composite filters, you cannot use more than one filter at the top level. Consider nesting the multiple filters within an `and(...)` statement. For example: change `query(query, where(...), or(...))` to `query(query, and(where(...), or(...)))`.");
-  }(r);
-  for (const t2 of r) e = t2._apply(e);
-  return e;
-}
-var QueryFieldFilterConstraint = class _QueryFieldFilterConstraint extends QueryConstraint {
-  /**
-   * @internal
-   */
-  constructor(e, t, n) {
-    super(), this._field = e, this._op = t, this._value = n, /** The type of this query constraint */
-    this.type = "where";
-  }
-  static _create(e, t, n) {
-    return new _QueryFieldFilterConstraint(e, t, n);
-  }
-  _apply(e) {
-    const t = this._parse(e);
-    return __PRIVATE_validateNewFieldFilter(e._query, t), new Query(e.firestore, e.converter, __PRIVATE_queryWithAddedFilter(e._query, t));
-  }
-  _parse(e) {
-    const t = __PRIVATE_newUserDataReader(e.firestore), n = function __PRIVATE_newQueryFilter(e2, t2, n2, r, i, s, o) {
-      let _;
-      if (i.isKeyField()) {
-        if ("array-contains" === s || "array-contains-any" === s) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid Query. You can't perform '${s}' queries on documentId().`);
-        if ("in" === s || "not-in" === s) {
-          __PRIVATE_validateDisjunctiveFilterElements(o, s);
-          const t3 = [];
-          for (const n3 of o) t3.push(__PRIVATE_parseDocumentIdValue(r, e2, n3));
-          _ = {
-            arrayValue: {
-              values: t3
-            }
-          };
-        } else _ = __PRIVATE_parseDocumentIdValue(r, e2, o);
-      } else "in" !== s && "not-in" !== s && "array-contains-any" !== s || __PRIVATE_validateDisjunctiveFilterElements(o, s), _ = __PRIVATE_parseQueryValue(
-        n2,
-        t2,
-        o,
-        /* allowArrays= */
-        "in" === s || "not-in" === s
-      );
-      const a = FieldFilter.create(i, s, _);
-      return a;
-    }(e._query, "where", t, e.firestore._databaseId, this._field, this._op, this._value);
-    return n;
-  }
-};
-function where(e, t, n) {
-  const r = t, i = __PRIVATE_fieldPathFromArgument("where", e);
-  return QueryFieldFilterConstraint._create(i, r, n);
-}
-var QueryCompositeFilterConstraint = class _QueryCompositeFilterConstraint extends AppliableConstraint {
-  /**
-   * @internal
-   */
-  constructor(e, t) {
-    super(), this.type = e, this._queryConstraints = t;
-  }
-  static _create(e, t) {
-    return new _QueryCompositeFilterConstraint(e, t);
-  }
-  _parse(e) {
-    const t = this._queryConstraints.map((t2) => t2._parse(e)).filter((e2) => e2.getFilters().length > 0);
-    return 1 === t.length ? t[0] : CompositeFilter.create(t, this._getOperator());
-  }
-  _apply(e) {
-    const t = this._parse(e);
-    return 0 === t.getFilters().length ? e : (function __PRIVATE_validateNewFilter(e2, t2) {
-      let n = e2;
-      const r = t2.getFlattenedFilters();
-      for (const e3 of r) __PRIVATE_validateNewFieldFilter(n, e3), n = __PRIVATE_queryWithAddedFilter(n, e3);
-    }(e._query, t), new Query(e.firestore, e.converter, __PRIVATE_queryWithAddedFilter(e._query, t)));
-  }
-  _getQueryConstraints() {
-    return this._queryConstraints;
-  }
-  _getOperator() {
-    return "and" === this.type ? "and" : "or";
-  }
-};
-var QueryOrderByConstraint = class _QueryOrderByConstraint extends QueryConstraint {
-  /**
-   * @internal
-   */
-  constructor(e, t) {
-    super(), this._field = e, this._direction = t, /** The type of this query constraint */
-    this.type = "orderBy";
-  }
-  static _create(e, t) {
-    return new _QueryOrderByConstraint(e, t);
-  }
-  _apply(e) {
-    const t = function __PRIVATE_newQueryOrderBy(e2, t2, n) {
-      if (null !== e2.startAt) throw new FirestoreError(N.INVALID_ARGUMENT, "Invalid query. You must not call startAt() or startAfter() before calling orderBy().");
-      if (null !== e2.endAt) throw new FirestoreError(N.INVALID_ARGUMENT, "Invalid query. You must not call endAt() or endBefore() before calling orderBy().");
-      const r = new OrderBy(t2, n);
-      return r;
-    }(e._query, this._field, this._direction);
-    return new Query(e.firestore, e.converter, function __PRIVATE_queryWithAddedOrderBy(e2, t2) {
-      const n = e2.explicitOrderBy.concat([t2]);
-      return new __PRIVATE_QueryImpl(e2.path, e2.collectionGroup, n, e2.filters.slice(), e2.limit, e2.limitType, e2.startAt, e2.endAt);
-    }(e._query, t));
-  }
-};
-function orderBy(e, t = "asc") {
-  const n = t, r = __PRIVATE_fieldPathFromArgument("orderBy", e);
-  return QueryOrderByConstraint._create(r, n);
-}
-var QueryLimitConstraint = class _QueryLimitConstraint extends QueryConstraint {
-  /**
-   * @internal
-   */
-  constructor(e, t, n) {
-    super(), this.type = e, this._limit = t, this._limitType = n;
-  }
-  static _create(e, t, n) {
-    return new _QueryLimitConstraint(e, t, n);
-  }
-  _apply(e) {
-    return new Query(e.firestore, e.converter, __PRIVATE_queryWithLimit(e._query, this._limit, this._limitType));
-  }
-};
-function limit(e) {
-  return __PRIVATE_validatePositiveNumber("limit", e), QueryLimitConstraint._create(
-    "limit",
-    e,
-    "F"
-    /* LimitType.First */
-  );
-}
-function __PRIVATE_parseDocumentIdValue(e, t, n) {
-  if ("string" == typeof (n = getModularInstance(n))) {
-    if ("" === n) throw new FirestoreError(N.INVALID_ARGUMENT, "Invalid query. When querying with documentId(), you must provide a valid document ID, but it was an empty string.");
-    if (!__PRIVATE_isCollectionGroupQuery(t) && -1 !== n.indexOf("/")) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid query. When querying a collection by documentId(), you must provide a plain document ID, but '${n}' contains a '/' character.`);
-    const r = t.path.child(ResourcePath.fromString(n));
-    if (!DocumentKey.isDocumentKey(r)) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid query. When querying a collection group by documentId(), the value provided must result in a valid document path, but '${r}' is not because it has an odd number of segments (${r.length}).`);
-    return __PRIVATE_refValue(e, new DocumentKey(r));
-  }
-  if (n instanceof DocumentReference) return __PRIVATE_refValue(e, n._key);
-  throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid query. When querying with documentId(), you must provide a valid string or a DocumentReference, but it was: ${__PRIVATE_valueDescription(n)}.`);
-}
-function __PRIVATE_validateDisjunctiveFilterElements(e, t) {
-  if (!Array.isArray(e) || 0 === e.length) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid Query. A non-empty array is required for '${t.toString()}' filters.`);
-}
-function __PRIVATE_validateNewFieldFilter(e, t) {
-  const n = function __PRIVATE_findOpInsideFilters(e2, t2) {
-    for (const n2 of e2) for (const e3 of n2.getFlattenedFilters()) if (t2.indexOf(e3.op) >= 0) return e3.op;
-    return null;
-  }(e.filters, function __PRIVATE_conflictingOps(e2) {
-    switch (e2) {
-      case "!=":
-        return [
-          "!=",
-          "not-in"
-          /* Operator.NOT_IN */
-        ];
-      case "array-contains-any":
-      case "in":
-        return [
-          "not-in"
-          /* Operator.NOT_IN */
-        ];
-      case "not-in":
-        return [
-          "array-contains-any",
-          "in",
-          "not-in",
-          "!="
-          /* Operator.NOT_EQUAL */
-        ];
-      default:
-        return [];
-    }
-  }(t.op));
-  if (null !== n)
-    throw n === t.op ? new FirestoreError(N.INVALID_ARGUMENT, `Invalid query. You cannot use more than one '${t.op.toString()}' filter.`) : new FirestoreError(N.INVALID_ARGUMENT, `Invalid query. You cannot use '${t.op.toString()}' filters with '${n.toString()}' filters.`);
-}
-var AbstractUserDataWriter = class {
-  convertValue(e, t = "none") {
-    switch (__PRIVATE_typeOrder(e)) {
-      case 0:
-        return null;
-      case 1:
-        return e.booleanValue;
-      case 2:
-        return __PRIVATE_normalizeNumber(e.integerValue || e.doubleValue);
-      case 3:
-        return this.convertTimestamp(e.timestampValue);
-      case 4:
-        return this.convertServerTimestamp(e, t);
-      case 5:
-        return e.stringValue;
-      case 6:
-        return this.convertBytes(__PRIVATE_normalizeByteString(e.bytesValue));
-      case 7:
-        return this.convertReference(e.referenceValue);
-      case 8:
-        return this.convertGeoPoint(e.geoPointValue);
-      case 9:
-        return this.convertArray(e.arrayValue, t);
-      case 11:
-        return this.convertObject(e.mapValue, t);
-      case 10:
-        return this.convertVectorValue(e.mapValue);
-      default:
-        throw fail(62114, {
-          value: e
-        });
-    }
-  }
-  convertObject(e, t) {
-    return this.convertObjectMap(e.fields, t);
-  }
-  /**
-   * @internal
-   */
-  convertObjectMap(e, t = "none") {
-    const n = {};
-    return forEach(e, (e2, r) => {
-      n[e2] = this.convertValue(r, t);
-    }), n;
-  }
-  /**
-   * @internal
-   */
-  convertVectorValue(e) {
-    var t, n, r;
-    const i = null === (r = null === (n = null === (t = e.fields) || void 0 === t ? void 0 : t[Tt].arrayValue) || void 0 === n ? void 0 : n.values) || void 0 === r ? void 0 : r.map((e2) => __PRIVATE_normalizeNumber(e2.doubleValue));
-    return new VectorValue(i);
-  }
-  convertGeoPoint(e) {
-    return new GeoPoint(__PRIVATE_normalizeNumber(e.latitude), __PRIVATE_normalizeNumber(e.longitude));
-  }
-  convertArray(e, t) {
-    return (e.values || []).map((e2) => this.convertValue(e2, t));
-  }
-  convertServerTimestamp(e, t) {
-    switch (t) {
-      case "previous":
-        const n = __PRIVATE_getPreviousValue(e);
-        return null == n ? null : this.convertValue(n, t);
-      case "estimate":
-        return this.convertTimestamp(__PRIVATE_getLocalWriteTime(e));
-      default:
-        return null;
-    }
-  }
-  convertTimestamp(e) {
-    const t = __PRIVATE_normalizeTimestamp(e);
-    return new Timestamp(t.seconds, t.nanos);
-  }
-  convertDocumentKey(e, t) {
-    const n = ResourcePath.fromString(e);
-    __PRIVATE_hardAssert(__PRIVATE_isValidResourceName(n), 9688, {
-      name: e
-    });
-    const r = new DatabaseId(n.get(1), n.get(3)), i = new DocumentKey(n.popFirst(5));
-    return r.isEqual(t) || // TODO(b/64130202): Somehow support foreign references.
-    __PRIVATE_logError(`Document ${i} contains a document reference within a different database (${r.projectId}/${r.database}) which is not supported. It will be treated as a reference in the current database (${t.projectId}/${t.database}) instead.`), i;
-  }
-};
-function count() {
-  return new AggregateField("count");
 }
 var SnapshotMetadata = class {
   /** @hideconstructor */
@@ -23128,49 +16898,6 @@ QuerySnapshot._jsonSchemaVersion = "firestore/querySnapshot/1.0", QuerySnapshot.
   bundleName: property("string"),
   bundle: property("string")
 };
-var __PRIVATE_ExpUserDataWriter = class extends AbstractUserDataWriter {
-  constructor(e) {
-    super(), this.firestore = e;
-  }
-  convertBytes(e) {
-    return new Bytes(e);
-  }
-  convertReference(e) {
-    const t = this.convertDocumentKey(e, this.firestore._databaseId);
-    return new DocumentReference(
-      this.firestore,
-      /* converter= */
-      null,
-      t
-    );
-  }
-};
-function getDocs(e) {
-  e = __PRIVATE_cast(e, Query);
-  const t = __PRIVATE_cast(e.firestore, Firestore), n = ensureFirestoreConfigured(t), r = new __PRIVATE_ExpUserDataWriter(t);
-  return __PRIVATE_validateHasExplicitOrderByForLimitToLast(e._query), __PRIVATE_firestoreClientGetDocumentsViaSnapshotListener(n, e._query).then((n2) => new QuerySnapshot(t, r, e, n2));
-}
-function getCountFromServer(e) {
-  return getAggregateFromServer(e, {
-    count: count()
-  });
-}
-function getAggregateFromServer(e, t) {
-  const n = __PRIVATE_cast(e.firestore, Firestore), r = ensureFirestoreConfigured(n), i = __PRIVATE_mapToArray(t, (e2, t2) => new __PRIVATE_AggregateImpl(t2, e2.aggregateType, e2._internalFieldPath));
-  return __PRIVATE_firestoreClientRunAggregateQuery(r, e._query, i).then((t2) => (
-    /**
-    * Converts the core aggregation result to an `AggregateQuerySnapshot`
-    * that can be returned to the consumer.
-    * @param query
-    * @param aggregateResult Core aggregation result
-    * @internal
-    */
-    function __PRIVATE_convertToAggregateQuerySnapshot(e2, t3, n2) {
-      const r2 = new __PRIVATE_ExpUserDataWriter(e2), i2 = new AggregateQuerySnapshot(t3, r2, n2);
-      return i2;
-    }(n, e, t2)
-  ));
-}
 !function __PRIVATE_registerFirestore(e, t = true) {
   !function __PRIVATE_setSDKVersion(e2) {
     x = e2;
@@ -23208,220 +16935,31 @@ if (ready) {
 }
 
 // src/lib/account.js
-var account = {
-  uid: null,
-  name: "",
-  photo: "",
-  score: 0,
-  tier: 0,
-  tickets: 5,
-  ticketAt: 0,
-  games: 0,
-  wk: 0,
-  mo: 0,
-  wkKey: "",
-  moKey: "",
-  needName: false,
-  /* 구글로 처음 들어왔으면 별명을 정해야 한다 */
-  loaded: false,
-  signedIn: false,
-  /* 게스트(익명)로 들어왔는가. 게임·점수는 같지만 랭킹에는 안 오른다 */
-  guest: false
-};
-function periodKeys(at2) {
-  const d = at2 ? new Date(at2) : /* @__PURE__ */ new Date();
-  const mo = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const day = (t.getUTCDay() + 6) % 7;
-  t.setUTCDate(t.getUTCDate() - day + 3);
-  const year = t.getUTCFullYear();
-  const first = new Date(Date.UTC(year, 0, 4));
-  const wkNo = 1 + Math.round(((t - first) / 864e5 - 3 + (first.getUTCDay() + 6) % 7) / 7);
-  return { wk: year + "-W" + String(wkNo).padStart(2, "0"), mo };
-}
-var TIER_STEP = 5e3;
-function tierOf(score) {
-  return Math.floor(score / TIER_STEP);
-}
 var TICKET_MS = 30 * 60 * 1e3;
+var HANGUL = /[\u3131-\u318E\uAC00-\uD7A3]/;
+function nameCost(str) {
+  let cost = 0;
+  for (const ch of String(str || "")) {
+    cost += HANGUL.test(ch) ? 8 / 6 : 1;
+  }
+  return cost;
+}
+var NAME_MAX = 8;
+function checkName(str) {
+  const v = String(str || "").trim();
+  if (!v) return { ok: false, why: "empty" };
+  if (/\s/.test(v)) return { ok: false, why: "space" };
+  for (const ch of v) {
+    if (!HANGUL.test(ch) && !/[A-Za-z0-9]/.test(ch)) return { ok: false, why: "char" };
+  }
+  if (nameCost(v) > NAME_MAX + 1e-3) return { ok: false, why: "long" };
+  return { ok: true, name: v };
+}
 var isLocal = typeof location !== "undefined" && /^(localhost|127\.0\.0\.1|192\.168\.|10\.)/.test(location.hostname);
-var FIELD = { all: "score", week: "wk", month: "mo" };
-var KEYF = { week: "wkKey", month: "moKey" };
-async function topScores(kind = "all", want = 100) {
-  if (!ready) return [];
-  const f = FIELD[kind] || "score";
-  const col = collection(db, "users");
-  const k2 = periodKeys();
-  const q2 = kind === "all" ? query(col, orderBy(f, "desc"), limit(want + 60)) : query(
-    col,
-    where(KEYF[kind], "==", kind === "week" ? k2.wk : k2.mo),
-    orderBy(f, "desc"),
-    limit(want + 60)
-  );
-  const snap = await getDocs(q2);
-  const out = [];
-  snap.forEach((d) => {
-    const v = d.data() || {};
-    if (v.guest) return;
-    const sc = Number(v[f] || 0);
-    if (sc <= 0) return;
-    out.push({ uid: d.id, name: v.name || "", score: sc, tier: tierOf(v.score || 0) });
-  });
-  return out.slice(0, want);
-}
-async function myRank(kind = "all") {
-  if (!ready || !account.signedIn || account.guest) return null;
-  const f = FIELD[kind] || "score";
-  const mine = Number(kind === "all" ? account.score : (kind === "week" ? account.wk : account.mo) || 0);
-  if (mine <= 0) return null;
-  const col = collection(db, "users");
-  const k2 = periodKeys();
-  const q2 = kind === "all" ? query(col, where(f, ">", mine)) : query(col, where(KEYF[kind], "==", kind === "week" ? k2.wk : k2.mo), where(f, ">", mine));
-  try {
-    const c = await getCountFromServer(q2);
-    return { rank: (c.data().count || 0) + 1, score: mine, tier: account.tier };
-  } catch (e) {
-    return null;
-  }
-}
-
-// src/screens/rank.js
-var fetchTop = (...a) => (window.__topScores || topScores)(...a);
-var fetchMine = (...a) => (window.__myRank || myRank)(...a);
-var T = {
-  ko: {
-    title: "\uB7AD\uD0B9",
-    tabs: { all: "\uC804\uCCB4", week: "\uC774\uBC88 \uC8FC", month: "\uC774\uBC88 \uB2EC" },
-    loading: "\uBD88\uB7EC\uC624\uB294 \uC911",
-    empty: "\uC544\uC9C1 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
-    guest: "\uAC8C\uC2A4\uD2B8\uB294 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uC124\uC815\uC5D0\uC11C \uAD6C\uAE00 \uACC4\uC815\uC744 \uC774\uC73C\uBA74 \uC9C0\uAE08 \uC810\uC218 \uADF8\uB300\uB85C \uC624\uB985\uB2C8\uB2E4.",
-    meOut: "\uC544\uC9C1 \uC21C\uC704\uC5D0 \uB4E4\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4",
-    me: "\uB0B4 \uC21C\uC704",
-    tier: (t) => t + "\uD2F0\uC5B4",
-    err: "\uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4"
-  },
-  en: {
-    title: "Leaderboard",
-    tabs: { all: "All time", week: "This week", month: "This month" },
-    loading: "Loading",
-    empty: "No records yet",
-    guest: "Guests don't appear here. Link a Google account in settings to keep your score and join.",
-    meOut: "Not ranked yet",
-    me: "Your rank",
-    tier: (t) => "Tier " + t,
-    err: "Could not load"
-  }
-};
-var HTML = `
-<div class="veil"></div>
-<main class="screen">
-  <div class="bar">
-    <button class="navback" data-back="lobby" aria-label="\uB4A4\uB85C">\u2039</button>
-    <div class="bar__t" id="rkBar"></div>
-  </div>
-  <div class="body">
-    <div class="block__label" id="rkTitle"></div>
-    <div class="cfg__row" id="rkTabs">
-      <button data-k="all"></button>
-      <button data-k="week"></button>
-      <button data-k="month"></button>
-    </div>
-    <div id="rkList" class="rk"></div>
-    <div id="rkMe" class="rk rk--me"></div>
-    <p class="hint" id="rkNote"></p>
-  </div>
-</main>`;
-function mount8(root) {
-  if (!root) return;
-  root.innerHTML = HTML;
-  const el = (id) => root.querySelector("#" + id);
-  let lang = window.__lang || "ko";
-  let kind = "all";
-  let rows = null, mine = null, state = "idle";
-  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  function rowHTML(no, r, me2) {
-    return '<div class="rk__r' + (me2 ? " rk__r--me" : "") + '"><span class="rk__no">' + no + '</span><span class="rk__t">' + T[lang].tier(r.tier) + '</span><span class="rk__n">' + esc(r.name || "-") + '</span><span class="rk__s">' + Number(r.score || 0).toLocaleString() + "</span></div>";
-  }
-  function draw() {
-    const t = T[lang];
-    el("rkTitle").textContent = t.title;
-    if (el("rkBar")) el("rkBar").textContent = t.title;
-    el("rkTabs").querySelectorAll("button").forEach((b) => {
-      b.textContent = t.tabs[b.dataset.k];
-      b.setAttribute("aria-pressed", String(b.dataset.k === kind));
-    });
-    const list = el("rkList");
-    if (state === "loading") {
-      list.innerHTML = '<p class="hint">' + t.loading + "</p>";
-    } else if (state === "error") {
-      list.innerHTML = '<p class="hint">' + t.err + "</p>";
-    } else if (!rows || !rows.length) {
-      list.innerHTML = '<p class="hint">' + t.empty + "</p>";
-    } else {
-      list.innerHTML = rows.map((r, i) => rowHTML(i + 1, r, r.uid === account.uid)).join("");
-    }
-    const meBox = el("rkMe");
-    if (account.guest || !account.signedIn) {
-      meBox.innerHTML = "";
-    } else if (mine) {
-      meBox.innerHTML = '<div class="rk__cap">' + t.me + "</div>" + rowHTML(mine.rank, { name: account.name, score: mine.score, tier: mine.tier }, true);
-    } else {
-      meBox.innerHTML = '<div class="rk__cap">' + t.me + '</div><p class="hint">' + t.meOut + "</p>";
-    }
-    el("rkNote").textContent = account.guest ? t.guest : "";
-  }
-  async function load() {
-    state = "loading";
-    rows = null;
-    mine = null;
-    draw();
-    const want = kind;
-    try {
-      const [list, r] = await Promise.all([fetchTop(kind, 100), fetchMine(kind)]);
-      if (want !== kind) return;
-      rows = list;
-      mine = r;
-      state = "done";
-    } catch (e) {
-      if (want !== kind) return;
-      state = "error";
-      console.warn(e);
-    }
-    draw();
-  }
-  el("rkTabs").addEventListener("click", (e) => {
-    const b = e.target.closest("button[data-k]");
-    if (!b || b.dataset.k === kind) return;
-    kind = b.dataset.k;
-    load();
-  });
-  window.addEventListener("langchange", () => {
-    lang = window.__lang || "ko";
-    draw();
-  });
-  window.addEventListener("accountchange", draw);
-  window.__bootRank = () => {
-    lang = window.__lang || "ko";
-    load();
-  };
-  draw();
-}
 export {
-  BAR_SWAP,
-  CFG_HTML,
-  CROWN,
-  GEAR,
-  MARKUP,
-  OPT_HTML,
-  draw_exports as draw,
-  entry_exports as entry,
-  initNav,
-  lobby_exports as lobby,
-  rank_exports as rank,
-  result_exports as result,
-  room_exports as room,
-  table_exports as table,
-  tax_exports as tax
+  NAME_MAX,
+  checkName,
+  nameCost
 };
 /*! Bundled license information:
 
@@ -25110,6 +18648,26 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2017 Google LLC
@@ -25144,6 +18702,24 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2017 Google LLC
@@ -25201,6 +18777,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -25287,6 +18881,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -25388,6 +19000,24 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
   (**
    * @license
    * Copyright 2020 Google LLC
@@ -25404,6 +19034,8 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2018 Google LLC
@@ -25420,6 +19052,22 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
 
 @firebase/firestore/dist/index.esm2017.js:
   (**
@@ -25472,6 +19120,26 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2017 Google LLC
@@ -25506,6 +19174,8 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2022 Google LLC
@@ -25522,6 +19192,44 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2017 Google LLC
@@ -25716,6 +19424,8 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2020 Google LLC
@@ -25755,6 +19465,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -25857,6 +19585,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2024 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -26108,6 +19854,62 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2020 Google LLC
@@ -26181,6 +19983,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -26404,6 +20224,26 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm2017.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm2017.js:
   (**
    * @license
    * Copyright 2017 Google LLC

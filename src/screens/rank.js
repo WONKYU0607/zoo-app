@@ -66,10 +66,17 @@ export function mount(root){
   const esc = s => String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+  /* 티어 뱃지 — 그림 위에 숫자를 얹는다 */
+  function tierHTML(t){
+    const n = Math.max(0, Math.min(10, Number(t) || 0));
+    return '<span class="rk__t" style="background-image:url(/assets/tier_' +
+      String(n).padStart(2, "0") + '.webp)"><b>' + n + '</b></span>';
+  }
+
   function rowHTML(no, r, me){
     return '<div class="rk__r' + (me ? " rk__r--me" : "") + '">' +
       '<span class="rk__no">' + no + '</span>' +
-      '<span class="rk__t">' + T[lang].tier(r.tier) + '</span>' +
+      tierHTML(r.tier) +
       '<span class="rk__n">' + esc(r.name || "-") + '</span>' +
       '<span class="rk__s">' + Number(r.score || 0).toLocaleString() + '</span>' +
       '</div>';

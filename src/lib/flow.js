@@ -187,6 +187,9 @@ function openTable(v, n, names){
   W().__net = { engine: true };
   W().GAME = {
     N: n,
+    /* 화면 자리 → 그 자리에 앉은 사람(엔진 자리).
+       얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다 */
+    faces: v.seats.map(s => s.seat),
     roundNo: v.roundNo,
     names: v.names.slice(),
     namesEn: v.names.slice(),

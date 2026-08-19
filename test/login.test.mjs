@@ -138,5 +138,23 @@ await wait(150);
 check("로그아웃이 불린다", outCalled === 1);
 check("로그아웃하면 첫 화면으로", document.getElementById("entry").classList.contains("is-on"));
 
+/* 별명 창 — 되돌리다 날아간 적이 있어서 검사로 못박는다 */
+let nickTried = "";
+window.setNickname = async v => { nickTried = v; return { ok: true, name: v }; };
+Object.assign(window.ACCOUNT, { signedIn: true, guest: true, name: "게스트168" });
+window.dispatchEvent(new Event("accountchange"));
+await wait(60);
+document.querySelector("[data-acctopen]").click();
+await wait(80);
+check("연필을 누르면 별명 창이 뜬다", (() => {
+  const pen = q("#acName"); if (!pen) return false;
+  pen.click(); return Boolean(document.querySelector("#nkBox #nkIn"));
+})(), document.querySelector("#nkBox") ? "열림" : "안 열림");
+const inp = document.querySelector("#nkBox #nkIn");
+if (inp){ inp.value = "사자왕"; document.querySelector("#nkBox #nkOk").click(); await wait(120); }
+check("별명이 실제로 넘어간다", nickTried === "사자왕", nickTried || "안 불림");
+check("정하고 나면 창이 닫힌다",
+      !document.querySelector("#nkBox").classList.contains("on"));
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);

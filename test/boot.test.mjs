@@ -100,5 +100,17 @@ if (back){
         document.getElementById("lobby").classList.contains("is-on"));
 }
 
+/* 얼굴은 사람을 따라가야 한다. 세 화면 모두 같은 표를 봐야 한다 */
+window.GAME = { faces: [3, 1, 0, 2] };
+const shots = [];
+["draw", "room"].forEach(id => {
+  const sec = document.getElementById(id);
+  const av = sec ? sec.querySelectorAll(".seat__av") : [];
+  shots.push(id + ":" + av.length);
+});
+check("뽑기·대기실이 얼굴 표를 쓴다",
+      /faceOf/.test(String(B.draw.mount)) && /faceOf/.test(String(B.room.mount)),
+      shots.join(" "));
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);

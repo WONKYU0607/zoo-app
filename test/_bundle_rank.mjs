@@ -7,19 +7,23 @@ var __export = (target, all) => {
 // src/lib/account.js
 var account_exports = {};
 __export(account_exports, {
+  NAME_MAX: () => NAME_MAX,
   TICKET_MAX: () => TICKET_MAX,
   TICKET_MS: () => TICKET_MS,
   TIER_STEP: () => TIER_STEP,
   account: () => account,
   addTicket: () => addTicket,
   changeName: () => changeName,
+  checkName: () => checkName,
   finishGame: () => finishGame,
   isLocal: () => isLocal,
   linkGoogle: () => linkGoogle,
   myRank: () => myRank,
+  nameCost: () => nameCost,
   pending: () => pending,
   periodKeys: () => periodKeys,
   scoreFor: () => scoreFor,
+  setNickname: () => setNickname,
   signInGoogle: () => signInGoogle,
   signInGuest: () => signInGuest,
   signInTest: () => signInTest,
@@ -21291,6 +21295,8 @@ var account = {
   mo: 0,
   wkKey: "",
   moKey: "",
+  needName: false,
+  /* 구글로 처음 들어왔으면 별명을 정해야 한다 */
   loaded: false,
   signedIn: false,
   /* 게스트(익명)로 들어왔는가. 게임·점수는 같지만 랭킹에는 안 오른다 */
@@ -21339,6 +21345,72 @@ function ticketLeft() {
   return r.left;
 }
 var key = (s) => s.trim().toLowerCase();
+var HANGUL = /[\u3131-\u318E\uAC00-\uD7A3]/;
+function nameCost(str) {
+  let cost = 0;
+  for (const ch of String(str || "")) {
+    cost += HANGUL.test(ch) ? 8 / 6 : 1;
+  }
+  return cost;
+}
+var NAME_MAX = 8;
+function checkName(str) {
+  const v = String(str || "").trim();
+  if (!v) return { ok: false, why: "empty" };
+  if (/\s/.test(v)) return { ok: false, why: "space" };
+  for (const ch of v) {
+    if (!HANGUL.test(ch) && !/[A-Za-z0-9]/.test(ch)) return { ok: false, why: "char" };
+  }
+  if (nameCost(v) > NAME_MAX + 1e-3) return { ok: false, why: "long" };
+  return { ok: true, name: v };
+}
+async function nextGuestName() {
+  const ref = doc(db, "meta", "guest");
+  let no = 0;
+  await runTransaction(db, async (tx) => {
+    const got = await tx.get(ref);
+    no = (got.exists() && Number(got.data().seq) || 0) + 1;
+    tx.set(ref, { seq: no }, { merge: true });
+  });
+  return "\uAC8C\uC2A4\uD2B8" + no;
+}
+async function setNickname(wanted) {
+  if (!ready || !account.uid) throw new Error("\uB85C\uADF8\uC778 \uC0C1\uD0DC\uAC00 \uC544\uB2D9\uB2C8\uB2E4");
+  const c = checkName(wanted);
+  if (!c.ok) return { ok: false, why: c.why };
+  const want = c.name;
+  const ref = doc(db, "names", key(want));
+  try {
+    await runTransaction(db, async (tx) => {
+      const got = await tx.get(ref);
+      if (got.exists() && got.data().uid !== account.uid) throw new Error("taken");
+      tx.set(ref, { uid: account.uid, name: want });
+    });
+  } catch (e) {
+    if (String(e.message) === "taken") return { ok: false, why: "taken" };
+    throw e;
+  }
+  const old = account.name;
+  await updateDoc(doc(db, "users", account.uid), { name: want });
+  try {
+    await updateProfile(auth.currentUser, { displayName: want });
+  } catch (e) {
+  }
+  account.name = want;
+  account.needName = false;
+  try {
+    await updateDoc(doc(db, "users", account.uid), { needName: false });
+  } catch (e) {
+  }
+  if (old && key(old) !== key(want)) {
+    try {
+      await setDoc(doc(db, "names", key(old)), { uid: null, name: old });
+    } catch (e) {
+    }
+  }
+  window.dispatchEvent(new Event("accountchange"));
+  return { ok: true, name: want };
+}
 async function claimName(uid, wanted) {
   const base = (wanted || "\uC774\uB984\uC5C6\uC74C").trim().slice(0, 12);
   for (let n = 0; n < 40; n++) {
@@ -21472,7 +21544,18 @@ async function loadProfile(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
-    const name4 = await claimName(user.uid, user.displayName);
+    const guest = Boolean(user.isAnonymous);
+    let name4;
+    if (guest) {
+      try {
+        name4 = await nextGuestName();
+      } catch (e) {
+        name4 = "\uAC8C\uC2A4\uD2B8" + Math.floor(Math.random() * 9e3 + 1e3);
+      }
+      name4 = await claimName(user.uid, name4);
+    } else {
+      name4 = await claimName(user.uid, "\uC0C8\uC0AC\uC6A9\uC790");
+    }
     const fresh = {
       name: name4,
       score: 0,
@@ -21480,13 +21563,15 @@ async function loadProfile(user) {
       tickets: TICKET_MAX,
       ticketAt: Date.now(),
       createdAt: serverTimestamp(),
-      guest: Boolean(user.isAnonymous)
+      guest,
+      needName: !guest
     };
     await setDoc(ref, fresh);
     Object.assign(account, fresh);
   } else {
     const d = snap.data();
     Object.assign(account, d);
+    account.needName = Boolean(d.needName);
     const r = refill(d.tickets, d.ticketAt);
     if (r.tickets !== d.tickets || !d.ticketAt) {
       await updateDoc(ref, { tickets: r.tickets, ticketAt: r.at });
@@ -21496,9 +21581,11 @@ async function loadProfile(user) {
   }
   account.tier = tierOf(account.score);
   account.guest = Boolean(user.isAnonymous);
+  account.needName = !account.guest && Boolean(account.needName);
   account.signedIn = true;
   account.loaded = true;
   window.dispatchEvent(new Event("accountchange"));
+  if (account.needName && typeof window !== "undefined" && window.__askName) window.__askName();
   return account;
 }
 async function signOutNow() {

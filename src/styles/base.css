@@ -182,6 +182,8 @@ button:disabled{opacity:.42}
 .cfg__b{padding:16px 18px 22px}
 .cfg__l{font-size:11px;letter-spacing:.22em;color:#B08A34;margin-bottom:9px}
 .cfg__row{display:flex;gap:8px}
+/* hidden 을 붙이면 정말 사라지게. display 규칙이 이기면 빈 틀만 남는다 */
+.cfg__row[hidden],[hidden]{display:none !important}
 .cfg__row button{flex:1;padding:13px;border:1px solid #4A3A1E;border-radius:3px;
   background:rgba(0,0,0,.3);color:#C9B58C;font-size:14px;cursor:pointer}
 .cfg__row button[aria-pressed="true"]{color:#140D04;border-color:#E3C67C;

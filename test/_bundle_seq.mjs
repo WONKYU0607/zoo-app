@@ -844,7 +844,9 @@ if (typeof window !== "undefined") {
 // src/nav.js
 var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
 var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
-var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgAcctL"></div><p class="cfg__n" id="cfgAcct"></p><div class="cfg__row" id="cfgLinkRow" hidden><button id="cfgLink"></button></div><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
+var PENCIL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>';
+var ACCT_HTML = '<div class="cfg" id="acctBox" role="dialog" aria-modal="true"><div class="cfg__v" data-acctclose></div><div class="cfg__p"><div class="cfg__h"><span id="acBoxT"></span><button class="cfg__x" data-acctclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="ac__name"><span id="acNick"></span><button id="acName" class="ac__edit" aria-label="rename"></button></div><p class="cfg__n" id="acLine"></p><div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div><div class="cfg__row"><button id="acOut"></button></div></div></div></div>';
+var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
 function initNav() {
   window.__lang = function() {
     try {
@@ -966,22 +968,21 @@ function initNav() {
     const t2 = CFG_T[window.__lang] || CFG_T.ko;
     document.getElementById("cfgT").textContent = t2.title;
     document.getElementById("cfgLangL").textContent = t2.lang;
-    document.getElementById("cfgNote").textContent = t2.note;
-    paintAcct();
+    document.getElementById("cfgNote").textContent = "";
     document.getElementById("cfg").classList.add("on");
   }
   function paintAcct() {
     const ko = (window.__lang || "ko") === "ko";
     const a2 = window.ACCOUNT;
-    const lab = document.getElementById("cfgAcctL");
-    const line = document.getElementById("cfgAcct");
-    const row = document.getElementById("cfgLinkRow");
-    let btn = document.getElementById("cfgLink");
+    const lab = document.getElementById("acBoxT");
+    const line = document.getElementById("acLine");
+    const row = document.getElementById("acLinkRow");
+    let btn = document.getElementById("acLink");
     if (!lab || !line || !row) return;
     if (conflictOn) return;
-    if (!row.querySelector("#cfgLink")) {
-      row.innerHTML = '<button id="cfgLink"></button>';
-      btn = document.getElementById("cfgLink");
+    if (!row.querySelector("#acLink")) {
+      row.innerHTML = '<button id="acLink"></button>';
+      btn = document.getElementById("acLink");
     }
     if (!btn) return;
     lab.textContent = ko ? "\uACC4\uC815" : "Account";
@@ -991,51 +992,80 @@ function initNav() {
       return;
     }
     if (a2.guest) {
-      line.textContent = ko ? (a2.name || "\uAC8C\uC2A4\uD2B8") + " \xB7 \uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : (a2.name || "Guest") + " \xB7 Guest \xB7 not on the leaderboard";
+      line.textContent = ko ? "\uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : "Guest \xB7 not on the leaderboard";
       btn.textContent = ko ? "\uAD6C\uAE00 \uACC4\uC815 \uC787\uAE30" : "Link Google account";
       row.hidden = false;
     } else {
-      line.textContent = ko ? (a2.name || "") + " \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : (a2.name || "") + " \xB7 on the leaderboard";
+      line.textContent = ko ? "\uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : "On the leaderboard";
       row.hidden = true;
     }
-    let out = document.getElementById("cfgOutRow");
-    if (!out) {
-      out = document.createElement("div");
-      out.className = "cfg__row";
-      out.id = "cfgOutRow";
-      out.innerHTML = '<button id="cfgOut"></button>';
-      row.parentNode.insertBefore(out, row.nextSibling);
+    const nick = document.getElementById("acNick");
+    const pen = document.getElementById("acName");
+    if (nick) nick.textContent = a2.name || (ko ? "\uC774\uB984\uC5C6\uC74C" : "No name");
+    if (pen) {
+      pen.innerHTML = PENCIL;
+      pen.hidden = false;
     }
-    out.querySelector("#cfgOut").textContent = ko ? "\uB85C\uADF8\uC544\uC6C3" : "Sign out";
-    out.hidden = false;
+    const outBtn = document.getElementById("acOut");
+    if (outBtn) {
+      outBtn.textContent = ko ? "\uB85C\uADF8\uC544\uC6C3" : "Sign out";
+      outBtn.hidden = false;
+    }
   }
   window.addEventListener("accountchange", () => {
-    const c2 = document.getElementById("cfg");
-    if (c2 && c2.classList.contains("on")) paintAcct();
+    const b2 = document.getElementById("acctBox");
+    if (b2 && b2.classList.contains("on")) paintAcct();
   });
   let conflictOn = false;
   function showConflict() {
     conflictOn = true;
     const ko = (window.__lang || "ko") === "ko";
-    const box = document.getElementById("cfgLinkRow");
+    const box = document.getElementById("acLinkRow");
     if (!box) return;
     box.hidden = false;
-    box.innerHTML = '<p class="cfg__n" style="margin:0 0 8px">' + (ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4." : "That Google account already exists. Signing in will discard your guest progress.") + '</p><button id="cfgSwitch">' + (ko ? "\uAE30\uC874 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uAE30" : "Sign in to that account") + '</button><button id="cfgKeep">' + (ko ? "\uCDE8\uC18C" : "Cancel") + "</button>";
+    box.innerHTML = '<p class="cfg__n" style="margin:0 0 8px">' + (ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4." : "That Google account already exists. Signing in will discard your guest progress.") + '</p><button id="acSwitch">' + (ko ? "\uAE30\uC874 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uAE30" : "Sign in to that account") + '</button><button id="acKeep">' + (ko ? "\uCDE8\uC18C" : "Cancel") + "</button>";
   }
-  window.__showLinkConflict = showConflict;
+  window.__showLinkConflict = () => {
+    openAcct();
+    showConflict();
+  };
+  function openAcct() {
+    let box = document.getElementById("acctBox");
+    if (!box) {
+      const st = document.getElementById("stage");
+      if (!st) return;
+      st.insertAdjacentHTML("beforeend", ACCT_HTML);
+      box = document.getElementById("acctBox");
+    }
+    paintAcct();
+    box.classList.add("on");
+  }
+  function closeAcct() {
+    const b2 = document.getElementById("acctBox");
+    if (b2) b2.classList.remove("on");
+  }
+  window.__openAcct = openAcct;
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-acctclose]")) {
+      closeAcct();
+      return;
+    }
+    if (e.target.closest("#acctProfile") || e.target.closest("[data-acctopen]")) openAcct();
+    if (e.target.closest("#acName") && window.__askName) window.__askName();
+  });
   document.addEventListener("click", async (e) => {
-    if (e.target.closest("#cfgSwitch")) {
+    if (e.target.closest("#acSwitch")) {
       conflictOn = false;
       if (window.switchToGoogle) await window.switchToGoogle();
       paintAcct();
       return;
     }
-    if (e.target.closest("#cfgKeep")) {
+    if (e.target.closest("#acKeep")) {
       conflictOn = false;
       paintAcct();
       return;
     }
-    if (e.target.closest("#cfgOut")) {
+    if (e.target.closest("#acOut")) {
       const ko2 = (window.__lang || "ko") === "ko";
       conflictOn = false;
       try {
@@ -1043,14 +1073,14 @@ function initNav() {
       } catch (err) {
         window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
       }
-      document.getElementById("cfg").classList.remove("on");
+      closeAcct();
       go("entry");
     }
   });
   document.addEventListener("click", async (e) => {
-    if (!e.target.closest("#cfgLink")) return;
+    if (!e.target.closest("#acLink")) return;
     const ko = (window.__lang || "ko") === "ko";
-    const btn = document.getElementById("cfgLink");
+    const btn = document.getElementById("acLink");
     btn.disabled = true;
     try {
       const r2 = window.linkGoogle ? await window.linkGoogle() : null;
@@ -1420,7 +1450,7 @@ function mount(root) {
       const big = cap <= 6;
       el.style.setProperty("--av", (big ? 46 : 36) + "px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2 % HEADS2.length] + ')"></span>' + (p2.off || p2.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p2.name + "</span>" + (p2.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span><span class="seat__n">' + L2[lang].empty + "</span>";
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2 % HEADS2.length] + ')"></span>' + (p2.off || p2.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p2.name + "</span>" + (p2.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
       box.appendChild(el);
     }
     const sm = document2.getElementById("sum");
@@ -19223,6 +19253,9 @@ function screenView(G2, ctx, myID, names) {
   for (let seat = 0; seat < n2; seat++) {
     const pos = toScreen(seat, me, n2);
     seats[pos] = {
+      /* 엔진 자리 번호. 얼굴 그림은 이 번호로 골라야 사람을 따라간다 —
+         화면 위치로 고르면 판이 바뀔 때 얼굴만 그 자리에 남는다 */
+      seat,
       name: nm[seat] || "",
       c: G2.counts[seat],
       s: G2.passed[seat] ? "pass" : "",
@@ -19638,7 +19671,7 @@ function mount3(root) {
   function apply(v2) {
     if (!v2) return;
     if (holdingEnd && !v2.over) return;
-    SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [] }));
+    SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v2.finish.slice();
@@ -19666,7 +19699,7 @@ function mount3(root) {
           count: t2.count,
           cards: t2.cards.slice()
         }));
-        animated = 0;
+        animated = Math.min(animated, ghost.length);
         if (holdPile) clearTimeout(holdPile);
         holdPile = setTimeout(() => {
           holdPile = null;
@@ -19710,14 +19743,15 @@ function mount3(root) {
       n: x2.name,
       c: i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
       s: "",
-      hold: []
+      hold: [],
+      av: x2.seat
     }));
     hand = [];
     finish = lr.order.slice();
     turn = -1;
     busy = true;
     trick = lr.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: t2.cards.slice() }));
-    animated = 0;
+    animated = Math.max(0, trick.length - 1);
     spread = false;
     draw();
     if (timerId) clearTimeout(timerId);
@@ -19890,7 +19924,7 @@ function mount3(root) {
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
       const tag = s2.c === 0 ? tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
-      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + (s2.n || "") + "</span>" + (i2 === 0 ? "" : fanHTML(s2.c)) + '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
+      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s2.n || "") + "</span>" + (i2 === 0 ? "" : fanHTML(s2.c)) + '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
       box.appendChild(d2);
     });
     const nd = el("need");

@@ -64,9 +64,10 @@ await wait(200);
 
 const rr = q("#rkList").querySelectorAll(".rk__r");
 check("줄이 세 개 그려진다", rr.length === 3, rr.length + "줄");
-check("1등 줄에 순위·티어·이름·점수",
+check("1등 줄에 순위·티어뱃지·이름·점수",
       rr[0].querySelector(".rk__no").textContent === "1" &&
-      rr[0].querySelector(".rk__t").textContent === "6티어" &&
+      rr[0].querySelector(".rk__t").textContent === "6" &&
+      /tier_06\.webp/.test(rr[0].querySelector(".rk__t").getAttribute("style") || "") &&
       rr[0].querySelector(".rk__n").textContent === "서연" &&
       rr[0].querySelector(".rk__s").textContent === "30,000",
       [...rr[0].children].map(c => c.textContent).join(" | "));

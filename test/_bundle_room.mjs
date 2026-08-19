@@ -221,7 +221,7 @@ function mount(root) {
       const big = cap <= 6;
       el.style.setProperty("--av", (big ? 46 : 36) + "px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span><span class="seat__n">' + L[lang].empty + "</span>";
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");
@@ -373,6 +373,9 @@ function screenView(G, ctx, myID, names) {
   for (let seat = 0; seat < n; seat++) {
     const pos = toScreen(seat, me, n);
     seats[pos] = {
+      /* 엔진 자리 번호. 얼굴 그림은 이 번호로 골라야 사람을 따라간다 —
+         화면 위치로 고르면 판이 바뀔 때 얼굴만 그 자리에 남는다 */
+      seat,
       name: nm[seat] || "",
       c: G.counts[seat],
       s: G.passed[seat] ? "pass" : "",
@@ -703,7 +706,7 @@ function mount2(root) {
   function apply(v) {
     if (!v) return;
     if (holdingEnd && !v.over) return;
-    SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [] }));
+    SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -731,7 +734,7 @@ function mount2(root) {
           count: t.count,
           cards: t.cards.slice()
         }));
-        animated = 0;
+        animated = Math.min(animated, ghost.length);
         if (holdPile) clearTimeout(holdPile);
         holdPile = setTimeout(() => {
           holdPile = null;
@@ -775,14 +778,15 @@ function mount2(root) {
       n: x.name,
       c: i === lr.order[lr.order.length - 1] ? x.c : 0,
       s: "",
-      hold: []
+      hold: [],
+      av: x.seat
     }));
     hand = [];
     finish = lr.order.slice();
     turn = -1;
     busy = true;
     trick = lr.table.map((t) => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
-    animated = 0;
+    animated = Math.max(0, trick.length - 1);
     spread = false;
     draw();
     if (timerId) clearTimeout(timerId);
@@ -955,7 +959,7 @@ function mount2(root) {
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];
       const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";
-      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i] + ')"></span><span class="seat__n">' + (s.n || "") + "</span>" + (i === 0 ? "" : fanHTML(s.c)) + '<span class="seat__c">' + T[lang].left(s.c) + "</span>";
+      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s.n || "") + "</span>" + (i === 0 ? "" : fanHTML(s.c)) + '<span class="seat__c">' + T[lang].left(s.c) + "</span>";
       box.appendChild(d);
     });
     const nd = el("need");

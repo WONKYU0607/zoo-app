@@ -202,6 +202,66 @@ export function initNav(){
   }
   window.__showLinkConflict = () => { openAcct(); showConflict(); };
 
+  /* ---------- 별명 정하기 ----------
+     구글로 처음 들어오면 반드시 정하고 들어간다 */
+  let nameBox = null;
+  function openName(){
+    const ko = (window.__lang || "ko") === "ko";
+    if (!nameBox){
+      nameBox = document.createElement("div");
+      nameBox.className = "cfg";
+      nameBox.id = "nkBox";
+      document.getElementById("stage").appendChild(nameBox);
+    }
+    nameBox.innerHTML =
+      '<div class="cfg__v" data-nkclose></div><div class="cfg__p">' +
+      '<div class="cfg__h"><span>' + (ko ? "별명 정하기" : "Choose a name") + '</span>' +
+      '<button class="cfg__x" data-nkclose aria-label="close">\u00D7</button></div>' +
+      '<div class="cfg__b">' +
+      '<p class="cfg__n">' +
+      (ko ? "한글 6자 또는 영문·숫자 8자까지. 다른 사람과 겹칠 수 없습니다."
+          : "Up to 6 Korean or 8 Latin characters. Must be unique.") + '</p>' +
+      '<input id="nkIn" maxlength="16" autocomplete="off" spellcheck="false" class="nk__in">' +
+      '<p class="hint" id="nkMsg"></p>' +
+      '<div class="cfg__row"><button id="nkOk">' + (ko ? "정하기" : "Save") + '</button></div>' +
+      '</div></div>';
+    const inp = nameBox.querySelector("#nkIn");
+    if (inp){ inp.value = (window.ACCOUNT && window.ACCOUNT.name) || ""; setTimeout(() => inp.focus(), 60); }
+    nameBox.classList.add("on");
+  }
+  function closeName(){ if (nameBox) nameBox.classList.remove("on"); }
+  window.__askName = openName;
+
+  document.addEventListener("click", async e => {
+    if (e.target.closest("[data-nkclose]")){ closeName(); return; }
+    if (!e.target.closest("#nkOk")) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const inp = document.getElementById("nkIn");
+    const msg = document.getElementById("nkMsg");
+    const btn = document.getElementById("nkOk");
+    if (!inp || !window.setNickname) return;
+    btn.disabled = true;
+    msg.className = "hint";
+    msg.textContent = ko ? "확인하는 중" : "Checking";
+    let r = null;
+    try { r = await window.setNickname(inp.value); }
+    catch(err){
+      msg.className = "hint hint--err";
+      msg.textContent = String(err && err.code || err);
+      btn.disabled = false; return;
+    }
+    if (r && r.ok){ closeName(); btn.disabled = false; paintAcct(); return; }
+    const why = r && r.why;
+    msg.className = "hint hint--err";
+    msg.textContent =
+      why === "taken" ? (ko ? "이미 쓰는 이름입니다" : "That name is taken") :
+      why === "long"  ? (ko ? "너무 깁니다. 한글 6자 또는 영문 8자까지" : "Too long") :
+      why === "space" ? (ko ? "띄어쓰기는 넣을 수 없습니다" : "No spaces") :
+      why === "char"  ? (ko ? "한글, 영문, 숫자만 됩니다" : "Letters and numbers only") :
+                        (ko ? "이름을 넣어 주세요" : "Please enter a name");
+    btn.disabled = false;
+  });
+
   /* 상단바 사자 프로필 → 계정 창 */
   function openAcct(){
     let box = document.getElementById("acctBox");

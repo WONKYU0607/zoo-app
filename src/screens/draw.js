@@ -4,6 +4,12 @@ import { ART_DECK as A_DECK, HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/draw.css";
 
 export function mount(root){
+  /* 화면 자리에 앉은 사람을 찾아 얼굴을 고른다. 표가 없으면 자리 번호 그대로 */
+  const faceOf = i => {
+    const f = window.GAME && window.GAME.faces;
+    return (f && f[i] != null) ? f[i] : i;
+  };
+
   const document = scoped(root);
   
   const ART = A_DECK, HEADS = A_HEADS;
@@ -304,7 +310,8 @@ export function mount(root){
       d.innerHTML =
         '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + '</span>' +
         (upper ? chip : "") +
-        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i] + ')"></span>' +
+        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
+          HEADS[faceOf(i) % HEADS.length] + ')"></span>' +
         '<span class="seat__n">' + nameOf(i) + '</span>' +
         (upper ? "" : chip);
       box.appendChild(d);
@@ -326,8 +333,10 @@ export function mount(root){
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.settling + '</div>';
     } else if (waiting.indexOf(0) >= 0){
       /* 내가 아직 안 뽑았으면 남은 시간을 보여준다 */
-      m.innerHTML = '<div class="mid__h">' + t.h + '</div><div class="mid__s">' + t.s + '</div>' +
-        '<div class="cd">' + Math.max(pickLeft, 0) + '</div>';
+      /* 남은 시간은 제목 옆에 붙인다. 아래에 두면 긴 설명에 묻혀 안 보인다 */
+      m.innerHTML = '<div class="mid__h">' + t.h +
+        (pickLeft > 0 ? ' <b>(' + pickLeft + ')</b>' : '') + '</div>' +
+        '<div class="mid__s">' + t.s + '</div>';
     } else {
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' +
         t.waitS(nameOf(waiting[0])) + '</div>';

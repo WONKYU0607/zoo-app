@@ -18077,6 +18077,9 @@ function screenView(G2, ctx, myID, names) {
   for (let seat = 0; seat < n2; seat++) {
     const pos = toScreen(seat, me, n2);
     seats[pos] = {
+      /* 엔진 자리 번호. 얼굴 그림은 이 번호로 골라야 사람을 따라간다 —
+         화면 위치로 고르면 판이 바뀔 때 얼굴만 그 자리에 남는다 */
+      seat,
       name: nm[seat] || "",
       c: G2.counts[seat],
       s: G2.passed[seat] ? "pass" : "",
@@ -18497,7 +18500,7 @@ function mount(root) {
   function apply(v2) {
     if (!v2) return;
     if (holdingEnd && !v2.over) return;
-    SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [] }));
+    SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v2.finish.slice();
@@ -18525,7 +18528,7 @@ function mount(root) {
           count: t2.count,
           cards: t2.cards.slice()
         }));
-        animated = 0;
+        animated = Math.min(animated, ghost.length);
         if (holdPile) clearTimeout(holdPile);
         holdPile = setTimeout(() => {
           holdPile = null;
@@ -18569,14 +18572,15 @@ function mount(root) {
       n: x2.name,
       c: i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
       s: "",
-      hold: []
+      hold: [],
+      av: x2.seat
     }));
     hand = [];
     finish = lr.order.slice();
     turn = -1;
     busy = true;
     trick = lr.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: t2.cards.slice() }));
-    animated = 0;
+    animated = Math.max(0, trick.length - 1);
     spread = false;
     draw();
     if (timerId) clearTimeout(timerId);
@@ -18749,7 +18753,7 @@ function mount(root) {
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
       const tag = s2.c === 0 ? tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
-      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + (s2.n || "") + "</span>" + (i2 === 0 ? "" : fanHTML(s2.c)) + '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
+      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s2.n || "") + "</span>" + (i2 === 0 ? "" : fanHTML(s2.c)) + '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
       box.appendChild(d2);
     });
     const nd = el("need");

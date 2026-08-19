@@ -4,6 +4,12 @@ import { HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/room.css";
 
 export function mount(root){
+  /* 화면 자리에 앉은 사람을 찾아 얼굴을 고른다. 표가 없으면 자리 번호 그대로 */
+  const faceOf = i => {
+    const f = window.GAME && window.GAME.faces;
+    return (f && f[i] != null) ? f[i] : i;
+  };
+
   const document = scoped(root);
   
   const HEADS = A_HEADS;
@@ -160,7 +166,8 @@ export function mount(root){
       el.style.setProperty("--av", (big ? 46 : 36) + "px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
       el.innerHTML = filled
-        ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i % HEADS.length] + ')"></span>' +
+        ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
+            HEADS[faceOf(i) % HEADS.length] + ')"></span>' +
           (p.off || p.left ? '<span class="seat__off"></span>' : '') +
           '<span class="seat__n">' + p.name + '</span>' +
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
