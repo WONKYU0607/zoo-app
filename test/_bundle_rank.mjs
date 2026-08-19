@@ -21,7 +21,6 @@ __export(account_exports, {
   periodKeys: () => periodKeys,
   scoreFor: () => scoreFor,
   signInGoogle: () => signInGoogle,
-  signInGoogleRedirect: () => signInGoogleRedirect,
   signInGuest: () => signInGuest,
   signInTest: () => signInTest,
   signOutNow: () => signOutNow,
@@ -21446,18 +21445,26 @@ async function linkGoogle() {
   }
 }
 async function switchToGoogle() {
+  try {
+    await signOut(auth);
+  } catch (e) {
+  }
   return signInGoogle();
-}
-async function signInGoogleRedirect() {
-  const provider = new GoogleAuthProvider();
-  await signInWithRedirect(auth, provider);
-  return { redirecting: true };
 }
 async function signInGoogle() {
   if (!ready) throw new Error("Firebase \uC124\uC815\uC774 \uC5C6\uC2B5\uB2C8\uB2E4");
   const provider = new GoogleAuthProvider();
-  const cred = await signInWithPopup(auth, provider);
-  return loadProfile(cred.user);
+  try {
+    const cred = await signInWithPopup(auth, provider);
+    return loadProfile(cred.user);
+  } catch (err) {
+    const code = String(err && err.code || "");
+    if (POPUP_FAIL.has(code)) {
+      await signInWithRedirect(auth, provider);
+      return { redirecting: true };
+    }
+    throw err;
+  }
 }
 async function loadProfile(user) {
   account.uid = user.uid;
@@ -21670,7 +21677,10 @@ var T = {
 var HTML = `
 <div class="veil"></div>
 <main class="screen">
-  <div class="bar"><div class="view" id="lang"></div></div>
+  <div class="bar">
+    <button class="navback" data-back="lobby" aria-label="\uB4A4\uB85C">\u2039</button>
+    <div class="bar__t" id="rkBar"></div>
+  </div>
   <div class="body">
     <div class="block__label" id="rkTitle"></div>
     <div class="cfg__row" id="rkTabs">
@@ -21697,6 +21707,7 @@ function mount(root) {
   function draw() {
     const t = T[lang];
     el("rkTitle").textContent = t.title;
+    if (el("rkBar")) el("rkBar").textContent = t.title;
     el("rkTabs").querySelectorAll("button").forEach((b) => {
       b.textContent = t.tabs[b.dataset.k];
       b.setAttribute("aria-pressed", String(b.dataset.k === kind));

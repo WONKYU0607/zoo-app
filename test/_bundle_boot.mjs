@@ -203,8 +203,14 @@ function initNav() {
     const lab = document.getElementById("cfgAcctL");
     const line = document.getElementById("cfgAcct");
     const row = document.getElementById("cfgLinkRow");
-    const btn = document.getElementById("cfgLink");
-    if (!lab || !line || !row || !btn) return;
+    let btn = document.getElementById("cfgLink");
+    if (!lab || !line || !row) return;
+    if (conflictOn) return;
+    if (!row.querySelector("#cfgLink")) {
+      row.innerHTML = '<button id="cfgLink"></button>';
+      btn = document.getElementById("cfgLink");
+    }
+    if (!btn) return;
     lab.textContent = ko ? "\uACC4\uC815" : "Account";
     if (!a || !a.signedIn) {
       line.textContent = ko ? "\uB85C\uADF8\uC778\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4" : "Not signed in";
@@ -219,10 +225,54 @@ function initNav() {
       line.textContent = ko ? (a.name || "") + " \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : (a.name || "") + " \xB7 on the leaderboard";
       row.hidden = true;
     }
+    let out = document.getElementById("cfgOutRow");
+    if (!out) {
+      out = document.createElement("div");
+      out.className = "cfg__row";
+      out.id = "cfgOutRow";
+      out.innerHTML = '<button id="cfgOut"></button>';
+      row.parentNode.insertBefore(out, row.nextSibling);
+    }
+    out.querySelector("#cfgOut").textContent = ko ? "\uB85C\uADF8\uC544\uC6C3" : "Sign out";
+    out.hidden = false;
   }
   window.addEventListener("accountchange", () => {
     const c = document.getElementById("cfg");
     if (c && c.classList.contains("on")) paintAcct();
+  });
+  let conflictOn = false;
+  function showConflict() {
+    conflictOn = true;
+    const ko = (window.__lang || "ko") === "ko";
+    const box = document.getElementById("cfgLinkRow");
+    if (!box) return;
+    box.hidden = false;
+    box.innerHTML = '<p class="cfg__n" style="margin:0 0 8px">' + (ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4." : "That Google account already exists. Signing in will discard your guest progress.") + '</p><button id="cfgSwitch">' + (ko ? "\uAE30\uC874 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uAE30" : "Sign in to that account") + '</button><button id="cfgKeep">' + (ko ? "\uCDE8\uC18C" : "Cancel") + "</button>";
+  }
+  window.__showLinkConflict = showConflict;
+  document.addEventListener("click", async (e) => {
+    if (e.target.closest("#cfgSwitch")) {
+      conflictOn = false;
+      if (window.switchToGoogle) await window.switchToGoogle();
+      paintAcct();
+      return;
+    }
+    if (e.target.closest("#cfgKeep")) {
+      conflictOn = false;
+      paintAcct();
+      return;
+    }
+    if (e.target.closest("#cfgOut")) {
+      const ko2 = (window.__lang || "ko") === "ko";
+      conflictOn = false;
+      try {
+        if (window.signOutNow) await window.signOutNow();
+      } catch (err) {
+        window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
+      }
+      document.getElementById("cfg").classList.remove("on");
+      go("entry");
+    }
   });
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("#cfgLink")) return;
@@ -235,8 +285,7 @@ function initNav() {
         window.alert(ko ? "\uC774\uBBF8 \uAD6C\uAE00 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD574 \uC788\uC2B5\uB2C8\uB2E4" : "Already signed in with Google");
       } else if (r && r.redirecting) {
       } else if (r && r.conflict) {
-        const msg = ko ? "\uC774\uBBF8 \uADF8 \uAD6C\uAE00 \uACC4\uC815\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uADF8 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00\uBA74 \uAC8C\uC2A4\uD2B8\uB85C \uC313\uC740 \uC810\uC218\uB294 \uC0AC\uB77C\uC9D1\uB2C8\uB2E4. \uACC4\uC18D\uD560\uAE4C\uC694?" : "That Google account already exists. Signing in will discard your guest progress. Continue?";
-        if (window.confirm(msg) && window.switchToGoogle) await window.switchToGoogle();
+        showConflict();
       }
     } catch (err) {
       const code = String(err && err.code || err && err.message || err);
@@ -336,10 +385,12 @@ function initNav() {
       setTimeout(() => go("table"), 140);
     }
   });
-  document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => {
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-back]");
+    if (!b) return;
     if (b.closest("#table") && window.__quitGame) window.__quitGame();
     go(b.dataset.back);
-  }));
+  });
 }
 
 // src/lib/bar.js
@@ -511,7 +562,8 @@ function mount(root) {
       hint.className = "hint";
     } catch (err) {
       hint.className = "hint hint--err";
-      hint.textContent = navigator.onLine ? T2[lang].hintErr : T2[lang].hintNet;
+      const code = String(err && err.code || "");
+      hint.textContent = (navigator.onLine ? T2[lang].hintErr : T2[lang].hintNet) + (code ? " (" + code + ")" : "");
       console.warn(err);
     }
     busy = false;
@@ -528,7 +580,7 @@ function mount(root) {
       } catch (err) {
         const hint = document2.getElementById("hint");
         hint.className = "hint hint--err";
-        hint.textContent = String(err && err.message || err).slice(0, 60);
+        hint.textContent = String(err && err.code || err && err.message || err).slice(0, 60);
         console.warn(err);
       }
       busy = false;
@@ -23227,7 +23279,10 @@ var T = {
 var HTML = `
 <div class="veil"></div>
 <main class="screen">
-  <div class="bar"><div class="view" id="lang"></div></div>
+  <div class="bar">
+    <button class="navback" data-back="lobby" aria-label="\uB4A4\uB85C">\u2039</button>
+    <div class="bar__t" id="rkBar"></div>
+  </div>
   <div class="body">
     <div class="block__label" id="rkTitle"></div>
     <div class="cfg__row" id="rkTabs">
@@ -23254,6 +23309,7 @@ function mount8(root) {
   function draw() {
     const t = T[lang];
     el("rkTitle").textContent = t.title;
+    if (el("rkBar")) el("rkBar").textContent = t.title;
     el("rkTabs").querySelectorAll("button").forEach((b) => {
       b.textContent = t.tabs[b.dataset.k];
       b.setAttribute("aria-pressed", String(b.dataset.k === kind));
