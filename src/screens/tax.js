@@ -271,6 +271,7 @@ export function mount(root){
   
   function renderHand(){
     const h = el("hand"); h.innerHTML = "";
+    if (hideHand) return;                 /* 나누는 모션 중에는 안 보여 준다 */
     const hand = myHand(), w = 54, n = hand.length;
     const step2 = n > 1 ? Math.min(40, (h.clientWidth - w) / (n - 1)) : 0;
     const total = w + step2 * (n - 1);
@@ -372,10 +373,11 @@ export function mount(root){
        혁명은 카멜레온 두 장을 쥔 사람, 세금은 주고받는 당사자.
        나머지는 초읽기만 보고 기다린다 */
     const bar = b.parentElement;
-    const mine = step === 0 ? false
-      : step === 2 ? (revSeat === 0 && !declared)
-      : step === 3 ? (g > 0 && !taxSkipped())
-      : true;
+    /* 넘기기 단추는 없앤다. 전부 초읽기로 저절로 넘어간다.
+       남기는 것은 "고를 것이 있는" 두 가지뿐 — 혁명 선언, 세금 주기 */
+    const mine = step === 2 ? (revSeat === 0 && !declared)
+      : step === 3 ? (g > 0 && !taxSkipped() && !window.__taxCancelled)
+      : false;
     if (bar) bar.style.visibility = mine ? "" : "hidden";
     el("hint").innerHTML = step === 3 && g && mine
       ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
@@ -406,6 +408,7 @@ export function mount(root){
     ranks = (g.finish && g.finish.length === N) ? g.finish.slice()
           : Array.from({length: N}, (_, i) => i);
     step = 0; sel = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
+    hideHand = false;
     waitOn = 0;                 /* 기다린 횟수를 되돌린다. 안 하면 다음에 자동 진행이 안 걸린다 */
     clearFx();
     draw();
@@ -420,13 +423,16 @@ export function mount(root){
      혁명이 없으면 "일어나지 않았습니다"를, 세금은 남들끼리 주고받는 것도 보여준다.
      무슨 일이 있었는지 모른 채 다음 판이 시작되면 안 된다 */
   function needStep(k){
-    /* 혁명으로 세금이 사라졌으면 세금 걷는 화면은 보여줄 것이 없다 */
-    if (k === 3) return !taxSkipped();
+    /* 혁명이면(소혁명·대혁명 모두) 세금은 아예 안 걷는다.
+       엔진이 이미 취소했는데 화면만 열어 카드를 고르게 하면,
+       골라서 줘도 아무 일이 안 일어난다 — 실제로 그렇게 겪었다 */
+    if (k === 3) return !taxSkipped() && !declared && !window.__taxCancelled;
     return true;
   }
   
   /* 누를 것이 없는 단계는 저절로 넘어간다 */
   var autoId = null;   /* 선언 전에 부르는 곳이 있어 var 로 둔다 */
+  var hideHand = false;  /* 나누는 모션이 끝날 때까지 손패를 감춘다 */
   var tickId = null, tickLeft = 0, tickBase = "";
   /* 버튼에 남은 초를 붙여 준다. 먼저 누르면 바로 넘어간다 */
   function stopTick(){
@@ -541,9 +547,14 @@ export function mount(root){
     }
     if (step < 4) step++;
     while (step < 4 && !needStep(step)) step++;        /* 볼 것 없는 단계는 지나친다 */
-    if (step === 1){ dealAll(); }
+    /* 10번: 패는 나누는 모션이 끝난 뒤에 손에 들어온다.
+       미리 넣어 두면 나누기 전에 이미 패가 보인다 */
+    if (step === 1){ dealAll(); hideHand = true; }
     draw();
-    if (step === 1) runDeal();
+    if (step === 1){
+      runDeal();
+      setTimeout(() => { hideHand = false; draw(); }, 2400);
+    }
     if (step === 4){
       G().order = order().slice();
       if (autoId){ clearTimeout(autoId); autoId = null; }

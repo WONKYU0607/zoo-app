@@ -13,7 +13,7 @@ const fetchMine = (...a) => (window.__myRank    || myRank)(...a);
 const T = {
   ko: {
     title: "랭킹",
-    tabs: { all: "전체", week: "이번 주", month: "이번 달" },
+    tabs: { all: "전체 랭킹", month: "월간 랭킹", week: "주간 랭킹" },
     loading: "불러오는 중",
     empty: "아직 기록이 없습니다",
     guest: "게스트는 랭킹에 오르지 않습니다. 설정에서 구글 계정을 이으면 지금 점수 그대로 오릅니다.",
@@ -24,7 +24,7 @@ const T = {
   },
   en: {
     title: "Leaderboard",
-    tabs: { all: "All time", week: "This week", month: "This month" },
+    tabs: { all: "All time", month: "Monthly", week: "Weekly" },
     loading: "Loading",
     empty: "No records yet",
     guest: "Guests don't appear here. Link a Google account in settings to keep your score and join.",
@@ -46,8 +46,8 @@ const HTML = `
     <div class="block__label" id="rkTitle"></div>
     <div class="cfg__row" id="rkTabs">
       <button data-k="all"></button>
-      <button data-k="week"></button>
       <button data-k="month"></button>
+      <button data-k="week"></button>
     </div>
     <div id="rkList" class="rk"></div>
     <div id="rkMe" class="rk rk--me"></div>

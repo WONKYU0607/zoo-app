@@ -150,3 +150,6 @@
   border:none !important;box-shadow:none !important;border-radius:50%;
   display:block;flex:none;overflow:visible}
 #table .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}
+/* 12시 자리는 카드·장수를 프로필 위로 올린다 (바닥 카드에 가려서) */
+#table .seat--above{display:flex;flex-direction:column;align-items:center}
+#table .seat--above .seat__c{order:-1;margin:0 0 1px}

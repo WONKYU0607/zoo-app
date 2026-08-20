@@ -188,7 +188,7 @@
 }
 #rank .veil{display:none}
 #rank .screen{position:relative;height:100%;display:flex;flex-direction:column}
-#rank .bar{min-height:64px;margin-top:-10px;display:flex;align-items:center;
+#rank .bar{min-height:74px;margin-top:-15px;display:flex;align-items:center;
   gap:8px;padding:14px 12px 0}
 #rank .bar .navback{font-size:24px;line-height:1;color:#6B4E22;background:none;border:none}
 #rank .bar__t{font-size:14px;letter-spacing:.1em;color:#4A3517;font-weight:700}
@@ -197,7 +197,7 @@
 
 /* 놋쇠 틀 — 탭과 순위 줄에 같은 틀을 두른다 */
 #rank #rkTabs{display:flex;gap:8px;margin:2px 0 10px}
-#rank #rkTabs button{flex:1;min-height:0;padding:9px 4px;font-size:13px;font-weight:700;
+#rank #rkTabs button{flex:1;min-height:0;padding:4px 4px;font-size:12px;font-weight:700;
   color:#6B4E22;background:rgba(255,250,235,.35);
   border:13px solid transparent;border-image:url(/assets/frame_row.webp) 110 fill stretch}
 #rank #rkTabs button[aria-pressed="true"]{color:#2E2009;background:rgba(240,209,140,.5)}
@@ -223,10 +223,11 @@
 
 /* ---- 랭킹 단추 (로비 상단바 아래) ---- */
 #lobby .rankbar{display:flex;justify-content:flex-end;padding:2px 14px 0}
-#lobby .bt-rank{display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  min-height:0 !important;padding:2px 6px !important;border-width:11px !important;
-  border-image-width:11px !important;font-size:11px;font-weight:700;letter-spacing:.02em}
-#lobby .bt-rank svg{width:12px;height:12px}
+#lobby .bt-rank{display:inline-flex;align-items:center;justify-content:center;
+  min-height:0 !important;padding:0 !important;border-width:10px !important;
+  border-image-width:10px !important;font-size:11px;font-weight:700;letter-spacing:0;
+  line-height:1}
+#lobby .bt-rank svg{display:none}
 
 /* ---- 계정 창의 이름 + 연필 ---- */
 .ac__name{display:flex;align-items:center;gap:8px;margin:2px 0 6px}
@@ -237,3 +238,11 @@
 #nkBox .nk__in{width:100%;padding:10px;border-radius:8px;
   background:rgba(20,26,18,.7);border:1px solid rgba(198,168,103,.45);
   color:#EADFC2;font:inherit;font-size:15px}
+
+/* 상단바 티어 — 지정한 테두리 안에 숫자 */
+#lobby .top__tier{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;padding:0;border:none;background-color:transparent;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  font-size:11px;font-weight:900;color:#FFFFFF;
+  text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 4px rgba(0,0,0,.6)}

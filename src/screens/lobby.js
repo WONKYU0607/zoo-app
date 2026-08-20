@@ -133,7 +133,12 @@ export function mount(root){
     const k = document.getElementById("acctTick");
     const n = document.getElementById("acctName");
     if (n) n.textContent = a.name || "";
-    if (t) t.textContent = a.tier;
+    if (t){
+      /* 티어에도 지정한 테두리를 씌운다. 숫자는 그 위에 */
+      const n = Math.max(0, Math.min(10, Number(a.tier) || 0));
+      t.textContent = n;
+      t.style.backgroundImage = "url(/assets/tier_" + String(n).padStart(2, "0") + ".webp)";
+    }
     if (s) s.textContent = a.score.toLocaleString();
     if (k) k.textContent = a.tickets;
     paintTimer();

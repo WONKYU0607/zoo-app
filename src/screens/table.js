@@ -315,12 +315,16 @@ export function mount(root){
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];
       const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";   /* 차례는 테두리로 알린다 */
+      /* 12시 자리는 바닥에 깔린 카드에 가린다. 그 자리만 카드·장수를 프로필 위로 */
+      const topSeat = i !== 0 && p.y < 22;
+      if (topSeat) d.classList.add("seat--above");
+      const av = '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
+          HEADS[(s.av == null ? i : s.av) % HEADS.length] + ')"></span>';
+      const nm = '<span class="seat__n">' + (s.n || "") + '</span>';
+      const fan = i === 0 ? '' : fanHTML(s.c);
+      const cnt = '<span class="seat__c">' + T[lang].left(s.c) + '</span>';
       d.innerHTML = (tag ? '<span class="seat__tag">' + tag + '</span>' : '') +
-        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-          HEADS[(s.av == null ? i : s.av) % HEADS.length] + ')"></span>' +
-        '<span class="seat__n">' + (s.n || "") + '</span>' +
-        (i === 0 ? '' : fanHTML(s.c)) +
-        '<span class="seat__c">' + T[lang].left(s.c) + '</span>';
+        (topSeat ? (fan + cnt + av + nm) : (av + nm + fan + cnt));
       box.appendChild(d);
     });
     const nd = el("need");

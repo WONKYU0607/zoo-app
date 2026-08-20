@@ -46,7 +46,7 @@ check("주가 넘어가면 딱지가 바뀐다", k.wk !== k2.wk, k.wk + " → " 
 B.mountRank(document.getElementById("rank"));
 const q = s => document.querySelector("#rank " + s);
 check("탭이 셋", q("#rkTabs").querySelectorAll("button").length === 3);
-check("탭 글자", [...q("#rkTabs").querySelectorAll("button")].map(b => b.textContent).join("/") === "전체/이번 주/이번 달",
+check("탭 글자", [...q("#rkTabs").querySelectorAll("button")].map(b => b.textContent).join("/") === "전체 랭킹/월간 랭킹/주간 랭킹",
       [...q("#rkTabs").querySelectorAll("button")].map(b => b.textContent).join("/"));
 
 /* 가짜 데이터로 그려 본다 */

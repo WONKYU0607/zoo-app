@@ -58,7 +58,7 @@ function build(){
       if (bar && !sec.querySelector("[data-rankopen]")){
         const wrap = document.createElement("div");
         wrap.className = "rankbar";
-        wrap.innerHTML = '<button class="bt-rank" data-rankopen>' + CROWN +
+        wrap.innerHTML = '<button class="bt-rank" data-rankopen>' +
           '<span id="rankLabel">랭킹</span></button>';
         bar.parentNode.insertBefore(wrap, bar.nextSibling);
       }

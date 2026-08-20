@@ -73,7 +73,13 @@ function pollStop(){ if (pollId){ clearInterval(pollId); pollId = null; } }
 
 function botFillStart(){
   if (botTimer) return;
-  botTimer = setInterval(() => { if (!addOneBot()) botFillStop(); }, opt.botJoinMs);
+  /* 빈자리가 있으면 계속 채운다. 꽉 찼다고 꺼버리면
+     나중에 인원을 늘려도 아무도 안 들어온다 */
+  botTimer = setInterval(() => {
+    if (!myRoom || myRoom.phase !== "waiting") return;
+    if (seatCount(myRoom) >= myRoom.cap) return;   /* 지금은 자리가 없다. 끄지는 않는다 */
+    addOneBot();
+  }, opt.botJoinMs);
 }
 function botFillStop(){ if (botTimer){ clearInterval(botTimer); botTimer = null; } }
 
@@ -188,8 +194,11 @@ function openTable(v, n, names){
   W().GAME = {
     N: n,
     /* 화면 자리 → 그 자리에 앉은 사람(엔진 자리).
-       얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다 */
-    faces: v.seats.map(s => s.seat),
+       얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다.
+       뽑기 동안에는 방에 앉았던 순서 그대로 두고(6번),
+       자리 교체는 판에 들어설 때 한다 — 미리 바뀌면 누가 뭘 뽑았는지 짐작된다 */
+    faces: Array.from({ length: n }, (_, k) => k),
+    seatFaces: v.seats.map(s => s.seat),
     roundNo: v.roundNo,
     names: v.names.slice(),
     namesEn: v.names.slice(),
@@ -358,6 +367,9 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     W().__opts.cap = myRoom.cap;
     W().__opts.seated = seatCount(myRoom);
     emitRoom();
+    /* 인원을 늘렸으면 빈자리가 생겼으니 다시 채우고, 초읽기는 접는다 */
+    if (seatCount(myRoom) < myRoom.cap){ stopRoomCount(); botFillStart(); }
+    else startRoomCount(15);
   };
   W().__botFill = on => (on ? botFillStart() : botFillStop());
   W().__addBot = addOneBot;
@@ -384,6 +396,9 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
   const prevBootTable = W().__bootTable;
   W().__bootTable = fresh => {
     stopCount();
+    /* 판에 들어설 때 비로소 자리대로 앉힌다 */
+    const G0 = W().GAME;
+    if (G0 && G0.seatFaces) G0.faces = G0.seatFaces.slice();
     ensureTaxGiven();                      /* 안 낸 세금이 있으면 대신 낸다 */
     eng.setPaused(false);
     if (typeof prevBootTable === "function") prevBootTable(fresh);
