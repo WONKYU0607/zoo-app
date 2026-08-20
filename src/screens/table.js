@@ -22,7 +22,7 @@ export function mount(root){
          cnt:n=>n+"장을 맞춰 주세요", lower:"더 낮은 숫자를 내세요",
          autoOff:"자동", autoOn:"자동 끄기",
          autoOnMsg:"자동치기로 넘어갑니다 · 카드를 만지면 풀립니다",
-         autoPass:"시간이 다 되어 자동으로 넘겼습니다", left2:n=>n+"초", cleared:"판을 비웠습니다 · 다시 선", endR:"판 종료",
+         autoPass:"시간이 다 되어 자동으로 넘겼습니다", left2:n=>n+"초", cleared:"판을 비웠습니다 · 다시 선",
          close:"다시 누르면 접힙니다" },
   
     en:{ roundN:n=>"ROUND "+n, joker:"CHAMELEON",
@@ -36,7 +36,7 @@ export function mount(root){
          cnt:n=>"Play exactly "+n, lower:"Play a lower number",
          autoOff:"Auto", autoOn:"Auto off",
          autoOnMsg:"Auto play on \u00B7 tap a card to take over",
-         autoPass:"Time up \u2014 passed for you", left2:n=>n+"s", cleared:"Pile cleared \u00B7 you lead again", endR:"End round",
+         autoPass:"Time up \u2014 passed for you", left2:n=>n+"s", cleared:"Pile cleared \u00B7 you lead again",
          close:"Tap again to close" }
   };
   let lang = window.__lang || "ko";
@@ -188,11 +188,17 @@ export function mount(root){
   const label = n => isJ(n) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n-1];
   const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
   
-  function cardHTML(n, w){
-    if (isJ(n)) return '<div class="card is-joker" style="--w:' + w + 'px">' +
-      '<div class="card__band"><span class="card__name">카멜레온</span></div>' +
-      '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
-      '<div class="card__band"></div></div>';
+  /* as = 카멜레온이 변신한 숫자. 같이 낸 카드가 있으면 그 숫자가 된다.
+     혼자 낸 카멜레온(13번)은 as 가 없어 숫자를 안 적는다 */
+  function cardHTML(n, w, as){
+    if (isJ(n)){
+      const num = (as == null || as >= 13) ? "" : '<span class="card__num as">' + as + '</span>';
+      return '<div class="card is-joker" style="--w:' + w + 'px">' +
+        '<div class="card__band">' + num +
+        '<span class="card__name">' + T[lang].joker + '</span>' + num + '</div>' +
+        '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
+        '<div class="card__band">' + num + num + '</div></div>';
+    }
     return '<div class="card" style="--w:' + w + 'px">' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
       '<span class="card__name">' + label(n) + '</span>' +
@@ -239,7 +245,9 @@ export function mount(root){
     const bias = 0;   /* 아래쪽만 밀어내면 원에서 떨어져 보인다 */
     /* 눈으로 본 미세 보정 */
     const side = Math.abs(s) < 0.05;                    // 좌우 끝자리
-    const nudge = s > 0.9 ? 9 : (side ? 4 : (s > 0.25 ? 2 : 0));
+    /* 12시 자리는 바닥에 쌓인 카드가 프로필까지 덮는다. 그만큼 더 올린다 */
+    const top = s < -0.85;
+    const nudge = top ? 22 : (s > 0.9 ? 9 : (side ? 4 : (s > 0.25 ? 2 : 0)));
     const nudgeX = side ? (Math.cos(a) < 0 ? 2 : -2) : 0;   // 좌우 끝은 바깥으로
     return {x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias,
             nudge: nudge, nudgeX: nudgeX};
@@ -415,7 +423,6 @@ export function mount(root){
     const ord = x => { const s = ["th","st","nd","rd"], v = x % 100; return x + (s[(v-20)%10] || s[v] || s[0]); };
     const rname = (ri == null) ? "" : (lang === "ko" ? (ri + 1) + "등" : ord(ri + 1));
     el("round").textContent = t.roundN(rn) + (rname ? " · " + rname : "");
-    const eb = el("endRound"); if (eb) eb.textContent = t.endR;
     el("pass").textContent = t.pass;
     const list = sel.map(i => hand[i]);
     const ok = legal(list) && turn === 0 && !busy;
@@ -569,15 +576,6 @@ const TURN_SEC = 15;
   el("ring").addEventListener("click", e => {
     if (!trick.length) return;
     if (e.target.closest(".play, .spread")) { spread = !spread; renderPile(); }
-  });
-  
-  document.querySelectorAll("#lang button").forEach(b => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document.documentElement.lang = lang;
-      document.querySelectorAll("#lang button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-      draw();
-    });
   });
   
   boot();

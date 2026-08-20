@@ -50,11 +50,18 @@ export function screenView(G, ctx, myID, names){
     };
   }
 
+  /* 실제로 낸 카드. 엔진이 남겨 주면 그대로 쓴다 —
+     카멜레온으로 채운 자리를 숫자 카드로 바꿔치기하면 화면이 거짓말을 한다.
+     옛 판(서버가 아직 안 실어 주는 경우)은 숫자로 채워 예전처럼 그린다 */
+  const realCards = t => (t.cards && t.cards.length === t.count)
+    ? t.cards.slice()
+    : new Array(t.count).fill(t.num);
+
   const table = (G.table || []).map(t => ({
     by: toScreen(t.by, me, n),
     num: t.num,
     count: t.count,
-    cards: new Array(t.count).fill(t.num),      /* 남의 카드는 숫자만 안다 */
+    cards: realCards(t),
   }));
 
   return {
@@ -71,7 +78,7 @@ export function screenView(G, ctx, myID, names){
        올리기와 치우기가 한 수 안에서 끝나므로, 이걸 넘겨야 화면이 보여줄 수 있다 */
     lastTable: (G.shown || []).map(t => ({
       by: toScreen(t.by, me, n), num: t.num, count: t.count,
-      cards: new Array(t.count).fill(t.num),
+      cards: realCards(t),
     })),
     finish: (G.finished || []).map(s => toScreen(s, me, n)),
     score: G.counts.map((_, seat) => G.score[toSeat(seat, me, n)]),
@@ -118,7 +125,7 @@ export function screenView(G, ctx, myID, names){
       points: G.lastRound.points.slice(),
       table: G.lastRound.table.map(t => ({
         by: toScreen(t.by, me, n), num: t.num, count: t.count,
-        cards: new Array(t.count).fill(t.num),
+        cards: realCards(t),
       })),
     } : null,
     over: ctx.gameover

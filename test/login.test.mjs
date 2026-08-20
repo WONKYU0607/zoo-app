@@ -121,8 +121,9 @@ Object.assign(window.ACCOUNT, { signedIn: true, guest: false, name: "원규" });
 window.dispatchEvent(new Event("accountchange"));
 await wait(100);
 check("구글 사용자에게는 잇기 단추가 없다", q("#acLinkRow").hidden);
-check("구글 사용자에게는 랭킹에 오른다고 알린다",
-      (q("#acLine").textContent || "").includes("랭킹에 오릅니다"), q("#acLine").textContent);
+/* 구글 계정이면 안내할 것이 없다. 빈 줄을 남기면 빈 상자로 보인다 */
+check("구글 사용자에게는 안내 줄이 사라진다",
+      q("#acLine").hidden && !(q("#acLine").textContent || "").trim(), q("#acLine").textContent);
 check("이름 옆에 연필이 있다", Boolean(q("#acName")) && q("#acName").innerHTML.includes("svg"));
 
 /* 로그아웃 — 없어서 한 번 들어가면 아무것도 못 바꾸던 문제 */

@@ -155,16 +155,20 @@ export function initNav(){
     if (!btn) return;
     lab.textContent = ko ? "계정" : "Account";
     if (!a || !a.signedIn){
+      line.hidden = false;
       line.textContent = ko ? "로그인하지 않았습니다" : "Not signed in";
       row.hidden = true;
       return;
     }
     if (a.guest){
+      line.hidden = false;
       line.textContent = ko ? "게스트 · 랭킹에 오르지 않습니다" : "Guest · not on the leaderboard";
       btn.textContent = ko ? "구글 계정 잇기" : "Link Google account";
       row.hidden = false;
     } else {
-      line.textContent = ko ? "랭킹에 오릅니다" : "On the leaderboard";
+      /* 구글 계정이면 안내할 것이 없다. 빈 줄을 남기면 빈 상자로 보인다 */
+      line.textContent = "";
+      line.hidden = true;
       row.hidden = true;
     }
     /* 로그아웃 — 없으면 한 번 들어간 뒤로 아무것도 못 바꾼다 */
@@ -392,9 +396,6 @@ export function initNav(){
   });
   /* 한 판이 끝나면 결과 화면 */
   window.__onRoundEnd = () => go("result");
-  document.querySelector("#table #endRound").addEventListener("click", () => {
-    if (window.__forceEnd) window.__forceEnd();
-  });
   
   /* 결과 → 다음 판 (세금을 켰으면 세금 단계를 거친다) */
   document.querySelector("#result #next").addEventListener("click", () => {

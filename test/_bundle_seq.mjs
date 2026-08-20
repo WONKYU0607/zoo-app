@@ -19987,7 +19987,13 @@ function mount3(root) {
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
       const tag = s2.c === 0 ? tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
-      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s2.n || "") + "</span>" + (i2 === 0 ? "" : fanHTML(s2.c)) + '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
+      const topSeat = i2 !== 0 && p2.y < 22;
+      if (topSeat) d2.classList.add("seat--above");
+      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span>';
+      const nm = '<span class="seat__n">' + (s2.n || "") + "</span>";
+      const fan = i2 === 0 ? "" : fanHTML(s2.c);
+      const cnt = '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
+      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
       box.appendChild(d2);
     });
     const nd = el("need");
@@ -20512,6 +20518,7 @@ function mount4(root) {
   function renderHand() {
     const h2 = el("hand");
     h2.innerHTML = "";
+    if (hideHand) return;
     const hand = myHand(), w2 = 54, n2 = hand.length;
     const step2 = n2 > 1 ? Math.min(40, (h2.clientWidth - w2) / (n2 - 1)) : 0;
     const total = w2 + step2 * (n2 - 1);
@@ -20585,7 +20592,7 @@ function mount4(root) {
     const b2 = el("next");
     if (tickBase) tickBase = "";
     const bar = b2.parentElement;
-    const mine = step === 0 ? false : step === 2 ? revSeat === 0 && !declared : step === 3 ? g2 > 0 && !taxSkipped() : true;
+    const mine = step === 2 ? revSeat === 0 && !declared : step === 3 ? g2 > 0 && !taxSkipped() && !window.__taxCancelled : false;
     if (bar) bar.style.visibility = mine ? "" : "hidden";
     el("hint").innerHTML = step === 3 && g2 && mine ? sel.length < g2 ? t2.giveNeed(g2 - sel.length) : "" : !mine && (step === 2 || step === 3) && tickLeft > 0 ? t2.waitSec(tickLeft) : "";
     if (step === 2 && revSeat === 0 && !declared) {
@@ -20620,6 +20627,7 @@ function mount4(root) {
     reversed = false;
     revSeat = null;
     wasGreat = false;
+    hideHand = false;
     waitOn = 0;
     clearFx();
     draw();
@@ -20631,10 +20639,11 @@ function mount4(root) {
   boot();
   autoNext();
   function needStep(k2) {
-    if (k2 === 3) return !taxSkipped();
+    if (k2 === 3) return !taxSkipped() && !declared && !window.__taxCancelled;
     return true;
   }
   var autoId = null;
+  var hideHand = false;
   var tickId = null, tickLeft = 0, tickBase = "";
   function stopTick() {
     if (tickId) {
@@ -20755,9 +20764,16 @@ function mount4(root) {
     while (step < 4 && !needStep(step)) step++;
     if (step === 1) {
       dealAll();
+      hideHand = true;
     }
     draw();
-    if (step === 1) runDeal();
+    if (step === 1) {
+      runDeal();
+      setTimeout(() => {
+        hideHand = false;
+        draw();
+      }, 2400);
+    }
     if (step === 4) {
       G2().order = order().slice();
       if (autoId) {
@@ -21008,7 +21024,11 @@ function mount6(root) {
     const k2 = document2.getElementById("acctTick");
     const n2 = document2.getElementById("acctName");
     if (n2) n2.textContent = a2.name || "";
-    if (t2) t2.textContent = a2.tier;
+    if (t2) {
+      const n3 = Math.max(0, Math.min(10, Number(a2.tier) || 0));
+      t2.textContent = n3;
+      t2.style.backgroundImage = "url(/assets/tier_" + String(n3).padStart(2, "0") + ".webp)";
+    }
     if (s2) s2.textContent = a2.score.toLocaleString();
     if (k2) k2.textContent = a2.tickets;
     paintTimer();
@@ -21320,7 +21340,9 @@ function pollStop() {
 function botFillStart() {
   if (botTimer2) return;
   botTimer2 = setInterval(() => {
-    if (!addOneBot()) botFillStop();
+    if (!myRoom || myRoom.phase !== "waiting") return;
+    if (seatCount(myRoom) >= myRoom.cap) return;
+    addOneBot();
   }, opt.botJoinMs);
 }
 function botFillStop() {
@@ -21435,8 +21457,11 @@ function openTable(v2, n2, names) {
   W2().GAME = {
     N: n2,
     /* 화면 자리 → 그 자리에 앉은 사람(엔진 자리).
-       얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다 */
-    faces: v2.seats.map((s2) => s2.seat),
+       얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다.
+       뽑기 동안에는 방에 앉았던 순서 그대로 두고(6번),
+       자리 교체는 판에 들어설 때 한다 — 미리 바뀌면 누가 뭘 뽑았는지 짐작된다 */
+    faces: Array.from({ length: n2 }, (_2, k2) => k2),
+    seatFaces: v2.seats.map((s2) => s2.seat),
     roundNo: v2.roundNo,
     names: v2.names.slice(),
     namesEn: v2.names.slice(),
@@ -21610,6 +21635,10 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
     W2().__opts.cap = myRoom.cap;
     W2().__opts.seated = seatCount(myRoom);
     emitRoom();
+    if (seatCount(myRoom) < myRoom.cap) {
+      stopRoomCount();
+      botFillStart();
+    } else startRoomCount(15);
   };
   W2().__botFill = (on3) => on3 ? botFillStart() : botFillStop();
   W2().__addBot = addOneBot;
@@ -21636,6 +21665,8 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   const prevBootTable = W2().__bootTable;
   W2().__bootTable = (fresh) => {
     stopCount();
+    const G0 = W2().GAME;
+    if (G0 && G0.seatFaces) G0.faces = G0.seatFaces.slice();
     ensureTaxGiven();
     setPaused(false);
     if (typeof prevBootTable === "function") prevBootTable(fresh);

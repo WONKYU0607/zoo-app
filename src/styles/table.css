@@ -130,7 +130,6 @@
 #table .hand{position:relative;z-index:2;height:126px;margin-bottom:9px}
 #table .hand .slot{position:absolute;bottom:0;transition:transform .16s ease}
 #table .hand .card{--w:60px}
-#table .hand .card__name{display:none}
 #table .slot--sel{transform:translateY(-20px)}
 #table .slot--sel .card{box-shadow:0 0 0 2px var(--gold-hi),0 10px 18px rgba(0,0,0,.6)}
 #table .slot--dead .card{filter:brightness(.44) saturate(.5)}

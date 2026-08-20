@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "sync": "npm run build && npx cap sync android",
-    "test": "node test/boot.test.mjs && node test/engine.test.js && node test/roundend.test.mjs && node test/table.test.mjs && node test/room.test.mjs && node test/auto.test.mjs && node test/login.test.mjs && node test/rank.test.mjs && node test/name.test.mjs && node test/sequence.test.mjs 2",
+    "test": "node test/boot.test.mjs && node test/face.test.mjs && node test/engine.test.js && node test/roundend.test.mjs && node test/table.test.mjs && node test/room.test.mjs && node test/auto.test.mjs && node test/login.test.mjs && node test/rank.test.mjs && node test/name.test.mjs && node test/sequence.test.mjs 2",
     "test:engine": "node test/engine.test.js",
     "test:table": "node test/table.test.mjs",
     "test:room": "node test/room.test.mjs",
@@ -19,6 +19,7 @@
     "test:login": "node test/login.test.mjs",
     "test:rank": "node test/rank.test.mjs",
     "test:boot": "node test/boot.test.mjs",
+    "test:face": "node test/face.test.mjs",
     "test:name": "node test/name.test.mjs"
   },
   "devDependencies": {

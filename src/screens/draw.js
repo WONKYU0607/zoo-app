@@ -91,8 +91,11 @@ export function mount(root){
   }
   function cardFace(c){
     const n = isJ(c) ? 13 : c;
+    const nm = isJ(c) ? (lang === "ko" ? "카멜레온" : "CHAMELEON")
+                      : (lang === "ko" ? KO_N : EN_N)[c - 1];
     return '<div class="card">' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
+      '<span class="card__name">' + nm + '</span>' +
       '<span class="card__num">' + n + '</span></div>' +
       '<div class="card__art"><img src="' + art(c) + '" alt=""></div>' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +

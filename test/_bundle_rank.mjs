@@ -21740,7 +21740,7 @@ var fetchMine = (...a) => (window.__myRank || myRank)(...a);
 var T = {
   ko: {
     title: "\uB7AD\uD0B9",
-    tabs: { all: "\uC804\uCCB4", week: "\uC774\uBC88 \uC8FC", month: "\uC774\uBC88 \uB2EC" },
+    tabs: { all: "\uC804\uCCB4 \uB7AD\uD0B9", month: "\uC6D4\uAC04 \uB7AD\uD0B9", week: "\uC8FC\uAC04 \uB7AD\uD0B9" },
     loading: "\uBD88\uB7EC\uC624\uB294 \uC911",
     empty: "\uC544\uC9C1 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
     guest: "\uAC8C\uC2A4\uD2B8\uB294 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uC124\uC815\uC5D0\uC11C \uAD6C\uAE00 \uACC4\uC815\uC744 \uC774\uC73C\uBA74 \uC9C0\uAE08 \uC810\uC218 \uADF8\uB300\uB85C \uC624\uB985\uB2C8\uB2E4.",
@@ -21751,7 +21751,7 @@ var T = {
   },
   en: {
     title: "Leaderboard",
-    tabs: { all: "All time", week: "This week", month: "This month" },
+    tabs: { all: "All time", month: "Monthly", week: "Weekly" },
     loading: "Loading",
     empty: "No records yet",
     guest: "Guests don't appear here. Link a Google account in settings to keep your score and join.",
@@ -21772,8 +21772,8 @@ var HTML = `
     <div class="block__label" id="rkTitle"></div>
     <div class="cfg__row" id="rkTabs">
       <button data-k="all"></button>
-      <button data-k="week"></button>
       <button data-k="month"></button>
+      <button data-k="week"></button>
     </div>
     <div id="rkList" class="rk"></div>
     <div id="rkMe" class="rk rk--me"></div>

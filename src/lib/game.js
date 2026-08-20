@@ -43,7 +43,8 @@ const nextAlive  = (G, from) => nextBy(G, from, i => G.counts[i] > 0);
 function clearPile(G, leader){
   G.pile = null;
   /* 치우기 직전 모습을 남긴다. 화면이 "무슨 카드로 끝냈는지"를 보여줄 때 쓴다 */
-  if ((G.table || []).length) G.shown = G.table.map(t => ({ by: t.by, num: t.num, count: t.count }));
+  if ((G.table || []).length) G.shown = G.table.map(t => ({
+    by: t.by, num: t.num, count: t.count, cards: (t.cards || []).slice() }));
   G.table = [];
   G.passed = G.passed.map(() => false);
   G.next = leader;
@@ -140,7 +141,7 @@ function openNextRound(G, random){
   G.lastRound = {
     order: order.slice(),
     table: ((G.table || []).length ? G.table : (G.shown || []))
-             .map(t => ({ by: t.by, num: t.num, count: t.count })),
+             .map(t => ({ by: t.by, num: t.num, count: t.count, cards: (t.cards || []).slice() })),
     points: order.map((seat, rank) => roundPoints(rank, n)),
     roundNo: G.roundNo,
   };
@@ -229,7 +230,10 @@ export const ZooPresident = {
           G.hands[seat] = t.hand;
           G.counts[seat] = t.hand.length;
           G.pile = { by: seat, num, count };
-          G.table.push({ by: seat, num, count });
+          /* 실제로 낸 카드를 그대로 남긴다. 숫자·장수만 남기면
+             카멜레온으로 채운 것을 화면이 알 수가 없어 숫자 카드로 거짓말을 하게 된다.
+             바닥은 모두가 보는 정보라 가릴 이유도 없다 */
+          G.table.push({ by: seat, num, count, cards: t.used.slice().sort((a, b) => a - b) });
           noteFinish(G, seat);
 
           const cleared = num === 1 || (G.opts.clear2 && num === 2);

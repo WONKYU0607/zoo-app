@@ -815,7 +815,11 @@ function mount2(root) {
     const k2 = document2.getElementById("acctTick");
     const n = document2.getElementById("acctName");
     if (n) n.textContent = a.name || "";
-    if (t) t.textContent = a.tier;
+    if (t) {
+      const n2 = Math.max(0, Math.min(10, Number(a.tier) || 0));
+      t.textContent = n2;
+      t.style.backgroundImage = "url(/assets/tier_" + String(n2).padStart(2, "0") + ".webp)";
+    }
     if (s) s.textContent = a.score.toLocaleString();
     if (k2) k2.textContent = a.tickets;
     paintTimer();
@@ -2176,7 +2180,13 @@ function mount5(root) {
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T2[lang];
       const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";
-      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s.n || "") + "</span>" + (i === 0 ? "" : fanHTML(s.c)) + '<span class="seat__c">' + T2[lang].left(s.c) + "</span>";
+      const topSeat = i !== 0 && p.y < 22;
+      if (topSeat) d.classList.add("seat--above");
+      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>';
+      const nm = '<span class="seat__n">' + (s.n || "") + "</span>";
+      const fan = i === 0 ? "" : fanHTML(s.c);
+      const cnt = '<span class="seat__c">' + T2[lang].left(s.c) + "</span>";
+      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
       box.appendChild(d);
     });
     const nd = el("need");
@@ -2701,6 +2711,7 @@ function mount6(root) {
   function renderHand() {
     const h = el("hand");
     h.innerHTML = "";
+    if (hideHand) return;
     const hand = myHand(), w = 54, n = hand.length;
     const step2 = n > 1 ? Math.min(40, (h.clientWidth - w) / (n - 1)) : 0;
     const total = w + step2 * (n - 1);
@@ -2774,7 +2785,7 @@ function mount6(root) {
     const b = el("next");
     if (tickBase) tickBase = "";
     const bar = b.parentElement;
-    const mine = step === 0 ? false : step === 2 ? revSeat === 0 && !declared : step === 3 ? g > 0 && !taxSkipped() : true;
+    const mine = step === 2 ? revSeat === 0 && !declared : step === 3 ? g > 0 && !taxSkipped() && !window.__taxCancelled : false;
     if (bar) bar.style.visibility = mine ? "" : "hidden";
     el("hint").innerHTML = step === 3 && g && mine ? sel.length < g ? t.giveNeed(g - sel.length) : "" : !mine && (step === 2 || step === 3) && tickLeft > 0 ? t.waitSec(tickLeft) : "";
     if (step === 2 && revSeat === 0 && !declared) {
@@ -2809,6 +2820,7 @@ function mount6(root) {
     reversed = false;
     revSeat = null;
     wasGreat = false;
+    hideHand = false;
     waitOn = 0;
     clearFx();
     draw();
@@ -2820,10 +2832,11 @@ function mount6(root) {
   boot();
   autoNext();
   function needStep(k2) {
-    if (k2 === 3) return !taxSkipped();
+    if (k2 === 3) return !taxSkipped() && !declared && !window.__taxCancelled;
     return true;
   }
   var autoId = null;
+  var hideHand = false;
   var tickId = null, tickLeft = 0, tickBase = "";
   function stopTick() {
     if (tickId) {
@@ -2944,9 +2957,16 @@ function mount6(root) {
     while (step < 4 && !needStep(step)) step++;
     if (step === 1) {
       dealAll();
+      hideHand = true;
     }
     draw();
-    if (step === 1) runDeal();
+    if (step === 1) {
+      runDeal();
+      setTimeout(() => {
+        hideHand = false;
+        draw();
+      }, 2400);
+    }
     if (step === 4) {
       G2().order = order().slice();
       if (autoId) {
@@ -23354,7 +23374,7 @@ var fetchMine = (...a) => (window.__myRank || myRank)(...a);
 var T = {
   ko: {
     title: "\uB7AD\uD0B9",
-    tabs: { all: "\uC804\uCCB4", week: "\uC774\uBC88 \uC8FC", month: "\uC774\uBC88 \uB2EC" },
+    tabs: { all: "\uC804\uCCB4 \uB7AD\uD0B9", month: "\uC6D4\uAC04 \uB7AD\uD0B9", week: "\uC8FC\uAC04 \uB7AD\uD0B9" },
     loading: "\uBD88\uB7EC\uC624\uB294 \uC911",
     empty: "\uC544\uC9C1 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
     guest: "\uAC8C\uC2A4\uD2B8\uB294 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uC124\uC815\uC5D0\uC11C \uAD6C\uAE00 \uACC4\uC815\uC744 \uC774\uC73C\uBA74 \uC9C0\uAE08 \uC810\uC218 \uADF8\uB300\uB85C \uC624\uB985\uB2C8\uB2E4.",
@@ -23365,7 +23385,7 @@ var T = {
   },
   en: {
     title: "Leaderboard",
-    tabs: { all: "All time", week: "This week", month: "This month" },
+    tabs: { all: "All time", month: "Monthly", week: "Weekly" },
     loading: "Loading",
     empty: "No records yet",
     guest: "Guests don't appear here. Link a Google account in settings to keep your score and join.",
@@ -23386,8 +23406,8 @@ var HTML = `
     <div class="block__label" id="rkTitle"></div>
     <div class="cfg__row" id="rkTabs">
       <button data-k="all"></button>
-      <button data-k="week"></button>
       <button data-k="month"></button>
+      <button data-k="week"></button>
     </div>
     <div id="rkList" class="rk"></div>
     <div id="rkMe" class="rk rk--me"></div>

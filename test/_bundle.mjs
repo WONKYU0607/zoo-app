@@ -18753,7 +18753,13 @@ function mount(root) {
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
       const tag = s2.c === 0 ? tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
-      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span><span class="seat__n">' + (s2.n || "") + "</span>" + (i2 === 0 ? "" : fanHTML(s2.c)) + '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
+      const topSeat = i2 !== 0 && p2.y < 22;
+      if (topSeat) d2.classList.add("seat--above");
+      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span>';
+      const nm = '<span class="seat__n">' + (s2.n || "") + "</span>";
+      const fan = i2 === 0 ? "" : fanHTML(s2.c);
+      const cnt = '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
+      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
       box.appendChild(d2);
     });
     const nd = el("need");

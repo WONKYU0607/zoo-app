@@ -197,10 +197,13 @@
 
 /* 놋쇠 틀 — 탭과 순위 줄에 같은 틀을 두른다 */
 #rank #rkTabs{display:flex;gap:8px;margin:2px 0 10px}
+/* 반투명 사각 배경을 깔면 놋쇠 틀 바깥으로 삐져나와 네모난 선이 하나 더 보인다.
+   틀 안쪽은 비워 두고, 고른 탭만 가장자리가 흐려지는 빛으로 표시한다 */
 #rank #rkTabs button{flex:1;min-height:0;padding:4px 4px;font-size:12px;font-weight:700;
-  color:#6B4E22;background:rgba(255,250,235,.35);
+  color:#6B4E22;background:none;border-radius:0;box-shadow:none;text-shadow:none;
   border:13px solid transparent;border-image:url(/assets/frame_row.webp) 110 fill stretch}
-#rank #rkTabs button[aria-pressed="true"]{color:#2E2009;background:rgba(240,209,140,.5)}
+#rank #rkTabs button[aria-pressed="true"]{color:#2E2009;
+  background:radial-gradient(120% 150% at 50% 50%,rgba(240,209,140,.62),rgba(240,209,140,0) 74%)}
 
 #rank .rk{display:flex;flex-direction:column;gap:6px}
 #rank .rk--me{margin-top:16px}
