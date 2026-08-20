@@ -81,9 +81,13 @@
   border:.5px solid rgba(198,154,60,.55);
   box-shadow:-1px 1px 3px rgba(0,0,0,.6);
 }
-#table .seat__tag{position:absolute;top:-7px;left:50%;transform:translateX(-50%);
-  font-size:9px;letter-spacing:.08em;padding:1px 6px;border-radius:2px;
-  background:rgba(10,16,12,.92);border:1px solid var(--gold-dim);color:var(--gold-hi);white-space:nowrap}
+#table .seat__avwrap{position:relative;display:block;line-height:0}
+/* 프로필 원의 오른쪽 위. 원 위로 올라와야 가리지 않는다 */
+#table .seat__tag{position:absolute;z-index:3;top:calc(var(--av,44px) * -.12);
+  left:calc(var(--av,44px) * .70);
+  font-size:9px;letter-spacing:.04em;padding:1px 5px;border-radius:2px;
+  background:rgba(10,16,12,.94);border:1px solid var(--gold-dim);color:var(--gold-hi);
+  white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.7)}
 #table /* ---------- pile in the middle ---------- */
 .pile{position:absolute;left:49%;top:43%;width:0;height:0;z-index:4;transform-style:preserve-3d}
 #table #seats{position:absolute;inset:0;transform-style:preserve-3d}

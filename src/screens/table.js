@@ -63,7 +63,7 @@ export function mount(root){
     /* 방금 끝난 판을 세워 두는 동안에는 새 판 상태를 그리지 않는다.
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over) return;
-    SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat }));
+    SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -133,7 +133,7 @@ export function mount(root){
     const lr = v.lastRound;
     SEATS = v.seats.map((x, i) => ({
       n: x.name, c: i === lr.order[lr.order.length - 1] ? x.c : 0, s: "", hold: [],
-      av: x.seat,
+      av: x.seat, r: lr.order.indexOf(i),
     }));
     hand = [];
     finish = lr.order.slice();
@@ -192,7 +192,10 @@ export function mount(root){
      혼자 낸 카멜레온(13번)은 as 가 없어 숫자를 안 적는다 */
   function cardHTML(n, w, as){
     if (isJ(n)){
-      const num = (as == null || as >= 13) ? "" : '<span class="card__num as">' + as + '</span>';
+      /* 숫자가 없어도 빈 칸을 양쪽에 둬야 이름이 가운데로 온다.
+         한쪽만 있으면 space-between 이 이름을 왼쪽 끝으로 밀어버린다 */
+      const num = (as == null || as >= 13) ? '<span class="card__num as"></span>'
+                                           : '<span class="card__num as">' + as + '</span>';
       return '<div class="card is-joker" style="--w:' + w + 'px">' +
         '<div class="card__band">' + num +
         '<span class="card__name">' + T[lang].joker + '</span>' + num + '</div>' +
@@ -305,6 +308,15 @@ export function mount(root){
       if (ox !== nx || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  /* 1등 · 2등 … / 1st · 2nd … */
+  function rankTag(r){
+    const k = r + 1;
+    if (lang === "ko") return k + "등";
+    const t = k % 10, h = k % 100;
+    const sfx = (t === 1 && h !== 11) ? "st" : (t === 2 && h !== 12) ? "nd"
+              : (t === 3 && h !== 13) ? "rd" : "th";
+    return k + sfx;
+  }
   function renderSeats(){
     syncRing();
     const box = el("seats"); box.innerHTML = "";
@@ -322,17 +334,22 @@ export function mount(root){
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];
-      const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";   /* 차례는 테두리로 알린다 */
+      /* 다 낸 사람은 몇 등으로 끝냈는지 붙인다. 차례는 테두리로 알린다 */
+      const tag = s.c === 0 ? (s.r >= 0 ? rankTag(s.r) : tg.tagOut)
+                : s.s === "pass" ? tg.tagPass : "";
       /* 12시 자리는 바닥에 깔린 카드에 가린다. 그 자리만 카드·장수를 프로필 위로 */
       const topSeat = i !== 0 && p.y < 22;
       if (topSeat) d.classList.add("seat--above");
-      const av = '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-          HEADS[(s.av == null ? i : s.av) % HEADS.length] + ')"></span>';
+      /* 등수표는 프로필 원을 기준으로 붙여야 자리 배치가 바뀌어도 따라간다.
+         12시 자리는 카드가 위로 가서, .seat 기준으로 잡으면 엉뚱한 데 붙는다 */
+      const av = '<span class="seat__avwrap">' +
+        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
+          HEADS[(s.av == null ? i : s.av) % HEADS.length] + ')"></span>' +
+        (tag ? '<span class="seat__tag">' + tag + '</span>' : '') + '</span>';
       const nm = '<span class="seat__n">' + (s.n || "") + '</span>';
       const fan = i === 0 ? '' : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s.c) + '</span>';
-      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + '</span>' : '') +
-        (topSeat ? (fan + cnt + av + nm) : (av + nm + fan + cnt));
+      d.innerHTML = topSeat ? (fan + cnt + av + nm) : (av + nm + fan + cnt);
       box.appendChild(d);
     });
     const nd = el("need");

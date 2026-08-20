@@ -73,9 +73,12 @@
     linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
   box-shadow:0 2px 6px rgba(0,0,0,.55);display:flex;flex-direction:column}
 #tax .card__band{display:flex;align-items:center;justify-content:space-between;
-  padding:0 calc(var(--w) * .016);height:calc(var(--w) * .208);color:var(--card-ink)}
+  padding:0 calc(var(--w) * .016);height:calc(var(--w) * .208);color:var(--card-ink);overflow:hidden}
 #tax .card__num{font-family:"Noto Serif KR",serif;font-weight:900;font-size:calc(var(--w) * .19);
-  line-height:1;min-width:calc(var(--w) * .17);text-align:center}
+  line-height:1;min-width:calc(var(--w) * .17);text-align:center;flex:none}
+/* 이름은 게임 화면 카드와 같은 비율(.086) */
+#tax .card__name{font-family:"Noto Serif KR",serif;font-weight:700;font-size:calc(var(--w) * .086);
+  line-height:1;white-space:nowrap;overflow:hidden;min-width:0;color:var(--card-ink-2)}
 #tax .card__art{flex:1;min-height:0;border:1px solid var(--gold-dim);background:#1A1410;overflow:hidden}
 #tax .card__art img{width:100%;height:100%;object-fit:cover;display:block}
 #tax /* hand + action */

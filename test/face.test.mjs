@@ -152,6 +152,73 @@ const css = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
 check("손패 이름을 숨기는 규칙이 없다",
       !/\.hand\s+\.card__name\s*\{[^}]*display\s*:\s*none/.test(css));
 
+/* ---------- 카드 안 글씨가 띠 밖으로 나가지 않는가 ----------
+   숫자 두 개 + 이름이 한 줄에 들어가야 한다. 예전에는 --w 를 52px 로 박아 두고
+   실제 카드는 34px 이라 오른쪽 숫자가 잘렸다. 대충 재는 것이라도 없는 것보다 낫다 */
+function bandFits(w, numR, nameR, padR, minR, longest){
+  const inner = w - 2 * (w * .042) - 2 * (w * padR);
+  const numW  = Math.max(w * minR, 2.2 * (w * numR) * .55);   /* "10" 두 자리 기준 */
+  const nameW = longest * (w * nameR);
+  return { ok: 2 * numW + nameW <= inner, need: (2*numW + nameW).toFixed(1), inner: inner.toFixed(1) };
+}
+{
+  const dcss = readFileSync(join(ROOT, "src/styles/draw.css"), "utf8");
+  const dnum = Number((dcss.match(/#draw \.card__num\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
+  const dname = Number((dcss.match(/#draw \.card__name\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
+  check("뽑기 카드가 실제 폭(--pw)을 쓴다", /#draw \.card\{--w:var\(--pw/.test(dcss));
+  for (const w of [26, 46]){
+    const r = bandFits(w, dnum, dname, .016, .17, 4);      /* 카멜레온 4글자 */
+    check("뽑기 카드 " + w + "px 에서 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+  }
+  const dsrc = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
+  check("뽑기 카드 폭을 세로도 보고 잡는다", /Math\.min\(46, byW, byH\)/.test(dsrc));
+
+  /* 사람 수가 늘면 열·줄이 늘어난다. 8명(4열 2줄)에서도 판 밖으로 나가면 안 된다.
+     draw.js 의 계산을 그대로 옮겨 와서 잰다 */
+  function grid(n, ringW, ringH){
+    const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
+    const rows = Math.ceil(n / cols);
+    const avail = ringW - 48, availH = ringH * 0.88 - 16;
+    const byW = Math.floor((avail - (cols - 1) * 9) / cols);
+    const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
+    const pw = Math.max(26, Math.min(46, byW, byH));
+    return { cols, rows, pw,
+             w: cols * pw + (cols - 1) * 9,
+             h: rows * pw * (390 / 200) + (rows - 1) * 9 };
+  }
+  /* 작은 폰(360x640)과 큰 폰(412x915) 두 가지로 */
+  for (const [ringW, ringH, tag] of [[336, 400, "작은 폰"], [388, 478, "큰 폰"], [336, 220, "짧은 화면"]]){
+    for (const n of [2, 3, 4, 5, 6, 7, 8]){
+      const g = grid(n, ringW, ringH);
+      const fitsW = g.w <= ringW - 16;
+      const fitsH = g.h <= ringH * 0.88;           /* 44% 중심 기준 위아래 */
+      const readable = g.pw >= 26;
+      check(tag + " " + n + "명 뽑기판이 판 안에 들어간다",
+            fitsW && fitsH && readable,
+            g.cols + "열 " + g.rows + "줄 · " + g.pw + "px · " +
+            g.w.toFixed(0) + "x" + g.h.toFixed(0) + " / " + ringW + "x" + ringH);
+    }
+  }
+}
+{
+  const tcss = readFileSync(join(ROOT, "src/styles/tax.css"), "utf8");
+  const tnum = Number((tcss.match(/#tax \.card__num\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
+  const tname = Number((tcss.match(/#tax \.card__name\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
+  const tsrc2 = readFileSync(join(ROOT, "src/screens/tax.js"), "utf8");
+  check("세금·혁명 화면 카드가 이름을 그린다", /card__name/.test(tsrc2));
+  for (const w of [32, 54]){
+    const r = bandFits(w, tnum, tname, .016, .17, 4);
+    check("세금 카드 " + w + "px 에서 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+  }
+}
+{
+  const tc = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
+  const num = Number((tc.match(/#table \.card__num\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
+  const nam = Number((tc.match(/#table \.card__name\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
+  const r = bandFits(60, num, nam, .016, .145, 4);
+  check("게임 화면 손패 60px 에서 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+}
+
 /* ---------- 뽑기 화면 카드에도 이름이 있는가 ---------- */
 const drawSrc = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
 check("뽑기 카드가 이름을 그린다", /card__name/.test(drawSrc));
@@ -170,6 +237,51 @@ const base = readFileSync(join(ROOT, "src/styles/base.css"), "utf8");
 check("랭킹 탭이 어두운 버튼 틀에 덮이지 않는다", !/#rank #rkTabs button/.test(base));
 const tsrc = readFileSync(join(ROOT, "src/screens/table.js"), "utf8");
 check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
+
+/* ---------- 완주 표시가 등수로, 프로필 오른쪽 위에 ----------
+   누군가 다 낼 때까지 자동으로 돌린 뒤 실제로 붙은 글자를 본다 */
+eng.stop();
+eng.engine.botMs = 0;
+eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
+                 opts: { rounds: 3, tax: false, clear2: false } });
+if (W.__bootTable) W.__bootTable();
+eng.setAuto(true);
+let outSeen = false;
+for (let i = 0; i < 400 && !outSeen; i++){
+  await wait(15);
+  const vv = eng.engine.view;
+  outSeen = Boolean(vv && vv.seats && vv.seats.some(x => x.c === 0 && x.rank >= 0));
+}
+check("누군가 다 내고 완주했다", outSeen);
+{
+  const seat = [...root.querySelectorAll(".seat")]
+    .filter(d => d.querySelector(".seat__tag"))[0];
+  const tagCss = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
+  check("등수표는 프로필 원 안에 붙는다 (자리 상자가 아니라)",
+        /\.seat__avwrap\{[^}]*position:relative/.test(tagCss));
+  check("등수표가 프로필 위로 올라온다", /\.seat__tag\{[^}]*z-index:3/.test(tagCss));
+  check("등수표가 오른쪽 위에 붙는다",
+        /\.seat__tag\{[^}]*left:calc\(var\(--av[^)]*\) \* \.70\)/.test(tagCss));
+  check("완주 대신 등수를 쓴다", /rankTag\(s\.r\)/.test(tsrc));
+  const tagTxt = seat ? seat.querySelector(".seat__tag").textContent : "";
+  check("붙은 글자가 등수 꼴이다 (완주 아님)", /^\d+등$/.test(tagTxt) || tagTxt === "패스", tagTxt || "없음");
+  check("등수표가 프로필 원 안에 들어 있다",
+        Boolean(seat) && Boolean(seat.querySelector(".seat__avwrap .seat__tag")),
+        seat ? seat.innerHTML.slice(0, 80) : "없음");
+}
+/* 카멜레온 손패 이름이 가운데로 오는가 — 빈 숫자칸이 양쪽에 있어야 한다 */
+{
+  const jh = [...el("hand").querySelectorAll(".card.is-joker")][0];
+  if (jh){
+    const kids = [...jh.querySelector(".card__band").children].map(x => x.className);
+    check("카멜레온 손패 이름 양쪽에 빈 숫자칸이 있다",
+          kids.length === 3 && kids[0].includes("card__num") && kids[2].includes("card__num"),
+          JSON.stringify(kids));
+  } else {
+    check("카멜레온 손패 이름 양쪽에 빈 숫자칸이 있다 (손에 없어 소스로 확인)",
+          /card__num as"><\/span>/.test(tsrc));
+  }
+}
 
 eng.stop();
 console.log("\n  통과 " + pass + " / 실패 " + fail);

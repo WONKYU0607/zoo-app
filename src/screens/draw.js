@@ -154,8 +154,17 @@ export function mount(root){
     deck.innerHTML = "";
     const n = pool.length;
     const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
-    const avail = (el("ring").clientWidth || 360) - 48;
-    const pw = Math.max(26, Math.min(34, Math.floor((avail - (cols - 1) * 9) / cols)));
+    const rows = Math.ceil(n / cols);
+    const ringEl = el("ring");
+    const avail = (ringEl.clientWidth || 360) - 48;
+    /* 34px 은 카드 안 글씨가 들어갈 자리가 안 나온다. 상한을 46 으로 올리되
+       세로도 같이 본다 — 덱은 판 높이의 44% 를 중심으로 놓이므로
+       위로 삐져나가지 않으려면 두 줄 높이가 0.88H 안에 들어와야 한다.
+       가로만 보고 잡으면 8명(4열 2줄)에서 카드가 판 위로 튀어나온다 */
+    const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
+    const byW = Math.floor((avail - (cols - 1) * 9) / cols);
+    const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
+    const pw = Math.max(26, Math.min(46, byW, byH));
     deck.style.setProperty("--cols", cols);
     deck.style.setProperty("--pw", pw + "px");
     pool.forEach((c, k) => {

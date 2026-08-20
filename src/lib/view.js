@@ -46,6 +46,8 @@ export function screenView(G, ctx, myID, names){
       c: G.counts[seat],
       s: G.passed[seat] ? "pass" : "",
       out: G.counts[seat] === 0,
+      /* 몇 번째로 끝냈는가. 0부터, 아직이면 -1 */
+      rank: (G.finished || []).indexOf(seat),
       hold: seat === me ? (G.hands[seat] || []).slice() : null,
     };
   }

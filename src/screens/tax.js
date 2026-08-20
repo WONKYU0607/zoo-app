@@ -77,12 +77,19 @@ export function mount(root){
   
   
   const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
+  const cardName = n => isJ(n) ? (lang === "ko" ? "카멜레온" : "CHAMELEON")
+                               : (lang === "ko" ? KO_N : EN_N)[n - 1];
   function cardHTML(n, w){
+    /* 빈 숫자칸을 양쪽에 둬야 이름이 가운데로 온다 */
     if (isJ(n)) return '<div class="card" style="--w:' + w + 'px">' +
-      '<div class="card__band"></div><div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
+      '<div class="card__band"><span class="card__num"></span>' +
+      '<span class="card__name">' + cardName(n) + '</span>' +
+      '<span class="card__num"></span></div>' +
+      '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
       '<div class="card__band"></div></div>';
     return '<div class="card" style="--w:' + w + 'px">' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
+      '<span class="card__name">' + cardName(n) + '</span>' +
       '<span class="card__num">' + n + '</span></div>' +
       '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
