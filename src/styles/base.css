@@ -9,7 +9,7 @@
 #lobby .btn-primary,#lobby .btn-second,
 #room .btn-primary,#room .waiting,
 #draw .bt-main,#tax .bt-main,#tax .bt-ghost,
-#table .acts button,#result .bt-main,#result .bt-ghost,
+#result .bt-main,#result .bt-ghost,
 #opts .opts__go,#cfg .cfg__row button,#acctBox .cfg__row button,
 #lobby .bt-rank,#nkBox .cfg__row button{
   border:13px solid transparent !important;

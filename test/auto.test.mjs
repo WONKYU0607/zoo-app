@@ -18,7 +18,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 execFileSync(process.execPath, [
   join(ROOT, "node_modules/esbuild/bin/esbuild"),
   join(HERE, "_entry.js"), "--bundle", "--format=esm", "--platform=browser",
-  "--loader:.css=empty", "--outfile=" + join(HERE, "_bundle.mjs"), "--log-level=warning",
+  "--loader:.css=empty", "--outfile=" + join(HERE, "_bundle_auto.mjs"), "--log-level=warning",
 ], { cwd: ROOT, stdio: "inherit" });
 
 const dom = new JSDOM("<!doctype html><html><body><div id='stage'><section class='page is-on' id='table'></section></div></body></html>",
@@ -30,7 +30,7 @@ global.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 global.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
 window.__lang = "ko"; window.__opts = { cap: 4, rounds: 3, tax: true, clear2: false };
 
-const B = await import("./_bundle.mjs");
+const B = await import("./_bundle_auto.mjs");
 const eng = B.eng;
 document.getElementById("table").innerHTML = B.MARKUP.table;
 eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","A","B","C"], opts: { rounds: 3, tax: true } });

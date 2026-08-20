@@ -195,9 +195,10 @@ function openTable(v, n, names){
     N: n,
     /* 화면 자리 → 그 자리에 앉은 사람(엔진 자리).
        얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다.
-       뽑기 동안에는 방에 앉았던 순서 그대로 두고(6번),
-       자리 교체는 판에 들어설 때 한다 — 미리 바뀌면 누가 뭘 뽑았는지 짐작된다 */
-    faces: Array.from({ length: n }, (_, k) => k),
+       예전에는 뽑기 동안 이것을 자리 번호 그대로(0,1,2…) 두었는데,
+       그러면 뽑기 화면에서 이름과 얼굴이 서로 다른 사람을 가리킨다.
+       뽑기와 판이 같은 사람을 그리도록 처음부터 진짜 자리를 넣는다 */
+    faces: v.seats.map(s => s.seat),
     seatFaces: v.seats.map(s => s.seat),
     roundNo: v.roundNo,
     names: v.names.slice(),

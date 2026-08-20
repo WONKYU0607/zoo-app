@@ -35,6 +35,7 @@ const MARKUP = JSON.parse(
 const dom = new JSDOM(
   `<!doctype html><html lang="ko"><body>
      <section id="table">${MARKUP.table}</section>
+     <section id="draw">${MARKUP.draw}</section>
    </body></html>`,
   { pretendToBeVisual: true, url: "http://localhost/" });
 
@@ -60,7 +61,7 @@ W.Element.prototype.getBoundingClientRect = function(){
 };
 
 const B = await import("./_bundle_face.mjs");
-const { mountTable, eng } = B;
+const { mountTable, mountDraw, eng } = B;
 
 const root = W.document.getElementById("table");
 const el = id => root.querySelector('[id="' + id + '"]');
@@ -238,6 +239,31 @@ check("랭킹 탭이 어두운 버튼 틀에 덮이지 않는다", !/#rank #rkTa
 const tsrc = readFileSync(join(ROOT, "src/screens/table.js"), "utf8");
 check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
 
+/* ---------- 판 화면 단추 크기 (예전의 80%) ---------- */
+{
+  const tc = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
+  const blk = (tc.match(/#table \.acts button\{[^}]*\}/) || [""])[0];
+  const num = re => Number((blk.match(re) || [])[1]);
+  const was = { border: 13, biw: 13, padY: 6, padX: 10, minH: 52, font: 16 };
+  const now = {
+    border: num(/border:([\d.]+)px solid transparent/),
+    biw:    num(/border-image-width:([\d.]+)px/),
+    padY:   num(/padding:([\d.]+)px [\d.]+px/),
+    padX:   num(/padding:[\d.]+px ([\d.]+)px/),
+    minH:   num(/min-height:([\d.]+)px/),
+    font:   num(/font-size:([\d.]+)px/),
+  };
+  for (const k of Object.keys(was)){
+    const want = +(was[k] * 0.8).toFixed(2);
+    check("단추 " + k + " 가 예전의 80%", Math.abs(now[k] - want) < 0.01,
+          now[k] + " (원래 " + was[k] + " → " + want + ")");
+  }
+  const bc = readFileSync(join(ROOT, "src/styles/base.css"), "utf8");
+  check("판 단추가 공통 !important 규칙에 안 묶여 있다",
+        !/#table \.acts button,/.test(bc));
+  check("판 단추가 놋쇠 틀을 그대로 쓴다", /border-image:var\(--fr-btn\)/.test(blk));
+}
+
 /* ---------- 완주 표시가 등수로, 프로필 오른쪽 위에 ----------
    누군가 다 낼 때까지 자동으로 돌린 뒤 실제로 붙은 글자를 본다 */
 eng.stop();
@@ -281,6 +307,82 @@ check("누군가 다 내고 완주했다", outSeen);
     check("카멜레온 손패 이름 양쪽에 빈 숫자칸이 있다 (손에 없어 소스로 확인)",
           /card__num as"><\/span>/.test(tsrc));
   }
+}
+
+/* ---------- 뽑기 화면과 판 화면이 같은 사람을 그리는가 ----------
+   예전에는 뽑기 화면이 붙박이 이름 목록(["나","민지","준호","서연",…])을
+   자리 번호로 꺼내 썼는데, 실제 자리 순서와 달라서 이름과 얼굴이 어긋났다.
+   얼굴도 뽑기 동안에는 0,1,2… 로 두어 판에 들어가면 얼굴이 바뀌었다.
+   두 화면이 같은 자리에 같은 이름·같은 얼굴을 그리는지 본다 */
+{
+  eng.stop();
+  eng.engine.botMs = 999999;
+  eng.startLocal({ numPlayers: 6, myID: "0",
+                   names: ["아데바요르","서연","준호","민지","태윤","하은"],
+                   opts: { rounds: 3, tax: false, clear2: false } });
+  await wait(20);
+  const vv = eng.engine.view;
+
+  /* flow.js 의 openTable 이 세우는 값과 같은 방식으로 만든다 */
+  W.__net = { engine: true };
+  W.GAME = {
+    N: vv.N,
+    /* faces 에 일부러 옛날 값(자리 번호 0,1,2…)을 넣어 둔다.
+       뽑기 화면이 seatFaces 를 먼저 봐야만 얼굴이 사람을 따라간다 */
+    faces: vv.seats.map((x, k) => k),
+    seatFaces: vv.seats.map(x => x.seat),
+    names: vv.names.slice(),
+    namesEn: vv.names.slice(),
+    roundNo: 1, score: new Array(vv.N).fill(0), order: null, finish: null, hold: null,
+  };
+  W.__leadSeat = vv.turn >= 0 ? vv.turn : 0;
+  W.__opts = { cap: 6, seated: 6, rounds: 3, tax: false, clear2: false };
+
+  const drawRoot = W.document.getElementById("draw");
+  mountDraw(drawRoot);
+  await wait(20);
+
+  const HEADS = ["head_01","head_02","head_04","head_10","head_06","head_09","head_07","head_12"];
+  const readSeats = r => [...r.querySelectorAll("#seats .seat")].map(d => {
+    const n = d.querySelector(".seat__n");
+    const a = d.querySelector(".seat__av");
+    const bg = a ? (a.getAttribute("style") || "") : "";
+    const hit = HEADS.filter(h => bg.includes(h));
+    return { name: n ? n.textContent : "", head: hit[0] || "" };
+  });
+
+  const dSeats = readSeats(drawRoot);
+  check("뽑기 화면에 사람이 다 그려졌다", dSeats.length === vv.N, String(dSeats.length));
+  check("뽑기 화면 이름이 진짜 이름이다",
+        dSeats.every((d, i) => d.name === vv.names[i]),
+        JSON.stringify(dSeats.map(d => d.name)) + " ← " + JSON.stringify(vv.names));
+
+  /* 판 화면을 같은 판으로 세우고 나란히 비교 */
+  if (W.__bootTable) W.__bootTable();
+  await wait(20);
+  const tSeats = readSeats(root);
+  check("판 화면에 사람이 다 그려졌다", tSeats.length === vv.N, String(tSeats.length));
+  check("같은 자리에 같은 이름이 온다",
+        dSeats.every((d, i) => tSeats[i] && d.name === tSeats[i].name),
+        JSON.stringify(dSeats.map(d => d.name)) + " / " + JSON.stringify(tSeats.map(d => d.name)));
+  check("같은 자리에 같은 얼굴이 온다 (뽑기에서 판으로 넘어가도 안 바뀐다)",
+        dSeats.every((d, i) => tSeats[i] && d.head && d.head === tSeats[i].head),
+        JSON.stringify(dSeats.map(d => d.head)) + " / " + JSON.stringify(tSeats.map(d => d.head)));
+  check("이름과 얼굴이 같은 사람을 가리킨다",
+        dSeats.every((d, i) => d.head === HEADS[vv.seats[i].seat % HEADS.length]),
+        JSON.stringify(dSeats.map((d, i) => d.name + ":" + d.head)));
+
+  /* 가장 낮은 카드는 실제 선의 자리에 간다 */
+  check("뽑기에서 선의 자리가 판의 선과 같다",
+        W.__leadSeat === vv.turn, W.__leadSeat + " / " + vv.turn);
+
+  /* flow 쪽도 같이 못박는다 — 예전에는 뽑기 동안 faces 를 0,1,2… 로 두었다 */
+  const flow = readFileSync(join(ROOT, "src/lib/flow.js"), "utf8");
+  check("flow 가 처음부터 진짜 자리를 싣는다",
+        /faces: v\.seats\.map\(s => s\.seat\)/.test(flow));
+  check("뽑기 화면이 seatFaces 를 먼저 본다",
+        /const f = g\.seatFaces \|\| g\.faces;/.test(
+          readFileSync(join(ROOT, "src/screens/draw.js"), "utf8")));
 }
 
 eng.stop();

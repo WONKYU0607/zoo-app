@@ -138,8 +138,16 @@
 #table .slot--sel .card{box-shadow:0 0 0 2px var(--gold-hi),0 10px 18px rgba(0,0,0,.6)}
 #table .slot--dead .card{filter:brightness(.44) saturate(.5)}
 #table .acts{position:relative;z-index:2;display:flex;gap:9px}
-#table .acts button{flex:1;padding:14px;border-radius:2px;
-  font-family:"Gowun Batang",serif;font-weight:700;font-size:16px;letter-spacing:.05em}
+/* 놋쇠 틀 단추. 예전에는 base.css 의 일괄 규칙(전부 !important)을 같이 썼는데,
+   그러면 여기서 크기를 못 바꾼다. 그 목록에서 빼고 여기서 온전히 잡는다.
+   값은 예전의 80% — 틀 13→10.4, 안여백 6/10→4.8/8, 최소높이 52→41.6, 글씨 16→12.8.
+   폭은 줄을 셋이 나눠 채우는 구조라 그대로 둔다 */
+#table .acts button{flex:1;border-radius:0;background:none;box-shadow:none;
+  border:10.4px solid transparent;
+  border-image:var(--fr-btn) 33 fill stretch;border-image-width:10.4px;
+  padding:4.8px 8px;min-height:41.6px;
+  color:#E9D5AC;text-shadow:0 1px 3px rgba(0,0,0,.85);
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:12.8px;letter-spacing:.05em}
 #table .bt-pass{border:1px solid var(--gold-dim);color:var(--parchment-dim)}
 #table .bt-play{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
   box-shadow:0 1px 0 rgba(227,198,124,.24) inset,0 5px 14px rgba(0,0,0,.5)}

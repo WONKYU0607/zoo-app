@@ -6,7 +6,9 @@ import "../styles/draw.css";
 export function mount(root){
   /* 화면 자리에 앉은 사람을 찾아 얼굴을 고른다. 표가 없으면 자리 번호 그대로 */
   const faceOf = i => {
-    const f = window.GAME && window.GAME.faces;
+    const g = window.GAME || {};
+    /* seatFaces = 이 자리에 실제로 앉은 사람(엔진 자리). 이걸 써야 얼굴이 사람을 따라간다 */
+    const f = g.seatFaces || g.faces;
     return (f && f[i] != null) ? f[i] : i;
   };
 
@@ -43,7 +45,15 @@ export function mount(root){
   let lang = window.__lang || "ko";
   let online = false;
   let N = 6;
-  const nameOf = i => (lang === "ko" ? NAMES_KO : NAMES_EN)[i];
+  /* 진짜 이름을 쓴다. 예전에는 아래 붙박이 목록을 자리 번호로 그냥 꺼내 썼는데,
+     그 목록의 순서가 실제 자리 순서와 달라서 이름과 얼굴이 서로 어긋났다.
+     방을 거치지 않고 이 화면만 열렸을 때만 붙박이 목록으로 되돌아간다 */
+  const nameOf = i => {
+    const g = window.GAME || {};
+    const list = (lang === "ko" ? g.names : (g.namesEn || g.names));
+    const v = list && list[i];
+    return (v == null || v === "") ? (lang === "ko" ? NAMES_KO : NAMES_EN)[i] : v;
+  };
   const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
   const val = c => isJ(c) ? 13 : c;
   
