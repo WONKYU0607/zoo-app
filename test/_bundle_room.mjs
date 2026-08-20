@@ -28,6 +28,10 @@ var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/room.js
 function mount(root) {
+  const faceOf = (i) => {
+    const f = window.GAME && window.GAME.faces;
+    return f && f[i] != null ? f[i] : i;
+  };
   const document = scoped(root);
   const HEADS2 = HEADS;
   const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
@@ -221,7 +225,7 @@ function mount(root) {
       const big = cap <= 6;
       el.style.setProperty("--av", (big ? 46 : 36) + "px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");

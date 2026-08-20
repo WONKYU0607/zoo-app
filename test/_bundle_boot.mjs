@@ -256,6 +256,61 @@ function initNav() {
     openAcct();
     showConflict();
   };
+  let nameBox = null;
+  function openName() {
+    const ko = (window.__lang || "ko") === "ko";
+    if (!nameBox) {
+      nameBox = document.createElement("div");
+      nameBox.className = "cfg";
+      nameBox.id = "nkBox";
+      document.getElementById("stage").appendChild(nameBox);
+    }
+    nameBox.innerHTML = '<div class="cfg__v" data-nkclose></div><div class="cfg__p"><div class="cfg__h"><span>' + (ko ? "\uBCC4\uBA85 \uC815\uD558\uAE30" : "Choose a name") + '</span><button class="cfg__x" data-nkclose aria-label="close">\xD7</button></div><div class="cfg__b"><p class="cfg__n">' + (ko ? "\uD55C\uAE00 6\uC790 \uB610\uB294 \uC601\uBB38\xB7\uC22B\uC790 8\uC790\uAE4C\uC9C0. \uB2E4\uB978 \uC0AC\uB78C\uACFC \uACB9\uCE60 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4." : "Up to 6 Korean or 8 Latin characters. Must be unique.") + '</p><input id="nkIn" maxlength="16" autocomplete="off" spellcheck="false" class="nk__in"><p class="hint" id="nkMsg"></p><div class="cfg__row"><button id="nkOk">' + (ko ? "\uC815\uD558\uAE30" : "Save") + "</button></div></div></div>";
+    const inp = nameBox.querySelector("#nkIn");
+    if (inp) {
+      inp.value = window.ACCOUNT && window.ACCOUNT.name || "";
+      setTimeout(() => inp.focus(), 60);
+    }
+    nameBox.classList.add("on");
+  }
+  function closeName() {
+    if (nameBox) nameBox.classList.remove("on");
+  }
+  window.__askName = openName;
+  document.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-nkclose]")) {
+      closeName();
+      return;
+    }
+    if (!e.target.closest("#nkOk")) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const inp = document.getElementById("nkIn");
+    const msg = document.getElementById("nkMsg");
+    const btn = document.getElementById("nkOk");
+    if (!inp || !window.setNickname) return;
+    btn.disabled = true;
+    msg.className = "hint";
+    msg.textContent = ko ? "\uD655\uC778\uD558\uB294 \uC911" : "Checking";
+    let r = null;
+    try {
+      r = await window.setNickname(inp.value);
+    } catch (err) {
+      msg.className = "hint hint--err";
+      msg.textContent = String(err && err.code || err);
+      btn.disabled = false;
+      return;
+    }
+    if (r && r.ok) {
+      closeName();
+      btn.disabled = false;
+      paintAcct();
+      return;
+    }
+    const why = r && r.why;
+    msg.className = "hint hint--err";
+    msg.textContent = why === "taken" ? ko ? "\uC774\uBBF8 \uC4F0\uB294 \uC774\uB984\uC785\uB2C8\uB2E4" : "That name is taken" : why === "long" ? ko ? "\uB108\uBB34 \uAE41\uB2C8\uB2E4. \uD55C\uAE00 6\uC790 \uB610\uB294 \uC601\uBB38 8\uC790\uAE4C\uC9C0" : "Too long" : why === "space" ? ko ? "\uB744\uC5B4\uC4F0\uAE30\uB294 \uB123\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4" : "No spaces" : why === "char" ? ko ? "\uD55C\uAE00, \uC601\uBB38, \uC22B\uC790\uB9CC \uB429\uB2C8\uB2E4" : "Letters and numbers only" : ko ? "\uC774\uB984\uC744 \uB123\uC5B4 \uC8FC\uC138\uC694" : "Please enter a name";
+    btn.disabled = false;
+  });
   function openAcct() {
     let box = document.getElementById("acctBox");
     if (!box) {
@@ -789,6 +844,10 @@ __export(room_exports, {
   mount: () => mount3
 });
 function mount3(root) {
+  const faceOf = (i) => {
+    const f = window.GAME && window.GAME.faces;
+    return f && f[i] != null ? f[i] : i;
+  };
   const document2 = scoped(root);
   const HEADS2 = HEADS;
   const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
@@ -982,7 +1041,7 @@ function mount3(root) {
       const big = cap <= 6;
       el.style.setProperty("--av", (big ? 46 : 36) + "px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
       box.appendChild(el);
     }
     const sm = document2.getElementById("sum");
@@ -1116,6 +1175,10 @@ __export(draw_exports, {
   mount: () => mount4
 });
 function mount4(root) {
+  const faceOf = (i) => {
+    const f = window.GAME && window.GAME.faces;
+    return f && f[i] != null ? f[i] : i;
+  };
   const document2 = scoped(root);
   const ART2 = ART_DECK, HEADS2 = HEADS;
   const el = (id) => document2.getElementById(id);
@@ -1421,7 +1484,7 @@ function mount4(root) {
       const dv = drawn[i] == null ? "" : val(drawn[i]);
       const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
       const upper = Math.sin(Math.PI / 2 + i * 2 * Math.PI / N2) < 0;
-      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
+      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
       box.appendChild(d);
     }
     const md = el("mid");
@@ -1437,7 +1500,7 @@ function mount4(root) {
     } else if (!waiting.length) {
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.settling + "</div>";
     } else if (waiting.indexOf(0) >= 0) {
-      m.innerHTML = '<div class="mid__h">' + t.h + '</div><div class="mid__s">' + t.s + '</div><div class="cd">' + Math.max(pickLeft, 0) + "</div>";
+      m.innerHTML = '<div class="mid__h">' + t.h + (pickLeft > 0 ? " <b>(" + pickLeft + ")</b>" : "") + '</div><div class="mid__s">' + t.s + "</div>";
     } else {
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.waitS(nameOf(waiting[0])) + "</div>";
     }
@@ -23339,8 +23402,12 @@ function mount8(root) {
   let kind = "all";
   let rows = null, mine = null, state = "idle";
   const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function tierHTML(t) {
+    const n = Math.max(0, Math.min(10, Number(t) || 0));
+    return '<span class="rk__t" style="background-image:url(/assets/tier_' + String(n).padStart(2, "0") + '.webp)"><b>' + n + "</b></span>";
+  }
   function rowHTML(no, r, me2) {
-    return '<div class="rk__r' + (me2 ? " rk__r--me" : "") + '"><span class="rk__no">' + no + '</span><span class="rk__t">' + T[lang].tier(r.tier) + '</span><span class="rk__n">' + esc(r.name || "-") + '</span><span class="rk__s">' + Number(r.score || 0).toLocaleString() + "</span></div>";
+    return '<div class="rk__r' + (me2 ? " rk__r--me" : "") + '"><span class="rk__no">' + no + "</span>" + tierHTML(r.tier) + '<span class="rk__n">' + esc(r.name || "-") + '</span><span class="rk__s">' + Number(r.score || 0).toLocaleString() + "</span></div>";
   }
   function draw() {
     const t = T[lang];

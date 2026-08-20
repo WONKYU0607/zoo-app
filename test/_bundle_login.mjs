@@ -376,6 +376,61 @@ function initNav() {
     openAcct();
     showConflict();
   };
+  let nameBox = null;
+  function openName() {
+    const ko = (window.__lang || "ko") === "ko";
+    if (!nameBox) {
+      nameBox = document.createElement("div");
+      nameBox.className = "cfg";
+      nameBox.id = "nkBox";
+      document.getElementById("stage").appendChild(nameBox);
+    }
+    nameBox.innerHTML = '<div class="cfg__v" data-nkclose></div><div class="cfg__p"><div class="cfg__h"><span>' + (ko ? "\uBCC4\uBA85 \uC815\uD558\uAE30" : "Choose a name") + '</span><button class="cfg__x" data-nkclose aria-label="close">\xD7</button></div><div class="cfg__b"><p class="cfg__n">' + (ko ? "\uD55C\uAE00 6\uC790 \uB610\uB294 \uC601\uBB38\xB7\uC22B\uC790 8\uC790\uAE4C\uC9C0. \uB2E4\uB978 \uC0AC\uB78C\uACFC \uACB9\uCE60 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4." : "Up to 6 Korean or 8 Latin characters. Must be unique.") + '</p><input id="nkIn" maxlength="16" autocomplete="off" spellcheck="false" class="nk__in"><p class="hint" id="nkMsg"></p><div class="cfg__row"><button id="nkOk">' + (ko ? "\uC815\uD558\uAE30" : "Save") + "</button></div></div></div>";
+    const inp = nameBox.querySelector("#nkIn");
+    if (inp) {
+      inp.value = window.ACCOUNT && window.ACCOUNT.name || "";
+      setTimeout(() => inp.focus(), 60);
+    }
+    nameBox.classList.add("on");
+  }
+  function closeName() {
+    if (nameBox) nameBox.classList.remove("on");
+  }
+  window.__askName = openName;
+  document.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-nkclose]")) {
+      closeName();
+      return;
+    }
+    if (!e.target.closest("#nkOk")) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const inp = document.getElementById("nkIn");
+    const msg = document.getElementById("nkMsg");
+    const btn = document.getElementById("nkOk");
+    if (!inp || !window.setNickname) return;
+    btn.disabled = true;
+    msg.className = "hint";
+    msg.textContent = ko ? "\uD655\uC778\uD558\uB294 \uC911" : "Checking";
+    let r = null;
+    try {
+      r = await window.setNickname(inp.value);
+    } catch (err) {
+      msg.className = "hint hint--err";
+      msg.textContent = String(err && err.code || err);
+      btn.disabled = false;
+      return;
+    }
+    if (r && r.ok) {
+      closeName();
+      btn.disabled = false;
+      paintAcct();
+      return;
+    }
+    const why = r && r.why;
+    msg.className = "hint hint--err";
+    msg.textContent = why === "taken" ? ko ? "\uC774\uBBF8 \uC4F0\uB294 \uC774\uB984\uC785\uB2C8\uB2E4" : "That name is taken" : why === "long" ? ko ? "\uB108\uBB34 \uAE41\uB2C8\uB2E4. \uD55C\uAE00 6\uC790 \uB610\uB294 \uC601\uBB38 8\uC790\uAE4C\uC9C0" : "Too long" : why === "space" ? ko ? "\uB744\uC5B4\uC4F0\uAE30\uB294 \uB123\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4" : "No spaces" : why === "char" ? ko ? "\uD55C\uAE00, \uC601\uBB38, \uC22B\uC790\uB9CC \uB429\uB2C8\uB2E4" : "Letters and numbers only" : ko ? "\uC774\uB984\uC744 \uB123\uC5B4 \uC8FC\uC138\uC694" : "Please enter a name";
+    btn.disabled = false;
+  });
   function openAcct() {
     let box = document.getElementById("acctBox");
     if (!box) {
