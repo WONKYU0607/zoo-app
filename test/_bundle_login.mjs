@@ -334,16 +334,19 @@ function initNav() {
     if (!btn) return;
     lab.textContent = ko ? "\uACC4\uC815" : "Account";
     if (!a || !a.signedIn) {
+      line.hidden = false;
       line.textContent = ko ? "\uB85C\uADF8\uC778\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4" : "Not signed in";
       row.hidden = true;
       return;
     }
     if (a.guest) {
+      line.hidden = false;
       line.textContent = ko ? "\uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : "Guest \xB7 not on the leaderboard";
       btn.textContent = ko ? "\uAD6C\uAE00 \uACC4\uC815 \uC787\uAE30" : "Link Google account";
       row.hidden = false;
     } else {
-      line.textContent = ko ? "\uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : "On the leaderboard";
+      line.textContent = "";
+      line.hidden = true;
       row.hidden = true;
     }
     const nick = document.getElementById("acNick");
@@ -557,9 +560,6 @@ function initNav() {
     }
   });
   window.__onRoundEnd = () => go("result");
-  document.querySelector("#table #endRound").addEventListener("click", () => {
-    if (window.__forceEnd) window.__forceEnd();
-  });
   document.querySelector("#result #next").addEventListener("click", () => {
     const G = window.GAME || {};
     const rounds = window.__opts && window.__opts.rounds || 5;
@@ -622,7 +622,7 @@ var BAR_SWAP = {
   ],
   "table": [
     '<button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>',
-    '<div style="display:flex;align-items:center;gap:9px"><button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button><button id="endRound" style="font-size:10.5px;letter-spacing:.04em;color:#8FA898;border:1px solid #2E4436;border-radius:2px;padding:4px 8px;background:none;cursor:pointer"></button></div>'
+    '<button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button>'
   ]
 };
 
@@ -636,12 +636,7 @@ var MARKUP = {
   <div class="bar">
     <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
     <div class="bar__r" id="round"></div>
-    <div style="display:flex;align-items:center;gap:9px">
-      <div class="lang" id="lang">
-        <button data-l="ko" aria-pressed="true">\uD55C</button>
-        <button data-l="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
+    <span class="bar__sp"></span>
   </div>
 
   <div class="ring" id="ring">

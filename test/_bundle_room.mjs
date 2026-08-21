@@ -384,15 +384,17 @@ function screenView(G, ctx, myID, names) {
       c: G.counts[seat],
       s: G.passed[seat] ? "pass" : "",
       out: G.counts[seat] === 0,
+      /* 몇 번째로 끝냈는가. 0부터, 아직이면 -1 */
+      rank: (G.finished || []).indexOf(seat),
       hold: seat === me ? (G.hands[seat] || []).slice() : null
     };
   }
+  const realCards = (t) => t.cards && t.cards.length === t.count ? t.cards.slice() : new Array(t.count).fill(t.num);
   const table = (G.table || []).map((t) => ({
     by: toScreen(t.by, me, n),
     num: t.num,
     count: t.count,
-    cards: new Array(t.count).fill(t.num)
-    /* 남의 카드는 숫자만 안다 */
+    cards: realCards(t)
   }));
   return {
     N: n,
@@ -411,7 +413,7 @@ function screenView(G, ctx, myID, names) {
       by: toScreen(t.by, me, n),
       num: t.num,
       count: t.count,
-      cards: new Array(t.count).fill(t.num)
+      cards: realCards(t)
     })),
     finish: (G.finished || []).map((s) => toScreen(s, me, n)),
     score: G.counts.map((_, seat) => G.score[toSeat(seat, me, n)]),
@@ -456,7 +458,7 @@ function screenView(G, ctx, myID, names) {
         by: toScreen(t.by, me, n),
         num: t.num,
         count: t.count,
-        cards: new Array(t.count).fill(t.num)
+        cards: realCards(t)
       }))
     } : null,
     over: ctx.gameover ? {
@@ -662,7 +664,6 @@ function mount2(root) {
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n) => n + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
-      endR: "\uD310 \uC885\uB8CC",
       close: "\uB2E4\uC2DC \uB204\uB974\uBA74 \uC811\uD799\uB2C8\uB2E4"
     },
     en: {
@@ -691,7 +692,6 @@ function mount2(root) {
       autoPass: "Time up \u2014 passed for you",
       left2: (n) => n + "s",
       cleared: "Pile cleared \xB7 you lead again",
-      endR: "End round",
       close: "Tap again to close"
     }
   };
@@ -710,7 +710,7 @@ function mount2(root) {
   function apply(v) {
     if (!v) return;
     if (holdingEnd && !v.over) return;
-    SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat }));
+    SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -783,7 +783,8 @@ function mount2(root) {
       c: i === lr.order[lr.order.length - 1] ? x.c : 0,
       s: "",
       hold: [],
-      av: x.seat
+      av: x.seat,
+      r: lr.order.indexOf(i)
     }));
     hand = [];
     finish = lr.order.slice();
@@ -843,8 +844,11 @@ function mount2(root) {
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n) => isJ(n) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n - 1];
   const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
-  function cardHTML(n, w) {
-    if (isJ(n)) return '<div class="card is-joker" style="--w:' + w + 'px"><div class="card__band"><span class="card__name">\uCE74\uBA5C\uB808\uC628</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"></div></div>';
+  function cardHTML(n, w, as) {
+    if (isJ(n)) {
+      const num = as == null || as >= 13 ? '<span class="card__num as"></span>' : '<span class="card__num as">' + as + "</span>";
+      return '<div class="card is-joker" style="--w:' + w + 'px"><div class="card__band">' + num + '<span class="card__name">' + T[lang].joker + "</span>" + num + '</div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band">' + num + num + "</div></div>";
+    }
     return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + label(n) + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
   }
   const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
@@ -886,7 +890,8 @@ function mount2(root) {
     const s = Math.sin(a);
     const bias = 0;
     const side = Math.abs(s) < 0.05;
-    const nudge = s > 0.9 ? 9 : side ? 4 : s > 0.25 ? 2 : 0;
+    const top = s < -0.85;
+    const nudge = top ? 22 : s > 0.9 ? 9 : side ? 4 : s > 0.25 ? 2 : 0;
     const nudgeX = side ? Math.cos(a) < 0 ? 2 : -2 : 0;
     return {
       x: RING.cx + Math.cos(a) * -RING.rx,
@@ -944,6 +949,13 @@ function mount2(root) {
       if (ox !== nx || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  function rankTag(r) {
+    const k = r + 1;
+    if (lang === "ko") return k + "\uB4F1";
+    const t = k % 10, h = k % 100;
+    const sfx = t === 1 && h !== 11 ? "st" : t === 2 && h !== 12 ? "nd" : t === 3 && h !== 13 ? "rd" : "th";
+    return k + sfx;
+  }
   function renderSeats() {
     syncRing();
     const box = el("seats");
@@ -962,14 +974,14 @@ function mount2(root) {
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];
-      const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";
+      const tag = s.c === 0 ? s.r >= 0 ? rankTag(s.r) : tg.tagOut : s.s === "pass" ? tg.tagPass : "";
       const topSeat = i !== 0 && p.y < 22;
       if (topSeat) d.classList.add("seat--above");
-      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>';
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s.n || "") + "</span>";
       const fan = i === 0 ? "" : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s.c) + "</span>";
-      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
+      d.innerHTML = topSeat ? fan + cnt + av + nm : av + nm + fan + cnt;
       box.appendChild(d);
     });
     const nd = el("need");
@@ -1052,8 +1064,6 @@ function mount2(root) {
     };
     const rname = ri == null ? "" : lang === "ko" ? ri + 1 + "\uB4F1" : ord(ri + 1);
     el("round").textContent = t.roundN(rn) + (rname ? " \xB7 " + rname : "");
-    const eb = el("endRound");
-    if (eb) eb.textContent = t.endR;
     el("pass").textContent = t.pass;
     const list = sel.map((i) => hand[i]);
     const ok = legal(list) && turn === 0 && !busy;
@@ -1198,14 +1208,6 @@ function mount2(root) {
       renderPile();
     }
   });
-  document.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document.documentElement.lang = lang;
-      document.querySelectorAll("#lang button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      draw();
-    });
-  });
   boot();
   window.addEventListener("resize", draw);
   window.addEventListener("langchange", () => {
@@ -1272,12 +1274,7 @@ var MARKUP = {
   <div class="bar">
     <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
     <div class="bar__r" id="round"></div>
-    <div style="display:flex;align-items:center;gap:9px">
-      <div class="lang" id="lang">
-        <button data-l="ko" aria-pressed="true">\uD55C</button>
-        <button data-l="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
+    <span class="bar__sp"></span>
   </div>
 
   <div class="ring" id="ring">

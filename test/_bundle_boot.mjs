@@ -14,12 +14,7 @@ var MARKUP = {
   <div class="bar">
     <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
     <div class="bar__r" id="round"></div>
-    <div style="display:flex;align-items:center;gap:9px">
-      <div class="lang" id="lang">
-        <button data-l="ko" aria-pressed="true">\uD55C</button>
-        <button data-l="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
+    <span class="bar__sp"></span>
   </div>
 
   <div class="ring" id="ring">
@@ -214,16 +209,19 @@ function initNav() {
     if (!btn) return;
     lab.textContent = ko ? "\uACC4\uC815" : "Account";
     if (!a || !a.signedIn) {
+      line.hidden = false;
       line.textContent = ko ? "\uB85C\uADF8\uC778\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4" : "Not signed in";
       row.hidden = true;
       return;
     }
     if (a.guest) {
+      line.hidden = false;
       line.textContent = ko ? "\uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : "Guest \xB7 not on the leaderboard";
       btn.textContent = ko ? "\uAD6C\uAE00 \uACC4\uC815 \uC787\uAE30" : "Link Google account";
       row.hidden = false;
     } else {
-      line.textContent = ko ? "\uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : "On the leaderboard";
+      line.textContent = "";
+      line.hidden = true;
       row.hidden = true;
     }
     const nick = document.getElementById("acNick");
@@ -437,9 +435,6 @@ function initNav() {
     }
   });
   window.__onRoundEnd = () => go("result");
-  document.querySelector("#table #endRound").addEventListener("click", () => {
-    if (window.__forceEnd) window.__forceEnd();
-  });
   document.querySelector("#result #next").addEventListener("click", () => {
     const G2 = window.GAME || {};
     const rounds = window.__opts && window.__opts.rounds || 5;
@@ -502,7 +497,7 @@ var BAR_SWAP = {
   ],
   "table": [
     '<button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>',
-    '<div style="display:flex;align-items:center;gap:9px"><button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button><button id="endRound" style="font-size:10.5px;letter-spacing:.04em;color:#8FA898;border:1px solid #2E4436;border-radius:2px;padding:4px 8px;background:none;cursor:pointer"></button></div>'
+    '<button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button>'
   ]
 };
 
@@ -1180,7 +1175,8 @@ __export(draw_exports, {
 });
 function mount4(root) {
   const faceOf = (i) => {
-    const f = window.GAME && window.GAME.faces;
+    const g = window.GAME || {};
+    const f = g.seatFaces || g.faces;
     return f && f[i] != null ? f[i] : i;
   };
   const document2 = scoped(root);
@@ -1224,7 +1220,12 @@ function mount4(root) {
   let lang = window.__lang || "ko";
   let online = false;
   let N2 = 6;
-  const nameOf = (i) => (lang === "ko" ? NAMES_KO : NAMES_EN)[i];
+  const nameOf = (i) => {
+    const g = window.GAME || {};
+    const list = lang === "ko" ? g.names : g.namesEn || g.names;
+    const v = list && list[i];
+    return v == null || v === "" ? (lang === "ko" ? NAMES_KO : NAMES_EN)[i] : v;
+  };
   const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
   const val = (c) => isJ(c) ? 13 : c;
   let drawn = Array(N2).fill(null);
@@ -1270,7 +1271,8 @@ function mount4(root) {
   }
   function cardFace(c) {
     const n = isJ(c) ? 13 : c;
-    return '<div class="card"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(c) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
+    const nm = isJ(c) ? lang === "ko" ? "\uCE74\uBA5C\uB808\uC628" : "CHAMELEON" : (lang === "ko" ? KO_N : EN_N)[c - 1];
+    return '<div class="card"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + nm + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(c) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
   }
   function makeDeck2() {
     const d = [];
@@ -1321,8 +1323,13 @@ function mount4(root) {
     deck.innerHTML = "";
     const n = pool.length;
     const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
-    const avail = (el("ring").clientWidth || 360) - 48;
-    const pw = Math.max(26, Math.min(34, Math.floor((avail - (cols - 1) * 9) / cols)));
+    const rows = Math.ceil(n / cols);
+    const ringEl = el("ring");
+    const avail = (ringEl.clientWidth || 360) - 48;
+    const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
+    const byW = Math.floor((avail - (cols - 1) * 9) / cols);
+    const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
+    const pw = Math.max(26, Math.min(46, byW, byH));
     deck.style.setProperty("--cols", cols);
     deck.style.setProperty("--pw", pw + "px");
     pool.forEach((c, k2) => {
@@ -1601,15 +1608,17 @@ function screenView(G2, ctx, myID, names) {
       c: G2.counts[seat],
       s: G2.passed[seat] ? "pass" : "",
       out: G2.counts[seat] === 0,
+      /* 몇 번째로 끝냈는가. 0부터, 아직이면 -1 */
+      rank: (G2.finished || []).indexOf(seat),
       hold: seat === me2 ? (G2.hands[seat] || []).slice() : null
     };
   }
+  const realCards = (t) => t.cards && t.cards.length === t.count ? t.cards.slice() : new Array(t.count).fill(t.num);
   const table = (G2.table || []).map((t) => ({
     by: toScreen(t.by, me2, n),
     num: t.num,
     count: t.count,
-    cards: new Array(t.count).fill(t.num)
-    /* 남의 카드는 숫자만 안다 */
+    cards: realCards(t)
   }));
   return {
     N: n,
@@ -1628,7 +1637,7 @@ function screenView(G2, ctx, myID, names) {
       by: toScreen(t.by, me2, n),
       num: t.num,
       count: t.count,
-      cards: new Array(t.count).fill(t.num)
+      cards: realCards(t)
     })),
     finish: (G2.finished || []).map((s) => toScreen(s, me2, n)),
     score: G2.counts.map((_, seat) => G2.score[toSeat(seat, me2, n)]),
@@ -1673,7 +1682,7 @@ function screenView(G2, ctx, myID, names) {
         by: toScreen(t.by, me2, n),
         num: t.num,
         count: t.count,
-        cards: new Array(t.count).fill(t.num)
+        cards: realCards(t)
       }))
     } : null,
     over: ctx.gameover ? {
@@ -1879,7 +1888,6 @@ function mount5(root) {
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n) => n + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
-      endR: "\uD310 \uC885\uB8CC",
       close: "\uB2E4\uC2DC \uB204\uB974\uBA74 \uC811\uD799\uB2C8\uB2E4"
     },
     en: {
@@ -1908,7 +1916,6 @@ function mount5(root) {
       autoPass: "Time up \u2014 passed for you",
       left2: (n) => n + "s",
       cleared: "Pile cleared \xB7 you lead again",
-      endR: "End round",
       close: "Tap again to close"
     }
   };
@@ -1927,7 +1934,7 @@ function mount5(root) {
   function apply(v) {
     if (!v) return;
     if (holdingEnd && !v.over) return;
-    SEATS = v.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat }));
+    SEATS = v.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat, r: x2.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -2000,7 +2007,8 @@ function mount5(root) {
       c: i === lr.order[lr.order.length - 1] ? x2.c : 0,
       s: "",
       hold: [],
-      av: x2.seat
+      av: x2.seat,
+      r: lr.order.indexOf(i)
     }));
     hand = [];
     finish = lr.order.slice();
@@ -2060,8 +2068,11 @@ function mount5(root) {
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n) => isJ(n) ? T2[lang].joker : (lang === "ko" ? KO_N : EN_N)[n - 1];
   const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
-  function cardHTML(n, w) {
-    if (isJ(n)) return '<div class="card is-joker" style="--w:' + w + 'px"><div class="card__band"><span class="card__name">\uCE74\uBA5C\uB808\uC628</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"></div></div>';
+  function cardHTML(n, w, as) {
+    if (isJ(n)) {
+      const num = as == null || as >= 13 ? '<span class="card__num as"></span>' : '<span class="card__num as">' + as + "</span>";
+      return '<div class="card is-joker" style="--w:' + w + 'px"><div class="card__band">' + num + '<span class="card__name">' + T2[lang].joker + "</span>" + num + '</div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band">' + num + num + "</div></div>";
+    }
     return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + label(n) + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
   }
   const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
@@ -2103,7 +2114,8 @@ function mount5(root) {
     const s = Math.sin(a);
     const bias = 0;
     const side = Math.abs(s) < 0.05;
-    const nudge = s > 0.9 ? 9 : side ? 4 : s > 0.25 ? 2 : 0;
+    const top = s < -0.85;
+    const nudge = top ? 22 : s > 0.9 ? 9 : side ? 4 : s > 0.25 ? 2 : 0;
     const nudgeX = side ? Math.cos(a) < 0 ? 2 : -2 : 0;
     return {
       x: RING.cx + Math.cos(a) * -RING.rx,
@@ -2161,6 +2173,13 @@ function mount5(root) {
       if (ox !== nx || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  function rankTag(r) {
+    const k2 = r + 1;
+    if (lang === "ko") return k2 + "\uB4F1";
+    const t = k2 % 10, h = k2 % 100;
+    const sfx = t === 1 && h !== 11 ? "st" : t === 2 && h !== 12 ? "nd" : t === 3 && h !== 13 ? "rd" : "th";
+    return k2 + sfx;
+  }
   function renderSeats() {
     syncRing();
     const box = el("seats");
@@ -2179,14 +2198,14 @@ function mount5(root) {
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T2[lang];
-      const tag = s.c === 0 ? tg.tagOut : s.s === "pass" ? tg.tagPass : "";
+      const tag = s.c === 0 ? s.r >= 0 ? rankTag(s.r) : tg.tagOut : s.s === "pass" ? tg.tagPass : "";
       const topSeat = i !== 0 && p.y < 22;
       if (topSeat) d.classList.add("seat--above");
-      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>';
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s.n || "") + "</span>";
       const fan = i === 0 ? "" : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T2[lang].left(s.c) + "</span>";
-      d.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
+      d.innerHTML = topSeat ? fan + cnt + av + nm : av + nm + fan + cnt;
       box.appendChild(d);
     });
     const nd = el("need");
@@ -2269,8 +2288,6 @@ function mount5(root) {
     };
     const rname = ri == null ? "" : lang === "ko" ? ri + 1 + "\uB4F1" : ord(ri + 1);
     el("round").textContent = t.roundN(rn2) + (rname ? " \xB7 " + rname : "");
-    const eb = el("endRound");
-    if (eb) eb.textContent = t.endR;
     el("pass").textContent = t.pass;
     const list = sel.map((i) => hand[i]);
     const ok = legal(list) && turn === 0 && !busy;
@@ -2415,14 +2432,6 @@ function mount5(root) {
       renderPile();
     }
   });
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
   boot();
   window.addEventListener("resize", draw);
   window.addEventListener("langchange", () => {
@@ -2531,9 +2540,10 @@ function mount6(root) {
   const myHand = () => holdOf(0);
   const nameOf = (i) => ((lang === "ko" ? G2().names : G2().namesEn) || G2().names || [])[i] || "";
   const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
+  const cardName = (n) => isJ(n) ? lang === "ko" ? "\uCE74\uBA5C\uB808\uC628" : "CHAMELEON" : (lang === "ko" ? KO_N : EN_N)[n - 1];
   function cardHTML(n, w) {
-    if (isJ(n)) return '<div class="card" style="--w:' + w + 'px"><div class="card__band"></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"></div></div>';
-    return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
+    if (isJ(n)) return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num"></span><span class="card__name">' + cardName(n) + '</span><span class="card__num"></span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"></div></div>';
+    return '<div class="card" style="--w:' + w + 'px"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + cardName(n) + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(n) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
   }
   function order() {
     return reversed ? ranks.slice().reverse() : ranks;
