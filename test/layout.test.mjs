@@ -6,7 +6,16 @@
 
    여기서는 dist 를 띄우고 실제 좌표와 '그 점을 누르면 누가 받는가'를 본다. */
 
-import { serve, open, toTable, boxes, hit } from "./shot.mjs";
+import { serve, open, toTable, boxes, hit, findBrowser } from "./shot.mjs";
+
+/* 크롬이 없으면 건너뛴다. 이 검사만 브라우저가 필요하다 */
+if (!(await findBrowser())){
+  console.log("\n크롬을 못 찾아 배치 검사를 건너뜁니다.");
+  console.log("크롬이나 엣지를 깔거나, CHROME_PATH 로 실행 파일 경로를 알려 주세요.");
+  console.log("  예) set CHROME_PATH=C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\n");
+  console.log("=== 통과 0 / 실패 0 ===\n");
+  process.exit(0);
+}
 
 let pass = 0, fail = 0;
 const check = (name, ok, note) => {

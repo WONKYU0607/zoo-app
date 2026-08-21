@@ -542,7 +542,6 @@ var EMOTES = [
   { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
   { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
 ];
-var EMOTE_BTN = "assets/emote_btn.webp";
 var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/entry.js
@@ -1186,407 +1185,6 @@ var draw_exports = {};
 __export(draw_exports, {
   mount: () => mount4
 });
-function mount4(root) {
-  const faceOf = (i) => {
-    const g = window.GAME || {};
-    const f = g.seatFaces || g.faces;
-    return f && f[i] != null ? f[i] : i;
-  };
-  const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
-  const el = (id) => document2.getElementById(id);
-  const isJ = (c) => c >= 13;
-  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
-  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
-  const NAMES_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
-  const NAMES_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
-  const T2 = {
-    ko: {
-      step: "\uCCAB \uC21C\uC11C \uC815\uD558\uAE30",
-      h: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC73C\uC138\uC694",
-      s: "\uC22B\uC790\uAC00 \uAC00\uC7A5 \uB0AE\uC740 \uBD84\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uAC70\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC73C\uB85C \uB3D5\uB2C8\uB2E4. \uCE74\uBA5C\uB808\uC628\uC740 13\uC73C\uB85C \uCE69\uB2C8\uB2E4.",
-      waitH: "\uBF51\uB294 \uC911",
-      waitS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uACE0\uB974\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
-      settling: "\uBF51\uC740 \uCE74\uB4DC\uB97C \uB9DE\uCDB0 \uBCF4\uB294 \uC911\uC785\uB2C8\uB2E4.",
-      doneH: "\uC21C\uC11C\uAC00 \uC815\uD574\uC84C\uC2B5\uB2C8\uB2E4",
-      first: "\uC120",
-      doneS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uC5EC\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC785\uB2C8\uB2E4.",
-      note: "\uCCAB \uD310\uC740 \uACC4\uAE09\uB3C4 \uC138\uAE08\uB3C4 \uC5C6\uC2B5\uB2C8\uB2E4.",
-      goIn: (n) => n + "\uCD08 \uB4A4 \uC2DC\uC791\uD569\uB2C8\uB2E4",
-      picking: "\uACE0\uB974\uB294 \uC911"
-    },
-    en: {
-      step: "Opening draw",
-      h: "Draw one card",
-      s: "The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
-      waitH: "Drawing",
-      waitS: (n) => "<b>" + n + "</b> is choosing.",
-      settling: "Comparing the draws.",
-      doneH: "Turn order is set",
-      first: "LEAD",
-      doneS: (n) => "<b>" + n + "</b> leads. Turns run clockwise from there.",
-      note: "The first round has no ranks and no tax.",
-      goIn: (n) => "Starting in " + n,
-      picking: "Choosing"
-    }
-  };
-  let lang = window.__lang || "ko";
-  let online = false;
-  let N2 = 6;
-  const nameOf = (i) => {
-    const g = window.GAME || {};
-    const list = lang === "ko" ? g.names : g.namesEn || g.names;
-    const v = list && list[i];
-    return v == null || v === "" ? (lang === "ko" ? NAMES_KO : NAMES_EN)[i] : v;
-  };
-  const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
-  const val = (c) => isJ(c) ? 13 : c;
-  let drawn = Array(N2).fill(null);
-  let pool = [];
-  let takenK = [];
-  let plan = null;
-  let waiting = [];
-  let phase = "pick";
-  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
-  function placeTable(sec, cyPct) {
-    const b = sec.getBoundingClientRect();
-    const W = b.width, H = b.height;
-    const scale = Math.max(W / OV.iw, H / OV.ih);
-    const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = cyPct == null ? (H - dh) / 2 + OV.cy * dh : cyPct / 100 * H;
-    const ox = W / 2 - OV.cx * dw;
-    const oy = cy - OV.cy * dh;
-    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
-    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
-    return {
-      cx: (ox + OV.cx * dw) / W * 100,
-      cy: cy / H * 100,
-      rx: OV.rx * dw / W * 100,
-      ry: OV.ry * dh / H * 100
-    };
-  }
-  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
-  function syncRing() {
-    const sec = window.document.getElementById("draw");
-    if (!sec) return;
-    RING = placeTable(sec, null);
-    const d = el("deck");
-    if (d) {
-      d.style.left = RING.cx + "%";
-      d.style.top = RING.cy + "%";
-    }
-  }
-  function seatPos(i) {
-    const a = Math.PI / 2 + i * 2 * Math.PI / N2;
-    const s = Math.sin(a);
-    const bias = s > 0.25 ? 3.4 * s : 0;
-    return { x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias };
-  }
-  function cardFace(c) {
-    const n = isJ(c) ? 13 : c;
-    const nm = isJ(c) ? lang === "ko" ? "\uCE74\uBA5C\uB808\uC628" : "CHAMELEON" : (lang === "ko" ? KO_N : EN_N)[c - 1];
-    return '<div class="card"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + nm + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(c) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
-  }
-  function makeDeck2() {
-    const d = [];
-    for (let n = 1; n <= 12; n++) for (let i = 0; i < n; i++) d.push(n);
-    d.push(13, 14);
-    for (let i = d.length - 1; i > 0; i--) {
-      const k2 = Math.floor(Math.random() * (i + 1));
-      [d[i], d[k2]] = [d[k2], d[i]];
-    }
-    return d;
-  }
-  let pickOrder = [];
-  function winner() {
-    let best = null;
-    pickOrder.forEach((i) => {
-      if (drawn[i] == null) return;
-      if (best === null || val(drawn[i]) < val(drawn[best])) best = i;
-    });
-    return best === null ? 0 : best;
-  }
-  function ranking() {
-    const w = winner();
-    return Array.from({ length: N2 }, (_, k2) => ({ i: (w + k2) % N2 }));
-  }
-  function layout(players) {
-    const d = makeDeck2();
-    pool = d.slice(0, players.length);
-    plan = null;
-    if (online && typeof window.__leadSeat === "number") {
-      const cand = [];
-      for (let v = 1; v <= 12; v++) cand.push(v);
-      for (let i = cand.length - 1; i > 0; i--) {
-        const k2 = Math.floor(Math.random() * (i + 1));
-        const t = cand[i];
-        cand[i] = cand[k2];
-        cand[k2] = t;
-      }
-      const use = cand.slice(0, N2).sort((a, b) => a - b);
-      const lead = window.__leadSeat;
-      plan = new Array(N2).fill(0);
-      for (let k2 = 0; k2 < N2; k2++) plan[(lead + k2) % N2] = use[k2];
-      pool = plan.slice();
-    }
-    waiting = players.slice();
-    const deck = el("deck");
-    deck.innerHTML = "";
-    const n = pool.length;
-    const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
-    const rows = Math.ceil(n / cols);
-    const ringEl = el("ring");
-    const avail = (ringEl.clientWidth || 360) - 48;
-    const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
-    const byW = Math.floor((avail - (cols - 1) * 9) / cols);
-    const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
-    const pw = Math.max(26, Math.min(46, byW, byH));
-    deck.style.setProperty("--cols", cols);
-    deck.style.setProperty("--pw", pw + "px");
-    pool.forEach((c, k2) => {
-      const w = document2.createElement("div");
-      w.className = "pk";
-      w.dataset.k = k2;
-      w.innerHTML = '<div class="pk__in"><div class="pk__f pk__f--b"><img src="' + ART2.back + '" alt=""></div><div class="pk__f pk__f--a">' + cardFace(c) + "</div></div>";
-      w.onclick = () => {
-        if (waiting[0] === 0) pick(0, k2);
-      };
-      deck.appendChild(w);
-    });
-  }
-  const PICK_SEC = 5;
-  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null;
-  function armPickTimer() {
-    stopPickTimer();
-    if (phase !== "pick") return;
-    startBotLoop();
-    if (waiting.indexOf(0) < 0) return;
-    pickLeft = PICK_SEC;
-    draw();
-    pickTickId = setInterval(() => {
-      pickLeft--;
-      if (pickLeft < 0) pickLeft = 0;
-      draw();
-    }, 1e3);
-    pickTimer = setTimeout(() => {
-      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
-      const free = el("deck").querySelectorAll(".pk:not(.taken)");
-      if (free.length) free[Math.floor(Math.random() * free.length)].click();
-    }, PICK_SEC * 1e3);
-  }
-  function stopPickTimer() {
-    if (pickTimer) {
-      clearTimeout(pickTimer);
-      pickTimer = null;
-    }
-    if (pickTickId) {
-      clearInterval(pickTickId);
-      pickTickId = null;
-    }
-    pickLeft = 0;
-  }
-  function startBotLoop() {
-    if (botLoopId) return;
-    botLoopId = setInterval(() => {
-      if (phase !== "pick") {
-        stopBotLoop();
-        return;
-      }
-      const others = waiting.filter((x2) => x2 !== 0);
-      if (!others.length) {
-        stopBotLoop();
-        return;
-      }
-      botPick2();
-    }, 900);
-  }
-  function stopBotLoop() {
-    if (botLoopId) {
-      clearInterval(botLoopId);
-      botLoopId = null;
-    }
-  }
-  function pick(seat, k2) {
-    const w = el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)');
-    if (!w) return;
-    takenK.push(k2);
-    if (online && plan) {
-      pool[k2] = plan[seat];
-      const face = w.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(pool[k2]);
-    }
-    drawn[seat] = pool[k2];
-    pickOrder.push(seat);
-    waiting = waiting.filter((x2) => x2 !== seat);
-    w.classList.add("flip", "taken");
-    w.dataset.seat = seat;
-    draw();
-    if (seat === 0) stopPickTimer();
-    if (!waiting.length) {
-      stopBotLoop();
-      setTimeout(settle, 1e3);
-    }
-  }
-  function botPick2() {
-    const seat = waiting.find((x2) => x2 !== 0);
-    if (seat === void 0) return;
-    const free = pool.map((_, k2) => k2).filter((k2) => el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)'));
-    pick(seat, free[Math.floor(Math.random() * free.length)]);
-  }
-  let cd = 5, cdId = null;
-  function startCountdown() {
-    cd = 5;
-    draw();
-    if (cdId) clearInterval(cdId);
-    cdId = setInterval(() => {
-      const sec = window.document.getElementById("draw");
-      if (sec && !sec.classList.contains("is-on")) {
-        clearInterval(cdId);
-        cdId = null;
-        return;
-      }
-      cd--;
-      draw();
-      if (cd <= 0) {
-        clearInterval(cdId);
-        cdId = null;
-        const g = el("go");
-        if (g && !g.disabled) g.click();
-      }
-    }, 1e3);
-  }
-  function settle() {
-    phase = "done";
-    const w = online && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
-    window.GAME = window.GAME || {};
-    window.GAME.N = N2;
-    window.GAME.roundNo = 1;
-    window.GAME.score = Array(N2).fill(0);
-    window.GAME.order = Array.from({ length: N2 }, (_, k2) => (w + k2) % N2);
-    if (!online) {
-      window.GAME.finish = null;
-      window.GAME.hold = null;
-    }
-    draw();
-    startCountdown();
-  }
-  function anchorSeats(box, limitBottom) {
-    const root2 = window.document.documentElement;
-    const W = (window.document.getElementById("stage") || root2).getBoundingClientRect();
-    box.querySelectorAll(".seat").forEach((s) => {
-      const av = s.querySelector(".seat__av");
-      if (!av) return;
-      const dy = av.offsetTop + av.offsetHeight / 2;
-      s.style.transform = "translate(-50%," + -dy + "px)";
-      const r = s.getBoundingClientRect();
-      let ox = 0, oy = 0;
-      if (r.left < W.left + 3) ox = W.left + 3 - r.left;
-      else if (r.right > W.right - 3) ox = W.right - 3 - r.right;
-      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
-      if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
-    });
-  }
-  function renderSeats() {
-    syncRing();
-    const box = el("seats");
-    box.innerHTML = "";
-    const order = phase === "done" ? ranking().map((x2) => x2.i) : [];
-    for (let i = 0; i < N2; i++) {
-      const a = Math.PI / 2 + i * 2 * Math.PI / N2;
-      const p = seatPos(i);
-      const d = document2.createElement("div");
-      const r = order.indexOf(i);
-      d.className = "seat" + (i === 0 ? " seat--me" : "") + (waiting[0] === i && phase === "pick" ? " seat--turn" : "");
-      d.style.left = p.x.toFixed(1) + "%";
-      d.style.top = p.y.toFixed(1) + "%";
-      const big = N2 <= 6;
-      d.style.setProperty("--av", (big ? 42 : 33) + "px");
-      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      const first = phase === "done" && i === winner();
-      const dv = drawn[i] == null ? "" : val(drawn[i]);
-      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
-      const upper = Math.sin(Math.PI / 2 + i * 2 * Math.PI / N2) < 0;
-      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
-      box.appendChild(d);
-    }
-    const md = el("mid");
-    anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
-  }
-  function draw() {
-    const t = T2[lang];
-    el("step").textContent = t.step;
-    renderSeats();
-    const m = el("mid");
-    if (phase === "done") {
-      m.innerHTML = '<div class="mid__h">' + t.doneH + '</div><div class="mid__s">' + t.doneS(nameOf(winner())) + "<br>" + t.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
-    } else if (!waiting.length) {
-      m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.settling + "</div>";
-    } else if (waiting.indexOf(0) >= 0) {
-      m.innerHTML = '<div class="mid__h">' + t.h + (pickLeft > 0 ? " <b>(" + pickLeft + ")</b>" : "") + '</div><div class="mid__s">' + t.s + "</div>";
-    } else {
-      m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.waitS(nameOf(waiting[0])) + "</div>";
-    }
-    const g = el("go");
-    g.textContent = phase === "done" ? t.goIn(cd) : t.picking;
-    g.disabled = phase !== "done";
-    const md = el("mid");
-    anchorSeats(el("seats"), md ? md.getBoundingClientRect().top - 4 : 0);
-  }
-  function boot() {
-    const sbox0 = el("seats");
-    if (sbox0) sbox0.innerHTML = "";
-    const dbox0 = el("deck");
-    if (dbox0) dbox0.innerHTML = "";
-    online = Boolean(window.__net);
-    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
-    if (cdId) {
-      clearInterval(cdId);
-      cdId = null;
-    }
-    cd = 5;
-    drawn = Array(N2).fill(null);
-    pickOrder = [];
-    takenK = [];
-    window.__roundNo = 1;
-    window.__myRankIdx = null;
-    if (!online) {
-      window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
-    }
-    phase = "pick";
-    layout(Array.from({ length: N2 }, (_, i) => i));
-    draw();
-  }
-  window.__bootDraw = () => {
-    boot();
-    armPickTimer();
-  };
-  boot();
-  document2.querySelectorAll("#lang button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  el("go").addEventListener("click", () => {
-    if (cdId) {
-      clearInterval(cdId);
-      cdId = null;
-    }
-  });
-  window.addEventListener("resize", draw);
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    draw();
-  });
-}
-
-// src/screens/table.js
-var table_exports = {};
-__export(table_exports, {
-  mount: () => mount5
-});
 
 // src/lib/deck.js
 var isJoker = (c) => c >= 13;
@@ -1631,6 +1229,19 @@ function screenView(G2, ctx, myID, names) {
     count: t.count,
     cards: realCards(t)
   }));
+  const draw = G2.draw ? {
+    /* 아직 아무도 안 집은 카드의 숫자는 화면에 주지 않는다.
+       이 기기 방은 판 상태를 그대로 읽으므로 여기서 가려야 한다 —
+       안 가리면 낮은 카드가 어디 있는지 다 보인다 */
+    pool: G2.draw.pool.map((v, i) => G2.draw.by[i] == null ? null : v),
+    /* 뽑기 화면 자리는 **방에 앉은 순서** 그대로다(나를 아래로 돌려놓기만 한다).
+       등수 자리로 바꾸는 것은 뽑기가 끝난 뒤 판에서 한다 —
+       여기서 ord 를 쓰면 마지막 사람이 고르는 순간 자리가 통째로 흔들린다 */
+    by: G2.draw.by.map((s) => s == null ? null : (s - me2 + n) % n),
+    mine: G2.draw.took[Number(myID)],
+    /* 내가 가져간 카드 자리 */
+    left: G2.draw.took.filter((x2) => x2 == null).length
+  } : null;
   return {
     N: n,
     me: 0,
@@ -1655,6 +1266,7 @@ function screenView(G2, ctx, myID, names) {
     roundNo: G2.roundNo,
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
+    draw,
     revolution: G2.revolution ? {
       seat: toScreen(G2.revolution.seat, me2, n),
       great: G2.revolution.great,
@@ -1838,6 +1450,35 @@ function scheduleBot() {
   const st2 = raw();
   if (!st2 || st2.ctx.gameover) return;
   const G2 = st2.G, ctx = st2.ctx;
+  if (ctx.phase === "draw") {
+    const d = G2.draw;
+    if (!d) return;
+    const todo = d.took.map((x2, seat2) => x2 == null && actsFor(seat2) ? seat2 : -1).filter((x2) => x2 >= 0);
+    if (!todo.length) return;
+    const g2 = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g2 !== gen) return;
+      const s2 = raw();
+      if (!s2 || s2.ctx.phase !== "draw") {
+        push();
+        return;
+      }
+      const d2 = s2.G.draw;
+      const seat2 = todo[0];
+      if (d2.took[seat2] != null) {
+        push();
+        return;
+      }
+      const free = d2.by.map((v, i) => v == null ? i : -1).filter((i) => i >= 0);
+      if (!free.length) return;
+      engine.client.updatePlayerID(String(seat2));
+      engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, Math.min(engine.botMs, 800));
+    return;
+  }
   if (ctx.phase === "tax") {
     const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
     const revTodo = revSeat >= 0 && actsFor(revSeat);
@@ -1908,6 +1549,13 @@ function setAuto(on2) {
   }
   scheduleBot();
 }
+if (typeof window !== "undefined") window.__eng = engine;
+function takeCard(idx) {
+  const c = engine.client;
+  if (!c) return;
+  c.updatePlayerID(engine.myID);
+  c.moves.takeCard(idx);
+}
 function play(num, count2) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
@@ -1921,7 +1569,392 @@ function passTurn() {
   return true;
 }
 
+// src/screens/draw.js
+function mount4(root) {
+  const faceOf = (i) => {
+    const g = window.GAME || {};
+    const f = g.seatFaces || g.faces;
+    return f && f[i] != null ? f[i] : i;
+  };
+  const document2 = scoped(root);
+  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const el = (id) => document2.getElementById(id);
+  const isJ = (c) => c >= 13;
+  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
+  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
+  const NAMES_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
+  const NAMES_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
+  const T2 = {
+    ko: {
+      step: "\uCCAB \uC21C\uC11C \uC815\uD558\uAE30",
+      h: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC73C\uC138\uC694",
+      s: "\uC22B\uC790\uAC00 \uAC00\uC7A5 \uB0AE\uC740 \uBD84\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uAC70\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC73C\uB85C \uB3D5\uB2C8\uB2E4. \uCE74\uBA5C\uB808\uC628\uC740 13\uC73C\uB85C \uCE69\uB2C8\uB2E4.",
+      waitH: "\uBF51\uB294 \uC911",
+      waitS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uACE0\uB974\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
+      settling: "\uBF51\uC740 \uCE74\uB4DC\uB97C \uB9DE\uCDB0 \uBCF4\uB294 \uC911\uC785\uB2C8\uB2E4.",
+      doneH: "\uC21C\uC11C\uAC00 \uC815\uD574\uC84C\uC2B5\uB2C8\uB2E4",
+      first: "\uC120",
+      doneS: (n) => "<b>" + n + "</b>\uB2D8\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uC5EC\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC785\uB2C8\uB2E4.",
+      note: "\uCCAB \uD310\uC740 \uACC4\uAE09\uB3C4 \uC138\uAE08\uB3C4 \uC5C6\uC2B5\uB2C8\uB2E4.",
+      goIn: (n) => n + "\uCD08 \uB4A4 \uC2DC\uC791\uD569\uB2C8\uB2E4",
+      picking: "\uACE0\uB974\uB294 \uC911"
+    },
+    en: {
+      step: "Opening draw",
+      h: "Draw one card",
+      s: "The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
+      waitH: "Drawing",
+      waitS: (n) => "<b>" + n + "</b> is choosing.",
+      settling: "Comparing the draws.",
+      doneH: "Turn order is set",
+      first: "LEAD",
+      doneS: (n) => "<b>" + n + "</b> leads. Turns run clockwise from there.",
+      note: "The first round has no ranks and no tax.",
+      goIn: (n) => "Starting in " + n,
+      picking: "Choosing"
+    }
+  };
+  let lang = window.__lang || "ko";
+  let online = false;
+  let N2 = 6;
+  const nameOf = (i) => {
+    const g = window.GAME || {};
+    const list = lang === "ko" ? g.names : g.namesEn || g.names;
+    const v = list && list[i];
+    return v == null || v === "" ? (lang === "ko" ? NAMES_KO : NAMES_EN)[i] : v;
+  };
+  const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
+  const val = (c) => isJ(c) ? 13 : c;
+  let drawn = Array(N2).fill(null);
+  let pool = [];
+  let takenK = [];
+  let plan = null;
+  let waiting = [];
+  let phase = "pick";
+  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
+  function placeTable(sec, cyPct) {
+    const b = sec.getBoundingClientRect();
+    const W = b.width, H = b.height;
+    const scale = Math.max(W / OV.iw, H / OV.ih);
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = cyPct == null ? (H - dh) / 2 + OV.cy * dh : cyPct / 100 * H;
+    const ox = W / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {
+      cx: (ox + OV.cx * dw) / W * 100,
+      cy: cy / H * 100,
+      rx: OV.rx * dw / W * 100,
+      ry: OV.ry * dh / H * 100
+    };
+  }
+  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
+  function syncRing() {
+    const sec = window.document.getElementById("draw");
+    if (!sec) return;
+    RING = placeTable(sec, null);
+    const d = el("deck");
+    if (d) {
+      d.style.left = RING.cx + "%";
+      d.style.top = RING.cy + "%";
+    }
+  }
+  function seatPos(i) {
+    const a = Math.PI / 2 + i * 2 * Math.PI / N2;
+    const s = Math.sin(a);
+    const bias = s > 0.25 ? 3.4 * s : 0;
+    return { x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias };
+  }
+  function cardFace(c) {
+    if (c == null) return '<div class="card"></div>';
+    const n = isJ(c) ? 13 : c;
+    const nm = isJ(c) ? lang === "ko" ? "\uCE74\uBA5C\uB808\uC628" : "CHAMELEON" : (lang === "ko" ? KO_N : EN_N)[c - 1];
+    return '<div class="card"><div class="card__band"><span class="card__num">' + n + '</span><span class="card__name">' + nm + '</span><span class="card__num">' + n + '</span></div><div class="card__art"><img src="' + art(c) + '" alt=""></div><div class="card__band"><span class="card__num">' + n + '</span><span class="card__num">' + n + "</span></div></div>";
+  }
+  let pickOrder = [];
+  function winner() {
+    let best = null;
+    pickOrder.forEach((i) => {
+      if (drawn[i] == null) return;
+      if (best === null || val(drawn[i]) < val(drawn[best])) best = i;
+    });
+    return best === null ? 0 : best;
+  }
+  function ranking() {
+    const w = winner();
+    return Array.from({ length: N2 }, (_, k2) => ({ i: (w + k2) % N2 }));
+  }
+  function layout(players) {
+    const v = engine.view;
+    pool = v && v.draw ? v.draw.pool.slice() : new Array(players.length).fill(null);
+    plan = null;
+    waiting = players.slice();
+    const deck = el("deck");
+    deck.innerHTML = "";
+    const n = pool.length;
+    const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
+    const rows = Math.ceil(n / cols);
+    const ringEl = el("ring");
+    const avail = (ringEl.clientWidth || 360) - 48;
+    const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
+    const byW = Math.floor((avail - (cols - 1) * 9) / cols);
+    const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
+    const pw = Math.max(26, Math.min(46, byW, byH));
+    deck.style.setProperty("--cols", cols);
+    deck.style.setProperty("--pw", pw + "px");
+    pool.forEach((c, k2) => {
+      const w = document2.createElement("div");
+      w.className = "pk";
+      w.dataset.k = k2;
+      w.innerHTML = '<div class="pk__in"><div class="pk__f pk__f--b"><img src="' + ART2.back + '" alt=""></div><div class="pk__f pk__f--a">' + cardFace(c) + "</div></div>";
+      w.onclick = () => {
+        if (waiting[0] === 0) pick(0, k2);
+      };
+      deck.appendChild(w);
+    });
+  }
+  const PICK_SEC = 5;
+  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null, offView = null;
+  function armPickTimer() {
+    stopPickTimer();
+    if (phase !== "pick") return;
+    startBotLoop();
+    if (waiting.indexOf(0) < 0) return;
+    pickLeft = PICK_SEC;
+    draw();
+    pickTickId = setInterval(() => {
+      pickLeft--;
+      if (pickLeft < 0) pickLeft = 0;
+      draw();
+    }, 1e3);
+    pickTimer = setTimeout(() => {
+      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
+      const free = el("deck").querySelectorAll(".pk:not(.taken)");
+      if (free.length) free[Math.floor(Math.random() * free.length)].click();
+    }, PICK_SEC * 1e3);
+  }
+  function stopPickTimer() {
+    if (pickTimer) {
+      clearTimeout(pickTimer);
+      pickTimer = null;
+    }
+    if (pickTickId) {
+      clearInterval(pickTickId);
+      pickTickId = null;
+    }
+    pickLeft = 0;
+  }
+  function startBotLoop() {
+  }
+  function stopBotLoop() {
+    if (botLoopId) {
+      clearInterval(botLoopId);
+      botLoopId = null;
+    }
+  }
+  function pick(seat, k2) {
+    if (seat !== 0) return;
+    if (el("deck").querySelector('.pk[data-k="' + k2 + '"].taken')) return;
+    takeCard(k2);
+  }
+  function syncDeck(d) {
+    if (!d) return;
+    const deck = el("deck");
+    d.by.forEach((seat, k2) => {
+      if (seat == null) return;
+      const w = deck.querySelector('.pk[data-k="' + k2 + '"]');
+      if (!w || w.classList.contains("taken")) return;
+      const face = w.querySelector(".pk__f--a");
+      if (face) face.innerHTML = cardFace(d.pool[k2]);
+      w.classList.add("flip", "taken");
+      w.dataset.seat = seat;
+      takenK.push(k2);
+      drawn[seat] = d.pool[k2];
+      if (pickOrder.indexOf(seat) < 0) pickOrder.push(seat);
+      waiting = waiting.filter((x2) => x2 !== seat);
+      if (seat === 0) stopPickTimer();
+    });
+  }
+  let cd = 5, cdId = null;
+  function startCountdown() {
+    cd = 5;
+    draw();
+    if (cdId) clearInterval(cdId);
+    cdId = setInterval(() => {
+      const sec = window.document.getElementById("draw");
+      if (sec && !sec.classList.contains("is-on")) {
+        clearInterval(cdId);
+        cdId = null;
+        return;
+      }
+      cd--;
+      draw();
+      if (cd <= 0) {
+        clearInterval(cdId);
+        cdId = null;
+        const g = el("go");
+        if (g && !g.disabled) g.click();
+      }
+    }, 1e3);
+  }
+  function settle() {
+    phase = "done";
+    const vv = engine.view;
+    if (vv && vv.turn >= 0) window.__leadSeat = vv.turn;
+    const w = typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
+    window.GAME = window.GAME || {};
+    window.GAME.N = N2;
+    window.GAME.roundNo = 1;
+    window.GAME.score = Array(N2).fill(0);
+    window.GAME.order = Array.from({ length: N2 }, (_, k2) => (w + k2) % N2);
+    if (!online) {
+      window.GAME.finish = null;
+      window.GAME.hold = null;
+    }
+    draw();
+    startCountdown();
+  }
+  function anchorSeats(box, limitBottom) {
+    const root2 = window.document.documentElement;
+    const W = (window.document.getElementById("stage") || root2).getBoundingClientRect();
+    box.querySelectorAll(".seat").forEach((s) => {
+      const av = s.querySelector(".seat__av");
+      if (!av) return;
+      const dy = av.offsetTop + av.offsetHeight / 2;
+      s.style.transform = "translate(-50%," + -dy + "px)";
+      const r = s.getBoundingClientRect();
+      let ox = 0, oy = 0;
+      if (r.left < W.left + 3) ox = W.left + 3 - r.left;
+      else if (r.right > W.right - 3) ox = W.right - 3 - r.right;
+      if (limitBottom && r.bottom > limitBottom) oy = limitBottom - r.bottom;
+      if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
+    });
+  }
+  function renderSeats() {
+    syncRing();
+    const box = el("seats");
+    box.innerHTML = "";
+    const order = phase === "done" ? ranking().map((x2) => x2.i) : [];
+    for (let i = 0; i < N2; i++) {
+      const a = Math.PI / 2 + i * 2 * Math.PI / N2;
+      const p = seatPos(i);
+      const d = document2.createElement("div");
+      const r = order.indexOf(i);
+      d.className = "seat" + (i === 0 ? " seat--me" : "") + (waiting[0] === i && phase === "pick" ? " seat--turn" : "");
+      d.style.left = p.x.toFixed(1) + "%";
+      d.style.top = p.y.toFixed(1) + "%";
+      const big = N2 <= 6;
+      d.style.setProperty("--av", (big ? 42 : 33) + "px");
+      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
+      const first = phase === "done" && i === winner();
+      const dv = drawn[i] == null ? "" : val(drawn[i]);
+      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
+      const upper = Math.sin(Math.PI / 2 + i * 2 * Math.PI / N2) < 0;
+      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
+      box.appendChild(d);
+    }
+    const md = el("mid");
+    anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
+  }
+  function draw() {
+    const t = T2[lang];
+    el("step").textContent = t.step;
+    renderSeats();
+    const m = el("mid");
+    if (phase === "done") {
+      m.innerHTML = '<div class="mid__h">' + t.doneH + '</div><div class="mid__s">' + t.doneS(nameOf(winner())) + "<br>" + t.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
+    } else if (!waiting.length) {
+      m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.settling + "</div>";
+    } else if (waiting.indexOf(0) >= 0) {
+      m.innerHTML = '<div class="mid__h">' + t.h + (pickLeft > 0 ? " <b>(" + pickLeft + ")</b>" : "") + '</div><div class="mid__s">' + t.s + "</div>";
+    } else {
+      m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' + t.waitS(nameOf(waiting[0])) + "</div>";
+    }
+    const g = el("go");
+    g.textContent = phase === "done" ? t.goIn(cd) : t.picking;
+    g.disabled = phase !== "done";
+    const md = el("mid");
+    anchorSeats(el("seats"), md ? md.getBoundingClientRect().top - 4 : 0);
+  }
+  function boot() {
+    const sbox0 = el("seats");
+    if (sbox0) sbox0.innerHTML = "";
+    const dbox0 = el("deck");
+    if (dbox0) dbox0.innerHTML = "";
+    online = Boolean(window.__net);
+    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
+    if (cdId) {
+      clearInterval(cdId);
+      cdId = null;
+    }
+    cd = 5;
+    drawn = Array(N2).fill(null);
+    pickOrder = [];
+    takenK = [];
+    window.__roundNo = 1;
+    window.__myRankIdx = null;
+    if (!online) {
+      window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
+    }
+    phase = "pick";
+    layout(Array.from({ length: N2 }, (_, i) => i));
+    if (offView) offView();
+    offView = onView((v) => {
+      if (phase === "done") return;
+      syncDeck(v.draw);
+      if (v.phase !== "draw") {
+        stopBotLoop();
+        stopPickTimer();
+        setTimeout(settle, 700);
+      }
+      draw();
+    });
+    if (engine.view) {
+      syncDeck(engine.view.draw);
+    }
+    draw();
+  }
+  window.__bootDraw = () => {
+    boot();
+    armPickTimer();
+  };
+  boot();
+  document2.querySelectorAll("#lang button").forEach((b) => {
+    b.addEventListener("click", () => {
+      lang = b.dataset.l;
+      document2.documentElement.lang = lang;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
+      draw();
+    });
+  });
+  el("go").addEventListener("click", () => {
+    if (cdId) {
+      clearInterval(cdId);
+      cdId = null;
+    }
+    const vv = engine.view;
+    if (vv && vv.seats) {
+      window.GAME = window.GAME || {};
+      window.GAME.faces = vv.seats.map((x2) => x2.seat);
+      window.GAME.seatFaces = vv.seats.map((x2) => x2.seat);
+      window.GAME.names = vv.names.slice();
+      window.GAME.namesEn = vv.names.slice();
+      if (vv.turn >= 0) window.__leadSeat = vv.turn;
+    }
+  });
+  window.addEventListener("resize", draw);
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    draw();
+  });
+}
+
 // src/screens/table.js
+var table_exports = {};
+__export(table_exports, {
+  mount: () => mount5
+});
 function mount5(root) {
   const document2 = scoped(root);
   const HEADS2 = HEADS, ART2 = ART;
@@ -1950,6 +1983,7 @@ function mount5(root) {
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
       autoOff: "\uC790\uB3D9 OFF",
       autoOn: "\uC790\uB3D9 ON",
+      emoBtn: "\uC774\uBAA8\uD2F0\uCF58",
       autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4\n\uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n) => n + "\uCD08",
@@ -1978,6 +2012,7 @@ function mount5(root) {
       lower: "Play a lower number",
       autoOff: "AUTO OFF",
       autoOn: "AUTO ON",
+      emoBtn: "EMOJI",
       autoOnMsg: "Auto play on\nTap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n) => n + "s",
@@ -2116,6 +2151,7 @@ function mount5(root) {
     emoUntil = 0;
     emoPickOpen(false);
     paintEmoBtn();
+    Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
     offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
@@ -2387,6 +2423,7 @@ function mount5(root) {
     renderPile();
     renderHand();
     renderBottom();
+    paintEmotes();
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -2506,7 +2543,7 @@ function mount5(root) {
     }
   }
   el("auto").onclick = () => setAuto2(!engine.auto);
-  const EMO_SHOW = 2e3, EMO_COOL = 2500;
+  const EMO_SHOW = 1e3, EMO_COOL = 2500;
   let emoUntil = 0;
   const emoTimers = {};
   function emoText(k2) {
@@ -2529,6 +2566,13 @@ function mount5(root) {
     }
     p.innerHTML = EMOTES.map((e) => '<button type="button" data-k="' + esc(e.k) + '"><span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span><span class="emoimg" style="background-image:url(' + e.img + ')"></span></button>').join("");
     p.hidden = false;
+    const h = el("hand");
+    if (h && p.offsetParent) {
+      const ph = p.offsetParent.getBoundingClientRect();
+      const hb = h.getBoundingClientRect();
+      p.style.bottom = Math.round(ph.bottom - hb.top + 4) + "px";
+      p.style.top = "auto";
+    }
     p.querySelectorAll("button").forEach((b) => {
       b.onclick = () => {
         emoSend(b.dataset.k);
@@ -2547,10 +2591,11 @@ function mount5(root) {
   function paintEmoBtn() {
     const b = el("emo");
     if (!b) return;
-    b.style.backgroundImage = "url(" + EMOTE_BTN + ")";
+    b.textContent = T2[lang].emoBtn;
     b.disabled = Date.now() < emoUntil;
   }
-  function showEmote(pos, k2) {
+  const emoNow = {};
+  function paintEmote(pos) {
     const seats = el("seats");
     const d = seats && seats.children[pos];
     if (!d) return;
@@ -2558,19 +2603,29 @@ function mount5(root) {
     if (!wrap2) return;
     const old = wrap2.querySelector(".seat__emo");
     if (old) old.remove();
+    const cur2 = emoNow[pos];
     const tag = wrap2.querySelector(".seat__tag");
+    if (!cur2 || Date.now() >= cur2.until) {
+      if (tag) tag.style.visibility = "";
+      return;
+    }
     if (tag) tag.style.visibility = "hidden";
     const box = document2.createElement("span");
     box.className = "seat__emo";
-    box.innerHTML = '<span class="emobub">' + esc(emoText(k2)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(k2) + ')"></span>';
+    box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
     wrap2.appendChild(box);
+  }
+  function paintEmotes() {
+    Object.keys(emoNow).forEach((p) => paintEmote(Number(p)));
+  }
+  function showEmote(pos, k2) {
+    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW };
+    paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
-      const cur2 = wrap2.querySelector(".seat__emo");
-      if (cur2) cur2.remove();
-      const t2 = wrap2.querySelector(".seat__tag");
-      if (t2) t2.style.visibility = "";
+      delete emoNow[pos];
       emoTimers[pos] = null;
+      paintEmote(pos);
     }, EMO_SHOW);
   }
   el("emo").onclick = () => {

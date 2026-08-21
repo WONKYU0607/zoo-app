@@ -64,8 +64,11 @@ async function worker(){
     /* 각 검사가 마지막에 찍는 합계 줄을 뽑아 온다 */
     const sum = (r.out.match(/(통과 \d+ \/ 실패 \d+)/g) || []).pop() || "";
     const ok = r.code === 0;
-    console.log((ok ? "  [OK]   " : "  [실패] ") +
+    const skip = /건너뜁니다/.test(r.out);
+    console.log((skip ? "  [건너뜀]" : ok ? "  [OK]   " : "  [실패] ") +
       j[0].padEnd(9) + " " + sum.padEnd(20) + (r.ms / 1000).toFixed(1) + "초");
+    if (skip) console.log(r.out.split("\n").filter(l => l.trim() && !/^===/.test(l))
+      .map(l => "         " + l.trim()).join("\n"));
     done.push(r);
   }
 }

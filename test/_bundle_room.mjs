@@ -31,7 +31,6 @@ var EMOTES = [
   { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
   { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
 ];
-var EMOTE_BTN = "assets/emote_btn.webp";
 var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/room.js
@@ -404,6 +403,19 @@ function screenView(G, ctx, myID, names) {
     count: t.count,
     cards: realCards(t)
   }));
+  const draw = G.draw ? {
+    /* 아직 아무도 안 집은 카드의 숫자는 화면에 주지 않는다.
+       이 기기 방은 판 상태를 그대로 읽으므로 여기서 가려야 한다 —
+       안 가리면 낮은 카드가 어디 있는지 다 보인다 */
+    pool: G.draw.pool.map((v, i) => G.draw.by[i] == null ? null : v),
+    /* 뽑기 화면 자리는 **방에 앉은 순서** 그대로다(나를 아래로 돌려놓기만 한다).
+       등수 자리로 바꾸는 것은 뽑기가 끝난 뒤 판에서 한다 —
+       여기서 ord 를 쓰면 마지막 사람이 고르는 순간 자리가 통째로 흔들린다 */
+    by: G.draw.by.map((s) => s == null ? null : (s - me + n) % n),
+    mine: G.draw.took[Number(myID)],
+    /* 내가 가져간 카드 자리 */
+    left: G.draw.took.filter((x) => x == null).length
+  } : null;
   return {
     N: n,
     me: 0,
@@ -428,6 +440,7 @@ function screenView(G, ctx, myID, names) {
     roundNo: G.roundNo,
     totalRounds: G.totalRounds,
     phase: ctx.phase,
+    draw,
     revolution: G.revolution ? {
       seat: toScreen(G.revolution.seat, me, n),
       great: G.revolution.great,
@@ -611,6 +624,35 @@ function scheduleBot() {
   const st = raw();
   if (!st || st.ctx.gameover) return;
   const G = st.G, ctx = st.ctx;
+  if (ctx.phase === "draw") {
+    const d = G.draw;
+    if (!d) return;
+    const todo = d.took.map((x, seat2) => x == null && actsFor(seat2) ? seat2 : -1).filter((x) => x >= 0);
+    if (!todo.length) return;
+    const g2 = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g2 !== gen) return;
+      const s2 = raw();
+      if (!s2 || s2.ctx.phase !== "draw") {
+        push();
+        return;
+      }
+      const d2 = s2.G.draw;
+      const seat2 = todo[0];
+      if (d2.took[seat2] != null) {
+        push();
+        return;
+      }
+      const free = d2.by.map((v, i) => v == null ? i : -1).filter((i) => i >= 0);
+      if (!free.length) return;
+      engine.client.updatePlayerID(String(seat2));
+      engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, Math.min(engine.botMs, 800));
+    return;
+  }
   if (ctx.phase === "tax") {
     const revSeat = G.revolution && !G.revDecided ? G.revolution.seat : -1;
     const revTodo = revSeat >= 0 && actsFor(revSeat);
@@ -681,6 +723,7 @@ function setAuto(on) {
   }
   scheduleBot();
 }
+if (typeof window !== "undefined") window.__eng = engine;
 function play(num, count) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
@@ -723,6 +766,7 @@ function mount2(root) {
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
       autoOff: "\uC790\uB3D9 OFF",
       autoOn: "\uC790\uB3D9 ON",
+      emoBtn: "\uC774\uBAA8\uD2F0\uCF58",
       autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4\n\uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n) => n + "\uCD08",
@@ -751,6 +795,7 @@ function mount2(root) {
       lower: "Play a lower number",
       autoOff: "AUTO OFF",
       autoOn: "AUTO ON",
+      emoBtn: "EMOJI",
       autoOnMsg: "Auto play on\nTap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n) => n + "s",
@@ -889,6 +934,7 @@ function mount2(root) {
     emoUntil = 0;
     emoPickOpen(false);
     paintEmoBtn();
+    Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
     offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
@@ -1160,6 +1206,7 @@ function mount2(root) {
     renderPile();
     renderHand();
     renderBottom();
+    paintEmotes();
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -1279,7 +1326,7 @@ function mount2(root) {
     }
   }
   el("auto").onclick = () => setAuto2(!engine.auto);
-  const EMO_SHOW = 2e3, EMO_COOL = 2500;
+  const EMO_SHOW = 1e3, EMO_COOL = 2500;
   let emoUntil = 0;
   const emoTimers = {};
   function emoText(k) {
@@ -1302,6 +1349,13 @@ function mount2(root) {
     }
     p.innerHTML = EMOTES.map((e) => '<button type="button" data-k="' + esc(e.k) + '"><span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span><span class="emoimg" style="background-image:url(' + e.img + ')"></span></button>').join("");
     p.hidden = false;
+    const h = el("hand");
+    if (h && p.offsetParent) {
+      const ph = p.offsetParent.getBoundingClientRect();
+      const hb = h.getBoundingClientRect();
+      p.style.bottom = Math.round(ph.bottom - hb.top + 4) + "px";
+      p.style.top = "auto";
+    }
     p.querySelectorAll("button").forEach((b) => {
       b.onclick = () => {
         emoSend(b.dataset.k);
@@ -1320,10 +1374,11 @@ function mount2(root) {
   function paintEmoBtn() {
     const b = el("emo");
     if (!b) return;
-    b.style.backgroundImage = "url(" + EMOTE_BTN + ")";
+    b.textContent = T[lang].emoBtn;
     b.disabled = Date.now() < emoUntil;
   }
-  function showEmote(pos, k) {
+  const emoNow = {};
+  function paintEmote(pos) {
     const seats = el("seats");
     const d = seats && seats.children[pos];
     if (!d) return;
@@ -1331,19 +1386,29 @@ function mount2(root) {
     if (!wrap) return;
     const old = wrap.querySelector(".seat__emo");
     if (old) old.remove();
+    const cur2 = emoNow[pos];
     const tag = wrap.querySelector(".seat__tag");
+    if (!cur2 || Date.now() >= cur2.until) {
+      if (tag) tag.style.visibility = "";
+      return;
+    }
     if (tag) tag.style.visibility = "hidden";
     const box = document.createElement("span");
     box.className = "seat__emo";
-    box.innerHTML = '<span class="emobub">' + esc(emoText(k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(k) + ')"></span>';
+    box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
     wrap.appendChild(box);
+  }
+  function paintEmotes() {
+    Object.keys(emoNow).forEach((p) => paintEmote(Number(p)));
+  }
+  function showEmote(pos, k) {
+    emoNow[pos] = { k, until: Date.now() + EMO_SHOW };
+    paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
-      const cur2 = wrap.querySelector(".seat__emo");
-      if (cur2) cur2.remove();
-      const t2 = wrap.querySelector(".seat__tag");
-      if (t2) t2.style.visibility = "";
+      delete emoNow[pos];
       emoTimers[pos] = null;
+      paintEmote(pos);
     }, EMO_SHOW);
   }
   el("emo").onclick = () => {

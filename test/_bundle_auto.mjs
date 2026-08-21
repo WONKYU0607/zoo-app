@@ -798,6 +798,7 @@ function scoped(root) {
 // src/lib/engine.js
 var engine_exports = {};
 __export(engine_exports, {
+  autoDraw: () => autoDraw,
   declareRev: () => declareRev,
   engine: () => engine,
   give: () => give,
@@ -811,7 +812,8 @@ __export(engine_exports, {
   setPaused: () => setPaused,
   startLocal: () => startLocal,
   startOnline: () => startOnline,
-  stop: () => stop
+  stop: () => stop,
+  takeCard: () => takeCard
 });
 
 // node_modules/nanoid/non-secure/index.js
@@ -17855,6 +17857,19 @@ function openNextRound(G2, random) {
   G2.next = order[0];
   G2.given = {};
 }
+function pickDistinct(random, n2) {
+  const all = [];
+  for (let v2 = 1; v2 <= 12; v2++) all.push(v2);
+  return random.Shuffle(all).slice(0, n2);
+}
+function drawOrder(d2, n2) {
+  const seats = Array.from({ length: n2 }, (_2, i2) => i2);
+  return seats.sort((a2, b2) => {
+    const va = d2.pool[d2.took[a2]], vb = d2.pool[d2.took[b2]];
+    if (va !== vb) return va - vb;
+    return d2.seq.indexOf(a2) - d2.seq.indexOf(b2);
+  });
+}
 var ZooPresident = {
   name: "zoo-president",
   setup: ({ ctx, random }, setupData) => {
@@ -17887,19 +17902,65 @@ var ZooPresident = {
       gameOver: false
     };
     dealRound(G2, random);
-    G2.seatOrder = random.Shuffle(Array.from({ length: n2 }, (_2, i2) => i2));
-    G2.next = G2.seatOrder[0];
+    G2.seatOrder = null;
+    G2.next = 0;
+    G2.draw = {
+      pool: pickDistinct(random, n2),
+      /* 자리마다 한 장씩, 서로 다른 숫자 */
+      by: new Array(n2).fill(null),
+      /* 카드 자리 → 가져간 사람 */
+      took: new Array(n2).fill(null),
+      /* 사람 → 가져간 카드 자리 */
+      seq: []
+      /* 고른 차례. 같은 숫자면 먼저 고른 쪽이 위 */
+    };
     return G2;
   },
   /* 남의 손패는 장수만 보인다 */
   playerView: ({ G: G2, playerID }) => {
     const out = Object.assign({}, G2);
     out.hands = G2.hands.map((h2, i2) => String(i2) === String(playerID) ? h2.slice() : null);
+    if (G2.draw) {
+      out.draw = Object.assign({}, G2.draw, {
+        pool: G2.draw.pool.map((v2, i2) => G2.draw.by[i2] == null ? null : v2)
+      });
+    }
     return out;
   },
   phases: {
-    play: {
+    /* 첫 순서 정하기. 모두가 동시에 참여하므로 activePlayers 로 열어 둔다.
+       한 장씩만 가져갈 수 있고, 남이 가져간 자리는 못 가져간다 */
+    draw: {
       start: true,
+      turn: {
+        activePlayers: { all: "picking" },
+        stages: {
+          picking: {
+            moves: {
+              takeCard: ({ G: G2, playerID }, idx) => {
+                const seat = Number(playerID);
+                const d2 = G2.draw;
+                if (!d2) return INVALID_MOVE;
+                if (d2.took[seat] != null) return INVALID_MOVE;
+                if (!(idx >= 0 && idx < d2.pool.length)) return INVALID_MOVE;
+                if (d2.by[idx] != null) return INVALID_MOVE;
+                d2.by[idx] = seat;
+                d2.took[seat] = idx;
+                d2.seq.push(seat);
+              }
+            }
+          }
+        }
+      },
+      endIf: ({ G: G2, ctx }) => G2.draw && G2.draw.took.every((x2, i2) => x2 != null || i2 >= ctx.numPlayers),
+      onEnd: ({ G: G2, ctx }) => {
+        const order = drawOrder(G2.draw, ctx.numPlayers);
+        G2.seatOrder = order.slice();
+        G2.next = order[0];
+      },
+      next: "play"
+    },
+    play: {
       turn: {
         /* 한 사람이 한 번 두면 차례가 넘어간다. 다음 사람은 G.next 가 정한다 */
         minMoves: 1,
@@ -18106,6 +18167,19 @@ function screenView(G2, ctx, myID, names) {
     count: t2.count,
     cards: realCards(t2)
   }));
+  const draw = G2.draw ? {
+    /* 아직 아무도 안 집은 카드의 숫자는 화면에 주지 않는다.
+       이 기기 방은 판 상태를 그대로 읽으므로 여기서 가려야 한다 —
+       안 가리면 낮은 카드가 어디 있는지 다 보인다 */
+    pool: G2.draw.pool.map((v2, i2) => G2.draw.by[i2] == null ? null : v2),
+    /* 뽑기 화면 자리는 **방에 앉은 순서** 그대로다(나를 아래로 돌려놓기만 한다).
+       등수 자리로 바꾸는 것은 뽑기가 끝난 뒤 판에서 한다 —
+       여기서 ord 를 쓰면 마지막 사람이 고르는 순간 자리가 통째로 흔들린다 */
+    by: G2.draw.by.map((s2) => s2 == null ? null : (s2 - me + n2) % n2),
+    mine: G2.draw.took[Number(myID)],
+    /* 내가 가져간 카드 자리 */
+    left: G2.draw.took.filter((x2) => x2 == null).length
+  } : null;
   return {
     N: n2,
     me: 0,
@@ -18130,6 +18204,7 @@ function screenView(G2, ctx, myID, names) {
     roundNo: G2.roundNo,
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
+    draw,
     revolution: G2.revolution ? {
       seat: toScreen(G2.revolution.seat, me, n2),
       great: G2.revolution.great,
@@ -18314,6 +18389,35 @@ function scheduleBot() {
   const st = raw();
   if (!st || st.ctx.gameover) return;
   const G2 = st.G, ctx = st.ctx;
+  if (ctx.phase === "draw") {
+    const d2 = G2.draw;
+    if (!d2) return;
+    const todo = d2.took.map((x2, seat2) => x2 == null && actsFor(seat2) ? seat2 : -1).filter((x2) => x2 >= 0);
+    if (!todo.length) return;
+    const g3 = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g3 !== gen) return;
+      const s2 = raw();
+      if (!s2 || s2.ctx.phase !== "draw") {
+        push();
+        return;
+      }
+      const d22 = s2.G.draw;
+      const seat2 = todo[0];
+      if (d22.took[seat2] != null) {
+        push();
+        return;
+      }
+      const free = d22.by.map((v2, i2) => v2 == null ? i2 : -1).filter((i2) => i2 >= 0);
+      if (!free.length) return;
+      engine.client.updatePlayerID(String(seat2));
+      engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, Math.min(engine.botMs, 800));
+    return;
+  }
   if (ctx.phase === "tax") {
     const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
     const revTodo = revSeat >= 0 && actsFor(revSeat);
@@ -18384,6 +18488,7 @@ function setAuto(on3) {
   }
   scheduleBot();
 }
+if (typeof window !== "undefined") window.__eng = engine;
 function attach(client) {
   engine.client = client;
   client.start();
@@ -18451,6 +18556,30 @@ function stop() {
   engine.view = null;
   emoteSeen = 0;
 }
+function takeCard(idx) {
+  const c2 = engine.client;
+  if (!c2) return;
+  c2.updatePlayerID(engine.myID);
+  c2.moves.takeCard(idx);
+}
+function autoDraw() {
+  const c2 = engine.client;
+  const st = raw();
+  if (!c2 || !st || st.ctx.phase !== "draw") return;
+  const d2 = st.G.draw;
+  if (!d2) return;
+  for (let seat = 0; seat < d2.took.length; seat++) {
+    const s2 = raw();
+    if (!s2 || s2.ctx.phase !== "draw") break;
+    if (s2.G.draw.took[seat] != null) continue;
+    const free = s2.G.draw.by.map((v2, i2) => v2 == null ? i2 : -1).filter((i2) => i2 >= 0);
+    if (!free.length) break;
+    c2.updatePlayerID(String(seat));
+    c2.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+  }
+  c2.updatePlayerID(engine.myID);
+  push();
+}
 function play(num, count) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
@@ -18492,7 +18621,6 @@ var EMOTES = [
   { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
   { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
 ];
-var EMOTE_BTN = "assets/emote_btn.webp";
 var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/table.js
@@ -18524,6 +18652,7 @@ function mount(root) {
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
       autoOff: "\uC790\uB3D9 OFF",
       autoOn: "\uC790\uB3D9 ON",
+      emoBtn: "\uC774\uBAA8\uD2F0\uCF58",
       autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4\n\uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n2) => n2 + "\uCD08",
@@ -18552,6 +18681,7 @@ function mount(root) {
       lower: "Play a lower number",
       autoOff: "AUTO OFF",
       autoOn: "AUTO ON",
+      emoBtn: "EMOJI",
       autoOnMsg: "Auto play on\nTap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n2) => n2 + "s",
@@ -18690,6 +18820,7 @@ function mount(root) {
     emoUntil = 0;
     emoPickOpen(false);
     paintEmoBtn();
+    Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
     offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
@@ -18961,6 +19092,7 @@ function mount(root) {
     renderPile();
     renderHand();
     renderBottom();
+    paintEmotes();
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -19080,7 +19212,7 @@ function mount(root) {
     }
   }
   el("auto").onclick = () => setAuto2(!engine.auto);
-  const EMO_SHOW = 2e3, EMO_COOL = 2500;
+  const EMO_SHOW = 1e3, EMO_COOL = 2500;
   let emoUntil = 0;
   const emoTimers = {};
   function emoText(k2) {
@@ -19103,6 +19235,13 @@ function mount(root) {
     }
     p2.innerHTML = EMOTES.map((e) => '<button type="button" data-k="' + esc(e.k) + '"><span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span><span class="emoimg" style="background-image:url(' + e.img + ')"></span></button>').join("");
     p2.hidden = false;
+    const h2 = el("hand");
+    if (h2 && p2.offsetParent) {
+      const ph = p2.offsetParent.getBoundingClientRect();
+      const hb = h2.getBoundingClientRect();
+      p2.style.bottom = Math.round(ph.bottom - hb.top + 4) + "px";
+      p2.style.top = "auto";
+    }
     p2.querySelectorAll("button").forEach((b2) => {
       b2.onclick = () => {
         emoSend(b2.dataset.k);
@@ -19121,10 +19260,11 @@ function mount(root) {
   function paintEmoBtn() {
     const b2 = el("emo");
     if (!b2) return;
-    b2.style.backgroundImage = "url(" + EMOTE_BTN + ")";
+    b2.textContent = T[lang].emoBtn;
     b2.disabled = Date.now() < emoUntil;
   }
-  function showEmote(pos, k2) {
+  const emoNow = {};
+  function paintEmote(pos) {
     const seats = el("seats");
     const d2 = seats && seats.children[pos];
     if (!d2) return;
@@ -19132,19 +19272,29 @@ function mount(root) {
     if (!wrap) return;
     const old = wrap.querySelector(".seat__emo");
     if (old) old.remove();
+    const cur2 = emoNow[pos];
     const tag = wrap.querySelector(".seat__tag");
+    if (!cur2 || Date.now() >= cur2.until) {
+      if (tag) tag.style.visibility = "";
+      return;
+    }
     if (tag) tag.style.visibility = "hidden";
     const box = document2.createElement("span");
     box.className = "seat__emo";
-    box.innerHTML = '<span class="emobub">' + esc(emoText(k2)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(k2) + ')"></span>';
+    box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
     wrap.appendChild(box);
+  }
+  function paintEmotes() {
+    Object.keys(emoNow).forEach((p2) => paintEmote(Number(p2)));
+  }
+  function showEmote(pos, k2) {
+    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW };
+    paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
-      const cur2 = wrap.querySelector(".seat__emo");
-      if (cur2) cur2.remove();
-      const t2 = wrap.querySelector(".seat__tag");
-      if (t2) t2.style.visibility = "";
+      delete emoNow[pos];
       emoTimers[pos] = null;
+      paintEmote(pos);
     }, EMO_SHOW);
   }
   el("emo").onclick = () => {

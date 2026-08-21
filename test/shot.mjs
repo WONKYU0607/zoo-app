@@ -11,9 +11,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { extname, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import pup from "puppeteer-core";
-import chromiumMod from "@sparticuz/chromium";
 
-const chromium = chromiumMod.default || chromiumMod;
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const DIST = join(ROOT, "dist");
@@ -36,10 +34,57 @@ export function serve(port = 5599){
   return new Promise(r => s.listen(port, () => r(s)));
 }
 
+/* 쓸 수 있는 크롬을 찾는다.
+
+   1) CHROME_PATH 환경변수
+   2) 이 기기에 깔린 크롬 / 엣지 (윈도우·맥·리눅스)
+   3) @sparticuz/chromium (**리눅스 전용**. 윈도우에 깔면 못 쓴다 —
+      바이너리가 리눅스용이라 "spawn ... chromium ENOENT" 로 죽는다)
+
+   못 찾으면 null. 부르는 쪽에서 검사를 건너뛴다 */
+export async function findBrowser(){
+  if (process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH))
+    return { path: process.env.CHROME_PATH, args: [] };
+
+  const LA = process.env.LOCALAPPDATA || "";
+  const PF = process.env["ProgramFiles"] || "C:\\Program Files";
+  const PF86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+  const cands = {
+    win32: [
+      PF + "\\Google\\Chrome\\Application\\chrome.exe",
+      PF86 + "\\Google\\Chrome\\Application\\chrome.exe",
+      LA + "\\Google\\Chrome\\Application\\chrome.exe",
+      PF + "\\Microsoft\\Edge\\Application\\msedge.exe",
+      PF86 + "\\Microsoft\\Edge\\Application\\msedge.exe",
+    ],
+    darwin: [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    ],
+    linux: [
+      "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable",
+      "/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/microsoft-edge",
+    ],
+  }[process.platform] || [];
+  for (const p of cands) if (existsSync(p)) return { path: p, args: [] };
+
+  if (process.platform === "linux"){
+    try {
+      const m = await import("@sparticuz/chromium");
+      const c = m.default || m;
+      const p = await c.executablePath();
+      if (p && existsSync(p)) return { path: p, args: c.args || [] };
+    } catch(e){}
+  }
+  return null;
+}
+
 export async function open({ width = 412, height = 745, port = 5599 } = {}){
+  const found = await findBrowser();
+  if (!found) throw new Error("NO_BROWSER");
   const browser = await pup.launch({
-    args: [...chromium.args, "--no-sandbox", "--disable-dev-shm-usage"],
-    executablePath: await chromium.executablePath(),
+    args: [...found.args, "--no-sandbox", "--disable-dev-shm-usage"],
+    executablePath: found.path,
     headless: true,
   });
   const page = await browser.newPage();
@@ -89,6 +134,10 @@ export async function hit(page, sel){
 }
 
 if (process.argv[1] && process.argv[1].endsWith("shot.mjs")){
+  if (!(await findBrowser())){
+    console.log("크롬을 못 찾았습니다. 크롬이나 엣지를 깔거나 CHROME_PATH 를 정해 주세요.");
+    process.exit(1);
+  }
   const srv = await serve();
   const { browser, page, logs } = await open({});
   await toTable(page, { numPlayers: 4 });
