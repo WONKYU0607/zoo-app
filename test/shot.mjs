@@ -7,7 +7,8 @@
    쓰는 법: node test/shot.mjs [내보낼그림.png] */
 
 import { createServer } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { extname, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import pup from "puppeteer-core";
@@ -19,6 +20,35 @@ const DIST = join(ROOT, "dist");
 const MIME = { ".html":"text/html", ".js":"text/javascript", ".css":"text/css",
   ".webp":"image/webp", ".png":"image/png", ".json":"application/json",
   ".woff2":"font/woff2", ".svg":"image/svg+xml" };
+
+/* dist 를 최신으로 맞춘다.
+
+   이 검사는 **빌드된 배포본**을 띄운다. 빌드를 안 했으면 빈 페이지가 뜨고
+   "window.__createRoom is not a function" 같은 엉뚱한 소리가 난다.
+   낡은 dist 를 띄우면 고친 것을 안 보고 통과시켜 버리므로, src 가 더 새로우면 다시 빌드한다 */
+export function ensureBuild(){
+  const idx = join(DIST, "index.html");
+  let need = !existsSync(idx);
+  if (!need){
+    const built = statSync(idx).mtimeMs;
+    const newest = (dir) => {
+      let t = 0;
+      for (const e of readdirSync(dir, { withFileTypes: true })){
+        if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+        const f = join(dir, e.name);
+        t = Math.max(t, e.isDirectory() ? newest(f) : statSync(f).mtimeMs);
+      }
+      return t;
+    };
+    const src = Math.max(newest(join(ROOT, "src")), newest(join(ROOT, "public")),
+                         statSync(join(ROOT, "index.html")).mtimeMs);
+    need = src > built;
+  }
+  if (!need) return;
+  console.log("  (dist 를 새로 빌드합니다)");
+  execFileSync(process.execPath, [join(ROOT, "node_modules/vite/bin/vite.js"), "build"],
+               { cwd: ROOT, stdio: "ignore" });
+}
 
 export function serve(port = 5599){
   const s = createServer((req, res) => {
@@ -138,6 +168,7 @@ if (process.argv[1] && process.argv[1].endsWith("shot.mjs")){
     console.log("크롬을 못 찾았습니다. 크롬이나 엣지를 깔거나 CHROME_PATH 를 정해 주세요.");
     process.exit(1);
   }
+  ensureBuild();
   const srv = await serve();
   const { browser, page, logs } = await open({});
   await toTable(page, { numPlayers: 4 });

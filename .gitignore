@@ -4,3 +4,7 @@ android
 .env
 functions/node_modules
 .DS_Store
+
+# 검사가 돌 때마다 esbuild 가 새로 만드는 임시 묶음. 소스가 아니다
+test/_bundle*.mjs
+firestore-debug.log

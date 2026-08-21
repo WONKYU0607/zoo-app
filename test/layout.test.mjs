@@ -6,7 +6,7 @@
 
    여기서는 dist 를 띄우고 실제 좌표와 '그 점을 누르면 누가 받는가'를 본다. */
 
-import { serve, open, toTable, boxes, hit, findBrowser } from "./shot.mjs";
+import { serve, open, toTable, boxes, hit, findBrowser, ensureBuild } from "./shot.mjs";
 
 /* 크롬이 없으면 건너뛴다. 이 검사만 브라우저가 필요하다 */
 if (!(await findBrowser())){
@@ -23,6 +23,7 @@ const check = (name, ok, note) => {
   else    { fail++; console.log("  [실패] " + name + (note ? "  " + note : "")); }
 };
 
+ensureBuild();
 const srv = await serve(5601);
 const { browser, page, logs } = await open({ port: 5601 });
 await toTable(page, { numPlayers: 4 });
