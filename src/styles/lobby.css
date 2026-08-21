@@ -146,7 +146,7 @@
 .top{
   /* 양옆으로 20px 씩, 폭 40px 넓힘. 화면 좌우 여백이 20px 이라 딱 끝까지 간다 */
   display:flex;align-items:center;gap:8px;flex:1;min-width:0;
-  width:calc(100% + 40px);margin:0 -20px;
+  width:calc(100% + 40px);margin:-15px -20px 0;
   height:42px;padding:0 10px 0 6px;
   border:11px solid transparent;
   border-image:url(/assets/fr_topbar.webp) 26 fill stretch;

@@ -337,11 +337,6 @@ export function mount(root){
               : (t === 3 && h !== 13) ? "rd" : "th";
     return k + sfx;
   }
-  /* 인원이 많으면 자리가 촘촘해져서 감정표현이 바닥 카드나 옆자리와 부딪힌다.
-     인원에 맞춰 통째로 줄인다. 4명이면 그대로, 8명이면 0.64배 */
-  function emoScale(n){
-    return Math.max(0.62, Math.min(1, 1 - (Math.max(4, n) - 4) * 0.09));
-  }
   function renderSeats(){
     syncRing();
     const box = el("seats"); box.innerHTML = "";
@@ -491,7 +486,6 @@ export function mount(root){
     if (!SEATS.length) return;
     renderSeats(); renderPile(); renderHand(); renderBottom();
     paintEmotes();   /* 자리를 새로 그렸으니 떠 있던 감정표현을 다시 붙인다 */
-    el("seats").style.setProperty("--emo-s", emoScale(SEATS.length).toFixed(3));
     el("seats").querySelectorAll(".seat__tag").forEach(keepInView);   /* 등수·패스 표도 */
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);

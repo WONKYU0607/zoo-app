@@ -29,7 +29,9 @@
 #entry .lang button[aria-pressed="true"]{color:#140D04;background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
 #entry .spacer{flex:1;min-height:0}
 #entry /* ---------- 아래 부채꼴 ---------- */
-.fan{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:3}
+/* 카드 연출은 **배경**이다. z-index 3 이면 화면(.screen z-index 2) 전체를 덮어
+   "구글로 시작하기" 단추까지 가린다. 배경(.bg 0)과 화면 사이로 내린다 */
+.fan{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:1}
 #entry .fan__in{position:absolute;left:63%;top:55%;transform:translate(-50%,-50%);width:0;height:0}
 #entry .fan .card{position:absolute;transform-origin:50% 168%;box-shadow:0 16px 32px rgba(0,0,0,.8)}
 #entry .fan .card[data-i="0"]{transform:rotate(-21deg);filter:brightness(.8) saturate(.94);z-index:1}
