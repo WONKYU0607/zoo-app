@@ -85,7 +85,10 @@
 /* 프로필 원의 오른쪽 위. 원 위로 올라와야 가리지 않는다 */
 #table .seat__tag{position:absolute;z-index:3;top:calc(var(--av,44px) * -.12);
   left:calc(var(--av,44px) * .70);
-  font-size:9px;letter-spacing:.04em;padding:1px 5px;border-radius:2px;
+  font-size:9px;letter-spacing:.04em;padding:2px 5px;border-radius:2px;
+  /* 감싸개가 line-height:0 이라 그대로 물려받아 상자가 4px 밖에 안 됐다.
+     글씨가 상자 밖으로 튀어나오던 원인 */
+  line-height:1.35;
   background:rgba(10,16,12,.94);border:1px solid var(--gold-dim);color:var(--gold-hi);
   white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.7)}
 #table /* ---------- pile in the middle ---------- */
@@ -215,7 +218,7 @@
 #table .emopick button:nth-child(5){animation-delay:.12s}
 #table .emopick button:active{transform:translateY(1px)}
 @keyframes emorise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-#table .emopick .emoimg{width:100%;min-width:72px;height:86px;background-repeat:no-repeat;
+#table .emopick .emoimg{width:100%;min-width:58px;height:69px;background-repeat:no-repeat;
   background-position:bottom center;background-size:contain;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.7))}
 
@@ -225,21 +228,29 @@
    대신 다섯 개를 **같은 크기**로 두어 늘어나는 일 자체를 없앤다.
    가로세로비 896:663, 아래 19% 는 꼬리라 글자를 그만큼 위로 올린다 */
 #table .emobub{display:flex;align-items:center;justify-content:center;
-  width:54px;height:40px;padding:0 4px 8px;box-sizing:border-box;
+  width:43px;height:32px;padding:0 3px 6px;box-sizing:border-box;
   background:url(/assets/emote_bubble.webp) no-repeat center/100% 100%;
-  font-family:"Gowun Batang",serif;font-weight:700;font-size:9.5px;line-height:1.1;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:7.6px;line-height:1.1;
   letter-spacing:-.03em;color:#3B2A12;text-align:center;white-space:nowrap}
 /* 영어는 글자가 길어 그대로 두면 넘친다 */
-html[lang="en"] #table .emobub{font-size:8px;letter-spacing:-.02em}
+html[lang="en"] #table .emobub{font-size:6.4px;letter-spacing:-.02em}
 
 /* 프로필 옆에 뜨는 것 */
 /* 프로필 **정가운데** 위로 올라온다 */
-#table .seat__emo{position:absolute;z-index:7;left:50%;bottom:0;
+/* 가운데로 당기는 값은 **연출과 별개로** 여기 둔다.
+   연출(emopop)을 끄면 그 안의 translateX 도 같이 사라져 오른쪽으로 밀린다 */
+#table .seat__emo{position:absolute;z-index:7;left:50%;transform:translateX(-50%);
+  bottom:calc(-10px * var(--emo-s,1));
   display:flex;flex-direction:column;align-items:center;
   pointer-events:none;animation:emopop .18s ease-out both}
-#table .seat__emo .emoimg{width:64px;height:64px;background-repeat:no-repeat;
+/* --emo-s : 인원이 많을수록 자리가 촘촘해지므로 그만큼 줄인다 (table.js 가 넣어 준다) */
+#table .seat__emo .emoimg{width:calc(64px * var(--emo-s,1));height:calc(64px * var(--emo-s,1));
+  background-repeat:no-repeat;
   background-position:bottom center;background-size:contain;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.75))}
-#table .seat__emo .emobub{width:50px;height:37px;font-size:9px;padding:0 4px 7px;margin-bottom:1px}
+#table .seat__emo .emobub{width:calc(50px * var(--emo-s,1));height:calc(37px * var(--emo-s,1));
+  font-size:calc(9px * var(--emo-s,1));padding:0 calc(4px * var(--emo-s,1)) calc(7px * var(--emo-s,1));
+  margin-bottom:1px}
+html[lang="en"] #table .seat__emo .emobub{font-size:calc(7.5px * var(--emo-s,1))}
 @keyframes emopop{from{opacity:0;transform:translate(-50%,6px) scale(.86)}
   to{opacity:1;transform:translateX(-50%)}}

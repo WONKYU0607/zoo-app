@@ -337,6 +337,11 @@ export function mount(root){
               : (t === 3 && h !== 13) ? "rd" : "th";
     return k + sfx;
   }
+  /* 인원이 많으면 자리가 촘촘해져서 감정표현이 바닥 카드나 옆자리와 부딪힌다.
+     인원에 맞춰 통째로 줄인다. 4명이면 그대로, 8명이면 0.64배 */
+  function emoScale(n){
+    return Math.max(0.62, Math.min(1, 1 - (Math.max(4, n) - 4) * 0.09));
+  }
   function renderSeats(){
     syncRing();
     const box = el("seats"); box.innerHTML = "";
@@ -486,6 +491,8 @@ export function mount(root){
     if (!SEATS.length) return;
     renderSeats(); renderPile(); renderHand(); renderBottom();
     paintEmotes();   /* 자리를 새로 그렸으니 떠 있던 감정표현을 다시 붙인다 */
+    el("seats").style.setProperty("--emo-s", emoScale(SEATS.length).toFixed(3));
+    el("seats").querySelectorAll(".seat__tag").forEach(keepInView);   /* 등수·패스 표도 */
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -695,7 +702,28 @@ const TURN_SEC = 15;
     box.className = "seat__emo";
     box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span>' +
                     '<span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
+    /* 자리를 다시 그릴 때마다 이 상자도 새로 만든다.
+       그때마다 떠오르는 연출을 다시 틀면 깜빡깜빡 끊겨 보인다 —
+       처음 뜰 때만 틀고, 다시 붙일 때는 끄고 그대로 놔둔다 */
+    if (cur2.shown) box.style.animation = "none";
+    else cur2.shown = true;
     wrap.appendChild(box);
+    keepInView(box);
+  }
+
+  /* 프로필에 매달린 것(말풍선·등수표)은 자리 상자 밖으로 튀어나와 있어서
+     anchorSeats 의 화면 맞춤에 안 잡힌다. 좌우 끝자리에서 잘려 나가므로
+     나간 만큼 직접 당겨 준다 */
+  function keepInView(box){
+    if (!box) return;
+    const stage = window.document.getElementById("stage") || window.document.documentElement;
+    const W = stage.getBoundingClientRect();
+    const r = box.getBoundingClientRect();
+    if (!r.width) return;
+    let dx = 0;
+    if (r.left < W.left + 2) dx = (W.left + 2) - r.left;
+    else if (r.right > W.right - 2) dx = (W.right - 2) - r.right;
+    box.style.marginLeft = dx ? Math.round(dx) + "px" : "";
   }
 
   /* 자리를 다시 그린 뒤 붙여 준다 */
@@ -704,7 +732,7 @@ const TURN_SEC = 15;
   }
 
   function showEmote(pos, k){
-    emoNow[pos] = { k, until: Date.now() + EMO_SHOW };
+    emoNow[pos] = { k, until: Date.now() + EMO_SHOW, shown: false };
     paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {

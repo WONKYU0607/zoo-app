@@ -114,6 +114,26 @@ check("말풍선 글자가 안 잘린다",
         .every(b => b.scrollWidth <= b.clientWidth + 1)),
       JSON.stringify(picks.map(p => p.txt)));
 
+/* 등수·패스 표 — 상자가 글씨보다 작으면 안 된다.
+   감싸개가 line-height:0 이라 그대로 물려받아 4px 짜리 상자가 나온 적이 있다 */
+await page.evaluate(() => {
+  const mk = (i, t) => {
+    const d = document.querySelectorAll("#table #seats .seat")[i];
+    if (!d) return;
+    const w = d.querySelector(".seat__avwrap");
+    if (!w || w.querySelector(".seat__tag")) return;
+    const s = document.createElement("span");
+    s.className = "seat__tag"; s.textContent = t; w.appendChild(s);
+  };
+  mk(1, "패스"); mk(2, "1등");
+});
+const tags = await page.evaluate(() => [...document.querySelectorAll("#table .seat__tag")]
+  .map(e => ({ t: e.textContent, over: e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1,
+               box: e.offsetWidth + "x" + e.offsetHeight })));
+check("등수·패스 표가 그려진다", tags.length >= 2, String(tags.length));
+check("표 상자가 글씨보다 작지 않다", tags.every(t => !t.over),
+      JSON.stringify(tags.map(t => t.t + " " + t.box)));
+
 const bad = logs.filter(l => /^ERROR/.test(l));
 check("화면에서 터진 것이 없다", bad.length === 0, JSON.stringify(bad.slice(0, 3)));
 
