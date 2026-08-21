@@ -34,6 +34,7 @@ const B = await import("./_bundle_auto.mjs");
 const eng = B.eng;
 document.getElementById("table").innerHTML = B.MARKUP.table;
 eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","A","B","C"], opts: { rounds: 3, tax: true } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
 eng.engine.botMs = 6;
 B.mountTable(document.getElementById("table"));
 await wait(80);
@@ -75,6 +76,7 @@ if (v2 && v2.over){
 /* 3. 카드를 만지면 꺼진다 */
 eng.stop();
 eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","A","B","C"], opts: { rounds: 3, tax: true } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
 eng.engine.botMs = 3000;
 await wait(60);
 eng.setAuto(false);                       /* 앞 판에서 켜 둔 것을 내린다 */
@@ -89,6 +91,7 @@ eng.stop();
 /* 4. 시간이 다 되면 그 턴은 넘기고, 다음 턴부터 자동치기로 */
 window.__turnSec = 1;                      /* 검사에서는 1초로 줄인다 */
 eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","A","B","C"], opts: { rounds: 3, tax: true } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
 eng.engine.botMs = 40;
 eng.setAuto(false);
 if (window.__bootTable) window.__bootTable();

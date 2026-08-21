@@ -25,6 +25,7 @@ const SLOW = [
 ];
 const FAST = [
   ["엔진",     ["test/engine.test.js"]],
+  ["배치",     ["test/layout.test.mjs"]],
   ["자동",     ["test/auto.test.mjs"]],
   ["카드얼굴", ["test/face.test.mjs"]],
   ["로그인",   ["test/login.test.mjs"]],

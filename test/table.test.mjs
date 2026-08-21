@@ -78,6 +78,7 @@ async function playOne(gi){
   eng.engine.botMs = 0;                       /* 검사에서는 봇이 바로 둔다 */
   const names = ["나", "가", "나2", "다", "라", "마", "바", "사"].slice(0, N);
   eng.startLocal({ numPlayers: N, myID: "0", names, opts: { rounds: 3, tax: true, clear2: false } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
   mountTable(root);
 
   let guard = 0, lastSig = "", stuck = 0;

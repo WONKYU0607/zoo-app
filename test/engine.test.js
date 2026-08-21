@@ -3,7 +3,7 @@
 
    쓰는 법:  node test/engine.test.js [인원] [게임수]  */
 
-import { engine, onView, startLocal, stop, play, passTurn, give, declareRev, passRev } from "../src/lib/engine.js";
+import { engine, onView, startLocal, stop, play, passTurn, give, declareRev, passRev, autoDraw } from "../src/lib/engine.js";
 
 const N     = Number(process.argv[2] || 6);
 const GAMES = Number(process.argv[3] || 5);
@@ -51,6 +51,7 @@ async function one(gi){
 
   engine.botMs = 8;                                   /* 시험에서는 빨리 */
   startLocal({ numPlayers: N, names: NAMES, myID: "0", opts: { rounds: 3, tax: true } });
+  autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
 
   const v0 = engine.view;
   if (gi === 1){

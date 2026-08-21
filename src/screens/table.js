@@ -21,7 +21,7 @@ export function mount(root){
          pass:"패스", pick:"대기중", play:n=>n+"장 내기",
          notTurn:"대기중", mix:"같은 숫자만 함께 낼 수 있습니다",
          cnt:n=>n+"장을 맞춰 주세요", lower:"더 낮은 숫자를 내세요",
-         autoOff:"자동 OFF", autoOn:"자동 ON",
+         autoOff:"자동 OFF", autoOn:"자동 ON", emoBtn:"이모티콘",
          autoOnMsg:"자동치기로 넘어갑니다\n카드를 만지면 풀립니다",
          autoPass:"시간이 다 되어 자동으로 넘겼습니다", left2:n=>n+"초", cleared:"판을 비웠습니다 · 다시 선",
          close:"다시 누르면 접힙니다" },
@@ -35,7 +35,7 @@ export function mount(root){
          pass:"Pass", pick:"Waiting", play:n=>"Play "+n,
          notTurn:"Waiting", mix:"Cards must share one number",
          cnt:n=>"Play exactly "+n, lower:"Play a lower number",
-         autoOff:"AUTO OFF", autoOn:"AUTO ON",
+         autoOff:"AUTO OFF", autoOn:"AUTO ON", emoBtn:"EMOJI",
          autoOnMsg:"Auto play on\nTap a card to take over",
          autoPass:"Time up \u2014 passed for you", left2:n=>n+"s", cleared:"Pile cleared \u00B7 you lead again",
          close:"Tap again to close" }
@@ -168,6 +168,7 @@ export function mount(root){
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
+    Object.keys(emoNow).forEach(p2 => delete emoNow[p2]);
     offEmote = eng.onEmote(e => showEmote(e.pos, e.k));
     offView = eng.onView(apply);
     if (eng.engine.view) apply(eng.engine.view);
@@ -484,6 +485,7 @@ export function mount(root){
        화면들은 앱이 뜰 때 한꺼번에 붙으므로, 게임 전에도 draw 가 불린다 */
     if (!SEATS.length) return;
     renderSeats(); renderPile(); renderHand(); renderBottom();
+    paintEmotes();   /* 자리를 새로 그렸으니 떠 있던 감정표현을 다시 붙인다 */
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -616,7 +618,7 @@ const TURN_SEC = 15;
      단추를 누르면 다섯 개가 올라오고, 하나 고르면 내 프로필 옆에 2초 뜬다.
      남이 보낸 것도 같은 자리에 뜬다. 연타는 2.5초 막는다 */
 
-  const EMO_SHOW = 2000, EMO_COOL = 2500;
+  const EMO_SHOW = 1000, EMO_COOL = 2500;
   let emoUntil = 0;                 /* 다음에 보낼 수 있는 시각 */
   const emoTimers = {};             /* 화면 자리 → 지우기 예약 */
 
@@ -641,6 +643,14 @@ const TURN_SEC = 15;
         '<span class="emoimg" style="background-image:url(' + e.img + ')"></span>' +
       '</button>').join("");
     p.hidden = false;
+    /* 떠 있는 판이라 자리를 직접 잡아 준다 — 손패 바로 위 */
+    const h = el("hand");
+    if (h && p.offsetParent){
+      const ph = p.offsetParent.getBoundingClientRect();
+      const hb = h.getBoundingClientRect();
+      p.style.bottom = Math.round(ph.bottom - hb.top + 4) + "px";
+      p.style.top = "auto";
+    }
     p.querySelectorAll("button").forEach(b => {
       b.onclick = () => { emoSend(b.dataset.k); emoPickOpen(false); };
     });
@@ -658,12 +668,15 @@ const TURN_SEC = 15;
   function paintEmoBtn(){
     const b = el("emo");
     if (!b) return;
-    b.style.backgroundImage = "url(" + EMOTE_BTN + ")";
+    b.textContent = T[lang].emoBtn;
     b.disabled = Date.now() < emoUntil;
   }
 
-  /* 자리 위에 띄운다. 등수표와 자리가 겹치므로 뜨는 동안만 등수표를 숨긴다 */
-  function showEmote(pos, k){
+  /* 지금 떠 있는 것. 자리를 다시 그려도 살아남아야 한다 —
+     봇이 카드를 낼 때마다 자리를 새로 그리므로, 붙여 두기만 하면 바로 지워진다 */
+  const emoNow = {};
+
+  function paintEmote(pos){
     const seats = el("seats");
     const d = seats && seats.children[pos];
     if (!d) return;
@@ -671,20 +684,33 @@ const TURN_SEC = 15;
     if (!wrap) return;
     const old = wrap.querySelector(".seat__emo");
     if (old) old.remove();
+    const cur2 = emoNow[pos];
     const tag = wrap.querySelector(".seat__tag");
-    if (tag) tag.style.visibility = "hidden";
+    if (!cur2 || Date.now() >= cur2.until){
+      if (tag) tag.style.visibility = "";
+      return;
+    }
+    if (tag) tag.style.visibility = "hidden";   /* 등수표와 자리가 겹친다 */
     const box = document.createElement("span");
     box.className = "seat__emo";
-    box.innerHTML = '<span class="emobub">' + esc(emoText(k)) + '</span>' +
-                    '<span class="emoimg" style="background-image:url(' + emoImg(k) + ')"></span>';
+    box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span>' +
+                    '<span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
     wrap.appendChild(box);
+  }
+
+  /* 자리를 다시 그린 뒤 붙여 준다 */
+  function paintEmotes(){
+    Object.keys(emoNow).forEach(p => paintEmote(Number(p)));
+  }
+
+  function showEmote(pos, k){
+    emoNow[pos] = { k, until: Date.now() + EMO_SHOW };
+    paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
-      const cur2 = wrap.querySelector(".seat__emo");
-      if (cur2) cur2.remove();
-      const t2 = wrap.querySelector(".seat__tag");
-      if (t2) t2.style.visibility = "";
+      delete emoNow[pos];
       emoTimers[pos] = null;
+      paintEmote(pos);
     }, EMO_SHOW);
   }
 

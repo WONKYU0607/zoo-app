@@ -146,6 +146,31 @@ function scheduleBot(){
 
   const G = st.G, ctx = st.ctx;
 
+  /* 뽑기: 봇이 아직 안 고른 자리 하나를 무작위로 집는다 */
+  if (ctx.phase === "draw"){
+    const d = G.draw;
+    if (!d) return;
+    const todo = d.took.map((x, seat) => (x == null && actsFor(seat) ? seat : -1))
+                       .filter(x => x >= 0);
+    if (!todo.length) return;
+    const g = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g !== gen) return;
+      const s2 = raw(); if (!s2 || s2.ctx.phase !== "draw"){ push(); return; }
+      const d2 = s2.G.draw;
+      const seat = todo[0];
+      if (d2.took[seat] != null){ push(); return; }
+      const free = d2.by.map((v, i) => (v == null ? i : -1)).filter(i => i >= 0);
+      if (!free.length) return;
+      engine.client.updatePlayerID(String(seat));
+      engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, Math.min(engine.botMs, 800));   /* 뽑기는 기다릴 것이 없다. 너무 느리면 답답하다 */
+    return;
+  }
+
   if (ctx.phase === "tax"){
     /* 혁명을 쥔 사람이 봇이면 대신 선언해 준다.
        내 자리면 화면이 정할 때까지 기다린다 — 쥐고도 안 부르는 것이 전략이므로 */
@@ -220,6 +245,10 @@ export function setAuto(on){
 
 /* ---------- 시작 / 끝 ---------- */
 
+/* 검사용 손잡이. 진짜 브라우저에서 엔진 상태를 들여다볼 수 있어야
+   "화면과 엔진이 어긋났다" 를 잡을 수 있다 */
+if (typeof window !== "undefined") window.__eng = engine;
+
 function attach(client){
   engine.client = client;
   client.start();
@@ -282,6 +311,34 @@ export function stop(){
 
 /* ---------- 내 수 ---------- */
 /* 자리 번호를 붙이지 않는다. 엔진이 내가 누구인지 안다 */
+
+/* 뽑기에서 카드 한 장을 가져간다 */
+export function takeCard(idx){
+  const c = engine.client;
+  if (!c) return;
+  c.updatePlayerID(engine.myID);
+  c.moves.takeCard(idx);
+}
+
+/* 남은 자리를 한꺼번에 뽑아 버린다. 검사에서 판부터 보고 싶을 때 쓴다 */
+export function autoDraw(){
+  const c = engine.client;
+  const st = raw();
+  if (!c || !st || st.ctx.phase !== "draw") return;
+  const d = st.G.draw;
+  if (!d) return;
+  for (let seat = 0; seat < d.took.length; seat++){
+    const s2 = raw();
+    if (!s2 || s2.ctx.phase !== "draw") break;
+    if (s2.G.draw.took[seat] != null) continue;
+    const free = s2.G.draw.by.map((v, i) => (v == null ? i : -1)).filter(i => i >= 0);
+    if (!free.length) break;
+    c.updatePlayerID(String(seat));
+    c.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+  }
+  c.updatePlayerID(engine.myID);
+  push();
+}
 
 export function play(num, count){
   if (!engine.client) return false;

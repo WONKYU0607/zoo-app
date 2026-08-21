@@ -87,6 +87,7 @@ while (!want && tries++ < 300){
   eng.engine.botMs = 0;
   eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
                    opts: { rounds: 3, tax: false, clear2: false } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
   if (W.__bootTable) W.__bootTable();
   await wait(3);
   const v = eng.engine.view;
@@ -289,6 +290,7 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
   eng.engine.botMs = 0;
   eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
                    opts: { rounds: 3, tax: false, clear2: false } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
   if (W.__bootTable) W.__bootTable();
   /* 내가 선이면 아무거나 한 장 깔아 판을 굴린다. 그래야 남들이 받고
      다시 내 차례가 올 때 바닥이 깔려 있다 */
@@ -362,28 +364,52 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
   }
 }
 
-/* ---------- 뽑기 숫자가 차례 순서와 맞는가 ---------- */
+/* ---------- 뽑기가 진짜인가 ----------
+   예전에는 엔진이 선을 먼저 정하고 뽑기 화면이 그 사람에게 가장 낮은 수를 배정했다.
+   누가 무엇을 골라도 결과가 같은 가짜였다. 이제 고른 카드가 곧 결과다 */
 {
   const ds = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
-  check("뽑기 숫자를 차례 순서대로 매긴다",
-        /plan\[\(lead \+ k\) % N\] = use\[k\]/.test(ds));
-  /* draw.js 와 같은 계산을 옮겨 와서, 내가 2등이면 1등이 왼쪽·3등이 오른쪽인지 본다.
-     화면 자리는 i 가 늘수록 아래 → 오른쪽 → 위 → 왼쪽 순이다 */
-  for (const N of [4, 6, 8]){
-    for (let lead = 0; lead < N; lead++){
-      const plan = new Array(N);
-      const use = Array.from({ length: N }, (_, k) => k + 1);   /* 1,2,3… 오름차순 */
-      for (let k = 0; k < N; k++) plan[(lead + k) % N] = use[k];
-      /* 내 자리는 언제나 0. 내 숫자가 r 번째면, r-1 번째는 왼쪽(N-1), r+1 번째는 오른쪽(1) */
-      const myRank = plan[0] - 1;
-      const leftRank  = plan[(0 - 1 + N) % N] - 1;
-      const rightRank = plan[(0 + 1) % N] - 1;
-      const ok = leftRank === (myRank - 1 + N) % N && rightRank === (myRank + 1) % N;
-      if (!ok){ check(N + "명 선" + lead + " 자리 순서", false,
-                      JSON.stringify(plan)); }
+  check("뽑기 화면이 숫자를 만들지 않는다",
+        !/plan\[\(lead \+ k\) % N\]/.test(ds) && !/plan = new Array\(N\)/.test(ds));
+  const gs2 = readFileSync(join(ROOT, "src/lib/game.js"), "utf8");
+  check("엔진에 뽑기 단계가 있다", /draw: \{[\s\S]{0,400}takeCard/.test(gs2));
+  check("고른 결과로 순서를 정한다", /drawOrder\(G\.draw, ctx\.numPlayers\)/.test(gs2));
+
+  /* 진짜로 돌려 본다 — 낮은 숫자를 집은 사람이 선이 되는가 */
+  for (let round = 0; round < 6; round++){
+    eng.stop();
+    eng.engine.botMs = 999999;
+    eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
+                     opts: { rounds: 3, tax: false, clear2: false } });
+    const st0 = eng.engine.client.store.getState();
+    if (st0.ctx.phase !== "draw"){ check("뽑기 단계로 시작한다", false, st0.ctx.phase); break; }
+    /* 자리 0..3 이 카드 0..3 을 순서대로 집는다 */
+    for (let seat = 0; seat < 4; seat++){
+      eng.engine.client.updatePlayerID(String(seat));
+      eng.engine.client.moves.takeCard(seat);
+    }
+    eng.engine.client.updatePlayerID("0");
+    const st = eng.engine.client.store.getState();
+    const pool = st.G.draw.pool;
+    const lowest = pool.indexOf(Math.min.apply(null, pool));
+    if (st.ctx.phase !== "play"){ check("다 고르면 판으로 넘어간다", false, st.ctx.phase); break; }
+    if (st.G.next !== lowest){
+      check("가장 낮은 숫자를 집은 사람이 선이 된다", false,
+            JSON.stringify(pool) + " → 선 " + st.G.next + " (와야 할 것 " + lowest + ")");
+      break;
+    }
+    /* 자리 순서가 숫자 오름차순인가 */
+    const byVal = st.G.seatOrder.map(sq => pool[st.G.draw.took[sq]]);
+    if (byVal.some((v, i2) => i2 && v < byVal[i2 - 1])){
+      check("자리 순서가 뽑은 숫자 순서다", false, JSON.stringify(byVal));
+      break;
+    }
+    if (round === 5){
+      check("여섯 판 내내 집은 카드가 곧 결과다", true);
+      check("가장 낮은 숫자를 집은 사람이 선이 된다", true, JSON.stringify(pool) + " → 선 " + st.G.next);
+      check("자리 순서가 뽑은 숫자 순서다", true, JSON.stringify(byVal));
     }
   }
-  check("어떤 인원·어떤 선이어도 왼쪽이 한 등수 위, 오른쪽이 한 등수 아래", true);
 }
 
 /* ---------- 판 끝 장면에서 마지막 사람 손패 ---------- */
@@ -409,6 +435,7 @@ eng.stop();
 eng.engine.botMs = 0;
 eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
                  opts: { rounds: 3, tax: false, clear2: false } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
 if (W.__bootTable) W.__bootTable();
 eng.setAuto(true);
 let outSeen = false;
@@ -459,6 +486,7 @@ check("누군가 다 내고 완주했다", outSeen);
   eng.startLocal({ numPlayers: 6, myID: "0",
                    names: ["아데바요르","서연","준호","민지","태윤","하은"],
                    opts: { rounds: 3, tax: false, clear2: false } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
   await wait(20);
   const vv = eng.engine.view;
 
@@ -530,6 +558,7 @@ check("누군가 다 내고 완주했다", outSeen);
   eng.engine.botMs = 999999;
   eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
                    opts: { rounds: 3, tax: false, clear2: false } });
+  eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
   if (W.__bootTable) W.__bootTable();
   await wait(20);
 
@@ -580,6 +609,21 @@ check("누군가 다 내고 완주했다", outSeen);
   click(emoBtn);
   check("쿨이 끝나면 다시 열린다", !pickBox.hidden);
   emoPickClose(pickBox);
+
+  /* 자동 단추가 정말로 자동치기를 켜는가 */
+  {
+    const ab = el("auto");
+    click(ab);
+    check("자동 단추를 누르면 켜진다",
+          ab.getAttribute("aria-pressed") === "true" && eng.engine.auto === true,
+          ab.getAttribute("aria-pressed") + " / " + eng.engine.auto);
+    check("글자가 ON 으로 바뀐다",
+          (ab.querySelector("span").textContent || "").includes("ON"),
+          ab.querySelector("span").textContent);
+    click(ab);
+    check("다시 누르면 꺼진다",
+          ab.getAttribute("aria-pressed") === "false" && eng.engine.auto === false);
+  }
 
   const es = readFileSync(join(ROOT, "src/lib/engine.js"), "utf8");
   check("남에게 보내는 통로가 쪽지 통로다", /sendChatMessage\(\{ t: "emote"/.test(es));

@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART_DECK as A_DECK, HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/draw.css";
@@ -100,6 +101,7 @@ export function mount(root){
     return {x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias};
   }
   function cardFace(c){
+    if (c == null) return '<div class="card"></div>';   /* 아직 아무도 안 집은 카드 */
     const n = isJ(c) ? 13 : c;
     const nm = isJ(c) ? (lang === "ko" ? "카멜레온" : "CHAMELEON")
                       : (lang === "ko" ? KO_N : EN_N)[c - 1];
@@ -111,17 +113,7 @@ export function mount(root){
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
       '<span class="card__num">' + n + '</span></div></div>';
   }
-  function makeDeck(){
-    const d = [];
-    for (let n = 1; n <= 12; n++) for (let i = 0; i < n; i++) d.push(n);
-    d.push(13, 14);
-    for (let i = d.length - 1; i > 0; i--){
-      const k = Math.floor(Math.random() * (i + 1));
-      [d[i], d[k]] = [d[k], d[i]];
-    }
-    return d;
-  }
-  
+
   /* 가장 낮은 숫자를 뽑은 사람이 1등. 나머지는 그 자리에서 시계 방향으로 */
   let pickOrder = [];              // 뽑은 순서 (동점이면 먼저 뽑은 쪽이 위)
   function winner(){
@@ -138,29 +130,14 @@ export function mount(root){
   }
   
   function layout(players){
-    const d = makeDeck();
-    pool = d.slice(0, players.length);
+    /* 바닥은 엔진이 깐다. 아직 아무도 안 집은 카드의 숫자는 엔진이 가려서 준다 */
+    const v = eng.engine.view;
+    pool = (v && v.draw) ? v.draw.pool.slice() : new Array(players.length).fill(null);
     plan = null;
-    if (online && typeof window.__leadSeat === "number"){
-      /* 서버가 정한 선이 가장 낮은 숫자를 갖도록 자리별 숫자를 미리 배정한다.
-         같은 숫자가 둘이면 누가 선인지 흐려지므로 서로 다른 숫자만 쓴다. */
-      const cand = [];
-      for (let v = 1; v <= 12; v++) cand.push(v);
-      for (let i = cand.length - 1; i > 0; i--){
-        const k2 = Math.floor(Math.random() * (i + 1));
-        const t = cand[i]; cand[i] = cand[k2]; cand[k2] = t;
-      }
-      const use = cand.slice(0, N).sort((a, b) => a - b);
-      const lead = window.__leadSeat;
-      plan = new Array(N).fill(0);
-      /* 숫자는 **차례 순서대로** 매긴다. 선이 가장 작고, 그다음 차례가 그다음 작은 수.
-         예전에는 자리 번호 순서로 매겨서, 뽑은 숫자가 실제 순서와 아무 상관이 없었다 —
-         내가 2등인데 1등이 엉뚱한 자리에 앉아 있는 것처럼 보였다.
-         자리는 이미 "선부터 차례대로"라서, 이렇게 하면 숫자와 자리가 맞아떨어진다 */
-      for (let k = 0; k < N; k++) plan[(lead + k) % N] = use[k];
-      pool = plan.slice();          /* 바닥 카드도 같은 숫자들로 */
-    }
-  
+    /* 예전에는 여기서 "서버가 정한 선이 가장 낮은 수를 갖도록" 숫자를 미리 배정했다.
+       누가 무엇을 골라도 결과가 같은 가짜였다. 이제 그런 것은 없다 —
+       고른 카드가 곧 결과다 */
+
     waiting = players.slice();
     const deck = el("deck");
     deck.innerHTML = "";
@@ -194,7 +171,7 @@ export function mount(root){
   /* 뽑기 제한 시간 5초. 안 뽑으면 자동으로 한 장 집는다.
      남들은 나를 기다리지 않고 저마다 뽑는다 */
   const PICK_SEC = 5;
-  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null;
+  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null, offView = null;
   function armPickTimer(){
     stopPickTimer();
     if (phase !== "pick") return;
@@ -219,47 +196,35 @@ export function mount(root){
     pickLeft = 0;
   }
   /* 나 말고 남은 사람들이 차례로 한 장씩 집는다 */
-  function startBotLoop(){
-    if (botLoopId) return;
-    botLoopId = setInterval(() => {
-      if (phase !== "pick"){ stopBotLoop(); return; }
-      const others = waiting.filter(x => x !== 0);
-      if (!others.length){ stopBotLoop(); return; }
-      botPick();
-    }, 900);
-  }
+  /* 남들이 고르는 것은 엔진이 한다. 화면은 결과만 받아 그린다 */
+  function startBotLoop(){}
   function stopBotLoop(){ if (botLoopId){ clearInterval(botLoopId); botLoopId = null; } }
   
+  /* 내가 한 장 집는다. 결과는 엔진이 정한다 — 여기서 숫자를 만들지 않는다 */
   function pick(seat, k){
-    const w = el("deck").querySelector('.pk[data-k="' + k + '"]:not(.taken)');
-    if (!w) return;
-    takenK.push(k);
-    /* 온라인이면 자리마다 나올 숫자를 미리 정해 뒀다.
-       카드는 뒤집히기 전까지 안 보이므로, 집는 순간 그 카드의 숫자를 정해진 값으로 맞춘다.
-       그래야 카드에 보이는 숫자와 자리에 적히는 숫자가 같다. */
-    if (online && plan){
-      pool[k] = plan[seat];
-      /* 카드 앞면은 처음 만들 때 정해진다. 숫자를 바꿨으니 앞면도 다시 그린다.
-         아직 뒤집히기 전이라 눈에 안 띈다. */
-      const face = w.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(pool[k]);
-    }
-    drawn[seat] = pool[k];
-    pickOrder.push(seat);
-    waiting = waiting.filter(x => x !== seat);
-    w.classList.add("flip", "taken");
-    w.dataset.seat = seat;
-    draw();
-    if (seat === 0) stopPickTimer();
-    if (!waiting.length){ stopBotLoop(); setTimeout(settle, 1000); }
+    if (seat !== 0) return;                    /* 남의 것을 대신 집지 않는다 */
+    if (el("deck").querySelector('.pk[data-k="' + k + '"].taken')) return;
+    eng.takeCard(k);
   }
-  
-  function botPick(){
-    const seat = waiting.find(x => x !== 0);   /* 내 자리는 대신 뽑지 않는다 */
-    if (seat === undefined) return;
-    const free = pool.map((_, k) => k).filter(k =>
-      el("deck").querySelector('.pk[data-k="' + k + '"]:not(.taken)'));
-    pick(seat, free[Math.floor(Math.random() * free.length)]);
+
+  /* 엔진이 알려 준 대로 바닥을 맞춘다. 뒤집기는 처음 보일 때 한 번만 */
+  function syncDeck(d){
+    if (!d) return;
+    const deck = el("deck");
+    d.by.forEach((seat, k) => {
+      if (seat == null) return;
+      const w = deck.querySelector('.pk[data-k="' + k + '"]');
+      if (!w || w.classList.contains("taken")) return;
+      const face = w.querySelector(".pk__f--a");
+      if (face) face.innerHTML = cardFace(d.pool[k]);
+      w.classList.add("flip", "taken");
+      w.dataset.seat = seat;
+      takenK.push(k);
+      drawn[seat] = d.pool[k];
+      if (pickOrder.indexOf(seat) < 0) pickOrder.push(seat);
+      waiting = waiting.filter(x => x !== seat);
+      if (seat === 0) stopPickTimer();
+    });
   }
   
   let cd = 5, cdId = null;
@@ -280,7 +245,13 @@ export function mount(root){
   }
   function settle(){
     phase = "done";
-    const w = online && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
+    /* 선은 엔진이 정했다. 판 화면 기준 자리로 받아 둔다 */
+    const vv = eng.engine.view;
+    if (vv && vv.turn >= 0) window.__leadSeat = vv.turn;
+    /* 이름·얼굴을 새 순서로 갈아 끼우는 것은 이 화면을 떠날 때 한다.
+       여기서 바꾸면 뽑은 숫자는 방에 앉은 순서로 붙어 있는데
+       이름만 등수 순서로 바뀌어 서로 다른 사람을 가리킨다 */
+    const w = typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
     window.GAME = window.GAME || {};
     window.GAME.N = N;
     window.GAME.roundNo = 1;
@@ -393,6 +364,15 @@ export function mount(root){
     }
     phase = "pick";
     layout(Array.from({length: N}, (_, i) => i));
+    /* 엔진이 바닥을 알려 준다. 남들이 고르는 것도 여기로 들어온다 */
+    if (offView) offView();
+    offView = eng.onView(v => {
+      if (phase === "done") return;
+      syncDeck(v.draw);
+      if (v.phase !== "draw"){ stopBotLoop(); stopPickTimer(); setTimeout(settle, 700); }
+      draw();
+    });
+    if (eng.engine.view){ syncDeck(eng.engine.view.draw); }
     draw();
   }
   window.__bootDraw = () => { boot(); armPickTimer(); };
@@ -406,7 +386,19 @@ export function mount(root){
       draw();
     });
   });
-  el("go").addEventListener("click", () => { if (cdId){ clearInterval(cdId); cdId = null; } });
+  el("go").addEventListener("click", () => {
+    if (cdId){ clearInterval(cdId); cdId = null; }
+    /* 판으로 넘어가는 순간에 자리가 등수 순서로 바뀐다 */
+    const vv = eng.engine.view;
+    if (vv && vv.seats){
+      window.GAME = window.GAME || {};
+      window.GAME.faces = vv.seats.map(x => x.seat);
+      window.GAME.seatFaces = vv.seats.map(x => x.seat);
+      window.GAME.names = vv.names.slice();
+      window.GAME.namesEn = vv.names.slice();
+      if (vv.turn >= 0) window.__leadSeat = vv.turn;
+    }
+  });
   window.addEventListener("resize", draw);
   
   window.addEventListener("langchange", () => { lang = window.__lang; draw(); });

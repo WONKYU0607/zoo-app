@@ -66,6 +66,20 @@ export function screenView(G, ctx, myID, names){
     cards: realCards(t),
   }));
 
+  /* 뽑기 화면 몫. 자리 번호는 화면 자리로 바꿔서 넘긴다 */
+  const draw = G.draw ? {
+    /* 아직 아무도 안 집은 카드의 숫자는 화면에 주지 않는다.
+       이 기기 방은 판 상태를 그대로 읽으므로 여기서 가려야 한다 —
+       안 가리면 낮은 카드가 어디 있는지 다 보인다 */
+    pool: G.draw.pool.map((v, i) => (G.draw.by[i] == null ? null : v)),
+    /* 뽑기 화면 자리는 **방에 앉은 순서** 그대로다(나를 아래로 돌려놓기만 한다).
+       등수 자리로 바꾸는 것은 뽑기가 끝난 뒤 판에서 한다 —
+       여기서 ord 를 쓰면 마지막 사람이 고르는 순간 자리가 통째로 흔들린다 */
+    by: G.draw.by.map(s => (s == null ? null : ((s - me + n) % n))),
+    mine: G.draw.took[Number(myID)],                 /* 내가 가져간 카드 자리 */
+    left: G.draw.took.filter(x => x == null).length,
+  } : null;
+
   return {
     N: n,
     me: 0,                                      /* 화면에서 나는 언제나 0 */
@@ -87,6 +101,7 @@ export function screenView(G, ctx, myID, names){
     roundNo: G.roundNo,
     totalRounds: G.totalRounds,
     phase: ctx.phase,
+    draw,
     revolution: G.revolution
       ? {
           seat: toScreen(G.revolution.seat, me, n),

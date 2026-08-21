@@ -40,6 +40,15 @@ let sawRoundEnd = 0, sawTax = 0, sawRevolution = 0;
 for (let gi = 1; gi <= 12; gi++){
   const c = Client({ game: ZooPresident, numPlayers: N });
   c.start();
+  /* 뽑기 단계를 먼저 끝낸다. 자리 순서는 여기서 정해진다 */
+  for (let seat = 0; seat < N; seat++){
+    const s0 = c.store.getState();
+    if (s0.ctx.phase !== "draw") break;
+    const free = s0.G.draw.by.map((v, i) => (v == null ? i : -1)).filter(i => i >= 0);
+    c.updatePlayerID(String(seat));
+    c.moves.takeCard(free[0]);
+  }
+  c.updatePlayerID("0");
   let guard = 0, seenRound = 1;
 
   while (guard++ < 3000){

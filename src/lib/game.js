@@ -175,6 +175,23 @@ function openNextRound(G, random){
   G.given = {};
 }
 
+/* 1~12 중에서 서로 다른 수를 n 개. 같은 수가 둘이면 누가 위인지 흐려진다 */
+function pickDistinct(random, n){
+  const all = [];
+  for (let v = 1; v <= 12; v++) all.push(v);
+  return random.Shuffle(all).slice(0, n);
+}
+
+/* 뽑기 결과로 순서를 정한다. 낮은 숫자가 위, 같으면 먼저 고른 쪽이 위 */
+export function drawOrder(d, n){
+  const seats = Array.from({ length: n }, (_, i) => i);
+  return seats.sort((a, b) => {
+    const va = d.pool[d.took[a]], vb = d.pool[d.took[b]];
+    if (va !== vb) return va - vb;
+    return d.seq.indexOf(a) - d.seq.indexOf(b);
+  });
+}
+
 /* ---------- 게임 ---------- */
 
 export const ZooPresident = {
@@ -194,9 +211,18 @@ export const ZooPresident = {
       needTax: false, given: {}, gameOver: false,
     };
     dealRound(G, random);
-    /* 첫 판 자리는 뽑기로 정한다. 엔진이 순서를 정하고 화면이 그대로 보여준다 */
-    G.seatOrder = random.Shuffle(Array.from({ length: n }, (_, i) => i));
-    G.next = G.seatOrder[0];
+    /* 첫 판 자리는 **진짜 뽑기**로 정한다.
+       예전에는 여기서 순서를 미리 섞어 놓고 뽑기 화면이 그 결과에 맞춰
+       숫자를 배정했다 — 누가 무엇을 골라도 결과가 같은 가짜였다.
+       이제 카드를 깔아만 두고, 각자 고른 것으로 순서가 결정된다 */
+    G.seatOrder = null;
+    G.next = 0;
+    G.draw = {
+      pool: pickDistinct(random, n),     /* 자리마다 한 장씩, 서로 다른 숫자 */
+      by: new Array(n).fill(null),       /* 카드 자리 → 가져간 사람 */
+      took: new Array(n).fill(null),     /* 사람 → 가져간 카드 자리 */
+      seq: [],                           /* 고른 차례. 같은 숫자면 먼저 고른 쪽이 위 */
+    };
     return G;
   },
 
@@ -204,12 +230,48 @@ export const ZooPresident = {
   playerView: ({ G, playerID }) => {
     const out = Object.assign({}, G);
     out.hands = G.hands.map((h, i) => (String(i) === String(playerID) ? h.slice() : null));
+    /* 아직 아무도 안 가져간 카드의 숫자는 가린다. 안 가리면 낮은 것만 골라 간다 */
+    if (G.draw){
+      out.draw = Object.assign({}, G.draw, {
+        pool: G.draw.pool.map((v, i) => (G.draw.by[i] == null ? null : v)),
+      });
+    }
     return out;
   },
 
   phases: {
-    play: {
+    /* 첫 순서 정하기. 모두가 동시에 참여하므로 activePlayers 로 열어 둔다.
+       한 장씩만 가져갈 수 있고, 남이 가져간 자리는 못 가져간다 */
+    draw: {
       start: true,
+      turn: { activePlayers: { all: "picking" },
+        stages: {
+          picking: {
+            moves: {
+              takeCard: ({ G, playerID }, idx) => {
+                const seat = Number(playerID);
+                const d = G.draw;
+                if (!d) return INVALID_MOVE;
+                if (d.took[seat] != null) return INVALID_MOVE;     /* 이미 골랐다 */
+                if (!(idx >= 0 && idx < d.pool.length)) return INVALID_MOVE;
+                if (d.by[idx] != null) return INVALID_MOVE;        /* 남이 가져갔다 */
+                d.by[idx] = seat;
+                d.took[seat] = idx;
+                d.seq.push(seat);
+              },
+            },
+          },
+        },
+      },
+      endIf: ({ G, ctx }) => G.draw && G.draw.took.every((x, i) => x != null || i >= ctx.numPlayers),
+      onEnd: ({ G, ctx }) => {
+        const order = drawOrder(G.draw, ctx.numPlayers);
+        G.seatOrder = order.slice();
+        G.next = order[0];
+      },
+      next: "play",
+    },
+    play: {
       turn: {
         /* 한 사람이 한 번 두면 차례가 넘어간다. 다음 사람은 G.next 가 정한다 */
         minMoves: 1,
