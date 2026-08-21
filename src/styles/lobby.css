@@ -144,7 +144,9 @@
   background:linear-gradient(180deg,rgba(8,5,2,.3),rgba(8,5,2,.52) 42%,rgba(6,4,2,.78))}
 #lobby /* ---------- 상단바 (프로필 · 점수 · 티켓 · 설정) ---------- */
 .top{
-  display:flex;align-items:center;gap:8px;flex:1;min-width:0;width:100%;margin:0;
+  /* 양옆으로 20px 씩, 폭 40px 넓힘. 화면 좌우 여백이 20px 이라 딱 끝까지 간다 */
+  display:flex;align-items:center;gap:8px;flex:1;min-width:0;
+  width:calc(100% + 40px);margin:0 -20px;
   height:42px;padding:0 10px 0 6px;
   border:11px solid transparent;
   border-image:url(/assets/fr_topbar.webp) 26 fill stretch;
@@ -226,8 +228,9 @@
 
 /* ---- 랭킹 단추 (로비 상단바 아래) ---- */
 #lobby .rankbar{display:flex;justify-content:flex-end;padding:2px 14px 0}
+/* 양옆으로 10px 씩, 폭 20px 넓힘 */
 #lobby .bt-rank{display:inline-flex;align-items:center;justify-content:center;
-  min-height:0 !important;padding:0 !important;border-width:10px !important;
+  min-height:0 !important;padding:0 10px !important;border-width:10px !important;
   border-image-width:10px !important;font-size:11px;font-weight:700;letter-spacing:0;
   line-height:1}
 #lobby .bt-rank svg{display:none}

@@ -123,9 +123,27 @@
   background:#1A1410;overflow:hidden}
 #table .card__art img{width:100%;height:100%;object-fit:cover;display:block}
 #table /* ---------- hand ---------- */
+/* 안내 줄 왼쪽에 아주 작은 자동 단추를 같이 둔다 */
+#table .needrow{position:relative;z-index:5;display:flex;align-items:center;gap:8px;
+  margin:2px 0 5px;min-height:22px}
 .need{position:relative;z-index:5;text-align:center;font-size:11.5px;color:#CDE0D4;
-  margin:2px auto 5px;min-height:16px;max-width:96%;padding:3px 10px;border-radius:10px;
+  margin:0 auto;min-height:16px;max-width:96%;padding:3px 10px;border-radius:10px;
   background:rgba(6,12,8,.72);backdrop-filter:blur(2px);width:fit-content}
+/* 안내 줄이 가운데에 오도록 자동 단추만큼 오른쪽에 빈 자리를 둔다 */
+#table .needrow::after{content:"";flex:none;width:62px}
+
+/* 아주 작은 자동 단추 — 그림 틀 없이 CSS 로만. 켜지면 초록불이 들어온다 */
+#table .autotiny{flex:none;display:inline-flex;align-items:center;gap:5px;
+  min-height:0;padding:3px 8px;border-radius:3px;cursor:pointer;
+  border:1px solid rgba(143,168,152,.45);background:rgba(6,12,8,.72);
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:10px;letter-spacing:.02em;
+  color:#7E9587;line-height:1;white-space:nowrap;transition:color .15s,border-color .15s}
+#table .autotiny i{width:6px;height:6px;border-radius:50%;flex:none;
+  background:#33463A;box-shadow:none;transition:background .15s,box-shadow .15s}
+#table .autotiny[aria-pressed="true"]{color:#CDEBD6;border-color:rgba(90,214,130,.75);
+  background:rgba(10,30,16,.85)}
+#table .autotiny[aria-pressed="true"] i{background:#5AD682;
+  box-shadow:0 0 6px rgba(90,214,130,.95),0 0 12px rgba(90,214,130,.5)}
 #table .need b{color:var(--gold-hi);font-weight:400}
 #table .timer{height:3px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:8px}
 #table .timer i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-hi),var(--gold));
@@ -138,19 +156,24 @@
 #table .slot--sel .card{box-shadow:0 0 0 2px var(--gold-hi),0 10px 18px rgba(0,0,0,.6)}
 #table .slot--dead .card{filter:brightness(.44) saturate(.5)}
 #table .acts{position:relative;z-index:2;display:flex;gap:9px}
-/* 놋쇠 틀 단추. 예전에는 base.css 의 일괄 규칙(전부 !important)을 같이 썼는데,
-   그러면 여기서 크기를 못 바꾼다. 그 목록에서 빼고 여기서 온전히 잡는다.
-   값은 예전의 80% — 틀 13→10.4, 안여백 6/10→4.8/8, 최소높이 52→41.6, 글씨 16→12.8.
-   폭은 줄을 셋이 나눠 채우는 구조라 그대로 둔다 */
+/* 판 화면 단추 셋. base.css 의 일괄 규칙(놋쇠·붉은 것 둘 다 !important)에서 빼고
+   여기서 온전히 잡는다. 그 규칙에 묶여 있으면 여기서 크기를 못 바꾼다 —
+   실제로 카드내기 단추만 안 줄어들어 셋의 높이가 어긋나 있었다.
+   값은 원래의 72% (80% 에서 10% 더) — 틀 13→9.36, 안여백 6/10→4.32/7.2,
+   최소높이 52→37.44, 글씨 16→11.52. 폭은 줄을 셋이 나눠 채우는 구조라 그대로 */
 #table .acts button{flex:1;border-radius:0;background:none;box-shadow:none;
-  border:10.4px solid transparent;
-  border-image:var(--fr-btn) 33 fill stretch;border-image-width:10.4px;
-  padding:4.8px 8px;min-height:41.6px;
+  border:9.36px solid transparent;
+  border-image:var(--fr-btn) 33 fill stretch;border-image-width:9.36px;
+  padding:4.32px 7.2px;min-height:37.44px;
   color:#E9D5AC;text-shadow:0 1px 3px rgba(0,0,0,.85);
-  font-family:"Gowun Batang",serif;font-weight:700;font-size:12.8px;letter-spacing:.05em}
-#table .bt-pass{border:1px solid var(--gold-dim);color:var(--parchment-dim)}
-#table .bt-play{background:linear-gradient(180deg,#7A2226,#4A1418);border:1px solid var(--gold);
-  box-shadow:0 1px 0 rgba(227,198,124,.24) inset,0 5px 14px rgba(0,0,0,.5)}
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:11.52px;letter-spacing:.05em;
+  line-height:1.15;word-break:keep-all}
+#table .bt-pass{color:var(--parchment-dim)}
+/* 카드내기는 붉은 틀. 크기는 위와 똑같아야 셋이 나란히 선다 */
+#table #play{border-image:var(--fr-red) 46 fill stretch;
+  color:#FBEFCE;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+#table #play:active{border-image:var(--fr-red-down) 46 fill stretch;transform:translateY(1px)}
+#table .bt-pass:active{border-image:var(--fr-btn-down) 33 fill stretch;transform:translateY(1px)}
 #table .acts button:disabled{opacity:.36;box-shadow:none}
 #table /* 아바타: 바깥은 놋쇠 틀, #table 안쪽은 얼굴 (두 겹 배경) */
 .seat__av{
@@ -164,3 +187,47 @@
 /* 12시 자리는 카드·장수를 프로필 위로 올린다 (바닥 카드에 가려서) */
 #table .seat--above{display:flex;flex-direction:column;align-items:center}
 #table .seat--above .seat__c{order:-1;margin:0 0 1px}
+
+/* ---------- 감정표현 ---------- */
+
+/* 단추 자리는 자동 단추가 쓰던 곳. 안에 말풍선 아이콘만 */
+#table .bt-emo{background-repeat:no-repeat;background-position:center;
+  background-size:auto calc(var(--emo-btn, 20px));font-size:0}
+#table .bt-emo{--emo-btn:19px}
+#table .bt-emo:disabled{opacity:.36}
+
+/* 고르는 판 — 손패 위로 떠오른다 */
+#table .emopick{position:relative;z-index:8;display:flex;gap:6px;justify-content:center;
+  align-items:flex-end;margin:0 0 6px;padding:6px 4px 0}
+#table .emopick[hidden]{display:none}
+#table .emopick button{flex:1;min-width:0;background:none;border:0;padding:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  animation:emorise .16s ease-out both}
+#table .emopick button:nth-child(2){animation-delay:.03s}
+#table .emopick button:nth-child(3){animation-delay:.06s}
+#table .emopick button:nth-child(4){animation-delay:.09s}
+#table .emopick button:nth-child(5){animation-delay:.12s}
+@keyframes emorise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* 말풍선 — 그림을 9칸으로 늘려 글자 길이에 맞춘다.
+   꼬리가 아래 가운데라 아래쪽 조각은 늘리지 않고 그대로 둔다 */
+#table .emobub{display:block;min-width:44px;max-width:100%;
+  padding:7px 8px 13px;border-style:solid;border-color:transparent;
+  border-width:16px 20px 26px;
+  border-image:url(/assets/emote_bubble.webp) 22 28 36 fill stretch;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:11px;line-height:1;
+  color:#3B2A12;text-align:center;white-space:nowrap}
+#table .emopick .emoimg{width:100%;height:52px;background-repeat:no-repeat;
+  background-position:bottom center;background-size:contain}
+#table .emopick button:active{transform:translateY(1px)}
+
+/* 프로필 옆에 뜨는 것 */
+#table .seat__emo{position:absolute;z-index:6;left:calc(var(--av, 44px) * .62);
+  bottom:calc(var(--av, 44px) * .30);display:flex;flex-direction:column;align-items:center;
+  pointer-events:none;animation:emopop .18s ease-out both}
+#table .seat__emo .emoimg{width:46px;height:46px;background-repeat:no-repeat;
+  background-position:bottom center;background-size:contain;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.75))}
+#table .seat__emo .emobub{font-size:10px;border-width:14px 17px 22px;padding:5px 6px 10px;
+  margin-bottom:-4px}
+@keyframes emopop{from{opacity:0;transform:translateY(6px) scale(.86)}to{opacity:1;transform:none}}

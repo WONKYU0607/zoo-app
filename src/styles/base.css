@@ -25,7 +25,7 @@
 }
 #lobby .btn-primary:active,#lobby .btn-second:active,
 #room .btn-primary:active,#draw .bt-main:active,#tax .bt-main:active,
-#tax .bt-ghost:active,#table .acts button:active,#result .bt-main:active,
+#tax .bt-ghost:active,#result .bt-main:active,
 #result .bt-ghost:active,#opts .opts__go:active,
 #lobby .bt-rank:active{
   border-image:var(--fr-btn-down) 33 fill stretch !important;
@@ -41,7 +41,7 @@
 button:disabled{opacity:.42}
 
 /* 붉은 버튼 — 전용 판 이미지 */
-#entry #start,#table #play,#lobby #btQuick,#room #action .btn-primary{
+#entry #start,#lobby #btQuick,#room #action .btn-primary{
   border:13px solid transparent !important;
   border-image:var(--fr-red) 46 fill stretch !important;
   border-image-width:13px !important;
@@ -53,7 +53,7 @@ button:disabled{opacity:.42}
   color:#FBEFCE !important;
   text-shadow:0 1px 4px rgba(0,0,0,.9);
 }
-#entry #start:active,#table #play:active,#lobby #btQuick:active,#room #action .btn-primary:active{
+#entry #start:active,#lobby #btQuick:active,#room #action .btn-primary:active{
   border-image:var(--fr-red-down) 46 fill stretch !important;
   transform:translateY(1px);
 }

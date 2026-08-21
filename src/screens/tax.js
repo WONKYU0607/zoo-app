@@ -439,6 +439,7 @@ export function mount(root){
   
   /* 누를 것이 없는 단계는 저절로 넘어간다 */
   var autoId = null;   /* 선언 전에 부르는 곳이 있어 var 로 둔다 */
+  var taxShown = false;  /* 카드가 오가는 연출을 틀었는가 (다음 판으로 넘어갈 때 기다려 준다) */
   var hideHand = false;  /* 나누는 모션이 끝날 때까지 손패를 감춘다 */
   var tickId = null, tickLeft = 0, tickBase = "";
   /* 버튼에 남은 초를 붙여 준다. 먼저 누르면 바로 넘어간다 */
@@ -488,7 +489,8 @@ export function mount(root){
     let wait = 0;
     if (step === 0) wait = 3000;        /* 등수 발표 */
     else if (step === 1) wait = 3000;   /* 카드 나누기 */
-    else if (step === 2) wait = 10000;  /* 혁명 */
+    /* 혁명: 쥔 사람이 있을 때만 고민할 것이 있다. 아무도 없으면 알리고 5초에 넘긴다 */
+    else if (step === 2) wait = (revSeat === null ? 5000 : 10000);
     else if (step === 3) wait = 10000;  /* 세금 */
     if (!wait) return;
     startTick(wait);
@@ -548,6 +550,7 @@ export function mount(root){
     }
     if (step === 3 && !taxSkipped()){
       window.__myGive = sel.map(i => myHand()[i]);
+      taxShown = true;
       runTax();
       applyTax(window.__myGive);
       sel = [];
@@ -565,8 +568,9 @@ export function mount(root){
     if (step === 4){
       G().order = order().slice();
       if (autoId){ clearTimeout(autoId); autoId = null; }
-      /* 마지막은 곧바로 다음 판으로 */
-      setTimeout(() => { if (window.__toTable) window.__toTable(); }, 400);
+      /* 카드가 오가는 연출이 1.9초쯤 걸린다. 400ms 만에 넘어가면
+         남들끼리 주고받는 것을 보라고 만든 연출을 아무도 못 본다 */
+      setTimeout(() => { if (window.__toTable) window.__toTable(); }, taxShown ? 2100 : 400);
       return;
     }
     autoNext();

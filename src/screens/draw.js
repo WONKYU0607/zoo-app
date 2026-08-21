@@ -153,9 +153,11 @@ export function mount(root){
       const use = cand.slice(0, N).sort((a, b) => a - b);
       const lead = window.__leadSeat;
       plan = new Array(N).fill(0);
-      plan[lead] = use[0];
-      let j = 1;
-      for (let i = 0; i < N; i++) if (i !== lead) plan[i] = use[j++];
+      /* 숫자는 **차례 순서대로** 매긴다. 선이 가장 작고, 그다음 차례가 그다음 작은 수.
+         예전에는 자리 번호 순서로 매겨서, 뽑은 숫자가 실제 순서와 아무 상관이 없었다 —
+         내가 2등인데 1등이 엉뚱한 자리에 앉아 있는 것처럼 보였다.
+         자리는 이미 "선부터 차례대로"라서, 이렇게 하면 숫자와 자리가 맞아떨어진다 */
+      for (let k = 0; k < N; k++) plan[(lead + k) % N] = use[k];
       pool = plan.slice();          /* 바닥 카드도 같은 숫자들로 */
     }
   

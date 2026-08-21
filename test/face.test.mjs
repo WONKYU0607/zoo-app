@@ -244,6 +244,7 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
   const tc = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
   const blk = (tc.match(/#table \.acts button\{[^}]*\}/) || [""])[0];
   const num = re => Number((blk.match(re) || [])[1]);
+  const R = 0.72;   /* 원래의 72% (80% 에서 10% 더 줄임) */
   const was = { border: 13, biw: 13, padY: 6, padX: 10, minH: 52, font: 16 };
   const now = {
     border: num(/border:([\d.]+)px solid transparent/),
@@ -254,14 +255,152 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
     font:   num(/font-size:([\d.]+)px/),
   };
   for (const k of Object.keys(was)){
-    const want = +(was[k] * 0.8).toFixed(2);
-    check("단추 " + k + " 가 예전의 80%", Math.abs(now[k] - want) < 0.01,
+    const want = +(was[k] * R).toFixed(2);
+    check("단추 " + k + " 가 원래의 72%", Math.abs(now[k] - want) < 0.01,
           now[k] + " (원래 " + was[k] + " → " + want + ")");
   }
   const bc = readFileSync(join(ROOT, "src/styles/base.css"), "utf8");
   check("판 단추가 공통 !important 규칙에 안 묶여 있다",
         !/#table \.acts button,/.test(bc));
   check("판 단추가 놋쇠 틀을 그대로 쓴다", /border-image:var\(--fr-btn\)/.test(blk));
+  /* 카드내기 단추만 base 의 붉은 규칙(!important)에 묶여 있어 혼자 안 줄어들었다 */
+  check("카드내기 단추가 붉은 일괄 규칙에 안 묶여 있다", !/#table #play,/.test(bc));
+  check("카드내기 단추도 같은 크기 규칙을 받는다",
+        /#table #play\{border-image:var\(--fr-red\)/.test(tc));
+  check("눌렀을 때 틀이 바뀐다", /#table #play:active\{border-image:var\(--fr-red-down\)/.test(tc)
+        && /#table \.bt-pass:active\{border-image:var\(--fr-btn-down\)/.test(tc));
+}
+
+/* ---------- 못 누르는 단추에는 "대기중" ---------- */
+{
+  const ts = readFileSync(join(ROOT, "src/screens/table.js"), "utf8");
+  check("상대 차례 문구가 대기중으로 바뀌었다", /notTurn:"대기중"/.test(ts));
+  check("카드를 고르세요 문구가 대기중으로 바뀌었다", /pick:"대기중"/.test(ts));
+  check("못 내는 카드는 아예 안 골린다", /if \(!canPick\(i\)\) return;/.test(ts));
+  check("자동치기 안내가 두 줄이다", /autoOnMsg:"자동치기로 넘어갑니다\\n/.test(ts));
+  check("안내 상자가 줄바꿈을 그린다", /join\("<br>"\)/.test(ts));
+}
+
+/* ---------- 못 내는 카드를 정말로 못 고르는가 ----------
+   바닥이 깔린 상태에서 내 차례가 올 때까지 돌린 뒤,
+   손패를 하나씩 눌러 보고 실제로 골라지는지 DOM 으로 확인한다 */
+{
+  eng.stop();
+  eng.engine.botMs = 0;
+  eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
+                   opts: { rounds: 3, tax: false, clear2: false } });
+  if (W.__bootTable) W.__bootTable();
+  /* 내가 선이면 아무거나 한 장 깔아 판을 굴린다. 그래야 남들이 받고
+     다시 내 차례가 올 때 바닥이 깔려 있다 */
+  let v2 = null;
+  for (let i = 0; i < 900 && !v2; i++){
+    await wait(6);
+    const vv2 = eng.engine.view;
+    if (!vv2) continue;
+    if (vv2.myTurn && vv2.pile){ v2 = vv2; break; }
+    if (vv2.myTurn && !vv2.pile){
+      const plain = vv2.hand.filter(c => c < 13);
+      const worst = plain.length ? plain[plain.length - 1] : null;
+      if (worst != null) eng.play(worst, 1);
+      else eng.passTurn();
+      await wait(12);
+    }
+  }
+  check("바닥이 깔린 채로 내 차례가 왔다", Boolean(v2),
+        v2 ? "" : "900틱 안에 안 옴");
+  if (v2){
+    eng.engine.botMs = 999999;          /* 확인하는 동안 봇을 멈춘다 */
+    await wait(20);
+    const slots = () => [...el("hand").querySelectorAll(".slot")];
+    const selCount = () => el("hand").querySelectorAll(".slot--sel").length;
+    const click = k => slots()[k].dispatchEvent(new W.MouseEvent("click", { bubbles: true }));
+
+    let tooHigh = 0, picked = 0;
+    for (let k = 0; k < v2.hand.length; k++){
+      const card = v2.hand[k];
+      click(k);
+      const got = selCount() === 1;
+      if (got){
+        picked++;
+        /* 골라졌다면 바닥보다 낮은 숫자이거나 카멜레온이어야 한다 */
+        if (!(card >= 13 || card < v2.pile.num))
+          check("골라진 카드가 바닥보다 낮다", false, card + " vs 바닥 " + v2.pile.num);
+        click(k);                        /* 되돌린다 */
+      } else if (card < 13 && card >= v2.pile.num){
+        tooHigh++;
+      }
+      if (selCount()) { click(k); }
+    }
+    check("바닥보다 높은 카드는 하나도 안 골렸다", true,
+          "고를 수 있던 것 " + picked + "장 / 막힌 높은 카드 " + tooHigh + "장");
+    check("고를 수 있는 카드가 있거나, 전부 막혔다면 흐려져 있다",
+          picked > 0 || slots().every(x => x.className.includes("slot--dead")),
+          "고를 수 있던 것 " + picked + "장");
+
+    /* 숫자를 섞으면 안 된다.
+       먼저 "실제로 골라지는" 숫자 카드를 하나 찾는다 — 장수가 모자라면 안 골린다 */
+    let base = -1;
+    for (let k = 0; k < v2.hand.length; k++){
+      if (v2.hand[k] >= 13) continue;
+      click(k);
+      if (selCount() === 1){ base = k; break; }
+      if (selCount()) click(k);
+    }
+    if (base >= 0){
+      const bv = v2.hand[base];
+      let tried = 0, bad = 0;
+      for (let k = 0; k < v2.hand.length; k++){
+        const c2 = v2.hand[k];
+        if (k === base || c2 >= 13 || c2 === bv) continue;
+        tried++;
+        click(k);
+        if (selCount() > 1){ bad++; click(k); }
+      }
+      check("다른 숫자는 같이 안 골린다", bad === 0,
+            bv + " 고른 뒤 다른 숫자 " + tried + "장 눌러 봄 · 딸려온 것 " + bad + "장");
+    }
+  }
+}
+
+/* ---------- 뽑기 숫자가 차례 순서와 맞는가 ---------- */
+{
+  const ds = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
+  check("뽑기 숫자를 차례 순서대로 매긴다",
+        /plan\[\(lead \+ k\) % N\] = use\[k\]/.test(ds));
+  /* draw.js 와 같은 계산을 옮겨 와서, 내가 2등이면 1등이 왼쪽·3등이 오른쪽인지 본다.
+     화면 자리는 i 가 늘수록 아래 → 오른쪽 → 위 → 왼쪽 순이다 */
+  for (const N of [4, 6, 8]){
+    for (let lead = 0; lead < N; lead++){
+      const plan = new Array(N);
+      const use = Array.from({ length: N }, (_, k) => k + 1);   /* 1,2,3… 오름차순 */
+      for (let k = 0; k < N; k++) plan[(lead + k) % N] = use[k];
+      /* 내 자리는 언제나 0. 내 숫자가 r 번째면, r-1 번째는 왼쪽(N-1), r+1 번째는 오른쪽(1) */
+      const myRank = plan[0] - 1;
+      const leftRank  = plan[(0 - 1 + N) % N] - 1;
+      const rightRank = plan[(0 + 1) % N] - 1;
+      const ok = leftRank === (myRank - 1 + N) % N && rightRank === (myRank + 1) % N;
+      if (!ok){ check(N + "명 선" + lead + " 자리 순서", false,
+                      JSON.stringify(plan)); }
+    }
+  }
+  check("어떤 인원·어떤 선이어도 왼쪽이 한 등수 위, 오른쪽이 한 등수 아래", true);
+}
+
+/* ---------- 판 끝 장면에서 마지막 사람 손패 ---------- */
+{
+  const gs = readFileSync(join(ROOT, "src/lib/game.js"), "utf8");
+  const vs = readFileSync(join(ROOT, "src/lib/view.js"), "utf8");
+  const ts = readFileSync(join(ROOT, "src/screens/table.js"), "utf8");
+  check("엔진이 판 끝 장수를 남긴다", /counts: G\.counts\.slice\(\)/.test(gs));
+  check("화면 몫으로 넘어간다", /G\.lastRound\.counts/.test(vs));
+  check("판 끝 장면이 그때 장수를 쓴다", /const lc = lr\.counts \|\| \[\]/.test(ts));
+}
+
+/* ---------- 세금·혁명 시간 ---------- */
+{
+  const xs = readFileSync(join(ROOT, "src/screens/tax.js"), "utf8");
+  check("혁명 쥔 사람이 없으면 5초", /revSeat === null \? 5000 : 10000/.test(xs));
+  check("카드 오가는 연출이 끝날 때까지 기다린다", /taxShown \? 2100 : 400/.test(xs));
 }
 
 /* ---------- 완주 표시가 등수로, 프로필 오른쪽 위에 ----------
@@ -384,6 +523,70 @@ check("누군가 다 내고 완주했다", outSeen);
         /const f = g\.seatFaces \|\| g\.faces;/.test(
           readFileSync(join(ROOT, "src/screens/draw.js"), "utf8")));
 }
+
+/* ---------- 감정표현 ---------- */
+{
+  eng.stop();
+  eng.engine.botMs = 999999;
+  eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","가","나2","다"],
+                   opts: { rounds: 3, tax: false, clear2: false } });
+  if (W.__bootTable) W.__bootTable();
+  await wait(20);
+
+  const emoBtn = el("emo");
+  const pickBox = el("emopick");
+  check("자동 단추가 안내 줄 옆으로 갔다",
+        Boolean(root.querySelector(".needrow .autotiny#auto")));
+  check("단추 자리에 감정표현이 들어왔다", Boolean(emoBtn));
+  check("자동 단추 글자가 ON/OFF 다",
+        (el("auto").querySelector("span").textContent || "").includes("OFF"),
+        el("auto").querySelector("span").textContent);
+  check("자동 단추가 꺼짐 상태로 시작한다", el("auto").getAttribute("aria-pressed") === "false");
+
+  const click = e => e.dispatchEvent(new W.MouseEvent("click", { bubbles: true }));
+  click(emoBtn);
+  const picks = [...pickBox.querySelectorAll("button")];
+  check("고르는 판에 다섯 개가 올라온다", picks.length === 5, String(picks.length));
+  const texts = picks.map(b => b.querySelector(".emobub").textContent);
+  check("말풍선 글자가 다 들어 있다",
+        JSON.stringify(texts) === JSON.stringify(["빨리빨리","감사","ㅠㅠ","풉ㅋㅋ","아오..!"]),
+        JSON.stringify(texts));
+  check("각 그림이 붙어 있다",
+        picks.every(b => /emote_\w+\.webp/.test(b.querySelector(".emoimg").getAttribute("style") || "")));
+
+  click(picks[3]);                     /* 원숭이 */
+  await wait(30);
+  check("고르면 판이 닫힌다", pickBox.hidden);
+  const mine = root.querySelectorAll("#seats .seat")[0];
+  const box = mine.querySelector(".seat__avwrap .seat__emo");
+  check("내 프로필 옆에 떴다", Boolean(box),
+        box ? box.textContent.trim() : "없음");
+  check("고른 것이 그대로 떴다",
+        Boolean(box) && box.textContent.includes("풉ㅋㅋ")
+        && /emote_monkey/.test(box.querySelector(".emoimg").getAttribute("style") || ""),
+        box ? box.textContent.trim() : "없음");
+
+  /* 연타 막기 */
+  click(emoBtn);
+  check("쿨 동안에는 판이 안 열린다", pickBox.hidden);
+  check("쿨 동안에는 단추가 꺼져 있다", emoBtn.disabled);
+
+  /* 2초 뒤 사라진다 */
+  await wait(2200);
+  check("2초 뒤 사라진다", !mine.querySelector(".seat__emo"));
+
+  /* 2.5초 쿨이 끝나면 다시 열린다 */
+  await wait(500);
+  click(emoBtn);
+  check("쿨이 끝나면 다시 열린다", !pickBox.hidden);
+  emoPickClose(pickBox);
+
+  const es = readFileSync(join(ROOT, "src/lib/engine.js"), "utf8");
+  check("남에게 보내는 통로가 쪽지 통로다", /sendChatMessage\(\{ t: "emote"/.test(es));
+  check("들어온 쪽지를 화면 자리로 옮긴다", /function drainEmotes/.test(es) && /toScreenSeat/.test(es));
+  check("판을 멈추면 옛 쪽지를 다시 안 읽는다", /emoteSeen = 0;\s*\/\* 새 판/.test(es));
+}
+function emoPickClose(p){ p.hidden = true; p.innerHTML = ""; }
 
 eng.stop();
 console.log("\n  통과 " + pass + " / 실패 " + fail);

@@ -801,10 +801,12 @@ __export(engine_exports, {
   declareRev: () => declareRev,
   engine: () => engine,
   give: () => give,
+  onEmote: () => onEmote,
   onView: () => onView,
   passRev: () => passRev,
   passTurn: () => passTurn,
   play: () => play,
+  sendEmote: () => sendEmote,
   setAuto: () => setAuto,
   setPaused: () => setPaused,
   startLocal: () => startLocal,
@@ -17823,6 +17825,9 @@ function openNextRound(G2, random) {
   const n2 = G2.counts.length;
   G2.lastRound = {
     order: order.slice(),
+    /* 판이 끝난 순간의 손패 장수. 바로 다음 판을 나누므로 이걸 안 남기면
+       마지막까지 남은 꼴등의 손패가 갑자기 새 판 장수로 바뀐다 */
+    counts: G2.counts.slice(),
     table: ((G2.table || []).length ? G2.table : G2.shown || []).map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: (t2.cards || []).slice() })),
     points: order.map((seat, rank) => roundPoints(rank, n2)),
     roundNo: G2.roundNo
@@ -18158,6 +18163,14 @@ function screenView(G2, ctx, myID, names) {
     lastRound: G2.lastRound ? {
       roundNo: G2.lastRound.roundNo,
       order: G2.lastRound.order.map((s2) => toScreen(s2, me, n2)),
+      /* 화면 자리 순서로 옮긴 '그때의 장수' */
+      counts: (() => {
+        const c2 = new Array(n2).fill(0);
+        (G2.lastRound.counts || []).forEach((v2, seat) => {
+          c2[toScreen(seat, me, n2)] = v2;
+        });
+        return c2;
+      })(),
       points: G2.lastRound.points.slice(),
       table: G2.lastRound.table.map((t2) => ({
         by: toScreen(t2.by, me, n2),
@@ -18209,6 +18222,7 @@ function push() {
   const st = raw();
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  drainEmotes();
   listeners.forEach((f2) => {
     try {
       f2(engine.view);
@@ -18217,6 +18231,52 @@ function push() {
     }
   });
   if (engine.mode === "local") scheduleBot();
+}
+var emoteSeen = 0;
+var emoteFns = [];
+function onEmote(fn2) {
+  emoteFns.push(fn2);
+  return () => {
+    const i2 = emoteFns.indexOf(fn2);
+    if (i2 >= 0) emoteFns.splice(i2, 1);
+  };
+}
+function fireEmote(seat, k2) {
+  const n2 = engine.view && engine.view.N || 0;
+  if (!n2) return;
+  const pos = toScreenSeat(seat);
+  emoteFns.forEach((f2) => {
+    try {
+      f2({ pos, seat, k: k2 });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+function toScreenSeat(seat) {
+  const v2 = engine.view;
+  if (!v2 || !v2.seats) return 0;
+  const i2 = v2.seats.findIndex((x2) => x2.seat === Number(seat));
+  return i2 < 0 ? 0 : i2;
+}
+function drainEmotes() {
+  const c2 = engine.client;
+  const list = c2 && c2.chatMessages || [];
+  for (; emoteSeen < list.length; emoteSeen++) {
+    const m = list[emoteSeen];
+    const p2 = m && m.payload;
+    if (!p2 || p2.t !== "emote") continue;
+    fireEmote(m.sender, p2.k);
+  }
+}
+function sendEmote(k2) {
+  const c2 = engine.client;
+  if (!c2) return;
+  if (engine.mode === "local") {
+    fireEmote(Number(engine.myID), k2);
+    return;
+  }
+  c2.sendChatMessage({ t: "emote", k: k2 });
 }
 function botPick(hand, pile) {
   const cnt = {};
@@ -18389,6 +18449,7 @@ function stop() {
   }
   engine.client = null;
   engine.view = null;
+  emoteSeen = 0;
 }
 function play(num, count) {
   if (!engine.client) return false;
@@ -18424,6 +18485,14 @@ function give(cards) {
 // src/lib/assets.js
 var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
 var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
+var EMOTES = [
+  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANK YOU" },
+  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "T_T" },
+  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
+  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
+];
+var EMOTE_BTN = "assets/emote_btn.webp";
 var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/table.js
@@ -18447,15 +18516,15 @@ function mount(root) {
       need: (c2, n2) => "<b>" + c2 + "\uC7A5</b>\uC744 <b>" + n2 + "\uBC88 \uC774\uD558</b>\uB85C \uBC1B\uC73C\uC138\uC694",
       emptyPile: "\uBC14\uB2E5\uC774 \uBE44\uC5C8\uC2B5\uB2C8\uB2E4<br>\uC6D0\uD558\uB294 \uCE74\uB4DC\uB97C \uB0B4\uC138\uC694",
       pass: "\uD328\uC2A4",
-      pick: "\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694",
+      pick: "\uB300\uAE30\uC911",
       play: (n2) => n2 + "\uC7A5 \uB0B4\uAE30",
-      notTurn: "\uC0C1\uB300 \uCC28\uB840\uC785\uB2C8\uB2E4",
+      notTurn: "\uB300\uAE30\uC911",
       mix: "\uAC19\uC740 \uC22B\uC790\uB9CC \uD568\uAED8 \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4",
       cnt: (n2) => n2 + "\uC7A5\uC744 \uB9DE\uCDB0 \uC8FC\uC138\uC694",
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
-      autoOff: "\uC790\uB3D9",
-      autoOn: "\uC790\uB3D9 \uB044\uAE30",
-      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4 \xB7 \uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
+      autoOff: "\uC790\uB3D9 OFF",
+      autoOn: "\uC790\uB3D9 ON",
+      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4\n\uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n2) => n2 + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
@@ -18475,15 +18544,15 @@ function mount(root) {
       need: (c2, n2) => "Beat with <b>" + c2 + (c2 === 1 ? " card" : " cards") + "</b> of <b>" + n2 + " or lower</b>",
       emptyPile: "The pile is empty<br>Play anything you like",
       pass: "Pass",
-      pick: "Select cards",
+      pick: "Waiting",
       play: (n2) => "Play " + n2,
-      notTurn: "Opponent's turn",
+      notTurn: "Waiting",
       mix: "Cards must share one number",
       cnt: (n2) => "Play exactly " + n2,
       lower: "Play a lower number",
-      autoOff: "Auto",
-      autoOn: "Auto off",
-      autoOnMsg: "Auto play on \xB7 tap a card to take over",
+      autoOff: "AUTO OFF",
+      autoOn: "AUTO ON",
+      autoOnMsg: "Auto play on\nTap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n2) => n2 + "s",
       cleared: "Pile cleared \xB7 you lead again",
@@ -18499,7 +18568,7 @@ function mount(root) {
   let SEATS = [];
   let hand = [];
   let finish = [];
-  let offView = null;
+  let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
   function apply(v2) {
@@ -18573,9 +18642,10 @@ function mount(root) {
   function showLastRound(v2) {
     holdingEnd = true;
     const lr = v2.lastRound;
+    const lc = lr.counts || [];
     SEATS = v2.seats.map((x2, i2) => ({
       n: x2.name,
-      c: i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
+      c: lc[i2] != null ? lc[i2] : i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
       s: "",
       hold: [],
       av: x2.seat,
@@ -18600,10 +18670,8 @@ function mount(root) {
   }
   function boot() {
     if (offView) offView();
-    if (el("auto")) {
-      el("auto").textContent = T[lang].autoOff;
-      el("auto").classList.remove("on");
-    }
+    if (offEmote) offEmote();
+    if (el("auto")) setAuto2(false);
     setAuto(false);
     if (holdPile) {
       clearTimeout(holdPile);
@@ -18619,6 +18687,10 @@ function mount(root) {
     busy = false;
     animated = 0;
     spread = false;
+    emoUntil = 0;
+    emoPickOpen(false);
+    paintEmoBtn();
+    offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
   }
@@ -18704,6 +18776,17 @@ function mount(root) {
     if (!c2) return false;
     if (isJ(n2)) return !KO_N.some((_2, i2) => i2 + 1 < c2.num && maxCount(i2 + 1) >= c2.count);
     return !(n2 < c2.num && maxCount(n2) >= c2.count);
+  }
+  function canPick(i2) {
+    if (sel.includes(i2)) return true;
+    const card = hand[i2];
+    if (isDead(card)) return false;
+    const c2 = cur();
+    if (c2 && sel.length >= c2.count) return false;
+    const next = sel.map((k2) => hand[k2]).concat([card]);
+    if (effective(next) === null) return false;
+    if (c2 && next.every(isJ) && next.length >= c2.count) return false;
+    return true;
   }
   function effective(l2) {
     const r2 = l2.filter((x2) => !isJ(x2));
@@ -18827,7 +18910,7 @@ function mount(root) {
     const total = w2 + step * (n2 - 1);
     hand.forEach((c2, i2) => {
       const s2 = document2.createElement("div");
-      s2.className = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (isDead(c2) ? " slot--dead" : "");
+      s2.className = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (turn === 0 && !busy && !canPick(i2) ? " slot--dead" : "");
       s2.style.left = (h2.clientWidth - total) / 2 + i2 * step + "px";
       s2.style.zIndex = i2;
       s2.innerHTML = cardHTML(c2, w2);
@@ -18835,8 +18918,13 @@ function mount(root) {
         handTouched();
         if (turn !== 0 || busy) return;
         const k2 = sel.indexOf(i2);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else sel.push(i2);
+        if (k2 >= 0) {
+          sel.splice(k2, 1);
+          draw();
+          return;
+        }
+        if (!canPick(i2)) return;
+        sel.push(i2);
         draw();
       };
       h2.appendChild(s2);
@@ -18864,7 +18952,7 @@ function mount(root) {
     const ok = legal(list) && turn === 0 && !busy;
     const b2 = el("play");
     b2.disabled = !ok;
-    b2.textContent = turn !== 0 ? t2.notTurn : !list.length ? t2.pick : ok ? t2.play(list.length) : effective(list) === null ? t2.mix : cur() && list.length !== cur().count ? t2.cnt(cur().count) : t2.lower;
+    b2.textContent = turn !== 0 ? t2.notTurn : ok ? t2.play(list.length) : cur() ? t2.play(cur().count) : t2.pick;
     el("pass").disabled = turn !== 0 || busy || !cur();
   }
   function draw() {
@@ -18981,7 +19069,9 @@ function mount(root) {
   function setAuto2(on3) {
     setAuto(on3);
     const b2 = el("auto");
-    b2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
+    b2.setAttribute("aria-pressed", String(Boolean(on3)));
+    const t2 = b2.querySelector("span");
+    if (t2) t2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
     b2.classList.toggle("on", on3);
     if (on3) {
       sel = [];
@@ -18990,9 +19080,80 @@ function mount(root) {
     }
   }
   el("auto").onclick = () => setAuto2(!engine.auto);
+  const EMO_SHOW = 2e3, EMO_COOL = 2500;
+  let emoUntil = 0;
+  const emoTimers = {};
+  function emoText(k2) {
+    const e = EMOTES.find((x2) => x2.k === k2);
+    return e ? lang === "ko" ? e.ko : e.en : "";
+  }
+  function emoImg(k2) {
+    const e = EMOTES.find((x2) => x2.k === k2);
+    return e ? e.img : "";
+  }
+  function esc(x2) {
+    return String(x2).replace(/[&<>"]/g, (c2) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c2]);
+  }
+  function emoPickOpen(on3) {
+    const p2 = el("emopick");
+    if (!on3) {
+      p2.hidden = true;
+      p2.innerHTML = "";
+      return;
+    }
+    p2.innerHTML = EMOTES.map((e) => '<button type="button" data-k="' + esc(e.k) + '"><span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span><span class="emoimg" style="background-image:url(' + e.img + ')"></span></button>').join("");
+    p2.hidden = false;
+    p2.querySelectorAll("button").forEach((b2) => {
+      b2.onclick = () => {
+        emoSend(b2.dataset.k);
+        emoPickOpen(false);
+      };
+    });
+  }
+  function emoSend(k2) {
+    const now2 = Date.now();
+    if (now2 < emoUntil) return;
+    emoUntil = now2 + EMO_COOL;
+    paintEmoBtn();
+    setTimeout(paintEmoBtn, EMO_COOL + 20);
+    sendEmote(k2);
+  }
+  function paintEmoBtn() {
+    const b2 = el("emo");
+    if (!b2) return;
+    b2.style.backgroundImage = "url(" + EMOTE_BTN + ")";
+    b2.disabled = Date.now() < emoUntil;
+  }
+  function showEmote(pos, k2) {
+    const seats = el("seats");
+    const d2 = seats && seats.children[pos];
+    if (!d2) return;
+    const wrap = d2.querySelector(".seat__avwrap");
+    if (!wrap) return;
+    const old = wrap.querySelector(".seat__emo");
+    if (old) old.remove();
+    const tag = wrap.querySelector(".seat__tag");
+    if (tag) tag.style.visibility = "hidden";
+    const box = document2.createElement("span");
+    box.className = "seat__emo";
+    box.innerHTML = '<span class="emobub">' + esc(emoText(k2)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(k2) + ')"></span>';
+    wrap.appendChild(box);
+    if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
+    emoTimers[pos] = setTimeout(() => {
+      const cur2 = wrap.querySelector(".seat__emo");
+      if (cur2) cur2.remove();
+      const t2 = wrap.querySelector(".seat__tag");
+      if (t2) t2.style.visibility = "";
+      emoTimers[pos] = null;
+    }, EMO_SHOW);
+  }
+  el("emo").onclick = () => {
+    if (Date.now() < emoUntil) return;
+    emoPickOpen(el("emopick").hidden);
+  };
   function flash(msg, msLong) {
     const f2 = el("flash");
-    f2.textContent = msg;
+    f2.innerHTML = String(msg).split("\n").map((x2) => x2.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch])).join("<br>");
     f2.style.opacity = 1;
     setTimeout(() => f2.style.opacity = 0, msLong ? 2200 : 1200);
   }
@@ -19032,18 +19193,23 @@ var MARKUP = {
     </div></div>
   </div>
 
-  <div class="need" id="need"></div>
+  <div class="needrow">
+    <button class="autotiny" id="auto" aria-pressed="false"><i></i><span></span></button>
+    <div class="need" id="need"></div>
+  </div>
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
+  <div class="emopick" id="emopick" hidden></div>
   <div class="acts">
-    <button class="bt-pass" id="auto">\uC790\uB3D9</button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
+    <button class="bt-pass bt-emo" id="emo" aria-label="\uAC10\uC815\uD45C\uD604"></button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
     <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
   </div>
 </main>
 
 <div id="flash" style="position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);
-  padding:12px 22px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
-  font-family:'Gowun Batang',serif;font-weight:700;font-size:16px;opacity:0;pointer-events:none;
+  padding:11px 20px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:15px;line-height:1.5;text-align:center;
+  max-width:74%;opacity:0;pointer-events:none;
   transition:opacity .2s ease;z-index:50"></div>`,
   "tax": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div style="display:flex;gap:6px">\n      <div class="lang" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="ring">\n    <div class="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="fx" id="fx"></div>\n      <div class="flash" id="flash"></div>\n      <div class="mid" id="mid"></div>\n    </div>\n  </div>\n\n  <div class="hint" id="hint"></div>\n  <div class="hand" id="hand"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="back"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>',
   "result": '<main class="screen">\n  <div class="lang" id="lang">\n    <button data-l="ko" aria-pressed="true">\uD55C</button>\n    <button data-l="en" aria-pressed="false">EN</button>\n  </div>\n  <div class="head">\n    <div class="head__k" id="kicker"></div>\n    <div class="head__t" id="title"></div>\n    <div class="head__s" id="sub"></div>\n  </div>\n  <div class="legend" id="legend"></div>\n  <div class="list" id="list"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="quit"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>'

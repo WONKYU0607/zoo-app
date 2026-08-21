@@ -46,8 +46,61 @@ function push(){
   const st = raw();
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  drainEmotes();
   listeners.forEach(f => { try { f(engine.view); } catch(e){ console.error(e); } });
   if (engine.mode === "local") scheduleBot();
+}
+
+/* ---------- 감정표현 ----------
+
+   판 상태가 아니라 boardgame.io 의 쪽지 통로로 보낸다.
+   판에 넣으면 자기 차례가 아닌 사람은 아예 못 보낸다 (moves 는 차례인 사람만 부를 수 있다).
+   쪽지 통로는 서버가 그냥 흘려보내 주므로 게임 서버 코드를 새로 짤 것이 없다.
+   이 기기 방(local)은 통로가 없으니 내가 보낸 것을 그대로 되돌려 준다 */
+
+let emoteSeen = 0;
+const emoteFns = [];
+
+export function onEmote(fn){
+  emoteFns.push(fn);
+  return () => { const i = emoteFns.indexOf(fn); if (i >= 0) emoteFns.splice(i, 1); };
+}
+
+function fireEmote(seat, k){
+  const n = (engine.view && engine.view.N) || 0;
+  if (!n) return;
+  const pos = toScreenSeat(seat);
+  emoteFns.forEach(f => { try { f({ pos, seat, k }); } catch(e){ console.error(e); } });
+}
+
+/* 엔진 자리 → 화면 자리. view 가 이미 그 짝을 들고 있다 */
+function toScreenSeat(seat){
+  const v = engine.view;
+  if (!v || !v.seats) return 0;
+  const i = v.seats.findIndex(x => x.seat === Number(seat));
+  return i < 0 ? 0 : i;
+}
+
+function drainEmotes(){
+  const c = engine.client;
+  const list = (c && c.chatMessages) || [];
+  for (; emoteSeen < list.length; emoteSeen++){
+    const m = list[emoteSeen];
+    const p = m && m.payload;
+    if (!p || p.t !== "emote") continue;
+    fireEmote(m.sender, p.k);
+  }
+}
+
+export function sendEmote(k){
+  const c = engine.client;
+  if (!c) return;
+  if (engine.mode === "local"){
+    /* 통로가 없다. 곧바로 내 자리에 띄운다 */
+    fireEmote(Number(engine.myID), k);
+    return;
+  }
+  c.sendChatMessage({ t: "emote", k });
 }
 
 /* ---------- 봇 (local 전용) ---------- */
@@ -224,6 +277,7 @@ export function stop(){
   if (engine.client){ try { engine.client.stop(); } catch(e){} }
   engine.client = null;
   engine.view = null;
+  emoteSeen = 0;      /* 새 판에서 옛 쪽지를 다시 읽지 않게 */
 }
 
 /* ---------- 내 수 ---------- */

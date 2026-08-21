@@ -140,6 +140,9 @@ function openNextRound(G, random){
      이걸 안 남기면 마지막에 무슨 카드로 끝냈는지 화면이 못 보여준다 */
   G.lastRound = {
     order: order.slice(),
+    /* 판이 끝난 순간의 손패 장수. 바로 다음 판을 나누므로 이걸 안 남기면
+       마지막까지 남은 꼴등의 손패가 갑자기 새 판 장수로 바뀐다 */
+    counts: G.counts.slice(),
     table: ((G.table || []).length ? G.table : (G.shown || []))
              .map(t => ({ by: t.by, num: t.num, count: t.count, cards: (t.cards || []).slice() })),
     points: order.map((seat, rank) => roundPoints(rank, n)),

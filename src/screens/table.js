@@ -2,6 +2,7 @@ import { scoped } from "../lib/scoped.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART as A_ART, HEADS as A_HEADS } from "../lib/assets.js";
+import { EMOTES, EMOTE_BTN } from "../lib/assets.js";
 import "../styles/table.css";
 
 export function mount(root){
@@ -17,11 +18,11 @@ export function mount(root){
          lead:"원하는 장수로 시작하세요", top1:'<b>1번</b>이 나왔습니다. 아무도 받을 수 없습니다',
          need:(c,n)=>'<b>'+c+'장</b>을 <b>'+n+'번 이하</b>로 받으세요',
          emptyPile:"바닥이 비었습니다<br>원하는 카드를 내세요",
-         pass:"패스", pick:"카드를 고르세요", play:n=>n+"장 내기",
-         notTurn:"상대 차례입니다", mix:"같은 숫자만 함께 낼 수 있습니다",
+         pass:"패스", pick:"대기중", play:n=>n+"장 내기",
+         notTurn:"대기중", mix:"같은 숫자만 함께 낼 수 있습니다",
          cnt:n=>n+"장을 맞춰 주세요", lower:"더 낮은 숫자를 내세요",
-         autoOff:"자동", autoOn:"자동 끄기",
-         autoOnMsg:"자동치기로 넘어갑니다 · 카드를 만지면 풀립니다",
+         autoOff:"자동 OFF", autoOn:"자동 ON",
+         autoOnMsg:"자동치기로 넘어갑니다\n카드를 만지면 풀립니다",
          autoPass:"시간이 다 되어 자동으로 넘겼습니다", left2:n=>n+"초", cleared:"판을 비웠습니다 · 다시 선",
          close:"다시 누르면 접힙니다" },
   
@@ -31,11 +32,11 @@ export function mount(root){
          lead:"Lead with any number of cards", top1:'<b>1</b> is out. Nobody can beat it',
          need:(c,n)=>'Beat with <b>'+c+(c===1?' card':' cards')+'</b> of <b>'+n+' or lower</b>',
          emptyPile:"The pile is empty<br>Play anything you like",
-         pass:"Pass", pick:"Select cards", play:n=>"Play "+n,
-         notTurn:"Opponent's turn", mix:"Cards must share one number",
+         pass:"Pass", pick:"Waiting", play:n=>"Play "+n,
+         notTurn:"Waiting", mix:"Cards must share one number",
          cnt:n=>"Play exactly "+n, lower:"Play a lower number",
-         autoOff:"Auto", autoOn:"Auto off",
-         autoOnMsg:"Auto play on \u00B7 tap a card to take over",
+         autoOff:"AUTO OFF", autoOn:"AUTO ON",
+         autoOnMsg:"Auto play on\nTap a card to take over",
          autoPass:"Time up \u2014 passed for you", left2:n=>n+"s", cleared:"Pile cleared \u00B7 you lead again",
          close:"Tap again to close" }
   };
@@ -54,7 +55,7 @@ export function mount(root){
   /* ---------- 엔진이 준 것으로 판을 세운다 ----------
      규칙 판단은 여기서 하지 않는다. 엔진이 정한 결과를 그대로 그린다.
      자리 번호를 돌리는 일은 view.js 안에서 이미 끝나 있다. */
-  let offView = null;
+  let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
 
@@ -131,9 +132,12 @@ export function mount(root){
   function showLastRound(v){
     holdingEnd = true;
     const lr = v.lastRound;
+    /* 그때의 장수를 그대로 쓴다. 엔진은 판이 끝나자마자 다음 판을 나누므로
+       지금 view 의 장수는 이미 새 판 것이다 — 마지막 남은 사람 손이 갑자기 10장이 됐었다 */
+    const lc = lr.counts || [];
     SEATS = v.seats.map((x, i) => ({
-      n: x.name, c: i === lr.order[lr.order.length - 1] ? x.c : 0, s: "", hold: [],
-      av: x.seat, r: lr.order.indexOf(i),
+      n: x.name, c: lc[i] != null ? lc[i] : (i === lr.order[lr.order.length - 1] ? x.c : 0),
+      s: "", hold: [], av: x.seat, r: lr.order.indexOf(i),
     }));
     hand = [];
     finish = lr.order.slice();
@@ -156,15 +160,15 @@ export function mount(root){
 
   function boot(){
     if (offView) offView();
-    if (el("auto")){
-      el("auto").textContent = T[lang].autoOff;
-      el("auto").classList.remove("on");
-    }
+    if (offEmote) offEmote();
+    if (el("auto")) setAuto(false);
     eng.setAuto(false);
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
     ghost = []; ghostSig = ""; holdingEnd = false;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
+    emoUntil = 0; emoPickOpen(false); paintEmoBtn();
+    offEmote = eng.onEmote(e => showEmote(e.pos, e.k));
     offView = eng.onView(apply);
     if (eng.engine.view) apply(eng.engine.view);
   }
@@ -264,6 +268,21 @@ export function mount(root){
     const c = cur(); if (!c) return false;
     if (isJ(n)) return !KO_N.some((_, i) => i + 1 < c.num && maxCount(i + 1) >= c.count);
     return !(n < c.num && maxCount(n) >= c.count);
+  }
+  /* 이 카드를 지금 고를 수 있는가.
+     못 내는 카드를 고르게 해 놓고 나중에 단추에 이유를 적는 대신,
+     아예 안 골리게 한다 — 고른 것은 언제나 뺄 수 있다 */
+  function canPick(i){
+    if (sel.includes(i)) return true;
+    const card = hand[i];
+    if (isDead(card)) return false;              /* 바닥을 이길 수 없는 카드 */
+    const c = cur();
+    if (c && sel.length >= c.count) return false; /* 장수를 넘길 수 없다 */
+    const next = sel.map(k => hand[k]).concat([card]);
+    if (effective(next) === null) return false;   /* 숫자가 섞이면 안 된다 */
+    /* 카멜레온만으로 장수를 다 채우면 13번이 되어 아무것도 못 이긴다 */
+    if (c && next.every(isJ) && next.length >= c.count) return false;
+    return true;
   }
   function effective(l){
     const r = l.filter(x => !isJ(x));
@@ -411,12 +430,16 @@ export function mount(root){
     const total = w + step * (n - 1);
     hand.forEach((c, i) => {
       const s = document.createElement("div");
-      s.className = "slot" + (sel.includes(i) ? " slot--sel" : "") + (isDead(c) ? " slot--dead" : "");
+      s.className = "slot" + (sel.includes(i) ? " slot--sel" : "") +
+        (turn === 0 && !busy && !canPick(i) ? " slot--dead" : "");
       s.style.left = ((h.clientWidth - total) / 2 + i * step) + "px";
       s.style.zIndex = i;
       s.innerHTML = cardHTML(c, w);
       s.onclick = () => { handTouched(); if (turn !== 0 || busy) return;
-        const k = sel.indexOf(i); if (k >= 0) sel.splice(k,1); else sel.push(i); draw(); };
+        const k = sel.indexOf(i);
+        if (k >= 0){ sel.splice(k, 1); draw(); return; }
+        if (!canPick(i)) return;               /* 못 내는 카드는 아예 안 골린다 */
+        sel.push(i); draw(); };
       h.appendChild(s);
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
@@ -445,12 +468,14 @@ export function mount(root){
     const ok = legal(list) && turn === 0 && !busy;
     const b = el("play");
     b.disabled = !ok;
+    /* 못 누르는 단추에는 안내를 길게 적지 않는다 — 흐려져 있어 어차피 못 누른다.
+       고르다 틀린 경우(장수·숫자)만 이유를 알려 준다 */
+    /* 못 내는 카드는 아예 안 골리므로, 남는 경우는 "장수가 덜 찼다" 하나뿐이다.
+       이유를 길게 적는 대신 목표 장수를 흐리게 보여준다 */
     b.textContent = turn !== 0 ? t.notTurn
-      : !list.length ? t.pick
       : ok ? t.play(list.length)
-      : effective(list) === null ? t.mix
-      : (cur() && list.length !== cur().count) ? t.cnt(cur().count)
-      : t.lower;
+      : cur() ? t.play(cur().count)
+      : t.pick;
     el("pass").disabled = turn !== 0 || busy || !cur();   /* 선은 패스할 수 없다 */
   }
   
@@ -579,14 +604,102 @@ const TURN_SEC = 15;
   function setAuto(on){
     eng.setAuto(on);
     const b = el("auto");
-    b.textContent = on ? T[lang].autoOn : T[lang].autoOff;
+    b.setAttribute("aria-pressed", String(Boolean(on)));
+    const t = b.querySelector("span");
+    if (t) t.textContent = on ? T[lang].autoOn : T[lang].autoOff;
     b.classList.toggle("on", on);
     if (on){ sel = []; renderHand(); renderBottom(); }
   }
   el("auto").onclick = () => setAuto(!eng.engine.auto);
   
+  /* ---------- 감정표현 ----------
+     단추를 누르면 다섯 개가 올라오고, 하나 고르면 내 프로필 옆에 2초 뜬다.
+     남이 보낸 것도 같은 자리에 뜬다. 연타는 2.5초 막는다 */
+
+  const EMO_SHOW = 2000, EMO_COOL = 2500;
+  let emoUntil = 0;                 /* 다음에 보낼 수 있는 시각 */
+  const emoTimers = {};             /* 화면 자리 → 지우기 예약 */
+
+  function emoText(k){
+    const e = EMOTES.find(x => x.k === k);
+    return e ? (lang === "ko" ? e.ko : e.en) : "";
+  }
+  function emoImg(k){
+    const e = EMOTES.find(x => x.k === k);
+    return e ? e.img : "";
+  }
+  function esc(x){
+    return String(x).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  }
+
+  function emoPickOpen(on){
+    const p = el("emopick");
+    if (!on){ p.hidden = true; p.innerHTML = ""; return; }
+    p.innerHTML = EMOTES.map(e =>
+      '<button type="button" data-k="' + esc(e.k) + '">' +
+        '<span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span>' +
+        '<span class="emoimg" style="background-image:url(' + e.img + ')"></span>' +
+      '</button>').join("");
+    p.hidden = false;
+    p.querySelectorAll("button").forEach(b => {
+      b.onclick = () => { emoSend(b.dataset.k); emoPickOpen(false); };
+    });
+  }
+
+  function emoSend(k){
+    const now = Date.now();
+    if (now < emoUntil) return;      /* 연타 막기 */
+    emoUntil = now + EMO_COOL;
+    paintEmoBtn();
+    setTimeout(paintEmoBtn, EMO_COOL + 20);
+    eng.sendEmote(k);
+  }
+
+  function paintEmoBtn(){
+    const b = el("emo");
+    if (!b) return;
+    b.style.backgroundImage = "url(" + EMOTE_BTN + ")";
+    b.disabled = Date.now() < emoUntil;
+  }
+
+  /* 자리 위에 띄운다. 등수표와 자리가 겹치므로 뜨는 동안만 등수표를 숨긴다 */
+  function showEmote(pos, k){
+    const seats = el("seats");
+    const d = seats && seats.children[pos];
+    if (!d) return;
+    const wrap = d.querySelector(".seat__avwrap");
+    if (!wrap) return;
+    const old = wrap.querySelector(".seat__emo");
+    if (old) old.remove();
+    const tag = wrap.querySelector(".seat__tag");
+    if (tag) tag.style.visibility = "hidden";
+    const box = document.createElement("span");
+    box.className = "seat__emo";
+    box.innerHTML = '<span class="emobub">' + esc(emoText(k)) + '</span>' +
+                    '<span class="emoimg" style="background-image:url(' + emoImg(k) + ')"></span>';
+    wrap.appendChild(box);
+    if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
+    emoTimers[pos] = setTimeout(() => {
+      const cur2 = wrap.querySelector(".seat__emo");
+      if (cur2) cur2.remove();
+      const t2 = wrap.querySelector(".seat__tag");
+      if (t2) t2.style.visibility = "";
+      emoTimers[pos] = null;
+    }, EMO_SHOW);
+  }
+
+  el("emo").onclick = () => {
+    if (Date.now() < emoUntil) return;
+    emoPickOpen(el("emopick").hidden);
+  };
+
+  /* 줄바꿈은 \n 으로 넘긴다. 한 줄로 길게 늘어놓으면 화면을 가로지른다 */
   function flash(msg, msLong){
-    const f = el("flash"); f.textContent = msg; f.style.opacity = 1;
+    const f = el("flash");
+    f.innerHTML = String(msg).split("\n")
+      .map(x => x.replace(/[&<>]/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[ch])))
+      .join("<br>");
+    f.style.opacity = 1;
     setTimeout(() => f.style.opacity = 0, msLong ? 2200 : 1200);
   }
   

@@ -124,6 +124,12 @@ export function screenView(G, ctx, myID, names){
     lastRound: G.lastRound ? {
       roundNo: G.lastRound.roundNo,
       order: G.lastRound.order.map(s => toScreen(s, me, n)),
+      /* 화면 자리 순서로 옮긴 '그때의 장수' */
+      counts: (() => {
+        const c = new Array(n).fill(0);
+        (G.lastRound.counts || []).forEach((v, seat) => { c[toScreen(seat, me, n)] = v; });
+        return c;
+      })(),
       points: G.lastRound.points.slice(),
       table: G.lastRound.table.map(t => ({
         by: toScreen(t.by, me, n), num: t.num, count: t.count,
