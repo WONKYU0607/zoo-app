@@ -52,18 +52,36 @@ function netRoomView(){
 }
 
 /* 방 대기실에 있는 동안 서버 상태를 계속 받아 온다 */
+/* 방 상태를 한 번 받아 온다.
+
+   방장이 인원을 바꾸면 서버가 **판을 새로 만든다**. 그러면 내 자리 번호와
+   자격증명이 달라지므로 그때마다 받아서 갈아 끼워야 한다.
+   안 그러면 옛 판에 붙은 채로 남아 게임이 시작돼도 아무것도 안 보인다 */
+async function refreshNet(){
+  if (!net) return null;
+  const r = await lobby.peekRoom(net.code, net.playerID);
+  net.players = r.players;
+  net.started = r.started;
+  if (r.numPlayers) net.numPlayers = r.numPlayers;
+  if (r.matchID) net.matchID = r.matchID;
+  if (r.you && r.you.playerID != null){
+    net.playerID = String(r.you.playerID);
+    if (r.you.credentials) net.credentials = r.you.credentials;
+  }
+  W().__opts.seated = (r.players || []).filter(p => p.name).length;
+  if (r.numPlayers) W().__opts.cap = r.numPlayers;
+  emitRoom();
+  return r;
+}
+
 function pollStart(){
   if (pollId || !net) return;
   pollId = setInterval(async () => {
     if (!net){ pollStop(); return; }
     try {
-      const r = await lobby.peekRoom(net.code);
-      net.players = r.players;
-      net.started = r.started;
-      W().__opts.seated = (r.players || []).filter(p => p.name).length;
-      emitRoom();
+      const r = await refreshNet();
       /* 방장이 시작했으면 따라 들어간다 */
-      if (r.started && !net.inGame) enterOnlineGame();
+      if (r && r.started && !net.inGame) enterOnlineGame();
     } catch(e){ /* 잠깐 끊긴 것은 넘긴다 */ }
   }, 1500);
 }
@@ -363,6 +381,26 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     myRoom = null; net = null; emitRoom();
   };
   W().__saveOpts = async () => {
+    /* 서버 방이면 서버가 판을 새로 만들어야 한다 — 인원수는 판을 만들 때 정해진다 */
+    if (net){
+      const want = (W().__opts || {}).cap;
+      if (!want || want === net.numPlayers) return;
+      try {
+        const r = await lobby.setRoomCap(net.code, want, net.playerID);
+        net.numPlayers = r.numPlayers;
+        if (r.matchID) net.matchID = r.matchID;
+        if (r.seatMap && r.seatMap[Number(net.playerID)] != null)
+          net.playerID = String(r.seatMap[Number(net.playerID)]);
+        W().__opts.cap = r.numPlayers;
+        await refreshNet();
+      } catch(e){
+        /* 못 바꿨으면 화면을 원래대로 되돌린다. 바뀐 척하면 안 된다 */
+        W().__opts.cap = net.numPlayers;
+        emitRoom();
+        alert((e && e.message || "").replace(/^\S+ \d+ /, "") || "인원을 바꾸지 못했습니다");
+      }
+      return;
+    }
     if (!myRoom) return;
     setCap(myRoom, (W().__opts || {}).cap);
     W().__opts.cap = myRoom.cap;

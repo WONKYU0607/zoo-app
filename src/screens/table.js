@@ -169,6 +169,7 @@ export function mount(root){
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
     Object.keys(emoNow).forEach(p2 => delete emoNow[p2]);
+    if (el("emolayer")) el("emolayer").innerHTML = "";
     offEmote = eng.onEmote(e => showEmote(e.pos, e.k));
     offView = eng.onView(apply);
     if (eng.engine.view) apply(eng.engine.view);
@@ -678,22 +679,25 @@ const TURN_SEC = 15;
   const emoNow = {};
 
   function paintEmote(pos){
+    const layer = el("emolayer");
     const seats = el("seats");
     const d = seats && seats.children[pos];
-    if (!d) return;
-    const wrap = d.querySelector(".seat__avwrap");
-    if (!wrap) return;
-    const old = wrap.querySelector(".seat__emo");
+    if (!layer || !d) return;
+    const old = layer.querySelector('[data-pos="' + pos + '"]');
     if (old) old.remove();
     const cur2 = emoNow[pos];
-    const tag = wrap.querySelector(".seat__tag");
+    const wrap = d.querySelector(".seat__avwrap");
+    const tag = wrap && wrap.querySelector(".seat__tag");
     if (!cur2 || Date.now() >= cur2.until){
       if (tag) tag.style.visibility = "";
       return;
     }
     if (tag) tag.style.visibility = "hidden";   /* 등수표와 자리가 겹친다 */
+    const av = d.querySelector(".seat__av");
+    if (!av) return;
     const box = document.createElement("span");
     box.className = "seat__emo";
+    box.dataset.pos = String(pos);
     box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span>' +
                     '<span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
     /* 자리를 다시 그릴 때마다 이 상자도 새로 만든다.
@@ -701,7 +705,11 @@ const TURN_SEC = 15;
        처음 뜰 때만 틀고, 다시 붙일 때는 끄고 그대로 놔둔다 */
     if (cur2.shown) box.style.animation = "none";
     else cur2.shown = true;
-    wrap.appendChild(box);
+    layer.appendChild(box);
+    /* 프로필 자리를 재서 그 위에 얹는다. 판 바깥의 층이라 좌표를 직접 잡아야 한다 */
+    const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
+    box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";
+    box.style.bottom = Math.round(lb.bottom - ab.bottom - 10) + "px";
     keepInView(box);
   }
 

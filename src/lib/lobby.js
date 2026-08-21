@@ -32,7 +32,14 @@ export const joinRoom = (code, name) =>
   api(`/zoo/rooms/${code}/join`, { name });
 
 /* 방 들여다보기 — 참가자·자리비움·이탈 */
-export const peekRoom = code => api(`/zoo/rooms/${code}`);
+/* seat 을 주면 내 새 자리·자격증명도 같이 내려온다.
+   방장이 인원을 바꾸면 서버가 판을 새로 만들기 때문에 그때 필요하다 */
+export const peekRoom = (code, seat) =>
+  api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}`));
+
+/* 방 인원 바꾸기 — 대기 중, 방장만 */
+export const setRoomCap = (code, numPlayers, playerID) =>
+  api(`/zoo/rooms/${code}/cap`, { numPlayers, playerID: String(playerID) });
 
 /* 시작 — 빈자리를 봇으로 채우고 서버가 대리인을 붙인다 */
 export const startRoom = code => api(`/zoo/rooms/${code}/start`, {});

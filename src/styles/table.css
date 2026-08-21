@@ -92,7 +92,12 @@
   background:rgba(10,16,12,.94);border:1px solid var(--gold-dim);color:var(--gold-hi);
   white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.7)}
 #table /* ---------- pile in the middle ---------- */
-.pile{position:absolute;left:49%;top:43%;width:0;height:0;z-index:4;transform-style:preserve-3d}
+/* 판(.plane)이 3차원 공간이라 이 안에서는 z-index 가 안 먹는다.
+   앞뒤는 깊이로 정해진다 — 바닥 카드를 한 칸 뒤로 밀어야
+   프로필 옆 감정표현이 카드 위로 올라온다.
+   z-index:9 를 줘도 카드에 가려지던 원인이 이것이었다 */
+.pile{position:absolute;left:49%;top:43%;width:0;height:0;z-index:4;
+  transform:translateZ(-40px);transform-style:preserve-3d}
 #table #seats{position:absolute;inset:0;transform-style:preserve-3d}
 #table .play{position:absolute;left:0;top:0;display:flex;gap:4px;transform-style:preserve-3d;
   transform:translate(-50%,calc(-50% + var(--dy,0px))) rotate(var(--r,0deg)) scale(var(--sc,1))}
@@ -239,9 +244,10 @@ html[lang="en"] #table .emobub{font-size:5.1px;letter-spacing:-.02em}
 /* 프로필 **정가운데** 위로 올라온다 */
 /* 가운데로 당기는 값은 **연출과 별개로** 여기 둔다.
    연출(emopop)을 끄면 그 안의 translateX 도 같이 사라져 오른쪽으로 밀린다 */
-/* 바닥 카드(z-index:4)보다 위에 그린다. 1초만 뜨는 것이라 겹쳐도 이쪽이 보이면 된다 */
-#table .seat__emo{position:absolute;z-index:9;left:50%;transform:translateX(-50%);
-  bottom:-10px;
+/* 판(.plane) 안은 3차원 공간이라 z-index 가 안 먹는다 — 거기 두면 바닥 카드에 가린다.
+   그래서 감정표현만 판 **바깥**의 제 층에 그리고, 자리를 재서 그 위에 얹는다 */
+#table .emolayer{position:absolute;left:0;right:0;top:0;bottom:0;z-index:12;pointer-events:none}
+#table .seat__emo{position:absolute;z-index:1;transform:translateX(-50%);
   display:flex;flex-direction:column;align-items:center;
   pointer-events:none;animation:emopop .18s ease-out both}
 #table .seat__emo .emoimg{width:64px;height:64px;background-repeat:no-repeat;

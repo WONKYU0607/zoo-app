@@ -371,6 +371,15 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
   const ds = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
   check("뽑기 화면이 숫자를 만들지 않는다",
         !/plan\[\(lead \+ k\) % N\]/.test(ds) && !/plan = new Array\(N\)/.test(ds));
+  /* 숫자를 알기 전에 뒤집으면 안 된다.
+     내가 누른 순간 화면이 먼저 "집었다" 고 치는데 그때는 숫자를 모른다.
+     그 상태로 뒤집으면 앞면이 백지가 되고, 서버가 "남이 먼저 집었다" 고 하면
+     엉뚱한 카드가 뒤집힌 채로 남았다가 나중에 다시 뒤집힌다 */
+  check("숫자를 모르면 카드를 안 뒤집는다",
+        /const val = d\.pool\[k\];\s*\n\s*if \(val == null\) return;/.test(ds));
+  check("숫자가 오면 앞면을 다시 그린다",
+        /w\.dataset\.val !== String\(val\)/.test(ds));
+
   const gs2 = readFileSync(join(ROOT, "src/lib/game.js"), "utf8");
   check("엔진에 뽑기 단계가 있다", /draw: \{[\s\S]{0,400}takeCard/.test(gs2));
   check("고른 결과로 순서를 정한다", /drawOrder\(G\.draw, ctx\.numPlayers\)/.test(gs2));
@@ -586,8 +595,8 @@ check("누군가 다 내고 완주했다", outSeen);
   click(picks[3]);                     /* 원숭이 */
   await wait(30);
   check("고르면 판이 닫힌다", pickBox.hidden);
-  const mine = root.querySelectorAll("#seats .seat")[0];
-  const box = mine.querySelector(".seat__avwrap .seat__emo");
+  /* 감정표현은 판(3차원 층) 바깥의 제 층에 그린다 — 거기 두면 바닥 카드에 가린다 */
+  const box = root.querySelector('#emolayer .seat__emo[data-pos="0"]');
   check("내 프로필 옆에 떴다", Boolean(box),
         box ? box.textContent.trim() : "없음");
   check("고른 것이 그대로 떴다",
@@ -602,7 +611,7 @@ check("누군가 다 내고 완주했다", outSeen);
 
   /* 2초 뒤 사라진다 */
   await wait(2200);
-  check("2초 뒤 사라진다", !mine.querySelector(".seat__emo"));
+  check("1초 뒤 사라진다", !root.querySelector("#emolayer .seat__emo"));
 
   /* 2.5초 쿨이 끝나면 다시 열린다 */
   await wait(500);

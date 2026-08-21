@@ -148,8 +148,7 @@ export function mount(root){
     const avail = (ringEl.clientWidth || 360) - 48;
     /* 34px 은 카드 안 글씨가 들어갈 자리가 안 나온다. 상한을 46 으로 올리되
        세로도 같이 본다 — 덱은 판 높이의 44% 를 중심으로 놓이므로
-       위로 삐져나가지 않으려면 두 줄 높이가 0.88H 안에 들어와야 한다.
-       가로만 보고 잡으면 8명(4열 2줄)에서 카드가 판 위로 튀어나온다 */
+       위로 삐져나가지 않으려면 두 줄 높이가 0.88H 안에 들어와야 한다 */
     const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
     const byW = Math.floor((avail - (cols - 1) * 9) / cols);
     const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
@@ -214,9 +213,20 @@ export function mount(root){
     d.by.forEach((seat, k) => {
       if (seat == null) return;
       const w = deck.querySelector('.pk[data-k="' + k + '"]');
-      if (!w || w.classList.contains("taken")) return;
+      if (!w) return;
+      /* **숫자를 알기 전에는 뒤집지 않는다.**
+         내가 누르면 화면이 먼저 "내가 집었다" 고 쳐 버리는데, 그때는 아직 숫자를 모른다.
+         그 상태로 뒤집으면 앞면이 백지가 되고,
+         서버가 "그 카드는 남이 먼저 집었다" 고 하면 엉뚱한 카드가 뒤집힌 채로 남는다.
+         숫자가 내려온 것 = 서버가 인정한 것이므로, 그때만 뒤집는다 */
+      const val = d.pool[k];
+      if (val == null) return;
       const face = w.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(d.pool[k]);
+      if (face && w.dataset.val !== String(val)){
+        face.innerHTML = cardFace(val);
+        w.dataset.val = String(val);
+      }
+      if (w.classList.contains("taken")) return;
       w.classList.add("flip", "taken");
       w.dataset.seat = seat;
       takenK.push(k);

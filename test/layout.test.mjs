@@ -134,6 +134,28 @@ check("등수·패스 표가 그려진다", tags.length >= 2, String(tags.length
 check("표 상자가 글씨보다 작지 않다", tags.every(t => !t.over),
       JSON.stringify(tags.map(t => t.t + " " + t.box)));
 
+/* 감정표현이 바닥 카드보다 위에 그려지는가.
+   판(.plane)은 3차원 층이라 그 안에서는 z-index 가 안 먹는다 —
+   거기 두면 z-index 를 아무리 올려도 카드에 가린다.
+   그래서 판 바깥의 제 층(#emolayer)에 그린다 */
+{
+  const where = await page.evaluate(() => {
+    const l = document.querySelector("#table #emolayer");
+    if (!l) return "층 없음";
+    const st = document.querySelector("#table .stage");
+    if (!st) return "판 없음";
+    /* 같은 부모 아래에서 층이 판보다 위에 오는가 */
+    const lz = Number(getComputedStyle(l).zIndex) || 0;
+    const sz = Number(getComputedStyle(st).zIndex) || 0;
+    return (l.parentElement === st.closest(".screen") || l.closest(".screen"))
+      ? (lz > sz ? "위" : "아래 " + lz + " vs " + sz)
+      : "판 안에 있음";
+  });
+  check("감정표현 층이 판 바깥에 있고 더 위에 있다", where === "위", where);
+  check("감정표현이 판(3차원 층) 안에 없다",
+        await page.evaluate(() => !document.querySelector("#table .plane #emolayer")));
+}
+
 const bad = logs.filter(l => /^ERROR/.test(l));
 check("화면에서 터진 것이 없다", bad.length === 0, JSON.stringify(bad.slice(0, 3)));
 

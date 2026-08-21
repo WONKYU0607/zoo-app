@@ -10,8 +10,8 @@ export const BG = { entry: "assets/bg.webp", throne: "assets/throne.webp", table
 /* 감정표현 — 동물 5종, 말풍선, 단추 아이콘 */
 export const EMOTES = [
   { k: "tiger",  img: "assets/emote_tiger.webp",  ko: "빨리빨리", en: "HURRY UP" },
-  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "감사",     en: "THANK YOU" },
-  { k: "bear",   img: "assets/emote_bear.webp",   ko: "ㅠㅠ",     en: "T_T" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "감사",     en: "THANKS" },
+  { k: "bear",   img: "assets/emote_bear.webp",   ko: "ㅠㅠ",     en: "SO SAD" },
   { k: "monkey", img: "assets/emote_monkey.webp", ko: "풉ㅋㅋ",   en: "LOL" },
   { k: "lion",   img: "assets/emote_lion.webp",   ko: "아오..!",  en: "ARGH...!" },
 ];

@@ -13,9 +13,15 @@ import { doc, getDoc, setDoc, updateDoc, runTransaction,
          collection, query, where, orderBy, limit, getDocs, getCountFromServer,
          increment, serverTimestamp } from "firebase/firestore";
 
+/* 티켓. account 보다 **먼저** 선언해야 한다 —
+   const 는 선언 전에 못 쓰고, account 는 파일이 열리는 순간 만들어진다.
+   아래에 두면 앱이 통째로 안 뜬다 */
+export const TICKET_MAX = 3;
+export const TICKET_MS = 30 * 60 * 1000;      /* 30분에 한 장 */
+
 export const account = {
   uid: null, name: "", photo: "",
-  score: 0, tier: 0, tickets: 5, ticketAt: 0, games: 0,
+  score: 0, tier: 0, tickets: TICKET_MAX, ticketAt: 0, games: 0,
   wk: 0, mo: 0, wkKey: "", moKey: "",
   needName: false,        /* 구글로 처음 들어왔으면 별명을 정해야 한다 */
   loaded: false, signedIn: false,
@@ -48,8 +54,6 @@ export function scoreFor(rank, n, earned, quit){
   return quit ? Math.floor(s / 2) : s;
 }
 
-export const TICKET_MAX = 5;
-export const TICKET_MS = 30 * 60 * 1000;      /* 30분에 한 장 */
 
 /* 마지막으로 기록한 시각부터 지난 만큼 채운다.
    최대치를 넘지 않고, 남은 시간을 같이 돌려준다. */
@@ -338,7 +342,7 @@ async function loadProfile(user){
 export async function signOutNow(){
   await signOut(auth);
   Object.assign(account, { uid: null, name: "", photo: "", score: 0,
-                           tier: 0, tickets: 5, games: 0, signedIn: false });
+                           tier: 0, tickets: TICKET_MAX, games: 0, signedIn: false });
   window.dispatchEvent(new Event("accountchange"));
 }
 
