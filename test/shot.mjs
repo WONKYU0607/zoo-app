@@ -61,7 +61,38 @@ export function serve(port = 5599){
       res.end(body);
     } catch(e){ res.writeHead(404); res.end("no"); }
   });
-  return new Promise(r => s.listen(port, () => r(s)));
+  /* 앞 판이 덜 닫혔으면 그 자리가 아직 물려 있다. 몇 칸 옮겨 가며 잡는다 */
+  return new Promise((resolve, reject) => {
+    let tries = 0;
+    const go = () => {
+      s.once("error", err => {
+        if (err.code === "EADDRINUSE" && ++tries < 12){ port++; go(); return; }
+        reject(err);
+      });
+      s.listen(port, "127.0.0.1", () => { s.__port = port; resolve(s); });
+    };
+    go();
+  });
+}
+
+/* 다 쓴 뒤 확실히 닫는다. 안 닫으면 크롬이 남아 돌고 검사가 안 끝난다 */
+export function shut(srv, browser){
+  try {
+    if (browser){
+      /* close() 는 비동기라 프로세스가 곧 끝나면 안 끝난다.
+         윈도우에서는 그대로 두면 크롬이 남아 돈다 — 실제로 죽인다 */
+      const proc = browser.process && browser.process();
+      browser.close().catch(() => {});
+      if (proc && !proc.killed) proc.kill("SIGKILL");
+    }
+  } catch(e){}
+  try {
+    if (srv){
+      if (srv.closeAllConnections) srv.closeAllConnections();
+      srv.close();
+      srv.unref();
+    }
+  } catch(e){}
 }
 
 /* 쓸 수 있는 크롬을 찾는다.
@@ -109,7 +140,8 @@ export async function findBrowser(){
   return null;
 }
 
-export async function open({ width = 412, height = 745, port = 5599 } = {}){
+export async function open({ width = 412, height = 745, port = 5599, srv = null } = {}){
+  if (srv && srv.__port) port = srv.__port;
   const found = await findBrowser();
   if (!found) throw new Error("NO_BROWSER");
   const browser = await pup.launch({
@@ -118,6 +150,9 @@ export async function open({ width = 412, height = 745, port = 5599 } = {}){
     headless: true,
   });
   const page = await browser.newPage();
+  /* 느린 기기에서 30초 기본값은 빠듯하다 */
+  page.setDefaultTimeout(60000);
+  page.setDefaultNavigationTimeout(60000);
   await page.setViewport({ width, height, deviceScaleFactor: 2 });
   const logs = [];
   page.on("console", m => logs.push(m.type() + ": " + m.text()));
@@ -170,14 +205,14 @@ if (process.argv[1] && process.argv[1].endsWith("shot.mjs")){
   }
   ensureBuild();
   const srv = await serve();
-  const { browser, page, logs } = await open({});
+  const { browser, page, logs } = await open({ srv });
   await toTable(page, { numPlayers: 4 });
-  const out = process.argv[2] || "/tmp/table.png";
+  const out = process.argv[2] || join(tmpdir(), "zoo-table.png");
   await page.screenshot({ path: out });
   console.log("찍음:", out);
   console.log("자리:", JSON.stringify(await boxes(page, "#table .seat"), null, 1));
   console.log("자동 단추:", JSON.stringify(await boxes(page, "#table #auto")));
   console.log("자동 단추를 누르면 받는 것:", await hit(page, "#table #auto"));
   console.log("콘솔:", logs.slice(0, 8));
-  await browser.close(); srv.close();
+  shut(srv, browser);
 }

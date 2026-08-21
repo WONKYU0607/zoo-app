@@ -6,7 +6,9 @@
 
    여기서는 dist 를 띄우고 실제 좌표와 '그 점을 누르면 누가 받는가'를 본다. */
 
-import { serve, open, toTable, boxes, hit, findBrowser, ensureBuild } from "./shot.mjs";
+import { serve, open, toTable, boxes, hit, findBrowser, ensureBuild, shut } from "./shot.mjs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /* 크롬이 없으면 건너뛴다. 이 검사만 브라우저가 필요하다 */
 if (!(await findBrowser())){
@@ -25,7 +27,18 @@ const check = (name, ok, note) => {
 
 ensureBuild();
 const srv = await serve(5601);
-const { browser, page, logs } = await open({ port: 5601 });
+let browser = null, page = null, logs = [];
+/* 도중에 터져도 크롬과 서버는 반드시 닫는다. 안 닫으면 크롬이 남아 돈다 */
+process.on("exit", () => shut(srv, browser));
+const boom = e => {
+  console.log("  [실패] 검사 도중 터짐  " + ((e && e.message) || e));
+  shut(srv, browser);
+  console.log("\n=== 통과 " + pass + " / 실패 " + (fail + 1) + " ===\n");
+  process.exit(1);
+};
+process.on("uncaughtException", boom);
+process.on("unhandledRejection", boom);   /* 위쪽 await 가 깨지면 이쪽으로 온다 */
+({ browser, page, logs } = await open({ srv }));
 await toTable(page, { numPlayers: 4 });
 
 const vh = 745;
@@ -104,8 +117,10 @@ check("말풍선 글자가 안 잘린다",
 const bad = logs.filter(l => /^ERROR/.test(l));
 check("화면에서 터진 것이 없다", bad.length === 0, JSON.stringify(bad.slice(0, 3)));
 
-await page.screenshot({ path: "/tmp/layout.png" });
-await browser.close();
-srv.close();
+/* 찍은 화면은 이 폴더 밑에 남긴다. "/tmp" 는 윈도우에 없다 */
+const shotPath = join(tmpdir(), "zoo-layout.png");
+try { await page.screenshot({ path: shotPath }); console.log("\n  화면: " + shotPath); }
+catch(e){ console.log("\n  (화면 저장 실패 — 검사와는 무관: " + e.message + ")"); }
+shut(srv, browser);
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);
