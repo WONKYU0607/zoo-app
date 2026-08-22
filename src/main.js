@@ -1,5 +1,5 @@
 import "./state.js";
-import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, GEAR, CROWN } from "./nav.js";
+import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, ASK_HTML, GEAR, CROWN } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
 import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
@@ -64,7 +64,7 @@ function build(){
       }
     }
   });
-  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML);
+  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML + ASK_HTML);
 }
 
 build();

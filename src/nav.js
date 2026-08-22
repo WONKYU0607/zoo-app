@@ -24,6 +24,15 @@ export const ACCT_HTML =
 
 export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
 
+/* 확인창 — 뒤로가기·앱 종료에 쓴다. 설정 창과 같은 틀 */
+export const ASK_HTML = "<div class=\"cfg\" id=\"ask\" role=\"dialog\" aria-modal=\"true\">" +
+  "<div class=\"cfg__v\" data-askno></div><div class=\"cfg__p\">" +
+  "<div class=\"cfg__h\"><span id=\"askT\"></span>" +
+  "<button class=\"cfg__x\" data-askno aria-label=\"close\">\u00D7</button></div>" +
+  "<div class=\"cfg__b\"><p class=\"cfg__l\" id=\"askM\"></p>" +
+  "<div class=\"cfg__row\"><button id=\"askNo\" data-askno></button>" +
+  "<button id=\"askYes\"></button></div></div></div></div>";
+
 export function initNav(){
   
   /* 언어는 앱 전체가 하나로 움직인다 */
@@ -427,6 +436,104 @@ export function initNav(){
       setTimeout(() => go("table"), 140);
     }
   });
+  /* ---------- 확인창 ---------- */
+  const ASK_T = {
+    ko: { quit: "게임 종료", quitM: "게임을 종료할까요?", yes: "종료", no: "취소",
+          leave: "판에서 나가기", leaveM: "나가면 완주 실패로 기록됩니다",
+          leaveY: "나가기", room: "방 나가기", roomM: "방에서 나갈까요?" },
+    en: { quit: "Quit", quitM: "Close the game?", yes: "Quit", no: "Cancel",
+          leave: "Leave the game", leaveM: "Leaving counts as a forfeit",
+          leaveY: "Leave", room: "Leave room", roomM: "Leave this room?" },
+  };
+  let askYes = null;
+  function ask(title, msg, yesLabel, onYes){
+    const t = ASK_T[window.__lang] || ASK_T.ko;
+    document.getElementById("askT").textContent = title;
+    document.getElementById("askM").textContent = msg;
+    document.getElementById("askYes").textContent = yesLabel;
+    document.getElementById("askNo").textContent = t.no;
+    askYes = onYes;
+    document.getElementById("ask").classList.add("on");
+  }
+  function askClose(){
+    document.getElementById("ask").classList.remove("on");
+    askYes = null;
+  }
+  function askOpen(){ return document.getElementById("ask").classList.contains("on"); }
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-askno]")){ askClose(); return; }
+    if (e.target.closest("#askYes")){
+      const f = askYes; askClose(); if (f) f();
+    }
+  });
+
+  /* ---------- 폰 하단바 뒤로가기 ----------
+
+     웹에서는 브라우저 뒤로가기(popstate), 안드로이드 껍데기에서는
+     Capacitor 의 backButton 이 같은 곳으로 들어온다.
+     아무것도 안 걸어 두면 뒤로가기 한 번에 앱 밖으로 나가 버린다.
+
+     열려 있는 창이 있으면 그것부터 닫고, 그다음이 화면별 규칙이다 */
+  function onBack(){
+    if (askOpen()){ askClose(); return; }
+    /* 설정·계정·별명 창이 열려 있으면 그것만 닫는다 */
+    const box = document.querySelector(".cfg.on");
+    if (box){ box.classList.remove("on"); return; }
+
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    const t = ASK_T[window.__lang] || ASK_T.ko;
+
+    if (now === "lobby" || now === "entry"){
+      ask(t.quit, t.quitM, t.yes, quitApp);
+      return;
+    }
+    if (now === "rank"){ go("lobby"); return; }
+    if (now === "room"){
+      ask(t.room, t.roomM, t.roomY || t.leaveY, () => {
+        if (window.__quitGame) window.__quitGame();
+        go("lobby");
+      });
+      return;
+    }
+    if (now === "table" || now === "tax"){
+      ask(t.leave, t.leaveM, t.leaveY, () => {
+        if (window.__quitGame) window.__quitGame();
+        go("lobby");
+      });
+      return;
+    }
+    /* 뽑기·판 결과·최종 결과는 저절로 넘어가는 화면이라 막는다 */
+  }
+  window.__back = onBack;
+
+  /* 앱 종료. 안드로이드 껍데기에서만 진짜로 꺼진다 —
+     웹(브라우저 탭)에서는 끌 방법이 없어 아무 일도 안 일어난다 */
+  function quitApp(){
+    const cap = window.Capacitor;
+    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.exitApp){
+      cap.Plugins.App.exitApp();
+      return;
+    }
+    try { window.close(); } catch(e){}
+  }
+
+  /* 브라우저 뒤로가기를 붙잡는다.
+     한 칸을 미리 쌓아 두고, 뒤로 갈 때마다 다시 쌓아 앱 밖으로 못 나가게 한다 */
+  try {
+    history.pushState({ zoo: 1 }, "");
+    window.addEventListener("popstate", () => {
+      history.pushState({ zoo: 1 }, "");
+      onBack();
+    });
+  } catch(e){}
+
+  /* 안드로이드 껍데기 */
+  try {
+    const cap = window.Capacitor;
+    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
+      cap.Plugins.App.addListener("backButton", () => onBack());
+  } catch(e){}
+
   /* 뒤로가기. 게임 도중에 나가면 완주 실패로 기록한다 */
   /* 나중에 그려지는 화면(랭킹 등)도 걸리도록 문서 전체에서 받는다 */
   document.addEventListener("click", e => {

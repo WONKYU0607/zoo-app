@@ -11,7 +11,7 @@
 #draw .bt-main,#tax .bt-main,#tax .bt-ghost,
 #result .bt-main,#result .bt-ghost,
 #opts .opts__go,#cfg .cfg__row button,#acctBox .cfg__row button,
-#lobby .bt-rank,#nkBox .cfg__row button{
+#lobby .bt-rank,#nkBox .cfg__row button,#ask .cfg__row button{
   border:13px solid transparent !important;
   border-image:var(--fr-btn) 33 fill stretch !important;
   border-image-width:13px !important;
@@ -25,7 +25,7 @@
 }
 #lobby .btn-primary:active,#lobby .btn-second:active,
 #room .btn-primary:active,#draw .bt-main:active,#tax .bt-main:active,
-#tax .bt-ghost:active,#result .bt-main:active,
+#tax .bt-ghost:active,#result .bt-main:active,#ask .cfg__row button:active,
 #result .bt-ghost:active,#opts .opts__go:active,
 #lobby .bt-rank:active{
   border-image:var(--fr-btn-down) 33 fill stretch !important;
@@ -41,7 +41,7 @@
 button:disabled{opacity:.42}
 
 /* 붉은 버튼 — 전용 판 이미지 */
-#entry #start,#lobby #btQuick,#room #action .btn-primary{
+#entry #start,#lobby #btQuick,#room #action .btn-primary,#ask #askYes{
   border:13px solid transparent !important;
   border-image:var(--fr-red) 46 fill stretch !important;
   border-image-width:13px !important;
@@ -53,7 +53,7 @@ button:disabled{opacity:.42}
   color:#FBEFCE !important;
   text-shadow:0 1px 4px rgba(0,0,0,.9);
 }
-#entry #start:active,#lobby #btQuick:active,#room #action .btn-primary:active{
+#entry #start:active,#lobby #btQuick:active,#room #action .btn-primary:active,#ask #askYes:active{
   border-image:var(--fr-red-down) 46 fill stretch !important;
   transform:translateY(1px);
 }
@@ -74,7 +74,7 @@ button:disabled{opacity:.42}
 #room .sum{padding:4px 8px !important}
 
 /* 큰 패널 */
-#opts .opts__p,#cfg .cfg__p,#lobby .sheet__panel{
+#opts .opts__p,#cfg .cfg__p,#ask .cfg__p,#lobby .sheet__panel{
   border:26px solid transparent !important;
   border-image:var(--fr-panel) 105 stretch !important;
   border-image-width:26px !important;
@@ -168,6 +168,23 @@ button:disabled{opacity:.42}
 .cfg{position:absolute;inset:0;z-index:60;visibility:hidden;
   display:flex;flex-direction:column;justify-content:flex-end}
 .cfg.on{visibility:visible}
+/* 확인창 — 취소·확인 두 단추를 나란히. 확인 쪽을 붉게 */
+/* 확인창은 아래에서 올라오는 시트가 아니라 **화면 한가운데 네모 상자** */
+#ask{display:flex;align-items:center;justify-content:center}
+/* 어두운 바탕이 **틀 밑까지** 깔려야 한다.
+   padding-box 로 자르면 틀 그림이 놓인 테두리 자리가 비어 보인다 */
+#ask .cfg__p{background-clip:border-box !important;
+  position:relative;width:84%;max-width:340px;
+  transform:scale(.9);opacity:0;transition:transform .18s ease-out,opacity .18s ease-out;
+  border-radius:0;border-top:0;padding-bottom:0;margin:0 !important}
+#ask.on .cfg__p{transform:none;opacity:1}
+#ask .cfg__h{border-bottom:1px solid #2E2417;padding:10px 4px 9px}
+#ask .cfg__b{padding:14px 4px 4px}
+/* 설명은 한 줄로 */
+#ask .cfg__l{margin:0 0 14px;text-align:center;line-height:1.6;
+  font-size:12.5px;letter-spacing:-.01em;white-space:nowrap;color:#CDE0D4}
+#ask .cfg__row{display:flex;gap:8px}
+#ask .cfg__row button{flex:1;min-height:44px !important;font-size:14px}
 .cfg__v{position:absolute;inset:0;background:rgba(4,7,5,.72);opacity:0;transition:opacity .24s ease}
 .cfg.on .cfg__v{opacity:1}
 .cfg__p{position:relative;background:linear-gradient(180deg,#1A130C,#0E0A06);
