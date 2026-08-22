@@ -359,7 +359,7 @@ export function mount(root){
       d.dataset.nudge = p.nudge || 0;
       d.dataset.nudgex = p.nudgeX || 0;
       const big = SEATS.length <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d.style.setProperty("--av", 44 + "px");   /* 인원과 무관하게 같은 크기 */
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];

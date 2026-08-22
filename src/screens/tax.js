@@ -272,7 +272,7 @@ export function mount(root){
         (r <= 1 ? " seat--top" : "") + (r >= n - 2 ? " seat--bot" : "");
       d.style.left = p.x.toFixed(1) + "%"; d.style.top = p.y.toFixed(1) + "%";
       const big = N <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d.style.setProperty("--av", 44 + "px");   /* 인원과 무관하게 같은 크기 */
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.innerHTML =
         '<span class="seat__r on">' + rankLabel(r) + '</span>' +

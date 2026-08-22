@@ -177,7 +177,7 @@ export function mount(root){
       el.style.left = left.toFixed(2) + "%";
       el.style.top  = top.toFixed(2) + "%";
       const big = cap <= 6;
-      el.style.setProperty("--av", (big ? 46 : 36) + "px");
+      el.style.setProperty("--av", 46 + "px");   /* 인원과 무관하게 같은 크기 */
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
       el.innerHTML = filled
         ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +

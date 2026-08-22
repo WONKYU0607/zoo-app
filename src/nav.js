@@ -21,7 +21,7 @@ export const ACCT_HTML =
   '<p class="cfg__n" id="acLine"></p>' +
   '<div class="cfg__l" id="acAvtL"></div>' +
   '<div class="avt" id="acAvt"></div>' +
-  '<p class="cfg__n" id="acAvtN"></p>' +
+
   '<div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div>' +
   '<div class="cfg__row"><button id="acOut"></button></div>' +
   '</div></div></div>';
@@ -156,7 +156,6 @@ export function initNav(){
   function paintAvatars(){
     const wrap = document.getElementById("acAvt");
     const lab = document.getElementById("acAvtL");
-    const note = document.getElementById("acAvtN");
     if (!wrap || !lab) return;
     const ko = (window.__lang || "ko") === "ko";
     const a = window.ACCOUNT || {};
@@ -165,12 +164,17 @@ export function initNav(){
     lab.textContent = ko ? "프로필 얼굴" : "Profile picture";
     wrap.innerHTML = AVATARS.map((v, i) => {
       const open = score >= (i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000);
+      const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000;
+      /* 잠긴 것은 자물쇠 밑에 필요한 점수를 바로 적는다.
+         눌러야 알려 주면 뭘 모으는 중인지 한눈에 안 보인다 */
+      const lock = open ? "" :
+        '<i class="avt__lk"></i><span class="avt__need">' +
+        need.toLocaleString() + (ko ? "점 달성 시\n해제" : " pts\nto unlock") + "</span>";
       return '<button class="avt__i' + (open ? "" : " avt__i--lock") +
         (i === mine ? " avt__i--on" : "") + '" data-avt="' + i + '"' +
         ' style="background-image:url(' + v.f + ')" aria-label="' + (ko ? v.ko : v.en) + '">' +
-        (open ? "" : '<i class="avt__lk"></i>') + "</button>";
+        lock + "</button>";
     }).join("");
-    if (note) note.textContent = "";
   }
 
   function paintAcct(){
@@ -489,15 +493,9 @@ export function initNav(){
     if (!b) return;
     const i = Number(b.dataset.avt);
     const ko = (window.__lang || "ko") === "ko";
-    const note = document.getElementById("acAvtN");
     const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000;
     const score = (window.ACCOUNT || {}).score || 0;
-    if (score < need){
-      if (note) note.textContent = ko
-        ? need.toLocaleString() + "점을 모으면 열립니다"
-        : "Unlocks at " + need.toLocaleString() + " points";
-      return;
-    }
+    if (score < need) return;      /* 필요한 점수는 자물쇠 밑에 이미 적혀 있다 */
     if (window.__setAvatar) await window.__setAvatar(i);
     paintAvatars();
   });

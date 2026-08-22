@@ -39,12 +39,15 @@ check("12,000점이면 앞 7개가 열린다", g && g.locked[0] === "7",
   g ? "잠긴 첫 번째 " + g.locked[0] : "-");
 check("지금 고른 것이 표시된다", g && g.on.length === 1 && g.on[0] === "0", JSON.stringify(g && g.on));
 
-/* 잠긴 것을 누르면 점수 안내 */
+/* 잠긴 것은 자물쇠 밑에 필요한 점수가 적혀 있다 */
+check("잠긴 것에 필요한 점수가 적혀 있다",
+  /25,000점/.test(await page.evaluate(() =>
+    (document.querySelector('[data-avt="9"] .avt__need')||{}).textContent || "")),
+  await page.evaluate(() => (document.querySelector('[data-avt="9"] .avt__need')||{}).textContent || "없음"));
 await page.evaluate(() => document.querySelector('[data-avt="9"]').click());
-await new Promise(r=>setTimeout(r,250));
-check("잠긴 것을 누르면 필요한 점수를 알려 준다",
-  /25,000점/.test(await page.evaluate(() => document.getElementById("acAvtN").textContent)),
-  await page.evaluate(() => document.getElementById("acAvtN").textContent));
+await new Promise(r=>setTimeout(r,200));
+check("잠긴 것을 눌러도 안 바뀐다",
+  !(await page.evaluate(() => document.querySelector('[data-avt="9"]').className.includes("--on"))));
 
 /* 열린 것을 고른다 */
 await page.evaluate(() => { window.__setAvatar = async i => { window.ACCOUNT.avatar = i; }; });

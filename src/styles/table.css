@@ -57,8 +57,11 @@
   z-index:6}
 #table .seat{transform:translate(-50%,-50%)}
 #table /* JS가 아바타 기준으로 다시 잡는다 */
+/* 배경 두 겹 — **테(ring.webp)는 꽉 차게, 얼굴은 테 안쪽 구멍(72%)에**.
+   화면마다 있는 `background-size:100% 100%, 72% 72%` 규칙이 그 짝이다.
+   테 층을 빼면 얼굴이 100% 로 늘어나 테가 가장자리를 먹는다 */
 .seat__av{width:var(--av,44px);height:var(--av,44px);border-radius:50%;object-fit:cover;
-  border:2px solid rgba(198,154,60,.6);background:#241A12;box-shadow:0 3px 9px rgba(0,0,0,.6)}
+  border:2px solid transparent;background:#241A12;box-shadow:0 3px 9px rgba(0,0,0,.6)}
 #table /* 자기 차례는 틀 바깥으로 붉은 빛이 돈다. 틀 그림은 가리지 않는다 */
 .seat--turn .seat__av{
   animation:turnBeat 1.05s ease-in-out infinite;

@@ -214,14 +214,19 @@ button:disabled{opacity:.42}
 
 /* ---------- 프로필 얼굴 고르기 ---------- */
 .avt{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:6px 0 4px}
+/* 계정 창은 그림 틀 없이 **CSS 원**으로. 고르면 불빛이 돈다 */
 .avt__i{position:relative;aspect-ratio:1;border-radius:50%;padding:0 !important;
   min-height:0 !important;border:2px solid rgba(198,154,60,.4) !important;
   background-size:cover;background-position:center;background-repeat:no-repeat;
-  background-color:#241A12 !important;cursor:pointer}
+  background-color:#241A12 !important;cursor:pointer;overflow:hidden}
 .avt__i--on{border-color:#E3C67C !important;
-  box-shadow:0 0 0 2px rgba(227,198,124,.35),0 0 10px rgba(227,198,124,.5)}
-/* 잠긴 것은 흐리게 + 자물쇠. 안 보이게 하면 모으는 재미가 없다 */
+  box-shadow:0 0 0 2px rgba(227,198,124,.4),0 0 14px rgba(227,198,124,.65)}
+/* 잠긴 것은 흐리게 + 자물쇠 + 필요한 점수. 안 보이게 하면 모으는 재미가 없다 */
 .avt__i--lock{filter:grayscale(1) brightness(.42)}
-.avt__lk{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:42%;height:42%;background:no-repeat center/contain;
+.avt__need{position:absolute;left:0;right:0;bottom:14%;text-align:center;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:7.5px;line-height:1.2;
+  letter-spacing:-.02em;color:#E3C67C;text-shadow:0 1px 3px rgba(0,0,0,.95);
+  white-space:pre-line;pointer-events:none}
+.avt__lk{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);
+  width:30%;height:30%;background:no-repeat center/contain;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E3C67C' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")}
