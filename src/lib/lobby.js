@@ -37,6 +37,10 @@ export const joinRoom = (code, name, avatar) =>
 export const peekRoom = (code, seat) =>
   api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}`));
 
+/* 빠른 참가 — 자리가 남은 방에 넣어 주고, 없으면 새로 만든다 */
+export const quickJoin = ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>
+  api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2 });
+
 /* 방 인원 바꾸기 — 대기 중, 방장만 */
 export const setRoomCap = (code, numPlayers, playerID) =>
   api(`/zoo/rooms/${code}/cap`, { numPlayers, playerID: String(playerID) });

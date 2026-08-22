@@ -143,6 +143,7 @@ function stopRoomCount(){
 }
 function startRoomCount(sec){
   if (roomCountId) return;
+  if (!myRoom) return;          /* 방이 없으면 셀 것도 없다 */
   const page = D().getElementById("room");
   if (!page) return;
   let left = sec;
@@ -341,7 +342,7 @@ function ensureTaxGiven(){
 
 /* ---------- 설치 ---------- */
 
-export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
+export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   opt = { goto, myName, botJoinMs };
 
   /* 화면이 보는 값을 엔진과 붙여 둔다.
@@ -378,6 +379,25 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     emitRoom();
     botFillStart();
     return myRoom.code;
+  };
+
+  /* 빠른 참가 — 서버가 자리 남은 방을 찾아 준다.
+     서버가 없으면(이 기기 방) 그냥 새 방을 만든다 */
+  W().__quickJoin = async () => {
+    const o = W().__opts || {};
+    if (!lobby.online()) return W().__createRoom();
+    const r = await lobby.quickJoin({
+      name: opt.myName(), avatar: myAvatar(),
+      numPlayers: o.cap || 4, rounds: o.rounds || 3,
+      tax: o.tax !== false, clear2: Boolean(o.clear2),
+    });
+    net = Object.assign({ started: false, inGame: false }, r,
+      { players: [{ id: Number(r.playerID), name: opt.myName() }] });
+    W().__opts = Object.assign(W().__opts || {},
+      { cap: r.numPlayers, seated: 1, rounds: (r.opts && r.opts.rounds) || o.rounds || 3 });
+    emitRoom();
+    pollStart();
+    return r.code;
   };
 
   W().__joinRoom = async code => {
@@ -484,7 +504,11 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     opt.goto("room");
   };
 
-  W().__quitGame = () => { stopCount(); botFillStop(); eng.stop(); eng.setPaused(false); };
+  /* 방 초읽기도 같이 멈춘다. 안 끄면 다음 방에서 초읽기가 아예 안 시작한다
+     (startRoomCount 가 "이미 세는 중"으로 보고 그냥 돌아간다) */
+  W().__quitGame = () => {
+    stopCount(); stopRoomCount(); botFillStop(); eng.stop(); eng.setPaused(false);
+  };
 
   /* 결과 화면의 "나가기" — 세던 것을 멈추고 판도 접는다 */
   const quit = D().querySelector("#result #quit");

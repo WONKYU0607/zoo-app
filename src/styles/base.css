@@ -218,15 +218,18 @@ button:disabled{opacity:.42}
 .avt__i{position:relative;aspect-ratio:1;border-radius:50%;padding:0 !important;
   min-height:0 !important;border:2px solid rgba(198,154,60,.4) !important;
   background-size:cover;background-position:center;background-repeat:no-repeat;
-  background-color:#241A12 !important;cursor:pointer;overflow:hidden}
+  background-color:#241A12 !important;cursor:pointer}
 .avt__i--on{border-color:#E3C67C !important;
   box-shadow:0 0 0 2px rgba(227,198,124,.4),0 0 14px rgba(227,198,124,.65)}
 /* 잠긴 것은 흐리게 + 자물쇠 + 필요한 점수. 안 보이게 하면 모으는 재미가 없다 */
-.avt__i--lock{filter:grayscale(1) brightness(.42)}
-.avt__need{position:absolute;left:0;right:0;bottom:14%;text-align:center;
-  font-family:"Gowun Batang",serif;font-weight:700;font-size:7.5px;line-height:1.2;
-  letter-spacing:-.02em;color:#E3C67C;text-shadow:0 1px 3px rgba(0,0,0,.95);
-  white-space:pre-line;pointer-events:none}
-.avt__lk{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);
+.avt__i--lock{filter:grayscale(1) brightness(.34)}
+/* 필요한 점수는 **눈에 들어오게**. 작게 적으면 안 보인다 */
+.avt__need{position:absolute;left:-8%;right:-8%;bottom:11%;text-align:center;
+  font-family:"Gowun Batang",serif;line-height:1.2;letter-spacing:-.03em;
+  text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.85);
+  pointer-events:none}
+.avt__need b{display:block;font-weight:700;font-size:12px;color:#FFE9A8;white-space:nowrap}
+.avt__need i{display:block;font-style:normal;font-size:8px;color:#D9C79A;white-space:nowrap}
+.avt__lk{position:absolute;left:50%;top:27%;transform:translate(-50%,-50%);
   width:30%;height:30%;background:no-repeat center/contain;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E3C67C' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")}

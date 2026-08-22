@@ -161,7 +161,7 @@ export function initNav(){
     const a = window.ACCOUNT || {};
     const score = a.score || 0;
     const mine = Number(a.avatar) || 0;
-    lab.textContent = ko ? "프로필 얼굴" : "Profile picture";
+    lab.textContent = ko ? "프로필 설정" : "Profile";
     wrap.innerHTML = AVATARS.map((v, i) => {
       const open = score >= (i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000);
       const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000;
@@ -169,7 +169,8 @@ export function initNav(){
          눌러야 알려 주면 뭘 모으는 중인지 한눈에 안 보인다 */
       const lock = open ? "" :
         '<i class="avt__lk"></i><span class="avt__need">' +
-        need.toLocaleString() + (ko ? "점 달성 시\n해제" : " pts\nto unlock") + "</span>";
+        '<b>' + need.toLocaleString() + (ko ? "점" : "") + "</b>" +
+        '<i>' + (ko ? "달성 시 해제" : "to unlock") + "</i></span>";
       return '<button class="avt__i' + (open ? "" : " avt__i--lock") +
         (i === mine ? " avt__i--on" : "") + '" data-avt="' + i + '"' +
         ' style="background-image:url(' + v.f + ')" aria-label="' + (ko ? v.ko : v.en) + '">' +
@@ -341,11 +342,17 @@ export function initNav(){
     if (e.target.closest("#acKeep")){ conflictOn = false; paintAcct(); return; }
     if (e.target.closest("#acOut")){
       const ko2 = (window.__lang || "ko") === "ko";
-      conflictOn = false;
-      try { if (window.signOutNow) await window.signOutNow(); }
-      catch(err){ window.alert((ko2 ? "로그아웃에 실패했습니다\n" : "Sign out failed\n") + String(err && err.code || err)); }
-      closeAcct();
-      go("entry");
+      /* 바로 로그아웃하지 않고 한 번 물어본다. 잘못 눌러 튕기면 다시 들어와야 한다 */
+      ask(ko2 ? "로그아웃" : "Sign out",
+          ko2 ? "로그아웃을 하시겠습니까?" : "Sign out of this account?",
+          ko2 ? "예" : "Sign out",
+          async () => {
+            conflictOn = false;
+            try { if (window.signOutNow) await window.signOutNow(); }
+            catch(err){ window.alert((ko2 ? "로그아웃에 실패했습니다\n" : "Sign out failed\n") + String(err && err.code || err)); }
+            closeAcct();
+            go("entry");
+          });
     }
   });
 
@@ -405,8 +412,10 @@ export function initNav(){
      방 조건은 들어간 방을 따라간다 */
   /* 빠른 참가 — 지금은 방을 하나 만들고 봇으로 채운다 */
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
-    if (window.__createRoom){
-      const code = await window.__createRoom();
+    /* 빠른 참가는 **자리 남은 방부터** 찾는다. 없으면 새로 만든다 */
+    const f = window.__quickJoin || window.__createRoom;
+    if (f){
+      const code = await f();
       if (!code) return;
     }
     go("room");
@@ -480,6 +489,8 @@ export function initNav(){
   let askYes = null;
   function ask(title, msg, yesLabel, onYes){
     const t = ASK_T[window.__lang] || ASK_T.ko;
+    /* 확인창을 안 심은 화면(검사 등)에서는 묻지 않고 바로 한다 */
+    if (!document.getElementById("askT")){ if (onYes) onYes(); return; }
     document.getElementById("askT").textContent = title;
     document.getElementById("askM").textContent = msg;
     document.getElementById("askYes").textContent = yesLabel;
