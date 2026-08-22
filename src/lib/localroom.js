@@ -9,12 +9,15 @@ const ME = "me";                       /* 내 자리 uid. 방장도 나다 */
 /* 방 번호. 이 기기 안의 방이어도 번호는 붙인다 — 화면이 "----" 로 보이면 고장 같아 보인다 */
 const newCode = () => String(Math.floor(1000 + Math.random() * 9000));
 
-export function createRoom({ cap = 4, name = "나" } = {}){
+/* 얼굴은 처음 열려 있는 다섯(0~4) 중에서 봇이 고른다 */
+const botAvatar = () => Math.floor(Math.random() * 5);
+
+export function createRoom({ cap = 4, name = "나", avatar = 0 } = {}){
   return {
     code: newCode(),
     cap: Math.min(8, Math.max(4, cap)),
     phase: "waiting",
-    seats: [{ uid: ME, name: String(name || "나"), bot: false }],
+    seats: [{ uid: ME, name: String(name || "나"), bot: false, avatar: Number(avatar) || 0 }],
   };
 }
 
@@ -23,7 +26,7 @@ export function addBot(room){
   if (room.seats.length >= room.cap) return false;
   const used = room.seats.map(s => s && s.name);
   const name = BOT_NAMES.find(n => !used.includes(n)) || ("봇" + room.seats.length);
-  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true });
+  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true, avatar: botAvatar() });
   return true;
 }
 

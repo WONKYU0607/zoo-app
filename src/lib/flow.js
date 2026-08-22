@@ -37,6 +37,7 @@ function netRoomView(){
     if (!p.name) return;
     seats[i] = {
       uid: "s" + i, name: p.name, bot: Boolean(p.bot),
+      avatar: Number(p.avatar) || 0,
       off: Boolean(p.away), left: Boolean(p.left),
     };
   });
@@ -69,9 +70,32 @@ async function refreshNet(){
     if (r.you.credentials) net.credentials = r.you.credentials;
   }
   W().__opts.seated = (r.players || []).filter(p => p.name).length;
-  if (r.numPlayers) W().__opts.cap = r.numPlayers;
+  /* __opts.cap 은 **방장이 고르고 있는 값**이다. 여기서 서버 값으로 덮으면,
+     설정 창에서 숫자를 올려 놓은 사이에 1.5초짜리 확인이 끼어들어 되돌려 버린다.
+     그래서 처음 바꿀 때는 안 먹고 두 번째에야 먹혔다.
+     서버 값은 __room.cap 으로 내려가고 방 화면은 그걸 본다 */
   emitRoom();
   return r;
+}
+
+/* 내가 고른 얼굴 */
+function myAvatar(){
+  const a = W().ACCOUNT || {};
+  return Number(a.avatar) || 0;
+}
+
+/* 자리마다 고른 얼굴. 서버 방이면 서버가 알려 준 것, 이 기기 방이면 방이 들고 있다 */
+function seatAvatars(n){
+  const out = new Array(n).fill(0);
+  if (net){
+    (net.players || []).forEach(p => {
+      const i = Number(p.id);
+      if (i >= 0 && i < n) out[i] = Number(p.avatar) || 0;
+    });
+    return out;
+  }
+  if (myRoom) myRoom.seats.forEach((s, i) => { if (i < n) out[i] = (s && Number(s.avatar)) || 0; });
+  return out;
 }
 
 function pollStart(){
@@ -218,6 +242,8 @@ function openTable(v, n, names){
        뽑기와 판이 같은 사람을 그리도록 처음부터 진짜 자리를 넣는다 */
     faces: v.seats.map(s => s.seat),
     seatFaces: v.seats.map(s => s.seat),
+    /* 엔진 자리 → 그 사람이 고른 얼굴 번호. 방에 앉은 순서가 곧 엔진 자리다 */
+    avatars: seatAvatars(n),
     roundNo: v.roundNo,
     names: v.names.slice(),
     namesEn: v.names.slice(),
@@ -336,7 +362,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
     const o = W().__opts || {};
     if (lobby.online()){
       const r = await lobby.createRoom({
-        numPlayers: o.cap || 4, name: opt.myName(),
+        numPlayers: o.cap || 4, name: opt.myName(), avatar: myAvatar(),
         rounds: o.rounds || 3, tax: o.tax !== false, clear2: Boolean(o.clear2),
       });
       /* 서버가 참가자 목록을 보내오기 전까지 내 자리만이라도 채워 둔다 */
@@ -347,7 +373,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
       pollStart();
       return r.code;
     }
-    myRoom = createRoom({ cap: o.cap || 4, name: opt.myName() });
+    myRoom = createRoom({ cap: o.cap || 4, name: opt.myName(), avatar: myAvatar() });
     W().__opts = Object.assign(W().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
@@ -359,7 +385,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 2500 } = {}){
       alert("서버 대전을 쓰려면 게임 서버 주소가 필요합니다.");
       return null;
     }
-    const r = await lobby.joinRoom(String(code).trim(), opt.myName());
+    const r = await lobby.joinRoom(String(code).trim(), opt.myName(), myAvatar());
     net = Object.assign({ started: false, inGame: false }, r,
       { players: [{ id: Number(r.playerID), name: opt.myName() }] });
     W().__opts = Object.assign(W().__opts || {}, {

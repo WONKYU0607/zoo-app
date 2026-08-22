@@ -1,9 +1,16 @@
 import { scoped } from "../lib/scoped.js";
+import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
-import { HEADS as A_HEADS } from "../lib/assets.js";
 import "../styles/room.css";
 
 export function mount(root){
+
+  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
+  function avtOf(seat){
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   /* 화면 자리에 앉은 사람을 찾아 얼굴을 고른다. 표가 없으면 자리 번호 그대로 */
   const faceOf = i => {
     const f = window.GAME && window.GAME.faces;
@@ -12,7 +19,6 @@ export function mount(root){
 
   const document = scoped(root);
   
-  const HEADS = A_HEADS;
   
   const PLAYERS_KO = ["나", "민지", "준호", "서연", "태윤", "하은", "지훈", "예린"];
   const PLAYERS_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
@@ -167,7 +173,7 @@ export function mount(root){
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
       el.innerHTML = filled
         ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-            HEADS[faceOf(i) % HEADS.length] + ')"></span>' +
+            avtOf(faceOf(i)) + ')"></span>' +
           (p.off || p.left ? '<span class="seat__off"></span>' : '') +
           '<span class="seat__n">' + p.name + '</span>' +
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')

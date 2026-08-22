@@ -24,12 +24,12 @@ async function api(path, body){
 }
 
 /* 방 만들기 — 만든 사람이 0번 자리 */
-export const createRoom = ({ numPlayers, name, rounds, tax, clear2 }) =>
-  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2 });
+export const createRoom = ({ numPlayers, name, rounds, tax, clear2, avatar }) =>
+  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar });
 
 /* 번호로 참가 — 빈자리 중 앞쪽에 앉는다 */
-export const joinRoom = (code, name) =>
-  api(`/zoo/rooms/${code}/join`, { name });
+export const joinRoom = (code, name, avatar) =>
+  api(`/zoo/rooms/${code}/join`, { name, avatar });
 
 /* 방 들여다보기 — 참가자·자리비움·이탈 */
 /* seat 을 주면 내 새 자리·자격증명도 같이 내려온다.

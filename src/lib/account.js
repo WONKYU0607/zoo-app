@@ -21,7 +21,7 @@ export const TICKET_MS = 30 * 60 * 1000;      /* 30분에 한 장 */
 
 export const account = {
   uid: null, name: "", photo: "",
-  score: 0, tier: 0, tickets: TICKET_MAX, ticketAt: 0, games: 0,
+  score: 0, tier: 0, tickets: TICKET_MAX, ticketAt: 0, games: 0, avatar: 0,
   wk: 0, mo: 0, wkKey: "", moKey: "",
   needName: false,        /* 구글로 처음 들어왔으면 별명을 정해야 한다 */
   loaded: false, signedIn: false,
@@ -119,6 +119,21 @@ async function nextGuestName(){
 }
 
 /* 별명 정하기. 이미 쓰는 이름이면 taken 을 돌려준다 */
+/* 프로필 얼굴. 앞 5개는 처음부터, 그 뒤는 5,000점마다 하나씩 */
+export const AVT_NEED = i => (i < 5 ? 0 : (i - 4) * TIER_STEP);
+export function avatarOpen(i){ return (account.score || 0) >= AVT_NEED(i); }
+
+export async function setAvatar(i){
+  i = Number(i) || 0;
+  if (!avatarOpen(i)) return { ok: false, why: "locked", need: AVT_NEED(i) };
+  account.avatar = i;
+  if (ready && account.uid){
+    try { await updateDoc(doc(db, "users", account.uid), { avatar: i }); } catch(e){}
+  }
+  try { localStorage.setItem("zk_avatar", String(i)); } catch(e){}
+  return { ok: true };
+}
+
 export async function setNickname(wanted){
   if (!ready || !account.uid) throw new Error("로그인 상태가 아닙니다");
   const c = checkName(wanted);
@@ -311,7 +326,7 @@ async function loadProfile(user){
     }
     const fresh = { name, score: 0, games: 0, tickets: TICKET_MAX,
                     ticketAt: Date.now(), createdAt: serverTimestamp(),
-                    guest, needName: !guest };
+                    guest, needName: !guest, avatar: 0 };
     await setDoc(ref, fresh);
     Object.assign(account, fresh);
   } else {
@@ -327,6 +342,9 @@ async function loadProfile(user){
     account.ticketAt = r.at;
   }
   account.tier = tierOf(account.score);
+  /* 얼굴은 문서에 없으면 첫 번째(생쥐). 점수가 줄 일은 없지만 혹시 잠긴 것을 들고 있으면 되돌린다 */
+  account.avatar = Number(account.avatar) || 0;
+  if (!avatarOpen(account.avatar)) account.avatar = 0;
   /* 게스트인지는 로그인 상태가 진실이다. 문서 값은 따라온다 */
   account.guest = Boolean(user.isAnonymous);
   /* 구글인데 아직 별명을 안 정했으면 물어봐야 한다 */

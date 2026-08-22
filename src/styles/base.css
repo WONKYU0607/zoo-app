@@ -211,3 +211,17 @@ button:disabled{opacity:.42}
 #entry{position:absolute;inset:0;overflow:hidden}
 #lobby,#room,#draw,#tax,#table,#result{position:absolute;inset:0;z-index:30;overflow:hidden}
 .navback{font-size:19px;line-height:1;color:#B8A47E;padding:2px 6px;background:none;border:none;cursor:pointer}
+
+/* ---------- 프로필 얼굴 고르기 ---------- */
+.avt{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:6px 0 4px}
+.avt__i{position:relative;aspect-ratio:1;border-radius:50%;padding:0 !important;
+  min-height:0 !important;border:2px solid rgba(198,154,60,.4) !important;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  background-color:#241A12 !important;cursor:pointer}
+.avt__i--on{border-color:#E3C67C !important;
+  box-shadow:0 0 0 2px rgba(227,198,124,.35),0 0 10px rgba(227,198,124,.5)}
+/* 잠긴 것은 흐리게 + 자물쇠. 안 보이게 하면 모으는 재미가 없다 */
+.avt__i--lock{filter:grayscale(1) brightness(.42)}
+.avt__lk{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:42%;height:42%;background:no-repeat center/contain;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E3C67C' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")}

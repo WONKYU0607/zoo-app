@@ -507,6 +507,8 @@ check("누군가 다 내고 완주했다", outSeen);
        뽑기 화면이 seatFaces 를 먼저 봐야만 얼굴이 사람을 따라간다 */
     faces: vv.seats.map((x, k) => k),
     seatFaces: vv.seats.map(x => x.seat),
+    /* 자리마다 다른 얼굴을 줘야 "같은 사람을 가리키는가" 가 진짜로 확인된다 */
+    avatars: vv.seats.map((x, i) => (i * 3 + 1) % 15),
     names: vv.names.slice(),
     namesEn: vv.names.slice(),
     roundNo: 1, score: new Array(vv.N).fill(0), order: null, finish: null, hold: null,
@@ -518,13 +520,13 @@ check("누군가 다 내고 완주했다", outSeen);
   mountDraw(drawRoot);
   await wait(20);
 
-  const HEADS = ["head_01","head_02","head_04","head_10","head_06","head_09","head_07","head_12"];
+  /* 얼굴 파일은 이제 사람이 고른 avt_NN 이다 (예전 head_NN 아님) */
   const readSeats = r => [...r.querySelectorAll("#seats .seat")].map(d => {
     const n = d.querySelector(".seat__n");
     const a = d.querySelector(".seat__av");
     const bg = a ? (a.getAttribute("style") || "") : "";
-    const hit = HEADS.filter(h => bg.includes(h));
-    return { name: n ? n.textContent : "", head: hit[0] || "" };
+    const hit = (bg.match(/avt_\d+/) || [""])[0];
+    return { name: n ? n.textContent : "", head: hit };
   });
 
   const dSeats = readSeats(drawRoot);
@@ -545,7 +547,11 @@ check("누군가 다 내고 완주했다", outSeen);
         dSeats.every((d, i) => tSeats[i] && d.head && d.head === tSeats[i].head),
         JSON.stringify(dSeats.map(d => d.head)) + " / " + JSON.stringify(tSeats.map(d => d.head)));
   check("이름과 얼굴이 같은 사람을 가리킨다",
-        dSeats.every((d, i) => d.head === HEADS[vv.seats[i].seat % HEADS.length]),
+        dSeats.every((d, i) => {
+          const seat = vv.seats[i].seat;
+          const want = "avt_" + String(((seat * 3 + 1) % 15) + 1).padStart(2, "0");
+          return d.head === want;
+        }),
         JSON.stringify(dSeats.map((d, i) => d.name + ":" + d.head)));
 
   /* 가장 낮은 카드는 실제 선의 자리에 간다 */

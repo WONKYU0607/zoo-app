@@ -1,10 +1,18 @@
 import { scoped } from "../lib/scoped.js";
+import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
-import { ART_DECK as A_DECK, HEADS as A_HEADS } from "../lib/assets.js";
+import { ART_DECK as A_DECK } from "../lib/assets.js";
 import "../styles/draw.css";
 
 export function mount(root){
+
+  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
+  function avtOf(seat){
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   /* 화면 자리에 앉은 사람을 찾아 얼굴을 고른다. 표가 없으면 자리 번호 그대로 */
   const faceOf = i => {
     const g = window.GAME || {};
@@ -15,7 +23,7 @@ export function mount(root){
 
   const document = scoped(root);
   
-  const ART = A_DECK, HEADS = A_HEADS;
+  const ART = A_DECK;
   const el = id => document.getElementById(id);
   const isJ = c => c >= 13;
   const KO_N = ["사자","호랑이","불곰","코끼리","악어","여우","기린","멧돼지","원숭이","토끼","새","생쥐"];
@@ -316,7 +324,7 @@ export function mount(root){
         '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + '</span>' +
         (upper ? chip : "") +
         '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-          HEADS[faceOf(i) % HEADS.length] + ')"></span>' +
+          avtOf(faceOf(i)) + ')"></span>' +
         '<span class="seat__n">' + nameOf(i) + '</span>' +
         (upper ? "" : chip);
       box.appendChild(d);
@@ -360,8 +368,13 @@ export function mount(root){
     /* 온라인이면 인원과 선을 서버 값에서 가져온다. 뽑기 연출은 그대로 보여준다.
        이 판단을 먼저 해야 인원이 잠깐 잘못 그려지지 않는다 */
     online = Boolean(window.__net);
-    N = online ? ((window.GAME && window.GAME.N) || 6)
-               : ((window.__opts && (window.__opts.seated || window.__opts.cap)) || 6);
+    /* 인원은 **엔진이 깐 카드 수**가 진짜다.
+       GAME.N 은 방을 열 때 적어 둔 값이라, 방장이 인원을 바꾼 뒤에는 옛 숫자다.
+       그걸 쓰면 옛 인원수만큼 카드를 깔았다가 곧 다시 그리게 된다 */
+    const dv = eng.engine.view;
+    N = (dv && dv.draw && dv.draw.pool.length)
+      || (online ? ((window.GAME && window.GAME.N) || 6)
+                 : ((window.__opts && (window.__opts.seated || window.__opts.cap)) || 6));
     if (cdId){ clearInterval(cdId); cdId = null; }
     cd = 5;
     drawn = Array(N).fill(null);

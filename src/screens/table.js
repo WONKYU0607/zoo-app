@@ -1,14 +1,22 @@
 import { scoped } from "../lib/scoped.js";
+import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
-import { ART as A_ART, HEADS as A_HEADS } from "../lib/assets.js";
+import { ART as A_ART } from "../lib/assets.js";
 import { EMOTES, EMOTE_BTN } from "../lib/assets.js";
 import "../styles/table.css";
 
 export function mount(root){
+
+  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
+  function avtOf(seat){
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document = scoped(root);
   
-  const HEADS = A_HEADS, ART = A_ART;
+  const ART = A_ART;
   const KO_N = ["사자","호랑이","불곰","코끼리","악어","여우","기린","멧돼지","원숭이","토끼","새","생쥐"];
   const EN_N = ["LION","TIGER","BEAR","ELEPHANT","CROCODILE","FOX","GIRAFFE","BOAR","MONKEY","RABBIT","BIRD","MOUSE"];
   const T = {
@@ -365,7 +373,7 @@ export function mount(root){
          12시 자리는 카드가 위로 가서, .seat 기준으로 잡으면 엉뚱한 데 붙는다 */
       const av = '<span class="seat__avwrap">' +
         '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-          HEADS[(s.av == null ? i : s.av) % HEADS.length] + ')"></span>' +
+          avtOf(s.av == null ? i : s.av) + ')"></span>' +
         (tag ? '<span class="seat__tag">' + tag + '</span>' : '') + '</span>';
       const nm = '<span class="seat__n">' + (s.n || "") + '</span>';
       const fan = i === 0 ? '' : fanHTML(s.c);

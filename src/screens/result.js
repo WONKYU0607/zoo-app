@@ -1,11 +1,17 @@
 import { scoped } from "../lib/scoped.js";
-import { HEADS as A_HEADS } from "../lib/assets.js";
+import { avtFile } from "../lib/assets.js";
 import "../styles/result.css";
 
 export function mount(root){
+
+  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
+  function avtOf(seat){
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document = scoped(root);
   
-  const HEADS = A_HEADS;
   const el = id => document.getElementById(id);
   const KO_N = ["사자","호랑이","불곰","코끼리","악어","여우","기린","멧돼지","원숭이","토끼","새","생쥐"];
   const EN_N = ["LION","TIGER","BEAR","ELEPHANT","CROCODILE","FOX","GIRAFFE","BOAR","MONKEY","RABBIT","BIRD","MOUSE"];
@@ -77,7 +83,7 @@ export function mount(root){
         (!last && idx === cut - 1 ? " row--cut" : "") +
         (gained === 0 ? " row--none" : "") + '">' +
         '<span class="row__p">' + (idx + 1) + '</span>' +
-        '<img class="row__av" src="' + HEADS[seat % HEADS.length] + '" alt="">' +
+        '<img class="row__av" src="' + avtOf(seat) + '" alt="">' +
         '<span class="row__n">' + (names[seat] || "") + '</span>' +
         '<span class="row__r">' + rankLabel(place) + '</span>' +
         '<span class="row__g">+' + gained + '</span>' +

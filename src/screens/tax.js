@@ -1,12 +1,20 @@
 import { scoped } from "../lib/scoped.js";
+import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
-import { ART_DECK as A_DECK, HEADS as A_HEADS } from "../lib/assets.js";
+import { ART_DECK as A_DECK } from "../lib/assets.js";
 import "../styles/tax.css";
 
 export function mount(root){
+
+  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
+  function avtOf(seat){
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document = scoped(root);
   
-  const ART = A_DECK, HEADS = A_HEADS;
+  const ART = A_DECK;
   const el = id => document.getElementById(id);
   const isJ = c => c >= 13;
   
@@ -268,7 +276,7 @@ export function mount(root){
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.innerHTML =
         '<span class="seat__r on">' + rankLabel(r) + '</span>' +
-        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + HEADS[i] + ')"></span>' +
+        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' + avtOf(i) + ')"></span>' +
         '<span class="seat__n">' + nameOf(i) + '</span>';
       box.appendChild(d);
     }

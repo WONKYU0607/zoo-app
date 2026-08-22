@@ -1,4 +1,5 @@
 import "./styles/base.css";
+import { AVATARS, AVT_FREE } from "./lib/assets.js";
 import "./state.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
@@ -18,6 +19,9 @@ export const ACCT_HTML =
   '<div class="ac__name"><span id="acNick"></span>' +
   '<button id="acName" class="ac__edit" aria-label="rename"></button></div>' +
   '<p class="cfg__n" id="acLine"></p>' +
+  '<div class="cfg__l" id="acAvtL"></div>' +
+  '<div class="avt" id="acAvt"></div>' +
+  '<p class="cfg__n" id="acAvtN"></p>' +
   '<div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div>' +
   '<div class="cfg__row"><button id="acOut"></button></div>' +
   '</div></div></div>';
@@ -146,9 +150,33 @@ export function initNav(){
   }
 
   /* 계정 칸 — 게스트에게는 랭킹 안내와 잇기 단추를 보여준다 */
+  /* 프로필 얼굴 고르기.
+     앞 다섯은 처음부터, 그 뒤는 점수가 모자라면 잠긴 채로 보여 준다 —
+     뭘 모으는 재미가 있어야 계속 하게 된다 */
+  function paintAvatars(){
+    const wrap = document.getElementById("acAvt");
+    const lab = document.getElementById("acAvtL");
+    const note = document.getElementById("acAvtN");
+    if (!wrap || !lab) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const a = window.ACCOUNT || {};
+    const score = a.score || 0;
+    const mine = Number(a.avatar) || 0;
+    lab.textContent = ko ? "프로필 얼굴" : "Profile picture";
+    wrap.innerHTML = AVATARS.map((v, i) => {
+      const open = score >= (i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000);
+      return '<button class="avt__i' + (open ? "" : " avt__i--lock") +
+        (i === mine ? " avt__i--on" : "") + '" data-avt="' + i + '"' +
+        ' style="background-image:url(' + v.f + ')" aria-label="' + (ko ? v.ko : v.en) + '">' +
+        (open ? "" : '<i class="avt__lk"></i>') + "</button>";
+    }).join("");
+    if (note) note.textContent = "";
+  }
+
   function paintAcct(){
     const ko = (window.__lang || "ko") === "ko";
     const a = window.ACCOUNT;
+    paintAvatars();
     const lab = document.getElementById("acBoxT");
     const line = document.getElementById("acLine");
     const row = document.getElementById("acLinkRow");
@@ -455,6 +483,26 @@ export function initNav(){
     askYes = onYes;
     document.getElementById("ask").classList.add("on");
   }
+  /* 얼굴 누르기 */
+  document.addEventListener("click", async e => {
+    const b = e.target.closest("[data-avt]");
+    if (!b) return;
+    const i = Number(b.dataset.avt);
+    const ko = (window.__lang || "ko") === "ko";
+    const note = document.getElementById("acAvtN");
+    const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000;
+    const score = (window.ACCOUNT || {}).score || 0;
+    if (score < need){
+      if (note) note.textContent = ko
+        ? need.toLocaleString() + "점을 모으면 열립니다"
+        : "Unlocks at " + need.toLocaleString() + " points";
+      return;
+    }
+    if (window.__setAvatar) await window.__setAvatar(i);
+    paintAvatars();
+    if (note) note.textContent = ko ? "바꿨습니다" : "Changed";
+  });
+
   function askClose(){
     document.getElementById("ask").classList.remove("on");
     askYes = null;
