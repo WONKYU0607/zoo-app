@@ -70,6 +70,10 @@ async function refreshNet(){
     if (r.you.credentials) net.credentials = r.you.credentials;
   }
   W().__opts.seated = (r.players || []).filter(p => p.name).length;
+  /* 서버 방도 꽉 차면 방장이 안 눌러도 15초 뒤에 시작한다.
+     이 기기 방에만 있던 것이라 서버 대전에서는 초읽기가 아예 없었다 */
+  if (!r.started && String(net.playerID) === "0" &&
+      W().__opts.seated >= (r.numPlayers || net.numPlayers)) startRoomCount(15);
   /* __opts.cap 은 **방장이 고르고 있는 값**이다. 여기서 서버 값으로 덮으면,
      설정 창에서 숫자를 올려 놓은 사이에 1.5초짜리 확인이 끼어들어 되돌려 버린다.
      그래서 처음 바꿀 때는 안 먹고 두 번째에야 먹혔다.
@@ -143,14 +147,15 @@ function stopRoomCount(){
 }
 function startRoomCount(sec){
   if (roomCountId) return;
-  if (!myRoom) return;          /* 방이 없으면 셀 것도 없다 */
+  if (!myRoom && !net) return;          /* 방이 없으면 셀 것도 없다 */
   const page = D().getElementById("room");
   if (!page) return;
   let left = sec;
   const tick = () => {
     const b = D().querySelector("#room #action button");
-    if (!myRoom || myRoom.phase !== "waiting" || !page.classList.contains("is-on")){
-      if (!myRoom || myRoom.phase !== "waiting"){ stopRoomCount(); }
+    const alive = net ? (net && !net.started) : (myRoom && myRoom.phase === "waiting");
+    if (!alive || !page.classList.contains("is-on")){
+      if (!alive) stopRoomCount();
       return;                                  /* 화면을 잠깐 벗어난 것뿐이면 계속 센다 */
     }
     if (!b || b.disabled) return;
@@ -367,8 +372,9 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
         rounds: o.rounds || 3, tax: o.tax !== false, clear2: Boolean(o.clear2),
       });
       /* 서버가 참가자 목록을 보내오기 전까지 내 자리만이라도 채워 둔다 */
+      /* 얼굴을 안 실으면 서버가 알려 줄 때까지(1.5초) 생쥐로 보였다가 바뀐다 */
       net = Object.assign({ started: false, inGame: false }, r,
-        { players: [{ id: 0, name: opt.myName() }] });
+        { players: [{ id: 0, name: opt.myName(), avatar: myAvatar() }] });
       W().__opts = Object.assign(W().__opts || {}, { cap: r.numPlayers, seated: 1 });
       emitRoom();
       pollStart();
@@ -392,7 +398,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       tax: o.tax !== false, clear2: Boolean(o.clear2),
     });
     net = Object.assign({ started: false, inGame: false }, r,
-      { players: [{ id: Number(r.playerID), name: opt.myName() }] });
+      { players: [{ id: Number(r.playerID), name: opt.myName(), avatar: myAvatar() }] });
     W().__opts = Object.assign(W().__opts || {},
       { cap: r.numPlayers, seated: 1, rounds: (r.opts && r.opts.rounds) || o.rounds || 3 });
     emitRoom();
@@ -407,7 +413,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     }
     const r = await lobby.joinRoom(String(code).trim(), opt.myName(), myAvatar());
     net = Object.assign({ started: false, inGame: false }, r,
-      { players: [{ id: Number(r.playerID), name: opt.myName() }] });
+      { players: [{ id: Number(r.playerID), name: opt.myName(), avatar: myAvatar() }] });
     W().__opts = Object.assign(W().__opts || {}, {
       cap: r.numPlayers, rounds: (r.opts && r.opts.rounds) || 3,
       tax: !(r.opts && r.opts.tax === false), clear2: Boolean(r.opts && r.opts.clear2),

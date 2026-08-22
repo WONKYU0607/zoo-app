@@ -229,7 +229,7 @@
 /* ---- 랭킹 단추 (로비 상단바 아래) ---- */
 /* 랭킹 단추를 오른쪽으로 30px. 화면 여백(20px)을 넘지 않게 안쪽 여백에서 빼고
    모자란 만큼만 바깥으로 민다 */
-#lobby .rankbar{display:flex;justify-content:flex-end;padding:2px 0 0;margin-right:-16px}
+#lobby .rankbar{display:flex;justify-content:flex-end;padding:2px 0 0;margin-right:-1px}
 /* 양옆으로 10px 씩, 폭 20px 넓힘 */
 #lobby .bt-rank{display:inline-flex;align-items:center;justify-content:center;
   min-height:0 !important;padding:0 10px !important;border-width:10px !important;

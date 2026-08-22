@@ -222,7 +222,12 @@ button:disabled{opacity:.42}
 .avt__i--on{border-color:#E3C67C !important;
   box-shadow:0 0 0 2px rgba(227,198,124,.4),0 0 14px rgba(227,198,124,.65)}
 /* 잠긴 것은 흐리게 + 자물쇠 + 필요한 점수. 안 보이게 하면 모으는 재미가 없다 */
-.avt__i--lock{filter:grayscale(1) brightness(.34)}
+/* 흐리게 하는 것은 **그림에만**. filter 를 단추에 걸면 안의 글씨까지 같이 어두워져
+   무슨 말인지 안 보인다. 어두운 막을 그림 위에 한 겹 덮고 글씨는 그 위에 올린다 */
+.avt__i--lock{filter:grayscale(1)}
+.avt__i--lock::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:rgba(5,7,5,.72)}
+.avt__i--lock .avt__lk,.avt__i--lock .avt__need{z-index:1}
 /* 필요한 점수는 **눈에 들어오게**. 작게 적으면 안 보인다 */
 .avt__need{position:absolute;left:-8%;right:-8%;bottom:11%;text-align:center;
   font-family:"Gowun Batang",serif;line-height:1.2;letter-spacing:-.03em;

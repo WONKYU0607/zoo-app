@@ -211,7 +211,7 @@
 /* 고르는 판. 손패 **위에 떠 있게** 한다 —
    흐름 안에 두면 열 때마다 위 내용이 통째로 밀려 올라간다 */
 #table .emopick{position:absolute;left:0;right:0;z-index:9;
-  display:flex;gap:4px;justify-content:center;align-items:flex-end;
+  display:flex;gap:10px;justify-content:center;align-items:flex-end;
   padding:6px 4px 4px;pointer-events:none;
   /* 뒤에 깔린 안내 글씨와 섞이지 않게 살짝 어둡게 깐다 */
   background:linear-gradient(180deg,rgba(6,12,8,0),rgba(6,12,8,.72) 22%,rgba(6,12,8,.86))}
@@ -226,7 +226,7 @@
 #table .emopick button:nth-child(5){animation-delay:.12s}
 #table .emopick button:active{transform:translateY(1px)}
 @keyframes emorise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-#table .emopick .emoimg{width:100%;min-width:46px;height:55px;background-repeat:no-repeat;
+#table .emopick .emoimg{width:100%;min-width:55px;height:66px;background-repeat:no-repeat;
   background-position:bottom center;background-size:contain;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.7))}
 
@@ -236,12 +236,12 @@
    대신 다섯 개를 **같은 크기**로 두어 늘어나는 일 자체를 없앤다.
    가로세로비 896:663, 아래 19% 는 꼬리라 글자를 그만큼 위로 올린다 */
 #table .emobub{display:flex;align-items:center;justify-content:center;
-  width:34px;height:26px;padding:0 2px 5px;box-sizing:border-box;
+  width:41px;height:31px;padding:0 3px 6px;box-sizing:border-box;
   background:url(/assets/emote_bubble.webp) no-repeat center/100% 100%;
-  font-family:"Gowun Batang",serif;font-weight:700;font-size:6.1px;line-height:1.1;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:7.3px;line-height:1.1;
   letter-spacing:-.03em;color:#3B2A12;text-align:center;white-space:nowrap}
 /* 영어는 글자가 길어 그대로 두면 넘친다 */
-html[lang="en"] #table .emobub{font-size:5.1px;letter-spacing:-.02em}
+html[lang="en"] #table .emobub{font-size:6.1px;letter-spacing:-.02em}
 
 /* 프로필 옆에 뜨는 것 */
 /* 프로필 **정가운데** 위로 올라온다 */
