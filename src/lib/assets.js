@@ -3,11 +3,13 @@ export const CARDS = {"01": "assets/card_01.webp", "02": "assets/card_02.webp", 
 export const ART = {"01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp"};
 export const ART_DECK = {"01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp"};
 export const LOBBY_ART = {"01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp"};
-export const HERO = {"02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp"};
 export const BACK = "assets/back.webp";
 export const BG = { entry: "assets/bg.webp", throne: "assets/throne.webp", table: "assets/tablebg.webp" };
 /* 프로필 얼굴 15개. 앞 5개는 처음부터, 그 뒤는 점수 5,000점마다 하나씩 열린다.
    순서를 바꾸면 이미 고른 사람들의 얼굴이 바뀌므로 **뒤에만 덧붙일 것** */
+/* 진입 화면 부채꼴 카드 그림 (카드 아트와 별개) */
+export const HERO = {"02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp"};
+
 export const AVATARS = [
   { f: "assets/avt_01.webp", ko: "생쥐",   en: "Mouse",    need: 0 },
   { f: "assets/avt_02.webp", ko: "새",     en: "Bird",     need: 0 },

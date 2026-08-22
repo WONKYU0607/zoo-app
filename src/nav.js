@@ -500,7 +500,6 @@ export function initNav(){
     }
     if (window.__setAvatar) await window.__setAvatar(i);
     paintAvatars();
-    if (note) note.textContent = ko ? "바꿨습니다" : "Changed";
   });
 
   function askClose(){

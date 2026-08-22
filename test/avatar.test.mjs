@@ -76,6 +76,28 @@ check("내 자리에 내가 고른 얼굴", /avt_07/.test(seats.faces[0]),
   seats.faces[0] + " · GAME.avatars " + JSON.stringify(seats.avatars));
 check("봇은 처음 열린 다섯 중에서",
   (seats.avatars || []).slice(1).every(v => v >= 0 && v < 5), JSON.stringify(seats.avatars));
+/* 방 대기실 — 게임 전이라 GAME.avatars 가 없다.
+   방에 앉은 사람이 들고 있는 얼굴을 봐야 한다. 이걸 안 봐서 전부 생쥐였다 */
+await page.evaluate(() => window.__goto("lobby"));
+await new Promise(r=>setTimeout(r,300));
+await page.evaluate(async () => {
+  window.ACCOUNT = Object.assign(window.ACCOUNT||{}, { score: 50000, avatar: 12 });
+  window.__opts = { cap: 6, seated: 1, rounds: 3, tax: true, clear2: false };
+  await window.__createRoom();
+});
+for (let i=0;i<60;i++){ if (await page.evaluate(()=>(window.__opts&&window.__opts.seated)||0)>=6) break;
+  await new Promise(r=>setTimeout(r,300)); }
+await page.evaluate(() => window.__goto("room"));
+await new Promise(r=>setTimeout(r,500));
+const room = await page.evaluate(() =>
+  [...document.querySelectorAll("#room .seat__av")].map(e =>
+    ((e.style.backgroundImage||"").match(/avt_\d+/)||["?"])[0]));
+check("대기실에 내가 고른 얼굴이 나온다", room[0] === "avt_13", JSON.stringify(room));
+check("대기실 봇 얼굴이 다 같지는 않다", new Set(room.slice(1)).size > 1, JSON.stringify(room));
+check("대기실 봇은 처음 열린 다섯 중에서",
+  room.slice(1).every(f => ["avt_01","avt_02","avt_03","avt_04","avt_05"].includes(f)),
+  JSON.stringify(room));
+
 check("터진 것 없음", logs.filter(l=>/^ERROR/.test(l)).length===0,
   JSON.stringify(logs.filter(l=>/^ERROR/.test(l)).slice(0,2)));
 console.log("\n=== 통과 "+pass+" / 실패 "+fail+" ===\n");

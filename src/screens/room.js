@@ -11,6 +11,13 @@ export function mount(root){
     const a = g.avatars || [];
     return avtFile(Number(a[seat]) || 0);
   }
+  /* 방 대기실은 **아직 게임 전**이라 GAME.avatars 가 없다.
+     방에 앉은 사람이 들고 있는 얼굴을 그대로 쓴다 —
+     이걸 안 봐서 대기실에서 전부 생쥐로 나왔다 */
+  function avtSeat(p, seat){
+    if (p && p.avatar != null) return avtFile(Number(p.avatar) || 0);
+    return avtOf(seat);
+  }
   /* 화면 자리에 앉은 사람을 찾아 얼굴을 고른다. 표가 없으면 자리 번호 그대로 */
   const faceOf = i => {
     const f = window.GAME && window.GAME.faces;
@@ -136,6 +143,7 @@ export function mount(root){
     if (R && R.seats){
       return asArray(R.seats, R.cap || cap).map((s, i) => s ? {
         name: s.name || "",
+        avatar: Number(s.avatar) || 0,     /* 이걸 안 실어서 대기실이 전부 생쥐였다 */
         me: i === R.me,
         host: s.uid && s.uid === R.host,
         off: Boolean(s.off),
@@ -173,7 +181,7 @@ export function mount(root){
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
       el.innerHTML = filled
         ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-            avtOf(faceOf(i)) + ')"></span>' +
+            avtSeat(p, faceOf(i)) + ')"></span>' +
           (p.off || p.left ? '<span class="seat__off"></span>' : '') +
           '<span class="seat__n">' + p.name + '</span>' +
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
