@@ -230,6 +230,14 @@
 /* 랭킹 단추를 오른쪽으로 30px. 화면 여백(20px)을 넘지 않게 안쪽 여백에서 빼고
    모자란 만큼만 바깥으로 민다 */
 #lobby .rankbar{display:flex;justify-content:flex-end;padding:2px 0 0;margin-right:-1px}
+/* 랭킹·소리 단추는 **랭킹 화면의 전체랭킹 탭과 같은 양피지 틀**을 쓴다 */
+#lobby .bt-rank,#lobby .bt-mute{
+  border:13px solid transparent !important;
+  border-image:url(/assets/frame_row.webp) 110 fill stretch !important;
+  /* 틀 안은 비워 두고 글씨를 밝게 — 로비 배경이 어두워 그게 더 잘 읽힌다 */
+  background:none !important;background-color:transparent !important;
+  border-radius:0 !important;box-shadow:none !important;color:#F4EEE0 !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.7) !important}
 /* 양옆으로 10px 씩, 폭 20px 넓힘 */
 #lobby .bt-rank{display:inline-flex;align-items:center;justify-content:center;
   min-height:0 !important;padding:0 10px !important;border-width:10px !important;
@@ -254,3 +262,19 @@
   background-size:contain;background-repeat:no-repeat;background-position:center;
   font-size:11px;font-weight:900;color:#FFFFFF;
   text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 4px rgba(0,0,0,.6)}
+
+/* ---------- 소리 단추 (랭킹 옆) ---------- */
+#lobby .rankbar{gap:8px;align-items:center}
+/* 랭킹 단추와 높이를 맞춘다. 틀 그림이 같아야 나란히 보인다 */
+#lobby .bt-mute{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:31px;padding:0 !important;min-height:0 !important;cursor:pointer}
+#lobby .bt-mute i{width:19px;height:19px;background:no-repeat center/contain;display:none}
+/* 소리 켜짐 — 스피커에 물결 */
+/* i 선택자가 더 세서 배경을 지워 버린다 — 같은 무게로 맞춘다 */
+#lobby .bt-mute i.bt-mute__on{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F4EEE0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9v6h4l5 4V5L8 9H4z'/%3E%3Cpath d='M16.5 8.5a5 5 0 0 1 0 7'/%3E%3Cpath d='M19 6a8.5 8.5 0 0 1 0 12'/%3E%3C/svg%3E")}
+/* 음소거 — 스피커에 가위표 */
+#lobby .bt-mute i.bt-mute__off{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23BFB6A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9v6h4l5 4V5L8 9H4z'/%3E%3Cpath d='M17 9l5 6M22 9l-5 6'/%3E%3C/svg%3E")}
+#lobby .bt-mute[aria-pressed="true"] i.bt-mute__on{display:block}
+#lobby .bt-mute.is-off i.bt-mute__off{display:block}
+#lobby .bt-mute.is-off i.bt-mute__on{display:none}
+#lobby .bt-mute.is-off{opacity:.62}

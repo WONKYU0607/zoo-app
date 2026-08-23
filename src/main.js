@@ -58,7 +58,11 @@ function build(){
       if (bar && !sec.querySelector("[data-rankopen]")){
         const wrap = document.createElement("div");
         wrap.className = "rankbar";
-        wrap.innerHTML = '<button class="bt-rank" data-rankopen>' +
+        /* 랭킹 옆에 소리 단추. 누르면 음소거 */
+        wrap.innerHTML =
+          '<button class="bt-mute" id="btMute" aria-pressed="true" aria-label="소리 끄기">' +
+          '<i class="bt-mute__on"></i><i class="bt-mute__off"></i></button>' +
+          '<button class="bt-rank" data-rankopen>' +
           '<span id="rankLabel">랭킹</span></button>';
         bar.parentNode.insertBefore(wrap, bar.nextSibling);
       }

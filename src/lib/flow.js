@@ -25,6 +25,7 @@ const call = (name, ...a) => { const f = W()[name]; if (typeof f === "function")
 
 function emitRoom(){
   W().__room = net ? netRoomView() : toRoomView(myRoom);
+  syncGameAvatars();
   W().dispatchEvent(new Event("roomchange"));
 }
 
@@ -70,6 +71,7 @@ async function refreshNet(){
     if (r.you.credentials) net.credentials = r.you.credentials;
   }
   W().__opts.seated = (r.players || []).filter(p => p.name).length;
+  syncGameAvatars();
   /* 서버 방도 꽉 차면 방장이 안 눌러도 15초 뒤에 시작한다.
      이 기기 방에만 있던 것이라 서버 대전에서는 초읽기가 아예 없었다 */
   if (!r.started && String(net.playerID) === "0" &&
@@ -100,6 +102,18 @@ function seatAvatars(n){
   }
   if (myRoom) myRoom.seats.forEach((s, i) => { if (i < n) out[i] = (s && Number(s.avatar)) || 0; });
   return out;
+}
+
+/* 얼굴 표를 최신으로 유지한다.
+
+   예전에는 판을 열 때 한 번만 적어 두었다. 그런데 그 순간 서버가 알려 준
+   사람 목록이 아직 덜 왔으면 다들 기본값(생쥐)이 되고, 1.5초 뒤 목록이 와도
+   표는 그대로여서 **뽑기 화면이 한동안 전부 생쥐**로 보였다 */
+function syncGameAvatars(){
+  const g = W().GAME;
+  if (!g || !g.N) return;
+  const a = seatAvatars(g.N);
+  if (a.some(v => v)) g.avatars = a;      /* 다 0 이면 아직 모르는 것이니 덮지 않는다 */
 }
 
 function pollStart(){
@@ -444,6 +458,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
         if (r.seatMap && r.seatMap[Number(net.playerID)] != null)
           net.playerID = String(r.seatMap[Number(net.playerID)]);
         W().__opts.cap = r.numPlayers;
+        stopRoomCount();          /* 인원이 바뀌었으니 초읽기는 15초부터 다시 */
         await refreshNet();
       } catch(e){
         /* 못 바꿨으면 화면을 원래대로 되돌린다. 바뀐 척하면 안 된다 */
@@ -456,6 +471,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (!myRoom) return;
     setCap(myRoom, (W().__opts || {}).cap);
     W().__opts.cap = myRoom.cap;
+    stopRoomCount();          /* 인원이 바뀌었으니 초읽기는 15초부터 다시 */
     W().__opts.seated = seatCount(myRoom);
     emitRoom();
     /* 인원을 늘렸으면 빈자리가 생겼으니 다시 채우고, 초읽기는 접는다 */

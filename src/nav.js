@@ -1,5 +1,6 @@
 import "./styles/base.css";
 import { AVATARS, AVT_FREE } from "./lib/assets.js";
+import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm } from "./lib/sound.js";
 import "./state.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
@@ -26,7 +27,24 @@ export const ACCT_HTML =
   '<div class="cfg__row"><button id="acOut"></button></div>' +
   '</div></div></div>';
 
-export const CFG_HTML = "<div class=\"cfg\" id=\"cfg\" role=\"dialog\" aria-modal=\"true\"><div class=\"cfg__v\" data-cfgclose></div><div class=\"cfg__p\"><div class=\"cfg__h\"><span id=\"cfgT\"></span><button class=\"cfg__x\" data-cfgclose aria-label=\"close\">×</button></div><div class=\"cfg__b\"><div class=\"cfg__l\" id=\"cfgLangL\"></div><div class=\"cfg__row\"><button data-l=\"ko\">한국어</button><button data-l=\"en\">English</button></div><p class=\"cfg__n\" id=\"cfgNote\"></p></div></div></div>";
+export const CFG_HTML =
+  '<div class="cfg" id="cfg" role="dialog" aria-modal="true">' +
+  '<div class="cfg__v" data-cfgclose></div><div class="cfg__p">' +
+  '<div class="cfg__h"><span id="cfgT"></span>' +
+  '<button class="cfg__x" data-cfgclose aria-label="close">\u00D7</button></div>' +
+  '<div class="cfg__b">' +
+  '<div class="cfg__l" id="cfgLangL"></div>' +
+  '<div class="cfg__row"><button data-l="ko">한국어</button><button data-l="en">English</button></div>' +
+  '<p class="cfg__n" id="cfgNote"></p>' +
+  /* 음량 — 배경음악과 효과음을 따로 조절한다 */
+  '<div class="cfg__l" id="cfgVolL"></div>' +
+  '<div class="vol"><span class="vol__n" id="volBgmN"></span>' +
+  '<input class="vol__b" id="volBgm" type="range" min="0" max="100" step="5">' +
+  '<span class="vol__v" id="volBgmV"></span></div>' +
+  '<div class="vol"><span class="vol__n" id="volSfxN"></span>' +
+  '<input class="vol__b" id="volSfx" type="range" min="0" max="100" step="5">' +
+  '<span class="vol__v" id="volSfxV"></span></div>' +
+  '</div></div></div>';
 
 /* 확인창 — 뒤로가기·앱 종료에 쓴다. 설정 창과 같은 틀 */
 export const ASK_HTML = "<div class=\"cfg\" id=\"ask\" role=\"dialog\" aria-modal=\"true\">" +
@@ -146,6 +164,7 @@ export function initNav(){
     document.getElementById("cfgT").textContent = t.title;
     document.getElementById("cfgLangL").textContent = t.lang;
     document.getElementById("cfgNote").textContent = "";   /* 설명글은 없앤다 */
+    paintVol();
     document.getElementById("cfg").classList.add("on");
   }
 
@@ -153,6 +172,46 @@ export function initNav(){
   /* 프로필 얼굴 고르기.
      앞 다섯은 처음부터, 그 뒤는 점수가 모자라면 잠긴 채로 보여 준다 —
      뭘 모으는 재미가 있어야 계속 하게 된다 */
+  /* ---------- 음량 ---------- */
+  function paintVol(){
+    const ko = (window.__lang || "ko") === "ko";
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set("cfgVolL", ko ? "음량" : "Volume");
+    set("volBgmN", ko ? "배경음악" : "Music");
+    set("volSfxN", ko ? "효과음" : "Effects");
+    set("volBgmV", sound.bgm + "");
+    set("volSfxV", sound.sfx + "");
+    const b = document.getElementById("volBgm"), f = document.getElementById("volSfx");
+    if (b) b.value = String(sound.bgm);
+    if (f) f.value = String(sound.sfx);
+  }
+
+  /* 홈 화면 소리 단추 — 누르면 음소거 */
+  function paintMute(){
+    const b = document.getElementById("btMute");
+    if (!b) return;
+    b.setAttribute("aria-pressed", String(!sound.muted));
+    b.classList.toggle("is-off", sound.muted);
+    b.setAttribute("aria-label", sound.muted ? "소리 켜기" : "소리 끄기");
+  }
+
+  document.addEventListener("input", e => {
+    if (e.target.id === "volBgm"){ setBgm(e.target.value); paintVol(); }
+    if (e.target.id === "volSfx"){ setSfx(e.target.value); paintVol(); }
+  });
+  document.addEventListener("click", e => {
+    if (e.target.closest("#btMute")){ toggleMute(); paintMute(); paintVol(); return; }
+    /* 단추 소리 — 누를 수 있는 것에만 */
+    const b = e.target.closest("button");
+    if (b && !b.disabled) snd("button");
+  });
+
+  /* 배경음악은 **진입창에서 로비로 들어오는 순간** 시작한다.
+     브라우저가 사람이 화면을 만지기 전에는 소리를 막는데,
+     시작하기를 누른 뒤라 그 조건도 같이 풀린다 */
+  let touched = false;
+  onSound(() => { paintMute(); });
+
   function paintAvatars(){
     const wrap = document.getElementById("acAvt");
     const lab = document.getElementById("acAvtL");
@@ -179,6 +238,7 @@ export function initNav(){
   }
 
   function paintAcct(){
+    paintVol();
     const ko = (window.__lang || "ko") === "ko";
     const a = window.ACCOUNT;
     paintAvatars();
@@ -388,12 +448,22 @@ export function initNav(){
   window.__goto = id => go(id);
   window.__toTable = () => { window.__fresh = false; go("table"); };
   function go(id){
+    /* 로비에 들어오는 순간 배경음악을 켠다.
+       판에서는 끈다 — 효과음이 많아 겹치면 시끄럽다 */
+    if (id === "lobby") touched = true;
+    if (touched){
+      if (id === "lobby" || id === "room") playBgm("lobby");
+      else stopBgm();
+    }
     /* 화면을 보이기 전에 먼저 세운다.
        나중에 세우면 옛 내용이 한 번 보였다가 바뀐다 (인원이 8명이었다가 5명이 되는 현상) */
     if (id === "draw"  && window.__bootDraw)  window.__bootDraw();
     if (id === "table" && window.__bootTable){
       window.__bootTable(window.__fresh !== false);
       window.__fresh = false;
+      /* 판이 열렸다 — 패 나누는 소리.
+         화면 쪽에서 내면 앱을 켤 때 한 번 세워지면서도 울려 버린다 */
+      snd("card_deal");
     }
     if (id === "tax"   && window.__bootTax)   window.__bootTax();
     if (id === "result" && window.__bootResult) window.__bootResult();

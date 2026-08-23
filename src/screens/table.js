@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { play as snd } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
@@ -67,11 +68,43 @@ export function mount(root){
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
 
+  /* ---------- 소리 ----------
+     화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
+  let sndTurn = false, sndCount = -1, sndFin = 0, sndRev = 0, sndPass = 0;
+  function sounds(v){
+    /* 누가 카드를 냈다 / 패스했다 — 바닥에 쌓인 수가 바뀌는 것으로 안다 */
+    const n = (v.table || []).length;
+    if (sndCount >= 0 && n > sndCount) snd("card_play");
+    if (n === 0 && sndCount > 0) { /* 바닥이 치워졌다 — 소리 없음 */ }
+    sndCount = n;
+    /* 내 차례가 막 왔다 */
+    if (v.myTurn && !sndTurn) snd("my_turn");
+    sndTurn = Boolean(v.myTurn);
+    /* 누가 완주했다 */
+    const fin = (v.finish || []).length;
+    if (fin > sndFin){
+      const who = v.finish[fin - 1];
+      snd(who === 0 ? "win" : "card_play");
+      /* 내가 꼴등으로 남았다 */
+      if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) snd("lose");
+    }
+    sndFin = fin;
+    /* 혁명이 확정되는 순간 한 번 */
+    const rev = v.revolution && v.revolution.declared ? 1 : 0;
+    if (rev && !sndRev) snd("revolution");
+    sndRev = rev;
+    /* 패스 — 방금 패스한 사람이 늘었다 */
+    const ps = (v.seats || []).filter(x => x.s === "pass").length;
+    if (ps > sndPass) snd("pass");
+    sndPass = ps;
+  }
+
   function apply(v){
     if (!v) return;
     /* 방금 끝난 판을 세워 두는 동안에는 새 판 상태를 그리지 않는다.
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over) return;
+    sounds(v);
     SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
@@ -83,6 +116,9 @@ export function mount(root){
       const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
+      sndCount = -1; sndFin = 0; sndTurn = false; sndPass = 0; sndRev = 0;
+      /* 패 나누는 소리는 **판 화면에 들어올 때** 낸다.
+         여기서 내면 뽑기 화면에 있는 동안 먼저 울리고, 들어와서 또 울린다 */
       window.__roundNo = v.roundNo;
       /* 첫 판이 아니고 게임이 안 끝났으면 방금 끝난 판을 보여주고 넘긴다.
          마지막 판이면 판 결과를 건너뛰고 최종 결과로 간다 */
@@ -178,9 +214,10 @@ export function mount(root){
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
     Object.keys(emoNow).forEach(p2 => delete emoNow[p2]);
     if (el("emolayer")) el("emolayer").innerHTML = "";
-    offEmote = eng.onEmote(e => showEmote(e.pos, e.k));
+    offEmote = eng.onEmote(e => { snd("emote"); showEmote(e.pos, e.k); });
     offView = eng.onView(apply);
     if (eng.engine.view) apply(eng.engine.view);
+
   }
   window.__bootTable = boot;
   /* 미리보기용: 남은 사람을 남은 장수 순으로 채워 판을 끝낸다 */
@@ -520,6 +557,7 @@ const TURN_SEC = 15;
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
+        if (tLeft === 5) snd("tick");        /* 5초 남았다는 신호 */
         if (tLeft <= 0){ clearInterval(tickId); tickId = null; }
         renderBottom();
       }, 1000);

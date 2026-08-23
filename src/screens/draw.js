@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { play as snd } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
@@ -235,6 +236,7 @@ export function mount(root){
         w.dataset.val = String(val);
       }
       if (w.classList.contains("taken")) return;
+      snd("card_flip");
       w.classList.add("flip", "taken");
       w.dataset.seat = seat;
       takenK.push(k);
@@ -386,6 +388,10 @@ export function mount(root){
       window.GAME = {N: N, roundNo: 1, score: Array(N).fill(0), order: null, finish: null, hold: null};
     }
     phase = "pick";
+    /* 앞 판의 자리·카드가 한 프레임 비쳤다가 새로 그려진다.
+       그동안 얼굴이 옛 값(기본 생쥐)으로 보이므로 먼저 지운다 */
+    { const sb = el("seats"), db = el("deck");
+      if (sb) sb.innerHTML = ""; if (db) db.innerHTML = ""; }
     layout(Array.from({length: N}, (_, i) => i));
     /* 엔진이 바닥을 알려 준다. 남들이 고르는 것도 여기로 들어온다 */
     if (offView) offView();

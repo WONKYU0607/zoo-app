@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { play as snd } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import "../styles/room.css";
@@ -156,11 +157,19 @@ export function mount(root){
     }));
   }
   
+  /* 자리가 늘면 누가 들어온 것이다 */
+  let sndSeated = 0;
+  function seatSound(n){
+    if (n > sndSeated && sndSeated > 0) snd("join");
+    sndSeated = n;
+  }
+
   function renderSeats(){
     RB = ringBox();
     const box = document.getElementById("seats");
     box.innerHTML = "";
     const list = seatList();
+    seatSound(list.filter(x => x && x.name).length);
     const R = window.__room;
     if (R) cap = R.cap || cap;
     for (let i = 0; i < cap; i++){

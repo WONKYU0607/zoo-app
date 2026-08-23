@@ -1,4 +1,5 @@
 import { scoped } from "../lib/scoped.js";
+import { play as snd } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART_DECK as A_DECK } from "../lib/assets.js";
@@ -219,15 +220,17 @@ export function mount(root){
   /* 새 패 나눠 주기 */
   function runDeal(){
     clearFx();
+    snd("card_deal");
     for (let round = 0; round < 3; round++)
       for (let i = 0; i < N; i++)
         flyCard(-1, i, 0, (round * 6 + i) * 55, true);
   }
   
-  /* 세금 주고받기 */
+  /* 세금 주고받기 — 카드가 오가므로 패 나누는 소리를 쓴다 */
   function runTax(){
     window.__myGive = window.__myGive || [];
     clearFx();
+    snd("card_deal");
     const o = order(), n = N;
     const pairs = [[o[0], o[n-1], 2], [o[1], o[n-2], 1]];
     let t = 0;
