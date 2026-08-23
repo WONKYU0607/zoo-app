@@ -236,7 +236,7 @@ export function mount(root){
         w.dataset.val = String(val);
       }
       if (w.classList.contains("taken")) return;
-      snd("card_flip");
+      snd("card_play");     /* 카드 한 장 뒤집는 것이니 낼 때와 같은 소리 */
       w.classList.add("flip", "taken");
       w.dataset.seat = seat;
       takenK.push(k);

@@ -29,6 +29,26 @@ const take = () => page.evaluate(() => { const x = window.__snd.slice(); window.
 await new Promise(r=>setTimeout(r,400));
 check("진입창에서는 조용하다", (await take()).length === 0);
 
+/* 진입창 단추는 소리를 안 낸다 */
+await page.evaluate(() => { const b = document.querySelector("#entry #start"); if (b) b.click(); });
+await new Promise(r=>setTimeout(r,300));
+check("진입창 단추는 조용하다", !(await take()).includes("button"));
+await page.evaluate(() => window.__goto("entry"));
+await new Promise(r=>setTimeout(r,200));
+await take();
+
+/* 기본 음량은 둘 다 50 */
+check("기본 음량이 50 / 50 이다", await page.evaluate(() => {
+  window.__goto("lobby");
+  document.querySelector("[data-cfgopen]").click();
+  const v = document.getElementById("volBgm").value + "/" + document.getElementById("volSfx").value;
+  document.querySelector("[data-cfgclose]").click();
+  window.__goto("entry");
+  return v;
+}) === "50/50");
+await new Promise(r=>setTimeout(r,300));
+await take();
+
 await page.evaluate(() => window.__goto("lobby"));
 await new Promise(r=>setTimeout(r,400));
 check("로비에 들어오면 배경음악이 시작된다", (await take()).includes("bgm_lobby"));
@@ -43,6 +63,9 @@ await new Promise(r=>setTimeout(r,5000));
 check("로비에 있으면 봇이 들어와도 조용하다", (await take()).length === 0);
 
 await page.evaluate(() => window.__goto("room"));
+await new Promise(r=>setTimeout(r,400));
+check("방 대기실에서는 로비 음악이 꺼진다",
+      await page.evaluate(() => window.__bgmOn !== true));
 for (let i=0;i<60;i++){ if (await page.evaluate(()=>(window.__opts&&window.__opts.seated)||0)>=4) break;
   await new Promise(r=>setTimeout(r,300)); }
 await new Promise(r=>setTimeout(r,400));
@@ -53,7 +76,8 @@ for (let i=0;i<60;i++){ if (await page.evaluate(()=>window.__eng?.view?.phase)==
   await new Promise(r=>setTimeout(r,200)); }
 await new Promise(r=>setTimeout(r,400));
 const dr = await take();
-check("뽑기에서 카드 뒤집는 소리", dr.filter(x => x === "card_flip").length >= 3, JSON.stringify(dr));
+check("뽑기에서 카드 뒤집는 소리 (카드 낼 때와 같은 소리)",
+      dr.filter(x => x === "card_play").length >= 3, JSON.stringify(dr));
 check("뽑기에서는 패 나누는 소리가 안 난다", !dr.includes("card_deal"), JSON.stringify(dr));
 
 await page.evaluate(() => { const b=document.querySelector("#draw #go"); if(b) b.click(); });
@@ -61,7 +85,8 @@ for (let i=0;i<40;i++){ if (await page.evaluate(()=>(document.querySelector(".pa
   await new Promise(r=>setTimeout(r,200)); }
 await new Promise(r=>setTimeout(r,800));
 const tb = await take();
-check("판에 들어가면 패 나누는 소리", tb.includes("card_deal"), JSON.stringify(tb));
+check("판에 들어가도 패 나누는 소리는 안 난다 (연출이 없다)",
+      !tb.includes("card_deal"), JSON.stringify(tb));
 check("판에서는 배경음악이 꺼진다", !tb.includes("bgm_lobby"));
 
 await page.evaluate(() => { window.__eng.botMs = 80;

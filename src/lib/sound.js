@@ -23,8 +23,8 @@ function readBool(k){
 function write(k, v){ try { localStorage.setItem(k, String(v)); } catch(e){} }
 
 export const sound = {
-  bgm: readNum(KEY.bgm, 50),      /* 배경음악은 조금 낮게 시작 */
-  sfx: readNum(KEY.sfx, 80),
+  bgm: readNum(KEY.bgm, 50),
+  sfx: readNum(KEY.sfx, 50),
   muted: readBool(KEY.mute),
 };
 
@@ -53,7 +53,6 @@ export function toggleMute(){ setMuted(!sound.muted); return sound.muted; }
 export const SFX = {
   card_play:  "assets/snd/card_play.webm",    /* 카드 낼 때 */
   card_deal:  "assets/snd/card_deal.webm",    /* 패 나눌 때 */
-  card_flip:  "assets/snd/card_flip.webm",    /* 뽑기 */
   pass:       "assets/snd/pass.webm",
   my_turn:    "assets/snd/my_turn.webm",
   win:        "assets/snd/win.webm",          /* 완주 */
@@ -68,24 +67,41 @@ export const BGM = {
   lobby: "assets/snd/bgm_lobby.webm",
 };
 
-const cache = {};
-function grab(src){
-  if (!cache[src]){
-    const a = new Audio(src);
-    a.preload = "auto";
-    cache[src] = a;
+/* 소리마다 몇 벌씩 미리 만들어 둔다.
+
+   부를 때마다 새로 만들면(cloneNode) 그때 파일을 다시 열어야 해서
+   **첫 소리가 눈에 띄게 늦다**. 미리 받아 둔 것을 돌려 쓰면 바로 난다.
+   같은 소리가 겹쳐 울릴 수 있게 한 소리에 여러 벌을 둔다 */
+const POOL = 4;
+const pool = {};
+function voices(src){
+  if (!pool[src]){
+    pool[src] = { i: 0, list: Array.from({ length: POOL }, () => {
+      const a = new Audio(src);
+      a.preload = "auto";
+      try { a.load(); } catch(e){}
+      return a;
+    }) };
   }
-  return cache[src];
+  return pool[src];
 }
 
-/* 효과음 한 번. 같은 소리가 겹쳐 울려야 하므로 복제해서 튼다 */
+/* 미리 받아 두기 — 화면이 열릴 때 한 번 불러 주면 첫 소리도 안 늦다 */
+export function warm(){
+  Object.keys(SFX).forEach(k => { try { voices(SFX[k]); } catch(e){} });
+}
+
+/* 효과음 한 번 */
 export function play(name){
   const src = SFX[name];
   if (!src) return;                 /* 아직 파일이 없다 */
   const g = sfxGain();
   if (g <= 0) return;
   try {
-    const a = grab(src).cloneNode();
+    const v = voices(src);
+    const a = v.list[v.i];
+    v.i = (v.i + 1) % v.list.length;
+    try { a.currentTime = 0; } catch(e){}
     a.volume = g;
     const p = a.play();
     if (p && p.catch) p.catch(() => {});   /* 사람이 아직 화면을 안 만졌으면 막힌다 */
@@ -105,6 +121,7 @@ export function playBgm(name){
     bgmEl.loop = true;
     bgmEl.volume = bgmGain();
     bgmName = name;
+    try { window.__bgmOn = true; } catch(e){}
     const p = bgmEl.play();
     if (p && p.catch) p.catch(() => {});
   } catch(e){}
@@ -113,6 +130,7 @@ export function playBgm(name){
 export function stopBgm(){
   if (bgmEl){ try { bgmEl.pause(); } catch(e){} }
   bgmEl = null; bgmName = "";
+  try { window.__bgmOn = false; } catch(e){}
 }
 
 function applyBgm(){

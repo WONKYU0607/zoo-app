@@ -1,6 +1,6 @@
 import "./styles/base.css";
 import { AVATARS, AVT_FREE } from "./lib/assets.js";
-import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm } from "./lib/sound.js";
+import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm, warm } from "./lib/sound.js";
 import "./state.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
@@ -201,9 +201,12 @@ export function initNav(){
   });
   document.addEventListener("click", e => {
     if (e.target.closest("#btMute")){ toggleMute(); paintMute(); paintVol(); return; }
-    /* 단추 소리 — 누를 수 있는 것에만 */
+    /* 단추 소리 — 누를 수 있는 것에만.
+       진입창은 뺀다. 거기서는 아직 소리가 막혀 있기도 하고,
+       첫 화면부터 소리가 나는 것이 부담스럽다 */
     const b = e.target.closest("button");
-    if (b && !b.disabled) snd("button");
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (b && !b.disabled && now !== "entry") snd("button");
   });
 
   /* 배경음악은 **진입창에서 로비로 들어오는 순간** 시작한다.
@@ -450,9 +453,10 @@ export function initNav(){
   function go(id){
     /* 로비에 들어오는 순간 배경음악을 켠다.
        판에서는 끈다 — 효과음이 많아 겹치면 시끄럽다 */
-    if (id === "lobby") touched = true;
+    if (id === "lobby"){ touched = true; warm(); }   /* 소리를 미리 받아 둔다 */
     if (touched){
-      if (id === "lobby" || id === "room") playBgm("lobby");
+      /* 로비와 랭킹에서만 배경음악. 방 대기실부터는 끈다 */
+      if (id === "lobby" || id === "rank") playBgm("lobby");
       else stopBgm();
     }
     /* 화면을 보이기 전에 먼저 세운다.
@@ -461,9 +465,7 @@ export function initNav(){
     if (id === "table" && window.__bootTable){
       window.__bootTable(window.__fresh !== false);
       window.__fresh = false;
-      /* 판이 열렸다 — 패 나누는 소리.
-         화면 쪽에서 내면 앱을 켤 때 한 번 세워지면서도 울려 버린다 */
-      snd("card_deal");
+      /* 패 나누는 연출이 없으므로 소리도 안 낸다 (세금 화면에서는 낸다) */
     }
     if (id === "tax"   && window.__bootTax)   window.__bootTax();
     if (id === "result" && window.__bootResult) window.__bootResult();
