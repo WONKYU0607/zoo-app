@@ -33,10 +33,15 @@ await page.evaluate(() => window.__goto("lobby"));
 await new Promise(r=>setTimeout(r,400));
 check("로비에 들어오면 배경음악이 시작된다", (await take()).includes("bgm_lobby"));
 
+/* 방을 만들어 놓고 **로비에 머무르면** 소리가 나면 안 된다.
+   방 화면은 안 보일 때도 1.5초마다 다시 그려진다 */
 await page.evaluate(async () => {
   window.__opts = { cap: 4, seated: 1, rounds: 3, tax: true, clear2: false };
   await window.__createRoom();
 });
+await new Promise(r=>setTimeout(r,5000));
+check("로비에 있으면 봇이 들어와도 조용하다", (await take()).length === 0);
+
 await page.evaluate(() => window.__goto("room"));
 for (let i=0;i<60;i++){ if (await page.evaluate(()=>(window.__opts&&window.__opts.seated)||0)>=4) break;
   await new Promise(r=>setTimeout(r,300)); }

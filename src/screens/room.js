@@ -157,10 +157,14 @@ export function mount(root){
     }));
   }
   
-  /* 자리가 늘면 누가 들어온 것이다 */
+  /* 자리가 늘면 누가 들어온 것이다.
+     이 화면은 **안 보일 때도 다시 그려진다**(1.5초마다 방 상태를 받아서).
+     보고 있을 때만 울려야 한다 — 안 그러면 로비에 있어도 소리가 난다 */
   let sndSeated = 0;
   function seatSound(n){
-    if (n > sndSeated && sndSeated > 0) snd("join");
+    const sec = window.document.getElementById("room");
+    const on = sec && sec.classList.contains("is-on");
+    if (on && n > sndSeated && sndSeated > 0) snd("join");
     sndSeated = n;
   }
 
