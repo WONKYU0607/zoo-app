@@ -100,9 +100,10 @@ check("내 차례 소리", g.includes("my_turn"));
 
 await page.evaluate(() => document.querySelector("#table #emo").click());
 await new Promise(r=>setTimeout(r,300));
+await take();
 await page.evaluate(() => document.querySelectorAll("#table .emopick button")[0].click());
 await new Promise(r=>setTimeout(r,500));
-check("감정표현 소리", (await take()).includes("emote"));
+check("감정표현은 소리를 안 낸다", !(await take()).includes("emote"));
 
 /* 음소거하면 아무것도 안 울린다 */
 await page.evaluate(() => { window.__goto("lobby"); document.getElementById("btMute").click(); });

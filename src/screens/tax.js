@@ -71,7 +71,7 @@ export function mount(root){
       joker:"CHAMELEON"
     }
   };
-  let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
+  let lang = "ko", step = 0, sel = [], selVal = [], declared = false, reversed = false, revSeat = null;
   let N = 6;
   let online = false;   /* 인원. 선언 없이 쓰고 있어서 모듈에서 막혔다 */
   let ranks = [];
@@ -302,8 +302,14 @@ export function mount(root){
       s.innerHTML = cardHTML(c, w);
       s.onclick = () => { if (!giveCount()) return;
         const k = sel.indexOf(i);
-        if (k >= 0) sel.splice(k, 1);
-        else if (sel.length < giveCount()) sel.push(i);
+        if (k >= 0){ sel.splice(k, 1); selVal.splice(k, 1); }
+        else if (sel.length < giveCount()){
+          sel.push(i);
+          /* 고른 **카드 값**도 같이 적어 둔다.
+             자리 번호만 두면, 그 사이에 손패가 다시 정렬될 때
+             엉뚱한 카드가 나간다(12 를 골랐는데 카멜레온이 가던 문제) */
+          selVal.push(c);
+        }
         draw(); };
       h.appendChild(s);
     });
@@ -425,7 +431,7 @@ export function mount(root){
     N = g.N || 6;
     ranks = (g.finish && g.finish.length === N) ? g.finish.slice()
           : Array.from({length: N}, (_, i) => i);
-    step = 0; sel = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
+    step = 0; sel = []; selVal = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
     hideHand = false;
     waitOn = 0;                 /* 기다린 횟수를 되돌린다. 안 하면 다음에 자동 진행이 안 걸린다 */
     clearFx();
@@ -560,11 +566,12 @@ export function mount(root){
       return;
     }
     if (step === 3 && !taxSkipped()){
-      window.__myGive = sel.map(i => myHand()[i]);
+      /* 자리 번호가 아니라 **고를 때 적어 둔 값**을 보낸다 */
+      window.__myGive = selVal.slice(0, giveCount());
       taxShown = true;
       runTax();
       applyTax(window.__myGive);
-      sel = [];
+      sel = []; selVal = [];
     }
     if (step < 4) step++;
     while (step < 4 && !needStep(step)) step++;        /* 볼 것 없는 단계는 지나친다 */

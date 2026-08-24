@@ -149,7 +149,11 @@ export function mount(root){
       ghost = []; ghostSig = "";
     }
     if (v.table.length < trick.length){    /* 바닥이 새로 시작됐다 */
-      animated = 0; spread = false;
+      /* 잔상을 보여 주는 중이면 건드리지 않는다.
+         여기서 0 으로 되돌리면 **앞서 낸 카드가 다시 날아오는 연출**이 나온다 —
+         전원이 패스해 바닥이 비워지고 내 차례로 돌아올 때 그랬다 */
+      if (!ghost.length) animated = 0;
+      spread = false;
     }
     trick = v.table.map(t => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
     sel = sel.filter(i => i < hand.length);
@@ -214,7 +218,7 @@ export function mount(root){
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
     Object.keys(emoNow).forEach(p2 => delete emoNow[p2]);
     if (el("emolayer")) el("emolayer").innerHTML = "";
-    offEmote = eng.onEmote(e => { snd("emote"); showEmote(e.pos, e.k); });
+    offEmote = eng.onEmote(e => showEmote(e.pos, e.k));   /* 감정표현은 소리 없이 */
     offView = eng.onView(apply);
     if (eng.engine.view) apply(eng.engine.view);
 
@@ -593,15 +597,31 @@ const TURN_SEC = 15;
     unlockLater();
   };
 
-  /* 수가 거부되면 새 상태가 안 온다. 그때 화면이 굳지 않게 잠금을 풀어 준다 */
+  /* 수가 거부되면 새 상태가 안 온다. 그때 화면이 굳지 않게 잠금을 풀어 준다.
+
+     예전에는 1.2초만 지나면 무조건 풀었다. 서버까지 갔다 오는 데 그보다 오래 걸리면
+     아직 처리 중인데도 풀려서, 한 번 눌러도 반응이 없는 것처럼 보이고
+     다시 누르면 **같은 수가 두 번 나갔다**(카드가 티틱 하고 두 장 날아가던 것).
+     그래서 **판이 그대로일 때만** 푼다. 조금이라도 움직였으면 처리된 것이다 */
   let unlockId = null;
+  function viewSig(v){
+    if (!v) return "";
+    return v.turn + "|" + (v.table || []).length + "|" +
+           (v.seats || []).map(x => x.c + (x.s || "")).join(",");
+  }
   function unlockLater(){
     if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
+    const sent = viewSig(eng.engine.view);
+    let tries = 0;
+    const look = () => {
       unlockId = null;
       const v = eng.engine.view;
-      if (v && v.myTurn && busy){ busy = false; draw(); }
-    }, 1200);
+      if (!busy) return;
+      if (viewSig(v) !== sent){ return; }        /* 움직였다 — 잘 갔다 */
+      if (++tries < 5){ unlockId = setTimeout(look, 1200); return; }
+      if (v && v.myTurn){ busy = false; draw(); }  /* 6초가 지나도 그대로면 거부된 것 */
+    };
+    unlockId = setTimeout(look, 1200);
   }
 
   /* 내가 직접 뒀다고 서버에 알린다. 안 알리면 자리를 비운 것으로 본다 */

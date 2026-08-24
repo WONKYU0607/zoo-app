@@ -59,7 +59,6 @@ export const SFX = {
   lose:       "assets/snd/lose.webm",
   button:     "assets/snd/button.webm",
   revolution: "assets/snd/revolution.webm",
-  emote:      "assets/snd/emote.webm",
   tick:       "assets/snd/tick.webm",         /* 남은 시간 */
   join:       "assets/snd/join.webm",         /* 대기실에 들어올 때 */
 };
