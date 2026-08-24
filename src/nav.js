@@ -206,7 +206,9 @@ export function initNav(){
        첫 화면부터 소리가 나는 것이 부담스럽다 */
     const b = e.target.closest("button");
     const now = (document.querySelector(".page.is-on") || {}).id || "entry";
-    if (b && !b.disabled && now !== "entry") snd("button");
+    /* 이모티콘 고르는 판은 제 소리가 없으니 단추 소리도 안 낸다 */
+    const quiet = e.target.closest(".emopick") || e.target.closest("#emo");
+    if (b && !b.disabled && now !== "entry" && !quiet) snd("button");
   });
 
   /* 배경음악은 **진입창에서 로비로 들어오는 순간** 시작한다.
@@ -451,6 +453,9 @@ export function initNav(){
   window.__goto = id => go(id);
   window.__toTable = () => { window.__fresh = false; go("table"); };
   function go(id){
+    /* 세금·혁명 화면을 보는 동안에는 다음 판이 굴러가면 안 된다.
+       "판 시작"을 눌러 판 화면에 들어설 때 비로소 풀린다 */
+    if (id === "tax" && window.__holdPlay) window.__holdPlay(true);
     /* 로비에 들어오는 순간 배경음악을 켠다.
        판에서는 끈다 — 효과음이 많아 겹치면 시끄럽다 */
     if (id === "lobby"){ touched = true; warm(); }   /* 소리를 미리 받아 둔다 */

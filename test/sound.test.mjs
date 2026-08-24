@@ -113,6 +113,23 @@ await page.evaluate(() => { const b = document.querySelector("#lobby #btNew") ||
 await new Promise(r=>setTimeout(r,400));
 check("음소거하면 소리가 안 난다", (await take()).length === 0);
 
+/* 세금 화면을 보는 동안 판이 굴러가면 안 된다.
+   예전에는 안 멈춰서, 그 화면을 넘기는 사이 봇들이 카드를 다 내버렸다.
+   벨(내 차례)과 째깍도 그때 같이 울렸다 */
+await page.evaluate(() => window.__goto("tax"));
+await new Promise(r=>setTimeout(r,400));
+await take();
+const before = await page.evaluate(() => ({
+  c: (window.__eng?.view?.seats||[]).map(x=>x.c), t: (window.__eng?.view?.table||[]).length }));
+await new Promise(r=>setTimeout(r,4000));
+const after = await page.evaluate(() => ({
+  c: (window.__eng?.view?.seats||[]).map(x=>x.c), t: (window.__eng?.view?.table||[]).length }));
+check("세금 화면에서는 봇이 카드를 안 낸다",
+      JSON.stringify(before.c) === JSON.stringify(after.c) && before.t === after.t,
+      JSON.stringify(before) + " → " + JSON.stringify(after));
+check("세금 화면에서는 벨·째깍이 안 울린다",
+      !(await take()).some(x => x === "tick" || x === "my_turn"));
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);
 process.exit(fail ? 1 : 0);

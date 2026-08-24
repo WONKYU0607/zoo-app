@@ -208,9 +208,11 @@ function scheduleBot(){
     return;
   }
 
-  /* 판 결과를 보고 있는 동안에는 다음 판이 저 혼자 굴러가면 안 된다.
-     세금은 멈추지 않는다 — 봇이 내야 다음으로 넘어간다 */
-  if (engine.paused) return;
+  /* 판 결과·세금 화면을 보고 있는 동안 다음 판이 저 혼자 굴러가면 안 된다.
+     다만 **세금 단계 자체는 멈추지 않는다** — 봇이 세금을 내야 다음으로 넘어간다.
+     멈추는 것은 카드를 내는 단계뿐이다.
+     이걸 안 나눠서, 세금 화면을 보는 동안 봇들이 이미 카드를 다 내버렸다 */
+  if (engine.paused && ctx.phase !== "tax") return;
 
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;

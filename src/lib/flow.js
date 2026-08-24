@@ -157,7 +157,8 @@ let roomCountId = null;
 function stopRoomCount(){
   if (roomCountId){ clearInterval(roomCountId); roomCountId = null; }
   const b = D().querySelector("#room #action button");
-  if (b) b.textContent = (b.textContent || "").replace(/\s*\(\d+\)$/, "");
+  W().__roomLeft = null;
+  if (b) b.textContent = (b.textContent || "").replace(/\s+\d+$/, "");
 }
 function startRoomCount(sec){
   if (roomCountId) return;
@@ -173,9 +174,13 @@ function startRoomCount(sec){
       return;                                  /* 화면을 잠깐 벗어난 것뿐이면 계속 센다 */
     }
     if (!b || b.disabled) return;
-    const base = (b.textContent || "").replace(/\s*\(\d+\)$/, "");
     if (left <= 0){ stopRoomCount(); b.click(); return; }
-    b.textContent = base + " (" + left + ")";
+    /* 남은 초를 여기에 적어 두면 방 화면이 다시 그릴 때도 그대로 붙는다.
+       예전에는 단추 글자를 직접 고쳤는데, 1.5초마다 새로 그려지면서
+       숫자가 사라졌다 붙었다 해서 **깜빡였다** */
+    W().__roomLeft = left;
+    const base = (b.textContent || "").replace(/\s+\d+$/, "");
+    b.textContent = base + " " + left;
     left--;
   };
   tick();
@@ -478,6 +483,8 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (seatCount(myRoom) < myRoom.cap){ stopRoomCount(); botFillStart(); }
     else startRoomCount(15);
   };
+  /* 카드 내는 단계를 멈춰 둔다 (세금 단계는 그대로 돈다) */
+  W().__holdPlay = on => eng.setPaused(Boolean(on));
   W().__botFill = on => (on ? botFillStart() : botFillStop());
   W().__addBot = addOneBot;
   W().__startRound = async () => startGame();

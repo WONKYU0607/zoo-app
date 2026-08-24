@@ -438,6 +438,46 @@ export function mount(root){
     draw();
   }
   window.__bootTax = () => { boot(); autoNext(); };
+
+  /* ---------- 검사용 손잡이 ----------
+
+     세금 화면은 밖에서 상태를 밀어 넣을 길이 없어서 확인이 어려웠다.
+     내가 몇 등인지·몇 장 주는지 읽고, 원하는 단계로 바로 세울 수 있게 열어 둔다.
+     게임 동작에는 아무 영향이 없다 */
+  window.__taxProbe = {
+    step: () => step,
+    rank: () => rankOf(0),
+    giveCount: () => giveCount(),
+    hand: () => myHand().slice(),
+    sel: () => sel.slice(),
+    selVal: () => selVal.slice(),
+    /* 고르는 단계(3)로 바로 세운다. ranks 를 주면 등수도 바꾼다 */
+    toGive: (order) => {
+      if (Array.isArray(order) && order.length === N) ranks = order.slice();
+      declared = true; reversed = false; revSeat = null;
+      hideHand = false;
+      step = 3; sel = []; selVal = [];
+      clearFx(); draw();
+      return { step, rank: rankOf(0), give: giveCount() };
+    },
+    /* 카드 값으로 고른다 */
+    pick: (vals) => {
+      const hand = myHand();
+      const out = [];
+      (vals || []).forEach(v => {
+        const i = hand.indexOf(v);
+        if (i < 0 || sel.includes(i) || sel.length >= giveCount()) return;
+        sel.push(i); selVal.push(hand[i]); out.push(hand[i]);
+      });
+      draw();
+      return out;
+    },
+    /* 고른 것을 실제로 넘긴다 */
+    submit: () => {
+      window.__myGive = selVal.slice(0, giveCount());
+      return window.__myGive.slice();
+    },
+  };
   boot();
   autoNext();
   
