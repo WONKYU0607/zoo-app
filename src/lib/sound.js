@@ -90,6 +90,13 @@ export function warm(){
   Object.keys(SFX).forEach(k => { try { voices(SFX[k]); } catch(e){} });
 }
 
+/* 울리고 있는 소리를 멈춘다 (째깍 소리처럼 긴 것) */
+export function stop(name){
+  const src = SFX[name];
+  if (!src || !pool[src]) return;
+  pool[src].list.forEach(a => { try { a.pause(); a.currentTime = 0; } catch(e){} });
+}
+
 /* 효과음 한 번 */
 export function play(name){
   const src = SFX[name];
