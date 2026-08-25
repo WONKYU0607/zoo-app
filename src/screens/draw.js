@@ -161,7 +161,8 @@ export function mount(root){
     const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
     const byW = Math.floor((avail - (cols - 1) * 9) / cols);
     const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
-    const pw = Math.max(26, Math.min(46, byW, byH));
+    /* 20% 줄인다 — 자리와 이름표에 견줘 카드가 컸다 */
+    const pw = Math.round(Math.max(26, Math.min(46, byW, byH)) * 0.8);
     deck.style.setProperty("--cols", cols);
     deck.style.setProperty("--pw", pw + "px");
     pool.forEach((c, k) => {

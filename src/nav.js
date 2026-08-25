@@ -275,7 +275,8 @@ export function initNav(){
     const t = frT();
     const box = document.getElementById("frBody");
     if (!box) return;
-    document.getElementById("frT").textContent = t.title;
+    document.getElementById("frT").textContent = frInviteMode
+      ? ((window.__lang || "ko") === "ko" ? "친구 부르기" : "Invite a friend") : t.title;
     document.querySelector('[data-frtab="list"]').textContent = t.list;
     document.querySelector('[data-frtab="add"]').textContent = t.add;
     document.querySelector('[data-frtab="rank"]').textContent = t.rank;
@@ -305,22 +306,31 @@ export function initNav(){
         '<span class="fr__s">' + (r.score || 0).toLocaleString() + t.pts + "</span></div>").join("");
       return;
     }
-    const inRoom = Boolean((window.__room || {}).code);   /* 방에 있을 때만 부를 수 있다 */
     const rows = await FR().listFriends();
     if (!rows.length){ box.innerHTML = '<p class="cfg__n">' + t.none + "</p>"; return; }
     box.innerHTML = rows.map(r => {
       const where = !r.online ? t.off : (r.state === "game" ? t.inGame : t.online);
       const dot = !r.online ? "off" : (r.state === "game" ? "game" : "on");
+      /* 빈자리에서 연 창이면 줄을 누르는 것이 곧 부르기다 */
+      if (frInviteMode){
+        const busy = r.online && r.state === "game";
+        return '<div class="fr__row' + (busy || !r.online ? " fr__row--off" : "") + '"' +
+          (busy || !r.online ? "" : ' data-frinv="' + r.uid + '"') + ">" +
+          '<i class="fr__dot fr__dot--' + dot + '"></i>' +
+          '<span class="fr__n">' + esc(r.name || "") + "</span>" +
+          '<span class="fr__w">' + (busy ? t.busy : where) + "</span></div>";
+      }
       return '<div class="fr__row">' +
         '<i class="fr__dot fr__dot--' + dot + '"></i>' +
         '<span class="fr__n">' + esc(r.name || "") + "</span>" +
         '<span class="fr__w">' + where + "</span>" +
-        (inRoom ? '<button class="fr__b" data-frinv="' + r.uid + '">' + t.invite + "</button>" : "") +
         '<button class="fr__b fr__b--off" data-frdel="' + r.uid + '">' + t.del + "</button></div>";
     }).join("");
   }
 
-  window.__openFriends = () => {
+  let frInviteMode = false;
+  window.__openFriends = (mode) => {
+    frInviteMode = mode === "invite";
     frTab = "list"; frNote("");
     document.getElementById("frBox").classList.add("on");
     frPaint();
@@ -353,6 +363,7 @@ export function initNav(){
       const code = (window.__room || {}).code;
       if (!code){ frNote(t.needRoom); return; }
       await FR().invite(inv.dataset.frinv, code);
+      if (frInviteMode){ document.getElementById("frBox").classList.remove("on"); return; }
       frNote(t.invited);
       return;
     }

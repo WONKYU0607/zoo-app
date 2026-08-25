@@ -21,14 +21,17 @@ await page.evaluate(() => {
   b.style.cssText = "position:fixed;left:30px;top:280px;width:220px;height:90px;z-index:99999";
   document.body.appendChild(b);
   window.__n = 0;
-  let tapAt = 0;
+  let at = 0, sawPointer = false;
+  b.onpointerdown = e => { sawPointer = true;
+    if (e.pointerType !== "mouse" && e.preventDefault) e.preventDefault(); };
   const once = e => {
     if (e && e.button != null && e.button !== 0) return;
     const now = Date.now();
-    if (now - tapAt < 400) return;
-    tapAt = now; window.__n++;
+    if (now - at < 250) return;
+    at = now; window.__n++;
   };
-  b.onpointerup = once; b.onclick = once;
+  b.onpointerup = once;
+  b.onclick = e => { if (sawPointer) return; once(e); };
 });
 const P = await page.evaluate(() => {
   const r = document.getElementById("probe").getBoundingClientRect();

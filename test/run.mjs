@@ -29,7 +29,8 @@ const FAST = [
   ["뒤로가기",   ["test/back.test.mjs"]],
   ["얼굴",      ["test/avatar.test.mjs"]],
   ["소리",      ["test/sound.test.mjs", "test/touch.test.mjs"]],
-  ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs"]],
+  ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs", "test/tap.test.mjs"]],
+
   ["자동",     ["test/auto.test.mjs"]],
   ["카드얼굴", ["test/face.test.mjs"]],
   ["로그인",   ["test/login.test.mjs"]],

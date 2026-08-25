@@ -200,7 +200,7 @@ export function mount(root){
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
         : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
           '<span class="seat__n seat__inv">' + L[lang].inviteHere + '</span>';
-      if (!filled) el.onclick = () => { if (window.__openFriends) window.__openFriends(); };
+      if (!filled) el.onclick = () => { if (window.__openFriends) window.__openFriends("invite"); };
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");

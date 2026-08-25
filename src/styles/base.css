@@ -292,3 +292,7 @@ button:disabled{opacity:.42}
   border:1px solid rgba(198,154,60,.5) !important;border-radius:3px;box-shadow:none !important}
 .fr__b--off{color:#A79E8C;background:rgba(90,86,78,.28) !important;
   border-color:rgba(160,150,130,.32) !important}
+
+/* 부르기 모드 — 줄 전체가 단추다 */
+#frBox .fr__row[data-frinv]{cursor:pointer}
+#frBox .fr__row--off{opacity:.45}

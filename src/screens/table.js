@@ -623,19 +623,40 @@ const TURN_SEC = 15;
 
      그래서 신호 종류로 거르지 않고, **한 번 누른 뒤 잠깐은 무조건 막는다**.
      사람이 0.4초 안에 일부러 두 번 누를 일은 없다 */
+  let sawPointerUp = false;     /* 이 기기가 pointerup 을 주는가 (화면 전체에서 하나) */
+  let lastTouchAt = 0;          /* 마지막으로 손가락을 쓴 시각 */
   function onTap(node, fn){
     if (!node) return;
-    let at = 0;                           /* **단추마다 따로** 센다.
-                                             한 군데서 세면 카드를 연달아 못 고른다 */
-    const once = e => {
+    /* **손가락을 대는 순간 뒤따르는 마우스 신호를 막는다.**
+       폰은 터치 뒤에 mousedown·mouseup·click 을 한 벌 더 보내고,
+       그것이 다시 pointer 신호로 바뀌어 같은 누름이 두 번 처리됐다.
+       pointerdown 에서 막아 두면 그 벌이 아예 안 온다.
+       시간으로만 거르던 방식은 신호가 늦게 오는 폰에서 뚫렸다 */
+    node.onpointerdown = e => {
+      if (e.pointerType !== "mouse" && e.preventDefault) e.preventDefault();
+    };
+    /* 한 번 누르면 pointerup 과 click 이 **둘 다** 온다(click 도 pointer 신호다).
+       그래서 pointerup 을 한 번이라도 받은 기기에서는 click 을 아예 안 쓴다.
+       칸마다 기억하면 소용없다 — 카드를 고르면 화면을 다시 그려
+       칸이 새로 만들어지고 기억이 지워지기 때문이다. 그래서 화면 전체에서 하나로 둔다 */
+    node.onpointerup = e => {
       if (e && e.button != null && e.button !== 0) return;
+      const kind = (e && e.pointerType) || "mouse";
       const now = Date.now();
-      if (now - at < 250) return;         /* 방금 받은 것의 메아리다 (0.1초 안에 온다) */
-      at = now;
+      /* 손가락으로 한 번 눌러도 pointerup 이 **두 번** 온다 —
+         하나는 손가락 것, 하나는 폰이 뒤따라 보내는 마우스 것.
+         손가락을 쓴 직후의 마우스 신호는 그 메아리이므로 버린다.
+         (진짜 마우스 사용자는 앞선 손가락 기록이 없어 그대로 동작한다) */
+      if (kind === "mouse" && now - lastTouchAt < 900) return;
+      if (kind !== "mouse") lastTouchAt = now;
+      sawPointerUp = true;
       fn(e);
     };
-    node.onpointerup = once;
-    node.onclick = once;
+    node.onclick = e => {
+      if (sawPointerUp) return;
+      if (e && e.button != null && e.button !== 0) return;
+      fn(e);
+    };
   }
 
   onTap(el("play"), () => {
