@@ -433,8 +433,11 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     net = Object.assign({ started: false, inGame: false }, r,
       { players: [{ id: Number(r.playerID), name: opt.myName(), avatar: myAvatar() }] });
     W().__opts = Object.assign(W().__opts || {},
-      { cap: r.numPlayers, seated: 1, rounds: (r.opts && r.opts.rounds) || o.rounds || 3 });
-    emitRoom();
+      { cap: r.numPlayers, rounds: (r.opts && r.opts.rounds) || o.rounds || 3 });
+    /* 화면을 열기 **전에** 먼저 방 상태를 받아 온다.
+       안 그러면 나 혼자 앉아 있다가 1.5초 뒤에 나머지가 한꺼번에 나타난다 —
+       들어가는 사람 입장에서는 이미 앉아 있는 사람들이 보여야 맞다 */
+    try { await refreshNet(); } catch(e){ emitRoom(); }
     pollStart();
     return r.code;
   };
@@ -452,7 +455,8 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       cap: r.numPlayers, rounds: (r.opts && r.opts.rounds) || 3,
       tax: !(r.opts && r.opts.tax === false), clear2: Boolean(r.opts && r.opts.clear2),
     });
-    emitRoom();
+    /* 화면을 열기 전에 방 상태를 먼저 받아 온다 — 앉아 있는 사람들이 바로 보이게 */
+    try { await refreshNet(); } catch(e){ emitRoom(); }
     pollStart();
     return r.code;
   };
