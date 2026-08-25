@@ -207,8 +207,7 @@ export function mount(root){
     document.getElementById("bt").textContent = t.title;
     document.getElementById("rl").textContent = t.roomL;
     document.getElementById("rc").textContent = t.copy;
-    document.querySelector('#view [data-v="host"]').textContent = t.host;
-    document.querySelector('#view [data-v="guest"]').textContent = t.guest;
+    /* 방장·참가자 팻말은 개발용 미리보기였다. 실제 방에서는 아무 일도 안 해서 뺐다 */
     const fc = document.querySelector(".felt__c");
     if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
     const R2 = window.__room;
@@ -241,8 +240,12 @@ export function mount(root){
     sm.disabled = !iamHost;
     const a = document.getElementById("action");
     if (iamHost){
+      /* 남은 초가 있으면 같이 적는다. 다시 그려도 숫자가 안 사라진다 */
+      const lf = window.__roomLeft;
+      const lbl = now < 4 ? t.needFour
+                : t.start + (lf != null && lf > 0 ? " " + lf : "");
       a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + '>' +
-        (now < 4 ? t.needFour : t.start) + '</button>';
+        lbl + '</button>';
     } else {
       a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
     }
@@ -318,13 +321,7 @@ export function mount(root){
     });
   });
   
-  document.querySelectorAll("#view button").forEach(b => {
-    b.addEventListener("click", () => {
-      role = b.dataset.v;
-      document.querySelectorAll("#view button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-      draw();
-    });
-  });
+
   
   /* 사람이 한 명씩 들어오는 모습 */
   setInterval(() => {

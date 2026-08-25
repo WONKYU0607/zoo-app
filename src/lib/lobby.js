@@ -24,8 +24,8 @@ async function api(path, body){
 }
 
 /* 방 만들기 — 만든 사람이 0번 자리 */
-export const createRoom = ({ numPlayers, name, rounds, tax, clear2, avatar }) =>
-  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar });
+export const createRoom = ({ numPlayers, name, rounds, tax, clear2, avatar, friends }) =>
+  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar, friends });
 
 /* 번호로 참가 — 빈자리 중 앞쪽에 앉는다 */
 export const joinRoom = (code, name, avatar) =>
@@ -36,6 +36,11 @@ export const joinRoom = (code, name, avatar) =>
    방장이 인원을 바꾸면 서버가 판을 새로 만들기 때문에 그때 필요하다 */
 export const peekRoom = (code, seat) =>
   api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}`));
+
+/* 방에서 나가기 — 자리를 비운다.
+   안 부르면 서버는 아직 앉아 있는 줄 알고, 다시 들어올 때 자리를 하나 더 준다 */
+export const leaveRoom = (code, playerID) =>
+  api(`/zoo/rooms/${code}/leave`, { playerID: String(playerID) }).catch(() => null);
 
 /* 빠른 참가 — 자리가 남은 방에 넣어 주고, 없으면 새로 만든다 */
 export const quickJoin = ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>

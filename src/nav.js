@@ -55,6 +55,25 @@ export const ASK_HTML = "<div class=\"cfg\" id=\"ask\" role=\"dialog\" aria-moda
   "<div class=\"cfg__row\"><button id=\"askNo\" data-askno></button>" +
   "<button id=\"askYes\"></button></div></div></div></div>";
 
+/* 친구 창 */
+export const FRIEND_HTML =
+  '<div class="cfg" id="frBox" role="dialog" aria-modal="true">' +
+  '<div class="cfg__v" data-frclose></div><div class="cfg__p">' +
+  '<div class="cfg__h"><span id="frT"></span>' +
+  '<button class="cfg__x" data-frclose aria-label="close">\u00D7</button></div>' +
+  '<div class="cfg__b">' +
+  '<div class="fr__tabs" id="frTabs">' +
+  '<button data-frtab="list" aria-pressed="true"></button>' +
+  '<button data-frtab="add"></button>' +
+  '<button data-frtab="rank"></button>' +
+  '</div>' +
+  '<div class="fr__find" id="frFind" hidden>' +
+  '<input id="frName" maxlength="12" autocomplete="off">' +
+  '<button id="frSearch"></button></div>' +
+  '<p class="cfg__n" id="frNote"></p>' +
+  '<div class="fr__body" id="frBody"></div>' +
+  '</div></div></div>';
+
 export function initNav(){
   
   /* 언어는 앱 전체가 하나로 움직인다 */
@@ -88,12 +107,14 @@ export function initNav(){
          cap:["방 인원","4명 \u2013 8명"],
          rnd:["플레이 판 수 설정","최소 3판부터 시작"],
          tax:["세금과 혁명","등수에 따라 카드를 교환하고, 조커 두 장으로 순위를 뒤집는 규칙입니다."],
-         cut:["2번 컷","2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다."], unit:"판" },
+         cut:["2번 컷","2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다."],
+         friends:["친구들끼리 하기",""], unit:"판" },
     en:{ create:"Create a room", edit:"Room settings", goCreate:"Create room", goEdit:"Done",
          cap:["Table size","4 \u2013 8 players"],
          rnd:["Number of rounds","Three at least"],
          tax:["Tax and revolution","Cards change hands by standing, and two jokers overturn it."],
-         cut:["Two-cut","Playing a 2 clears the pile and you lead again."], unit:"" }
+         cut:["Two-cut","Playing a 2 clears the pile and you lead again."],
+         friends:["Friends only",""], unit:"" }
   };
   function optRow(pair, right){
     return '<div class="mk__row"><div><div class="mk__t">' + pair[0] + '</div>' +
@@ -117,7 +138,8 @@ export function initNav(){
       optRow(t.cap, optStep("cap", o.cap, 4, 8)) +
       optRow(t.rnd, optStep("rnd", o.rounds, 3, 99, t.unit)) +
       optRow(t.tax, optSw("tax", o.tax)) +
-      optRow(t.cut, optSw("cut", o.clear2));
+      optRow(t.cut, optSw("cut", o.clear2)) +
+      optRow(t.friends, optSw("friends", o.friends));
   }
   function openOpts(mode){
     optMode = mode; optRender();
@@ -133,6 +155,7 @@ export function initNav(){
       if (v === "rnd+") o.rounds = o.rounds + 1;
       if (v === "tax") o.tax = !o.tax;
       if (v === "cut") o.clear2 = !o.clear2;
+      if (v === "friends") o.friends = !o.friends;
       optRender();
     }
     if (e.target.closest("[data-optclose]")) document.getElementById("opts").classList.remove("on");
@@ -216,6 +239,165 @@ export function initNav(){
      시작하기를 누른 뒤라 그 조건도 같이 풀린다 */
   let touched = false;
   onSound(() => { paintMute(); });
+
+  /* 이름에 꺾쇠 같은 것이 들어와도 화면이 안 깨지게 */
+  const esc = t => String(t == null ? "" : t)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  /* ---------- 친구 ---------- */
+  const FR_T = {
+    ko: { title:"친구", list:"목록", add:"추가", rank:"순위",
+          find:"별명으로 찾기", search:"찾기",
+          none:"아직 친구가 없습니다", noReq:"", online:"접속 중", inGame:"게임 중", off:"오프라인",
+          invite:"초대", del:"삭제", accept:"수락", no:"거절",
+          req:"받은 신청", sent:"신청했습니다", already:"이미 친구입니다",
+          notFound:"그런 별명이 없습니다", self:"자기 자신은 안 됩니다",
+          needRoom:"방에 있을 때만 부를 수 있습니다", invited:"불렀습니다",
+          busy:"게임 중이라 못 부릅니다", pts:"점" },
+    en: { title:"Friends", list:"List", add:"Add", rank:"Rank",
+          find:"Find by name", search:"Find",
+          none:"No friends yet", noReq:"", online:"Online", inGame:"In game", off:"Offline",
+          invite:"Invite", del:"Remove", accept:"Accept", no:"Decline",
+          req:"Requests", sent:"Request sent", already:"Already friends",
+          notFound:"No such name", self:"That's you", needRoom:"Open a room first",
+          invited:"Invited", busy:"They're in a game", pts:"pts" },
+  };
+  let frTab = "list";
+  const FR = () => window.__friends || {};
+  const frT = () => FR_T[window.__lang] || FR_T.ko;
+
+  function frNote(msg){
+    const e = document.getElementById("frNote");
+    if (e) e.textContent = msg || "";
+  }
+
+  async function frPaint(){
+    const t = frT();
+    const box = document.getElementById("frBody");
+    if (!box) return;
+    document.getElementById("frT").textContent = t.title;
+    document.querySelector('[data-frtab="list"]').textContent = t.list;
+    document.querySelector('[data-frtab="add"]').textContent = t.add;
+    document.querySelector('[data-frtab="rank"]').textContent = t.rank;
+    document.querySelectorAll("[data-frtab]").forEach(b =>
+      b.setAttribute("aria-pressed", String(b.dataset.frtab === frTab)));
+    document.getElementById("frFind").hidden = frTab !== "add";
+    document.getElementById("frSearch").textContent = t.search;
+    document.getElementById("frName").placeholder = t.find;
+
+    box.innerHTML = "";
+    if (frTab === "add"){
+      const reqs = await FR().incoming();
+      if (!reqs.length) return;
+      box.innerHTML = '<div class="fr__h">' + t.req + "</div>" +
+        reqs.map(r => '<div class="fr__row"><span class="fr__n">' + esc(r.name || "") + "</span>" +
+          '<button class="fr__b" data-fraccept="' + r.uid + '" data-frname="' + esc(r.name || "") + '">' +
+          t.accept + "</button>" +
+          '<button class="fr__b fr__b--off" data-frno="' + r.uid + '">' + t.no + "</button></div>").join("");
+      return;
+    }
+    if (frTab === "rank"){
+      const rows = await FR().friendRank();
+      box.innerHTML = rows.map((r, i) =>
+        '<div class="fr__row' + (r.mine ? " fr__row--me" : "") + '">' +
+        '<span class="fr__k">' + (i + 1) + "</span>" +
+        '<span class="fr__n">' + esc(r.name || "") + "</span>" +
+        '<span class="fr__s">' + (r.score || 0).toLocaleString() + t.pts + "</span></div>").join("");
+      return;
+    }
+    const rows = await FR().listFriends();
+    if (!rows.length){ box.innerHTML = '<p class="cfg__n">' + t.none + "</p>"; return; }
+    box.innerHTML = rows.map(r => {
+      const where = !r.online ? t.off : (r.state === "game" ? t.inGame : t.online);
+      const dot = !r.online ? "off" : (r.state === "game" ? "game" : "on");
+      return '<div class="fr__row">' +
+        '<i class="fr__dot fr__dot--' + dot + '"></i>' +
+        '<span class="fr__n">' + esc(r.name || "") + "</span>" +
+        '<span class="fr__w">' + where + "</span>" +
+        '<button class="fr__b" data-frinv="' + r.uid + '">' + t.invite + "</button>" +
+        '<button class="fr__b fr__b--off" data-frdel="' + r.uid + '">' + t.del + "</button></div>";
+    }).join("");
+  }
+
+  window.__openFriends = () => {
+    frTab = "list"; frNote("");
+    document.getElementById("frBox").classList.add("on");
+    frPaint();
+  };
+  document.addEventListener("click", async e => {
+    if (e.target.closest("[data-friendopen]")){ window.__openFriends(); return; }
+    if (e.target.closest("[data-frclose]")){
+      document.getElementById("frBox").classList.remove("on"); return; }
+    const tb = e.target.closest("[data-frtab]");
+    if (tb){ frTab = tb.dataset.frtab; frNote(""); frPaint(); return; }
+    if (e.target.closest("#frSearch")){
+      const t = frT();
+      const v = (document.getElementById("frName").value || "").trim();
+      const f = await FR().findByName(v);
+      if (!f){ frNote(t.notFound); return; }
+      if (f.self){ frNote(t.self); return; }
+      const r = await FR().sendRequest(f.uid, f.name);
+      frNote(r.ok ? t.sent : (r.why === "already" ? t.already : t.notFound));
+      return;
+    }
+    const ac = e.target.closest("[data-fraccept]");
+    if (ac){ await FR().accept(ac.dataset.fraccept, ac.dataset.frname); frPaint(); return; }
+    const no = e.target.closest("[data-frno]");
+    if (no){ await FR().reject(no.dataset.frno); frPaint(); return; }
+    const del = e.target.closest("[data-frdel]");
+    if (del){ await FR().removeFriend(del.dataset.frdel); frPaint(); return; }
+    const inv = e.target.closest("[data-frinv]");
+    if (inv){
+      const t = frT();
+      const code = (window.__room || {}).code;
+      if (!code){ frNote(t.needRoom); return; }
+      await FR().invite(inv.dataset.frinv, code);
+      frNote(t.invited);
+      return;
+    }
+  });
+
+  /* ---------- 접속 상태와 초대 알림 ----------
+
+     로비·대기실에 있으면 부를 수 있고, 판에 들어가면 못 부른다.
+     초대는 10초마다 확인해 로비·대기실에서만 띄운다 */
+  const PLAY = ["table", "draw", "tax", "result"];
+  let lastState = "";
+  function pushPresence(){
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (now === "entry") return;
+    const st = PLAY.includes(now) ? "game" : "lobby";
+    if (st === lastState) return;
+    lastState = st;
+    if (FR().setPresence) FR().setPresence(st);
+  }
+  setInterval(() => { lastState = ""; pushPresence(); }, 60000);   /* 살아 있다고 알린다 */
+
+  let invSeen = {};
+  async function checkInvites(){
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (now === "entry" || PLAY.includes(now)) return;   /* 판에서는 안 띄운다 */
+    if (!FR().invites) return;
+    const rows = await FR().invites();
+    const t = frT();
+    for (const r of rows){
+      if (invSeen[r.uid] === r.code) continue;
+      invSeen[r.uid] = r.code;
+      const ko = (window.__lang || "ko") === "ko";
+      ask(ko ? "초대" : "Invite",
+          (r.name || "") + (ko ? " 님이 불렀습니다" : " invited you"),
+          ko ? "들어가기" : "Join",
+          async () => {
+            await FR().dropInvite(r.uid);
+            if (window.__joinRoom){
+              const seat = await window.__joinRoom(r.code);
+              if (seat != null) go("room");
+            }
+          });
+      break;                                             /* 한 번에 하나만 */
+    }
+  }
+  setInterval(checkInvites, 10000);
 
   function paintAvatars(){
     const wrap = document.getElementById("acAvt");
@@ -459,6 +641,7 @@ export function initNav(){
     /* 로비에 들어오는 순간 배경음악을 켠다.
        판에서는 끈다 — 효과음이 많아 겹치면 시끄럽다 */
     if (id === "lobby"){ touched = true; warm(); }   /* 소리를 미리 받아 둔다 */
+    setTimeout(pushPresence, 0);
     if (touched){
       /* 로비와 랭킹에서만 배경음악. 방 대기실부터는 끈다 */
       if (id === "lobby" || id === "rank") playBgm("lobby");

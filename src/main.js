@@ -1,6 +1,9 @@
 import "./state.js";
-import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, ASK_HTML, GEAR, CROWN } from "./nav.js";
+import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, ASK_HTML, FRIEND_HTML, GEAR, CROWN } from "./nav.js";
 import { MARKUP } from "./screens/_markup.js";
+import { db } from "./lib/firebase.js";
+import * as FR from "./lib/friends.js";
+import { initFriends } from "./lib/friends.js";
 import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft, setAvatar } from "./lib/account.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
@@ -45,11 +48,11 @@ function build(){
     /* 언어 토글 자리를 설정 버튼으로 */
     sec.querySelectorAll('.lang, .view#lang').forEach(el => {
       if (el.id !== "lang") return;
+      /* 설정 단추는 **로비 것으로 통일**한다. 화면마다 모양이 달랐다 */
       const b = document.createElement("button");
       b.className = "cfgbtn";
       b.setAttribute("data-cfgopen", "");
       b.setAttribute("aria-label", "settings");
-      b.innerHTML = GEAR;
       el.replaceWith(b);
     });
     /* 로비 상단바 바로 아래에 랭킹 단추. 글자를 같이 넣는다 */
@@ -58,17 +61,19 @@ function build(){
       if (bar && !sec.querySelector("[data-rankopen]")){
         const wrap = document.createElement("div");
         wrap.className = "rankbar";
-        /* 랭킹 옆에 소리 단추. 누르면 음소거 */
+        /* 왼쪽부터 랭킹 · 친구 · 소리 */
         wrap.innerHTML =
-          '<button class="bt-mute" id="btMute" aria-pressed="true" aria-label="소리 끄기">' +
-          '<i class="bt-mute__on"></i><i class="bt-mute__off"></i></button>' +
           '<button class="bt-rank" data-rankopen>' +
-          '<span id="rankLabel">랭킹</span></button>';
+          '<span id="rankLabel">랭킹</span></button>' +
+          '<button class="bt-rank bt-friend" data-friendopen>' +
+          '<span id="friendLabel">친구</span></button>' +
+          '<button class="bt-mute" id="btMute" aria-pressed="true" aria-label="소리 끄기">' +
+          '<i class="bt-mute__on"></i><i class="bt-mute__off"></i></button>';
         bar.parentNode.insertBefore(wrap, bar.nextSibling);
       }
     }
   });
-  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML + ASK_HTML);
+  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML + ASK_HTML + FRIEND_HTML);
 }
 
 build();
@@ -79,6 +84,9 @@ initNav();
 
 /* 로그인 벽 — 구글로 로그인해야 들어간다 */
 window.ACCOUNT = account;
+/* 친구 — 계정과 같은 데이터베이스를 쓴다 */
+initFriends(db, account);
+window.__friends = FR;
 /* 얼굴 고르기 — 화면(nav)이 부른다 */
 window.__setAvatar = i => setAvatar(i);
 window.signInGoogle = signInGoogle;

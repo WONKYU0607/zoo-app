@@ -1,5 +1,5 @@
 import { scoped } from "../lib/scoped.js";
-import { play as snd } from "../lib/sound.js";
+import { play as snd, stop as sndStop } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
@@ -71,7 +71,20 @@ export function mount(root){
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
   let sndTurn = false, sndCount = -1, sndFin = 0, sndRev = 0, sndPass = 0;
+  const onScreen = () => {
+    const sec = window.document.getElementById("table");
+    return Boolean(sec && sec.classList.contains("is-on"));
+  };
   function sounds(v){
+    /* 세금·혁명·결과 화면을 보는 동안에는 이 화면이 뒤에서 계속 살아 있다.
+       그때 소리를 내면 **화면보다 먼저** 벨이 울린다 */
+    if (!onScreen()){
+      sndCount = (v.table || []).length;
+      sndTurn = Boolean(v.myTurn);
+      sndFin = (v.finish || []).length;
+      sndPass = (v.seats || []).filter(x => x.s === "pass").length;
+      return;
+    }
     /* 누가 카드를 냈다 / 패스했다 — 바닥에 쌓인 수가 바뀌는 것으로 안다 */
     const n = (v.table || []).length;
     if (sndCount >= 0 && n > sndCount) snd("card_play");
@@ -486,11 +499,11 @@ export function mount(root){
       s.style.left = ((h.clientWidth - total) / 2 + i * step) + "px";
       s.style.zIndex = i;
       s.innerHTML = cardHTML(c, w);
-      s.onclick = () => { handTouched(); if (turn !== 0 || busy) return;
+      onTap(s, () => { handTouched(); if (turn !== 0 || busy) return;
         const k = sel.indexOf(i);
         if (k >= 0){ sel.splice(k, 1); draw(); return; }
         if (!canPick(i)) return;               /* 못 내는 카드는 아예 안 골린다 */
-        sel.push(i); draw(); };
+        sel.push(i); draw(); });
       h.appendChild(s);
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
@@ -550,12 +563,21 @@ const TURN_SEC = 15;
      내가 다음 차례면 바로, 아니면 순서만큼 늦게 나선다. 앞사람이 적으면 취소된다. */
   function watchDeadline(){ /* 엔진이 차례를 관리한다. 제한 시간은 뒤에 서버 쪽에 붙인다 */ }
   
+  let showId = null;
   function resetTimer(){
+    if (showId) clearTimeout(showId);
+    showId = null;
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
+    sndStop("tick");                   /* 내 차례가 끝나면 재촉 소리도 그친다 */
     tLeft = 0;
+    /* 화면을 세우는 것이 보이기보다 먼저다. 아직 안 보이면 잠깐 뒤에 다시 본다 */
+    if (turn === 0 && !busy && !onScreen()){
+      showId = setTimeout(resetTimer, 150);
+      return;
+    }
     if (turn === 0 && !busy){
       tLeft = turnSec();
       renderBottom();
@@ -587,15 +609,35 @@ const TURN_SEC = 15;
     if (numValue === 1) return true;
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
-  el("play").onclick = () => {
+  /* 누름은 **pointerup** 으로 받는다.
+
+     click 은 손을 떼고 조금 뒤에 오는데, 그 사이에 화면을 다시 그리면
+     눌린 것이 사라져 **한 번 눌러서는 안 먹는 일**이 생긴다.
+     그래서 손을 떼는 순간 바로 받고, 뒤따라오는 click 은 무시한다 */
+  /* 이 기기가 포인터 신호를 주는가. 한 번이라도 봤으면 click 은 **아예 안 쓴다**.
+     예전에는 "0.7초 안에 온 click 은 무시" 로 막았는데, 느린 폰에서는 click 이
+     그보다 늦게 와서 뚫렸다 — 그게 **카드가 두 번 나가던 원인**이다 */
+  let sawPointer = false;
+  function onTap(node, fn){
+    if (!node) return;
+    node.onpointerup = e => {
+      if (e.button != null && e.button !== 0) return;
+      sawPointer = true;
+      fn(e);
+    };
+    node.onclick = e => { if (sawPointer) return; fn(e); };
+  }
+
+  onTap(el("play"), () => {
     const list = sel.map(i => hand[i]);
     if (!legal(list) || turn !== 0 || busy) return;
     const e = effective(list);
     sel = []; busy = true;
+    sndStop("tick");                   /* 다 냈으니 재촉하는 소리도 멈춘다 */
     eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
     iMoved();
     unlockLater();
-  };
+  });
 
   /* 수가 거부되면 새 상태가 안 온다. 그때 화면이 굳지 않게 잠금을 풀어 준다.
 
@@ -642,6 +684,7 @@ const TURN_SEC = 15;
       return;
     }
     sel = []; busy = true;
+    sndStop("tick");
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     eng.passTurn();
@@ -667,7 +710,7 @@ const TURN_SEC = 15;
     if (best !== null) return { num: best, count: 1 };
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
-  el("pass").onclick = () => doPass(false);
+  onTap(el("pass"), () => doPass(false));
 
   /* 자동치기 — 잠깐 자리를 비울 때 봇과 같은 판단으로 대신 둔다.
      카드를 직접 고르면 저절로 꺼진다 */

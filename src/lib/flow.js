@@ -132,6 +132,7 @@ function pollStop(){ if (pollId){ clearInterval(pollId); pollId = null; } }
 /* ---------- 방 ---------- */
 
 function botFillStart(){
+  if (myRoom && myRoom.friends) return;    /* 친구들끼리 하는 방은 봇 없음 */
   if (botTimer) return;
   /* 빈자리가 있으면 계속 채운다. 꽉 찼다고 꺼버리면
      나중에 인원을 늘려도 아무도 안 들어온다 */
@@ -193,7 +194,7 @@ function startGame(){
   if (net) return startOnlineGame();
   botFillStop();
   stopRoomCount();
-  while (seatCount(myRoom) < 4) if (!addOneBot()) break;
+  if (!(myRoom && myRoom.friends)) while (seatCount(myRoom) < 4) if (!addOneBot()) break;
   const n = seatCount(myRoom);
   if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
 
@@ -384,11 +385,13 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   });
 
   W().__createRoom = async () => {
+    leaveIfSeated();
     const o = W().__opts || {};
     if (lobby.online()){
       const r = await lobby.createRoom({
         numPlayers: o.cap || 4, name: opt.myName(), avatar: myAvatar(),
         rounds: o.rounds || 3, tax: o.tax !== false, clear2: Boolean(o.clear2),
+        friends: Boolean(o.friends),
       });
       /* 서버가 참가자 목록을 보내오기 전까지 내 자리만이라도 채워 둔다 */
       /* 얼굴을 안 실으면 서버가 알려 줄 때까지(1.5초) 생쥐로 보였다가 바뀐다 */
@@ -400,6 +403,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       return r.code;
     }
     myRoom = createRoom({ cap: o.cap || 4, name: opt.myName(), avatar: myAvatar() });
+    myRoom.friends = Boolean(o.friends);
     W().__opts = Object.assign(W().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
@@ -408,7 +412,17 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
 
   /* 빠른 참가 — 서버가 자리 남은 방을 찾아 준다.
      서버가 없으면(이 기기 방) 그냥 새 방을 만든다 */
+  /* 새로 들어가기 전에 앉아 있던 자리를 비운다 */
+  function leaveIfSeated(){
+    if (net && net.code != null && net.playerID != null){
+      lobby.leaveRoom(net.code, net.playerID);
+    }
+    botFillStop(); stopRoomCount(); pollStop();
+    net = null;
+  }
+
   W().__quickJoin = async () => {
+    leaveIfSeated();
     const o = W().__opts || {};
     if (!lobby.online()) return W().__createRoom();
     const r = await lobby.quickJoin({
@@ -426,6 +440,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   };
 
   W().__joinRoom = async code => {
+    leaveIfSeated();
     if (!lobby.online()){
       alert("서버 대전을 쓰려면 게임 서버 주소가 필요합니다.");
       return null;
@@ -448,6 +463,10 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   };
   W().__roomCode = () => (net ? net.code : (myRoom ? myRoom.code : null));
   W().__leaveRoom = () => {
+    /* 서버에도 알려 자리를 비운다. 안 그러면 다시 들어올 때 자리를 또 차지한다 */
+    if (net && net.code != null && net.playerID != null){
+      lobby.leaveRoom(net.code, net.playerID);
+    }
     botFillStop(); stopRoomCount(); pollStop(); eng.stop();
     myRoom = null; net = null; emitRoom();
   };

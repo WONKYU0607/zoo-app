@@ -122,9 +122,13 @@ button:disabled{opacity:.42}
 #lobby .lang,#room .lang,#draw .lang,#tax .lang,#table .lang{position:static;top:auto;right:auto}
 
 /* ---------- 설정 버튼 ---------- */
+/* 로비 상단바의 것과 같은 모양으로 통일한다 */
 .cfgbtn{display:inline-flex;align-items:center;justify-content:center;flex:none;
-  width:30px;height:30px;border:1px solid rgba(198,154,62,.6);border-radius:3px;
-  background:rgba(10,7,3,.45);color:#D9C08A;cursor:pointer;padding:0}
+  width:26px;height:26px;border:none;border-radius:0;padding:0;
+  /* 화면마다 `button{background:none}` 같은 규칙이 있어 덮인다. 못박아 둔다 */
+  background:url(/assets/ic_settings.webp) center/contain no-repeat !important;
+  color:transparent;cursor:pointer}
+.cfgbtn svg{display:none}
 .cfgbtn:active{transform:translateY(1px)}
 #entry .cfgbtn{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:16px;z-index:20;
   backdrop-filter:blur(4px)}
@@ -249,3 +253,37 @@ button:disabled{opacity:.42}
   background:#E3C67C;border:2px solid #2A2013;box-shadow:0 1px 4px rgba(0,0,0,.7);cursor:pointer}
 .vol__b::-moz-range-thumb{width:17px;height:17px;border-radius:50%;
   background:#E3C67C;border:2px solid #2A2013;box-shadow:0 1px 4px rgba(0,0,0,.7);cursor:pointer}
+
+/* ---------- 친구 창 ---------- */
+#frBox .cfg__p{max-height:76vh}
+#frBox .cfg__b{overflow:auto}
+.fr__tabs{display:flex;gap:7px;margin:2px 0 10px}
+.fr__tabs button{flex:1;min-height:0 !important;padding:5px 4px !important;
+  font-size:12.5px;font-weight:700;color:#8FA898;background:none !important;
+  border:1px solid rgba(198,154,60,.35) !important;border-radius:3px;box-shadow:none !important}
+.fr__tabs button[aria-pressed="true"]{color:#F4EEE0;border-color:#E3C67C !important;
+  background:rgba(227,198,124,.12) !important}
+.fr__find{display:flex;gap:7px;margin:0 0 8px}
+.fr__find input{flex:1;min-width:0;padding:7px 9px;font-size:13px;
+  font-family:"Gowun Batang",serif;color:#F4EEE0;background:rgba(6,10,7,.7);
+  border:1px solid rgba(198,154,60,.4);border-radius:3px;outline:none}
+.fr__find button{flex:none;min-height:0 !important;padding:6px 12px !important;
+  font-size:12.5px;color:#F4EEE0;background:rgba(227,198,124,.14) !important;
+  border:1px solid rgba(198,154,60,.5) !important;border-radius:3px;box-shadow:none !important}
+.fr__h{font-size:11.5px;color:#C69A3C;margin:4px 0 6px}
+.fr__row{display:flex;align-items:center;gap:7px;padding:7px 2px;
+  border-bottom:1px solid rgba(198,154,60,.14)}
+.fr__row--me{background:rgba(227,198,124,.09)}
+.fr__k{flex:none;width:20px;text-align:center;font-size:12px;color:#C69A3C}
+.fr__n{flex:1;min-width:0;font-size:13px;color:#F4EEE0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.fr__w{flex:none;font-size:11px;color:#8FA898}
+.fr__s{flex:none;font-size:12px;color:#E3C67C}
+.fr__dot{flex:none;width:8px;height:8px;border-radius:50%;background:#4A5A50}
+.fr__dot--on{background:#6FD08C;box-shadow:0 0 5px rgba(111,208,140,.7)}
+.fr__dot--game{background:#E0A33C;box-shadow:0 0 5px rgba(224,163,60,.6)}
+.fr__b{flex:none;min-height:0 !important;padding:4px 9px !important;font-size:11.5px;
+  color:#F4EEE0;background:rgba(227,198,124,.14) !important;
+  border:1px solid rgba(198,154,60,.45) !important;border-radius:3px;box-shadow:none !important}
+.fr__b--off{color:#A79E8C;background:rgba(60,60,55,.3) !important;
+  border-color:rgba(160,150,130,.3) !important}
