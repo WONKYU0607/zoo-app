@@ -1,3 +1,6 @@
+/* 사람이 누르는 것보다 훨씬 빠르게 돌린다.
+   실제 화면은 같은 단추를 0.25초 안에 두 번 누르면 메아리로 보고 무시하므로,
+   그 시간만큼은 띄워 준다 */
 /* 진짜 화면 코드(table.js)를 가짜 브라우저 안에서 끝까지 돌린다.
    지금까지의 검사는 규칙과 변환만 봤다. 이건 화면이 실제로 그려지고
    버튼이 실제로 동작하는지를 본다.
@@ -121,6 +124,7 @@ async function playOne(gi){
     /* 낼 수 있는 조합을 찾아 그 카드들을 실제로 눌러 고른다 */
     const wanted = choose(v);
     if (!wanted){
+      await wait(260);
       el("pass").dispatchEvent(new W.MouseEvent("click", { bubbles: true }));
       await wait(3);
       continue;
@@ -132,6 +136,7 @@ async function playOne(gi){
     const beforeRound = v.roundNo;
     const btn = el("play");
     quiet("고르면 내기 단추가 열림", !btn.disabled, "게임 " + gi + " " + wanted.num + "x" + wanted.count);
+    await wait(260);
     btn.dispatchEvent(new W.MouseEvent("click", { bubbles: true }));
     await wait(6);
 

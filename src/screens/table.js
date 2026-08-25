@@ -614,18 +614,28 @@ const TURN_SEC = 15;
      click 은 손을 떼고 조금 뒤에 오는데, 그 사이에 화면을 다시 그리면
      눌린 것이 사라져 **한 번 눌러서는 안 먹는 일**이 생긴다.
      그래서 손을 떼는 순간 바로 받고, 뒤따라오는 click 은 무시한다 */
-  /* 이 기기가 포인터 신호를 주는가. 한 번이라도 봤으면 click 은 **아예 안 쓴다**.
-     예전에는 "0.7초 안에 온 click 은 무시" 로 막았는데, 느린 폰에서는 click 이
-     그보다 늦게 와서 뚫렸다 — 그게 **카드가 두 번 나가던 원인**이다 */
-  let sawPointer = false;
+  /* 누름을 받는다.
+
+     폰에서는 손가락 하나를 눌러도 신호가 여러 번 온다.
+       터치 → pointerdown, pointerup, mousedown, mouseup, click
+     그리고 브라우저가 **뒤따라 마우스 신호를 한 벌 더** 보내는 일이 있어서,
+     pointerup 이 두 번 오기도 한다. 그게 카드가 두 번 나가던 원인이다.
+
+     그래서 신호 종류로 거르지 않고, **한 번 누른 뒤 잠깐은 무조건 막는다**.
+     사람이 0.4초 안에 일부러 두 번 누를 일은 없다 */
   function onTap(node, fn){
     if (!node) return;
-    node.onpointerup = e => {
-      if (e.button != null && e.button !== 0) return;
-      sawPointer = true;
+    let at = 0;                           /* **단추마다 따로** 센다.
+                                             한 군데서 세면 카드를 연달아 못 고른다 */
+    const once = e => {
+      if (e && e.button != null && e.button !== 0) return;
+      const now = Date.now();
+      if (now - at < 250) return;         /* 방금 받은 것의 메아리다 (0.1초 안에 온다) */
+      at = now;
       fn(e);
     };
-    node.onclick = e => { if (sawPointer) return; fn(e); };
+    node.onpointerup = once;
+    node.onclick = once;
   }
 
   onTap(el("play"), () => {

@@ -35,7 +35,7 @@ export function mount(root){
          count:(j,c)=>j+" / "+c+"명",
          needMore:"4명부터 시작할 수 있습니다",
          canStart:"지금 시작하거나 더 기다리셔도 됩니다",
-         full:"자리가 다 찼습니다", empty:"빈 자리", hostTag:"방장",
+         full:"자리가 다 찼습니다", empty:"빈 자리", hostTag:"방장", inviteHere:"초대하기",
          capT:"방 인원", capD:"4명 \u2013 8명", capDG:"방장이 정합니다.",
          rndT:"플레이 판 수 설정", rndD:"최소 3판부터 시작",
          rndDG:"방장이 정합니다.", rndU:n=>n+"판",
@@ -51,7 +51,7 @@ export function mount(root){
          count:(j,c)=>j+" of "+c,
          needMore:"Four players are needed to start",
          canStart:"Start now, or wait for more",
-         full:"The table is full", empty:"Open seat", hostTag:"HOST",
+         full:"The table is full", empty:"Open seat", hostTag:"HOST", inviteHere:"Invite",
          capT:"Table size", capD:"4 \u2013 8 players", capDG:"The host decides.",
          rndT:"Number of rounds", rndD:"Three at least",
          rndDG:"The host decides.", rndU:n=>n+"",
@@ -198,7 +198,9 @@ export function mount(root){
           (p.off || p.left ? '<span class="seat__off"></span>' : '') +
           '<span class="seat__n">' + p.name + '</span>' +
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
-        : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>';
+        : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
+          '<span class="seat__n seat__inv">' + L[lang].inviteHere + '</span>';
+      if (!filled) el.onclick = () => { if (window.__openFriends) window.__openFriends(); };
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");

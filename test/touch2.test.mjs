@@ -21,9 +21,14 @@ await page.evaluate(() => {
   b.style.cssText = "position:fixed;left:30px;top:280px;width:220px;height:90px;z-index:99999";
   document.body.appendChild(b);
   window.__n = 0;
-  let at = 0;
-  b.onpointerup = () => { at = Date.now(); window.__n++; };
-  b.onclick = () => { if (Date.now() - at < 700) return; window.__n++; };
+  let tapAt = 0;
+  const once = e => {
+    if (e && e.button != null && e.button !== 0) return;
+    const now = Date.now();
+    if (now - tapAt < 400) return;
+    tapAt = now; window.__n++;
+  };
+  b.onpointerup = once; b.onclick = once;
 });
 const P = await page.evaluate(() => {
   const r = document.getElementById("probe").getBoundingClientRect();
@@ -73,15 +78,24 @@ check("밖으로 끌고 나가 뗌 → 안 눌린다", await got() === 0, await 
 await reset();
 for (let i=0;i<2;i++){
   await touch("touchStart", P.x, P.y); await new Promise(r=>setTimeout(r,30));
-  await touch("touchEnd", P.x, P.y); await new Promise(r=>setTimeout(r,120));
+  await touch("touchEnd", P.x, P.y); await new Promise(r=>setTimeout(r,450));
 }
 await new Promise(r=>setTimeout(r,700));
-check("빠르게 두 번 톡 → 두 번", await got() === 2, await got() + "번");
+check("0.45초 띄워 두 번 톡 → 두 번", await got() === 2, await got() + "번");
 
 /* 7. 마우스 클릭도 여전히 한 번 */
 await reset();
 await page.mouse.click(P.x, P.y); await new Promise(r=>setTimeout(r,700));
 check("마우스 클릭 → 한 번", await got() === 1, await got() + "번");
+
+/* 폰이 터치 뒤에 마우스 신호를 한 벌 더 보내는 경우 — 한 번으로 봐야 한다 */
+await reset();
+await touch("touchStart", P.x, P.y); await new Promise(r=>setTimeout(r,60));
+await touch("touchEnd", P.x, P.y); await new Promise(r=>setTimeout(r,80));
+await cdp.send("Input.dispatchMouseEvent", { type:"mousePressed", x:P.x, y:P.y, button:"left", clickCount:1 });
+await cdp.send("Input.dispatchMouseEvent", { type:"mouseReleased", x:P.x, y:P.y, button:"left", clickCount:1 });
+await new Promise(r=>setTimeout(r,700));
+check("터치 뒤 마우스 신호가 또 와도 한 번", await got() === 1, await got() + "번");
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);

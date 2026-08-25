@@ -305,6 +305,7 @@ export function initNav(){
         '<span class="fr__s">' + (r.score || 0).toLocaleString() + t.pts + "</span></div>").join("");
       return;
     }
+    const inRoom = Boolean((window.__room || {}).code);   /* 방에 있을 때만 부를 수 있다 */
     const rows = await FR().listFriends();
     if (!rows.length){ box.innerHTML = '<p class="cfg__n">' + t.none + "</p>"; return; }
     box.innerHTML = rows.map(r => {
@@ -314,7 +315,7 @@ export function initNav(){
         '<i class="fr__dot fr__dot--' + dot + '"></i>' +
         '<span class="fr__n">' + esc(r.name || "") + "</span>" +
         '<span class="fr__w">' + where + "</span>" +
-        '<button class="fr__b" data-frinv="' + r.uid + '">' + t.invite + "</button>" +
+        (inRoom ? '<button class="fr__b" data-frinv="' + r.uid + '">' + t.invite + "</button>" : "") +
         '<button class="fr__b fr__b--off" data-frdel="' + r.uid + '">' + t.del + "</button></div>";
     }).join("");
   }
