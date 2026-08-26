@@ -100,7 +100,8 @@ async function run(gi){
   let sawRoomCount = false;
   for (let i = 0; i < 260; i++){
     const b = actBtn();
-    if (b && /\(\d+\)\s*$/.test(b.textContent)) sawRoomCount = true;
+    /* 괄호를 없애고 "시작하기 12" 처럼 적는다 */
+    if (b && /\s\d+\s*$/.test(b.textContent)) sawRoomCount = true;
     if (now() !== "room") break;
     await wait(100);
   }
@@ -210,9 +211,16 @@ async function run(gi){
 
   check("판 결과 화면을 판마다 지나갔다", sawResultMid >= 2, sawResultMid + "회");
   check("혁명·세금 화면을 거쳤다", visited.has("tax"), [...visited].join(" → "));
-  check("등수 발표·혁명·세금 단계를 모두 지나갔다",
-        ["등수 발표", "패 나누기", "혁명", "세금"].every(k => [...steps].some(x => x.includes(k))),
+  /* **혁명을 선언하면 세금이 취소된다** — 규칙상 한 판에서 둘 다 볼 수는 없다.
+     그래서 세금은 "혁명을 선언하지 않은 판에서만" 나와야 한다고 본다.
+     예전에는 둘 다 요구해서, 혁명이 난 판에서는 애먼 실패가 떴다 */
+  const sawRevDeclared = [...steps].some(x => x.includes("혁명")) && !([...steps].some(x => x.includes("세금")));
+  check("등수 발표와 패 나누기는 늘 지나간다",
+        ["등수 발표", "패 나누기"].every(k => [...steps].some(x => x.includes(k))),
         [...steps].join(" / "));
+  check("혁명 아니면 세금 단계를 지나간다",
+        [...steps].some(x => x.includes("혁명") || x.includes("세금")),
+        [...steps].join(" / ") + (sawRevDeclared ? "  (혁명 선언 → 세금 취소)" : ""));
   check("등수 발표에서는 버튼이 숨겨진다", hidBtnFail === 0, hidBtnFail + "번 보임");
   check("등수 발표에서 등수가 프로필에 붙는다", rankFail === 0, rankFail + "번 빠짐");
   check("혁명·세금 단추에 초읽기가 붙는다", sawStepCount > 0, sawStepCount + "번");

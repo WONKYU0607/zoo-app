@@ -168,6 +168,35 @@ export function mount(root){
     sndSeated = n;
   }
 
+  /* 누름을 받는다 — 판 화면과 같은 방식.
+     손가락은 touchend 로 받고 기본 동작을 막아, 폰이 뒤따라 보내는
+     마우스 신호가 아예 안 생기게 한다. 마우스는 click 으로 받는다 */
+  let touchAt = 0;
+  function onTap(node, fn){
+    if (!node) return;
+    let inside = false;
+    node.addEventListener("touchstart", () => { inside = true; }, { passive: true });
+    node.addEventListener("touchend", e => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t){
+        const r = node.getBoundingClientRect();
+        if (t.clientX < r.left - 8 || t.clientX > r.right + 8 ||
+            t.clientY < r.top - 8 || t.clientY > r.bottom + 8) return;
+      }
+      fn(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => { inside = false; }, { passive: true });
+    node.onclick = e => {
+      if (Date.now() - touchAt < 900) return;
+      if (e && e.button != null && e.button !== 0) return;
+      fn(e);
+    };
+  }
+
   function renderSeats(){
     RB = ringBox();
     const box = document.getElementById("seats");
@@ -200,7 +229,7 @@ export function mount(root){
           (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
         : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
           '<span class="seat__n seat__inv">' + L[lang].inviteHere + '</span>';
-      if (!filled) el.onclick = () => { if (window.__openFriends) window.__openFriends("invite"); };
+      if (!filled) onTap(el, () => { if (window.__openFriends) window.__openFriends("invite"); });
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");

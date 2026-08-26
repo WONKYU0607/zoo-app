@@ -222,6 +222,7 @@ export function initNav(){
     if (e.target.id === "volBgm"){ setBgm(e.target.value); paintVol(); }
     if (e.target.id === "volSfx"){ setSfx(e.target.value); paintVol(); }
   });
+  let lastBtnAt = 0;            /* 단추 소리가 겹치지 않게 */
   document.addEventListener("click", e => {
     if (e.target.closest("#btMute")){ toggleMute(); paintMute(); paintVol(); return; }
     /* 단추 소리 — 누를 수 있는 것에만.
@@ -231,7 +232,11 @@ export function initNav(){
     const now = (document.querySelector(".page.is-on") || {}).id || "entry";
     /* 이모티콘 고르는 판은 제 소리가 없으니 단추 소리도 안 낸다 */
     const quiet = e.target.closest(".emopick") || e.target.closest("#emo");
-    if (b && !b.disabled && now !== "entry" && !quiet) snd("button");
+    /* 폰은 한 번 눌러도 click 이 두 번 오는 일이 있어 소리가 겹친다.
+       바로 뒤이어 온 것은 메아리로 보고 버린다 */
+    const t = Date.now();
+    if (t - lastBtnAt < 350) return;
+    if (b && !b.disabled && now !== "entry" && !quiet){ lastBtnAt = t; snd("button"); }
   });
 
   /* 배경음악은 **진입창에서 로비로 들어오는 순간** 시작한다.

@@ -623,37 +623,38 @@ const TURN_SEC = 15;
 
      그래서 신호 종류로 거르지 않고, **한 번 누른 뒤 잠깐은 무조건 막는다**.
      사람이 0.4초 안에 일부러 두 번 누를 일은 없다 */
-  let sawPointerUp = false;     /* 이 기기가 pointerup 을 주는가 (화면 전체에서 하나) */
-  let lastTouchAt = 0;          /* 마지막으로 손가락을 쓴 시각 */
+  let touchAt = 0;              /* 마지막으로 손가락을 뗀 시각 (화면 전체에서 하나) */
   function onTap(node, fn){
     if (!node) return;
-    /* **손가락을 대는 순간 뒤따르는 마우스 신호를 막는다.**
-       폰은 터치 뒤에 mousedown·mouseup·click 을 한 벌 더 보내고,
-       그것이 다시 pointer 신호로 바뀌어 같은 누름이 두 번 처리됐다.
-       pointerdown 에서 막아 두면 그 벌이 아예 안 온다.
-       시간으로만 거르던 방식은 신호가 늦게 오는 폰에서 뚫렸다 */
-    node.onpointerdown = e => {
-      if (e.pointerType !== "mouse" && e.preventDefault) e.preventDefault();
-    };
-    /* 한 번 누르면 pointerup 과 click 이 **둘 다** 온다(click 도 pointer 신호다).
-       그래서 pointerup 을 한 번이라도 받은 기기에서는 click 을 아예 안 쓴다.
-       칸마다 기억하면 소용없다 — 카드를 고르면 화면을 다시 그려
-       칸이 새로 만들어지고 기억이 지워지기 때문이다. 그래서 화면 전체에서 하나로 둔다 */
-    node.onpointerup = e => {
-      if (e && e.button != null && e.button !== 0) return;
-      const kind = (e && e.pointerType) || "mouse";
-      const now = Date.now();
-      /* 손가락으로 한 번 눌러도 pointerup 이 **두 번** 온다 —
-         하나는 손가락 것, 하나는 폰이 뒤따라 보내는 마우스 것.
-         손가락을 쓴 직후의 마우스 신호는 그 메아리이므로 버린다.
-         (진짜 마우스 사용자는 앞선 손가락 기록이 없어 그대로 동작한다) */
-      if (kind === "mouse" && now - lastTouchAt < 900) return;
-      if (kind !== "mouse") lastTouchAt = now;
-      sawPointerUp = true;
+    /* 손가락은 **touchend** 로 받고 그 자리에서 기본 동작을 막는다.
+       그러면 폰이 뒤따라 보내는 mousedown·mouseup·click 이 아예 안 생긴다.
+       pointer 신호로 거르려 했더니, 손가락 것과 뒤따르는 마우스 것이
+       구분이 잘 안 돼 어떤 폰에서는 두 번 먹고 어떤 폰에서는 안 먹었다.
+       마우스로 쓸 때는 예전처럼 click 으로 받는다 */
+    let startX = 0, startY = 0, inside = false;
+    node.addEventListener("touchstart", e => {
+      const t = e.touches && e.touches[0];
+      startX = t ? t.clientX : 0; startY = t ? t.clientY : 0;
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", e => {
+      if (e.cancelable) e.preventDefault();   /* 뒤따르는 마우스 신호를 막는다 */
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      /* 손가락이 단추 밖으로 많이 나갔으면 누른 것으로 안 본다 */
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t){
+        const r = node.getBoundingClientRect();
+        const x = t.clientX, y = t.clientY;
+        if (x < r.left - 8 || x > r.right + 8 || y < r.top - 8 || y > r.bottom + 8) return;
+      }
       fn(e);
-    };
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => { inside = false; }, { passive: true });
     node.onclick = e => {
-      if (sawPointerUp) return;
+      /* 손가락을 쓴 **직후**의 click 만 버린다. 마우스로 쓸 때는 그대로 받는다 */
+      if (Date.now() - touchAt < 900) return;
       if (e && e.button != null && e.button !== 0) return;
       fn(e);
     };

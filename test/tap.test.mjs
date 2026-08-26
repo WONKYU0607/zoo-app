@@ -51,23 +51,24 @@ const phoneTap = async (x, y) => {
   await cdp.send("Input.dispatchMouseEvent", { type:"mousePressed", x, y, button:"left", clickCount:1 });
   await cdp.send("Input.dispatchMouseEvent", { type:"mouseReleased", x, y, button:"left", clickCount:1 });
 };
-const findCard = () => page.evaluate(() => {
+/* 고를 수 있는 카드를 찾는다. 손가락을 쓴 직후에는 click 이 막히므로 잠깐 띄운다 */
+const findCard = async () => { await new Promise(r=>setTimeout(r,950)); return page.evaluate(() => {
   const slots = [...document.querySelectorAll("#table #hand .slot")];
   for (let i = slots.length - 1; i >= 0; i--){
     const r = slots[i].getBoundingClientRect();
     const x = Math.round(r.left + r.width/2), y = Math.round(r.top + r.height*0.5);
     const top = document.elementFromPoint(x, y);
     if (!(top && slots[i].contains(top))) continue;
-    slots[i].dispatchEvent(new PointerEvent("pointerup", { bubbles:true, pointerType:"touch" }));
+    slots[i].dispatchEvent(new MouseEvent("click", { bubbles:true }));
     const on = document.querySelectorAll("#table #hand .slot--sel").length;
     if (on){
       [...document.querySelectorAll("#table #hand .slot")][i]
-        .dispatchEvent(new PointerEvent("pointerup", { bubbles:true, pointerType:"touch" }));
+        .dispatchEvent(new MouseEvent("click", { bubbles:true }));
       return { x, y };
     }
   }
   return null;
-});
+}); };
 
 let done = 0;
 for (let round = 1; round <= 20 && done < 3; round++){
@@ -114,6 +115,27 @@ for (let round = 1; round <= 20 && done < 3; round++){
     JSON.stringify(after.snd));
 }
 if (!done) console.log("  (낼 수 있는 상황이 안 나와 건너뜀)");
+/* 패스도 한 번 터치에 한 번, 소리도 한 번 */
+for (let i=0;i<300;i++){
+  if (await page.evaluate(() => Boolean(window.__eng?.view?.myTurn))) break;
+  await new Promise(r=>setTimeout(r,100));
+}
+const qb = await page.evaluate(() => {
+  const b = document.querySelector("#table #pass");
+  if (!b || b.disabled) return null;
+  const r = b.getBoundingClientRect();
+  return { x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2) };
+});
+if (qb){
+  await page.evaluate(() => { window.__snd.length = 0; });
+  const t0 = await page.evaluate(() => (window.__eng?.view?.seats||[]).filter(x=>x.s==="pass").length);
+  await phoneTap(qb.x, qb.y);
+  await new Promise(r=>setTimeout(r,1300));
+  const got = await page.evaluate(() => window.__snd.slice());
+  check("패스 소리가 한 번", got.filter(x => x === "pass").length <= 1, JSON.stringify(got));
+  check("단추 소리도 한 번", got.filter(x => x === "button").length <= 1, JSON.stringify(got));
+} else console.log("  (패스가 안 열려 건너뜀)");
+
 console.log("\n=== 통과 "+pass+" / 실패 "+fail+" ===\n");
 shut(srv, browser);
 process.exit(fail ? 1 : 0);

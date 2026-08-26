@@ -53,6 +53,7 @@
 #room .felt__n{font-family:"Gowun Batang",serif;font-weight:700;font-size:19px;color:#D9E6DC}
 #room .felt__s{font-size:11.5px;color:#8FA898;margin-top:6px;line-height:1.6}
 #room .seat{--av:46px;--fs:11px;pointer-events:none;z-index:3;
+  /* 빈자리만 누를 수 있게 아래에서 되살린다 */
   position:absolute;width:calc(var(--av,46px) + 30px);
   margin-top:0;
   display:flex;flex-direction:column;align-items:center;gap:5px;
@@ -134,7 +135,11 @@
   width:17px;height:17px;background:url(/assets/ic_offline.webp) center/contain no-repeat;
   filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 #room .seat{position:absolute}
-/* 빈자리 — 눌러서 친구를 부른다 */
+/* 빈자리 — 눌러서 친구를 부른다.
+   자리 상자 전체가 아니라 **동그라미와 글자만** 받는다.
+   상자는 그대로 두고 안쪽 두 개만 되살린다 */
 #room .seat--empty{cursor:pointer}
+#room .seat--empty .seat__av,
+#room .seat--empty .seat__inv{pointer-events:auto}
 #room .seat__inv{color:#C69A3C;opacity:.9}
 #room .seat--empty:active .seat__inv{opacity:1}
