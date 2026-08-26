@@ -268,6 +268,7 @@ export function initNav(){
           invited:"Invited", busy:"They're in a game", pts:"pts" },
   };
   let frTab = "list";
+  let frInviteMode = false;     /* 빈자리에서 연 창인가 (줄을 누르면 곧 부르기) */
   const FR = () => window.__friends || {};
   const frT = () => FR_T[window.__lang] || FR_T.ko;
 
@@ -291,49 +292,50 @@ export function initNav(){
     document.getElementById("frSearch").textContent = t.search;
     document.getElementById("frName").placeholder = t.find;
 
-    box.innerHTML = "";
+    /* **비우고 나서 자료를 받으면** 그 사이가 빈 화면이라 깜빡인다.
+       받아서 만들어 놓은 다음에 한 번에 갈아 끼운다 */
+    const want = frTab;
+    let html = "";
     if (frTab === "add"){
       const reqs = await FR().incoming();
-      if (!reqs.length) return;
-      box.innerHTML = '<div class="fr__h">' + t.req + "</div>" +
+      html = !reqs.length ? "" :
+        '<div class="fr__h">' + t.req + "</div>" +
         reqs.map(r => '<div class="fr__row"><span class="fr__n">' + esc(r.name || "") + "</span>" +
           '<button class="fr__b" data-fraccept="' + r.uid + '" data-frname="' + esc(r.name || "") + '">' +
           t.accept + "</button>" +
           '<button class="fr__b fr__b--off" data-frno="' + r.uid + '">' + t.no + "</button></div>").join("");
-      return;
-    }
-    if (frTab === "rank"){
+    } else if (frTab === "rank"){
       const rows = await FR().friendRank();
-      box.innerHTML = rows.map((r, i) =>
+      html = rows.map((r, i) =>
         '<div class="fr__row' + (r.mine ? " fr__row--me" : "") + '">' +
         '<span class="fr__k">' + (i + 1) + "</span>" +
         '<span class="fr__n">' + esc(r.name || "") + "</span>" +
         '<span class="fr__s">' + (r.score || 0).toLocaleString() + t.pts + "</span></div>").join("");
-      return;
+    } else {
+      const rows = await FR().listFriends();
+      html = !rows.length ? '<p class="cfg__n">' + t.none + "</p>" :
+        rows.map(r => {
+          const where = !r.online ? t.off : (r.state === "game" ? t.inGame : t.online);
+          const dot = !r.online ? "off" : (r.state === "game" ? "game" : "on");
+          if (frInviteMode){
+            const busy = r.online && r.state === "game";
+            return '<div class="fr__row' + (busy || !r.online ? " fr__row--off" : "") + '"' +
+              (busy || !r.online ? "" : ' data-frinv="' + r.uid + '"') + ">" +
+              '<i class="fr__dot fr__dot--' + dot + '"></i>' +
+              '<span class="fr__n">' + esc(r.name || "") + "</span>" +
+              '<span class="fr__w">' + (busy ? t.busy : where) + "</span></div>";
+          }
+          return '<div class="fr__row">' +
+            '<i class="fr__dot fr__dot--' + dot + '"></i>' +
+            '<span class="fr__n">' + esc(r.name || "") + "</span>" +
+            '<span class="fr__w">' + where + "</span>" +
+            '<button class="fr__b fr__b--off" data-frdel="' + r.uid + '">' + t.del + "</button></div>";
+        }).join("");
     }
-    const rows = await FR().listFriends();
-    if (!rows.length){ box.innerHTML = '<p class="cfg__n">' + t.none + "</p>"; return; }
-    box.innerHTML = rows.map(r => {
-      const where = !r.online ? t.off : (r.state === "game" ? t.inGame : t.online);
-      const dot = !r.online ? "off" : (r.state === "game" ? "game" : "on");
-      /* 빈자리에서 연 창이면 줄을 누르는 것이 곧 부르기다 */
-      if (frInviteMode){
-        const busy = r.online && r.state === "game";
-        return '<div class="fr__row' + (busy || !r.online ? " fr__row--off" : "") + '"' +
-          (busy || !r.online ? "" : ' data-frinv="' + r.uid + '"') + ">" +
-          '<i class="fr__dot fr__dot--' + dot + '"></i>' +
-          '<span class="fr__n">' + esc(r.name || "") + "</span>" +
-          '<span class="fr__w">' + (busy ? t.busy : where) + "</span></div>";
-      }
-      return '<div class="fr__row">' +
-        '<i class="fr__dot fr__dot--' + dot + '"></i>' +
-        '<span class="fr__n">' + esc(r.name || "") + "</span>" +
-        '<span class="fr__w">' + where + "</span>" +
-        '<button class="fr__b fr__b--off" data-frdel="' + r.uid + '">' + t.del + "</button></div>";
-    }).join("");
+    if (want !== frTab) return;            /* 그새 다른 탭으로 옮겼으면 버린다 */
+    box.innerHTML = html;
   }
 
-  let frInviteMode = false;
   window.__openFriends = (mode) => {
     frInviteMode = mode === "invite";
     frTab = "list"; frNote("");

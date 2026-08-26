@@ -624,6 +624,35 @@ const TURN_SEC = 15;
      그래서 신호 종류로 거르지 않고, **한 번 누른 뒤 잠깐은 무조건 막는다**.
      사람이 0.4초 안에 일부러 두 번 누를 일은 없다 */
   let touchAt = 0;              /* 마지막으로 손가락을 뗀 시각 (화면 전체에서 하나) */
+  /* ---------- 신호 들여다보기 ----------
+     주소 끝에 ?evlog=1 을 붙이면 화면 위에 신호가 그대로 찍힌다.
+     폰에서는 콘솔을 열기 어려워서 눈으로 볼 수 있게 해 둔다.
+     평소에는 아무 일도 하지 않는다 */
+  let evBox = null;
+  const EVLOG = (() => { try {
+    return String(location.search || "").indexOf("evlog") >= 0;
+  } catch(e){ return false; } })();
+  function evShow(txt){
+    if (!EVLOG) return;
+    if (!evBox){
+      evBox = window.document.createElement("div");
+      evBox.style.cssText = "position:fixed;left:4px;right:4px;top:4px;z-index:99999;" +
+        "background:rgba(0,0,0,.86);color:#7CFF9B;font:11px/1.35 monospace;" +
+        "padding:6px 8px;border-radius:4px;white-space:pre-wrap;max-height:36vh;overflow:auto";
+      window.document.body.appendChild(evBox);
+      evBox.onclick = () => { evBox.textContent = ""; };
+    }
+    evBox.textContent = (txt + "\n" + evBox.textContent).slice(0, 1400);
+  }
+  function evWatch(node, tag){
+    if (!EVLOG || !node) return;
+    ["touchstart","touchend","pointerdown","pointerup","mousedown","mouseup","click"]
+      .forEach(n => node.addEventListener(n, e => {
+        evShow(tag + " " + n + (e.pointerType ? ":" + e.pointerType : "") +
+          (e.cancelable ? "" : " (못막음)") + " " + (Date.now() % 100000));
+      }, true));
+  }
+
   function onTap(node, fn){
     if (!node) return;
     /* 손가락은 **touchend** 로 받고 그 자리에서 기본 동작을 막는다.
@@ -649,15 +678,18 @@ const TURN_SEC = 15;
         const x = t.clientX, y = t.clientY;
         if (x < r.left - 8 || x > r.right + 8 || y < r.top - 8 || y > r.bottom + 8) return;
       }
+      evShow("  → 처리(손가락)");
       fn(e);
     }, { passive: false });
     node.addEventListener("touchcancel", () => { inside = false; }, { passive: true });
     node.onclick = e => {
       /* 손가락을 쓴 **직후**의 click 만 버린다. 마우스로 쓸 때는 그대로 받는다 */
-      if (Date.now() - touchAt < 900) return;
+      if (Date.now() - touchAt < 900){ evShow("  (click 버림)"); return; }
       if (e && e.button != null && e.button !== 0) return;
+      evShow("  → 처리(click)");
       fn(e);
     };
+    evWatch(node, "");
   }
 
   onTap(el("play"), () => {
