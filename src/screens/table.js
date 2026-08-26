@@ -71,6 +71,9 @@ export function mount(root){
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
   let sndTurn = false, sndCount = -1, sndFin = 0, sndRev = 0, sndPass = 0;
+  let sndDone = new Set();      /* 이번 바퀴에 소리를 낸 수들 */
+  let emptyAt = 0;              /* 바닥이 비기 시작한 시각 */
+  let sndPassed = new Set();    /* 이미 소리를 낸 패스 자리 */
   const onScreen = () => {
     const sec = window.document.getElementById("table");
     return Boolean(sec && sec.classList.contains("is-on"));
@@ -86,8 +89,31 @@ export function mount(root){
       return;
     }
     /* 누가 카드를 냈다 / 패스했다 — 바닥에 쌓인 수가 바뀌는 것으로 안다 */
-    const n = (v.table || []).length;
-    if (sndCount >= 0 && n > sndCount) snd("card_play");
+    /* **장수로 세면 안 된다.**
+       서버 대전은 내 화면이 먼저 반영하고 서버가 다시 확인해 준다.
+       그 사이 바닥이 잠깐 비었다가 같은 카드로 다시 채워지는데,
+       장수만 보면 "0 → 1" 이 두 번이라 소리와 연출이 두 번 난다.
+       그래서 **마지막에 놓인 것이 정말 새것일 때만** 울린다 */
+    const tb = v.table || [];
+    const n = tb.length;
+    const last = n ? (tb[n-1].by + "-" + tb[n-1].num + "-" + tb[n-1].count) : "";
+    /* **마지막 하나만 기억하면 안 된다.**
+       서버가 화면을 다시 맞출 때 바닥이 비워졌다 채워지는데,
+       그 사이에 다른 수가 한 번 끼면 기억이 덮여 같은 수에 또 울린다.
+       그래서 이번 바퀴에 소리를 낸 수를 **모두** 기억한다 */
+    if (sndCount >= 0 && n > 0 && last && !sndDone.has(last)){
+      evShow("** 소리 card_play (" + last + ")");
+      try { (window.__sndDetail = window.__sndDetail || []).push("card:" + last); } catch(e){}
+      snd("card_play");
+      sndDone.add(last);
+    }
+    /* 바닥이 비면 새 바퀴다. 다만 **곧바로 비우면 안 된다** —
+       서버가 화면을 다시 맞추는 사이에도 잠깐 비기 때문이다.
+       비어 있는 상태가 잠시 이어질 때만 진짜 새 바퀴로 본다 */
+    if (n === 0){
+      if (!emptyAt) emptyAt = Date.now();
+      else if (Date.now() - emptyAt > 700){ sndDone.clear(); sndPassed.clear(); emptyAt = 0; }
+    } else emptyAt = 0;
     if (n === 0 && sndCount > 0) { /* 바닥이 치워졌다 — 소리 없음 */ }
     sndCount = n;
     /* 내 차례가 막 왔다 */
@@ -106,10 +132,18 @@ export function mount(root){
     const rev = v.revolution && v.revolution.declared ? 1 : 0;
     if (rev && !sndRev) snd("revolution");
     sndRev = rev;
-    /* 패스 — 방금 패스한 사람이 늘었다 */
-    const ps = (v.seats || []).filter(x => x.s === "pass").length;
-    if (ps > sndPass) snd("pass");
-    sndPass = ps;
+    /* 패스 — **누가** 패스했는지로 본다.
+       사람 수만 세면, 서버가 화면을 다시 맞출 때 그 수가 다시 늘어나
+       같은 패스에 소리가 두 번 난다 (카드와 같은 이유) */
+    const nowPass = (v.seats || []).map((x, i) => x.s === "pass" ? i : -1).filter(i => i >= 0);
+    const fresh = nowPass.filter(i => !sndPassed.has(i));
+    if (fresh.length){
+      evShow("** 소리 pass (자리 " + fresh.join(",") + ")");
+      try { (window.__sndDetail = window.__sndDetail || []).push("pass:" + fresh.join(",")); } catch(e){}
+      snd("pass");
+      fresh.forEach(i => sndPassed.add(i));
+    }
+    /* 패스 기억은 위에서 바닥이 진짜 비었을 때 같이 비운다 */
   }
 
   function apply(v){
@@ -130,6 +164,7 @@ export function mount(root){
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
       sndCount = -1; sndFin = 0; sndTurn = false; sndPass = 0; sndRev = 0;
+      sndDone.clear(); flew = new Set(); sndPassed.clear(); emptyAt = 0;
       /* 패 나누는 소리는 **판 화면에 들어올 때** 낸다.
          여기서 내면 뽑기 화면에 있는 동안 먼저 울리고, 들어와서 또 울린다 */
       window.__roundNo = v.roundNo;
@@ -250,6 +285,18 @@ export function mount(root){
   let lastPlayer = null;
   let busy = false;
   let animated = 0;   // 이미 날아온 카드 수
+  /* **장수로 세면 서버 대전에서 두 번 날아온다.**
+     바닥이 잠깐 비었다 다시 채워질 때 같은 카드를 새것으로 보기 때문이다.
+     그래서 어떤 수가 날아왔는지 이름표로 기억한다 */
+  let flew = new Set();
+  const keyOf = t => t ? (t.by + "-" + t.num + "-" + t.count) : "";
+  function flewKey(t){
+    const k = keyOf(t);
+    if (!k) return true;
+    if (flew.has(k)) return true;
+    flew.add(k);
+    return false;
+  }
   let spread = false; // 바닥 펼침 여부
   
   const cur = () => trick.length ? trick[trick.length - 1] : null;
@@ -471,7 +518,8 @@ export function mount(root){
       const from = seatPos(t.by);
       const g = document.createElement("div");
       g.className = "play" + (k < trick.length - 1 ? " play--old" : "") +
-        (k >= animated ? " play--new" : "");
+        (flewKey(trick[k]) ? "" : " play--new");
+      if (!flewKey(trick[k])) evShow("** 날아오는 연출 " + k);
       const d = trick.length - 1 - k;
       g.style.setProperty("--r", d === 0 ? "0deg" : (((k * 37) % 19) - 9 - d * 3) + "deg");
       g.style.setProperty("--dy", (-Math.min(d, 3) * 6) + "px");
