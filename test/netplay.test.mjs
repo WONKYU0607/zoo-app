@@ -92,7 +92,7 @@ for (let round=1; round<=6; round++){
     }
     return false;
   });
-  await page.evaluate(() => { window.__snd.length = 0; window.__sndDetail = []; });
+  await page.evaluate(() => { window.__snd.length = 0; window.__sndDetail = []; window.__sndWhy = []; });
   const before = await page.evaluate(() => ({
     c: (window.__eng?.view?.seats||[])[0]?.c, t: (window.__eng?.view?.table||[]).length }));
   console.log("   고름:", picked, "· 내기단추", await page.evaluate(() => {
@@ -106,18 +106,68 @@ for (let round=1; round<=6; round++){
     const a = await page.evaluate(() => ({
       c: (window.__eng?.view?.seats||[])[0]?.c,
       fly: document.querySelectorAll("#table #pile .play--new").length,
-      snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice() }));
-    const mine = a.snd.filter(x => x.startsWith("card_play"));
-    check("카드: 소리 한 번", mine.length === 1, JSON.stringify(a.det) + " · 손패 " + before.c + "→" + a.c);
+      snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice(),
+      why: (window.__sndWhy||[]).slice(-6) }));
+    const mineC = a.det.filter(x => x.startsWith("card:0-"));
+    check("카드: 내 소리 한 번", mineC.length === 1,
+      JSON.stringify(a.det) + " · 손패 " + before.c + "→" + a.c +
+      (mineC.length ? "" : "  왜? " + JSON.stringify(a.why)));
     check("카드: 날아오는 연출 한 벌", a.fly <= 1, "연출 " + a.fly);
   } else {
     await page.evaluate(() => { const b=document.querySelector("#table #pass"); if(b && !b.disabled) b.click(); });
     await new Promise(r=>setTimeout(r,700));
     const a = await page.evaluate(() => ({ snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice() }));
-    const ps = a.snd.filter(x => x.startsWith("pass"));
-    check("패스: 소리 한 번", ps.length <= 1, JSON.stringify(a.det));
+    /* 봇이 이어서 패스한 것까지 세면 안 된다. **내 자리(0)** 것만 본다 */
+    const mineP = a.det.filter(x => x === "pass:0" || /(^|,)0(,|$)/.test(x.replace("pass:","")));
+    check("패스: 내 소리 한 번", a.det.filter(x => x.startsWith("pass") &&
+      x.replace("pass:","").split(",").includes("0")).length <= 1, JSON.stringify(a.det));
   }
 }
+/* 눌린 뒤 단추가 다시 열렸다 닫히며 깜빡이는지, 패스 소리가 빠지는지 */
+let flick = 0, passTry = 0, passSnd = 0;
+for (let round=1; round<=8; round++){
+  for (let i=0;i<250;i++){
+    if (await page.evaluate(() => Boolean(window.__eng?.view?.myTurn))) break;
+    await new Promise(r=>setTimeout(r,150));
+  }
+  if (!(await page.evaluate(() => Boolean(window.__eng?.view?.myTurn)))) break;
+  const canPass = await page.evaluate(() => {
+    const b = document.querySelector("#table #pass"); return Boolean(b && !b.disabled); });
+  if (!canPass) { await new Promise(r=>setTimeout(r,600)); continue; }
+  passTry++;
+  await page.evaluate(() => { window.__snd.length = 0; window.__sndDetail = []; window.__sndWhy = []; });
+  const c0 = await page.evaluate(() => (window.__eng?.view?.seats||[])[0]?.c);
+  await page.evaluate(() => { const b=document.querySelector("#table #pass"); b.click(); });
+  /* 누른 직후 단추 상태를 촘촘히 본다 — 다시 열리면 깜빡임이다 */
+  let reopened = false;
+  for (let k=0;k<16;k++){
+    await new Promise(r=>setTimeout(r,60));
+    const on = await page.evaluate(() => {
+      const b = document.querySelector("#table #pass");
+      const p = document.querySelector("#table #play");
+      return Boolean((b && !b.disabled) || (p && !p.disabled));
+    });
+    if (on && await page.evaluate(() => !window.__eng?.view?.myTurn)) reopened = true;
+  }
+  if (reopened) flick++;
+  await new Promise(r=>setTimeout(r,500));
+  const got = await page.evaluate(() => ({
+    snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice(-4),
+    me: (window.__eng?.view?.seats||[])[0]?.s }));
+  /* 눌렀는데 정말 패스가 됐는지부터 본다.
+     이미 남이 낸 뒤라 내 차례가 아니었으면 셈에서 뺀다 */
+  const c1 = await page.evaluate(() => (window.__eng?.view?.seats||[])[0]?.c);
+  const reallyPassed = got.me === "pass" || c0 === c1;
+  const ok2 = got.snd.some(x => x.startsWith("pass"));
+  if (ok2) passSnd++;
+  else if (!reallyPassed){ passTry--; }
+  else console.log("   패스 소리 없음 · 내 표시=" + got.me + " · " + JSON.stringify(got.det) +
+    " 왜? " + JSON.stringify(await page.evaluate(() => (window.__sndWhy||[]).slice(-5))));
+}
+check("패스 소리가 빠지지 않는다", passTry === 0 || passSnd === passTry,
+  passSnd + "/" + passTry + "번");
+check("누른 뒤 단추가 다시 열리지 않는다", flick === 0, flick + "번 깜빡임");
+
 if (!pass && !fail) console.log("  (낼 상황이 안 나와 건너뜀)");
 console.log("\n=== 통과 "+pass+" / 실패 "+fail+" ===\n");
 shut(srv, browser);

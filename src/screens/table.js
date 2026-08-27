@@ -71,9 +71,16 @@ export function mount(root){
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
   let sndTurn = false, sndCount = -1, sndFin = 0, sndRev = 0, sndPass = 0;
-  let sndDone = new Set();      /* 이번 바퀴에 소리를 낸 수들 */
-  let emptyAt = 0;              /* 바닥이 비기 시작한 시각 */
-  let sndPassed = new Set();    /* 이미 소리를 낸 패스 자리 */
+  /* 무엇을 언제 울렸는지. 같은 것이 곧바로 또 오면 메아리로 본다 */
+  const sndDone = new Map(), sndPassed = new Map();
+  let pending = null, pendingAt = 0, pendingHand = -1;
+  const ECHO = 900;
+  function echo(map, key){
+    const t = Date.now(), was = map.get(key) || 0;
+    map.set(key, t);
+    if (map.size > 60) map.clear();          /* 오래된 것은 통째로 버린다 */
+    return t - was < ECHO;
+  }
   const onScreen = () => {
     const sec = window.document.getElementById("table");
     return Boolean(sec && sec.classList.contains("is-on"));
@@ -101,19 +108,18 @@ export function mount(root){
        서버가 화면을 다시 맞출 때 바닥이 비워졌다 채워지는데,
        그 사이에 다른 수가 한 번 끼면 기억이 덮여 같은 수에 또 울린다.
        그래서 이번 바퀴에 소리를 낸 수를 **모두** 기억한다 */
-    if (sndCount >= 0 && n > 0 && last && !sndDone.has(last)){
+    /* 같은 수를 **잠깐 사이에** 다시 보면 메아리로 친다.
+       기억을 언제 비울지 따지던 방식은, 못 비우면 다음 소리가 통째로 사라졌다.
+       한 사람이 같은 수를 1.5초 안에 두 번 둘 수는 없으므로 시각으로 가른다 */
+    /* 바닥에 몇 장째로 놓였는지까지 붙인다.
+       메아리는 같은 자리에 같은 수라 걸러지고,
+       새 바퀴에서 같은 카드를 다시 내는 것은 다른 것으로 본다 */
+    const key = last ? (last + "@" + n) : "";
+    if (sndCount >= 0 && n > 0 && key && !echo(sndDone, key)){
       evShow("** 소리 card_play (" + last + ")");
       try { (window.__sndDetail = window.__sndDetail || []).push("card:" + last); } catch(e){}
       snd("card_play");
-      sndDone.add(last);
     }
-    /* 바닥이 비면 새 바퀴다. 다만 **곧바로 비우면 안 된다** —
-       서버가 화면을 다시 맞추는 사이에도 잠깐 비기 때문이다.
-       비어 있는 상태가 잠시 이어질 때만 진짜 새 바퀴로 본다 */
-    if (n === 0){
-      if (!emptyAt) emptyAt = Date.now();
-      else if (Date.now() - emptyAt > 700){ sndDone.clear(); sndPassed.clear(); emptyAt = 0; }
-    } else emptyAt = 0;
     if (n === 0 && sndCount > 0) { /* 바닥이 치워졌다 — 소리 없음 */ }
     sndCount = n;
     /* 내 차례가 막 왔다 */
@@ -136,14 +142,12 @@ export function mount(root){
        사람 수만 세면, 서버가 화면을 다시 맞출 때 그 수가 다시 늘어나
        같은 패스에 소리가 두 번 난다 (카드와 같은 이유) */
     const nowPass = (v.seats || []).map((x, i) => x.s === "pass" ? i : -1).filter(i => i >= 0);
-    const fresh = nowPass.filter(i => !sndPassed.has(i));
+    const fresh = nowPass.filter(i => !echo(sndPassed, "p" + i));
     if (fresh.length){
       evShow("** 소리 pass (자리 " + fresh.join(",") + ")");
       try { (window.__sndDetail = window.__sndDetail || []).push("pass:" + fresh.join(",")); } catch(e){}
       snd("pass");
-      fresh.forEach(i => sndPassed.add(i));
     }
-    /* 패스 기억은 위에서 바닥이 진짜 비었을 때 같이 비운다 */
   }
 
   function apply(v){
@@ -158,13 +162,27 @@ export function mount(root){
     finish = v.finish.slice();
     turn = v.turn;
     busy = !v.myTurn;
+    /* 서버가 확인해 줄 때까지는 계속 잠가 둔다.
+       안 그러면 내 화면 → 서버 확인 사이에 단추가 잠깐 다시 열려
+       **두 번 눌린 것처럼 깜빡인다** */
+    /* 서버가 확인해 줄 때까지 잠가 두면 단추가 깜빡이지 않는다.
+       확인이 왔는지는 **내 손패가 줄었는가**로 본다.
+       자리 번호로 보면 화면 자리와 엔진 자리가 달라 안 맞는다 */
+    if (pending){
+      const myC = (v.seats || [])[0] ? v.seats[0].c : -1;
+      const done = (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
+                || (pendingHand < 0 && !v.myTurn)
+                || Date.now() - pendingAt > 2000;
+      if (done){ pending = null; pendingHand = -1; }
+      else busy = true;
+    }
 
     if (v.roundNo !== lastRound){          /* 새 판 */
       const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
       sndCount = -1; sndFin = 0; sndTurn = false; sndPass = 0; sndRev = 0;
-      sndDone.clear(); flew = new Set(); sndPassed.clear(); emptyAt = 0;
+      sndDone.clear(); sndPassed.clear(); flew = new Set(); pending = null; pendingHand = -1;
       /* 패 나누는 소리는 **판 화면에 들어올 때** 낸다.
          여기서 내면 뽑기 화면에 있는 동안 먼저 울리고, 들어와서 또 울린다 */
       window.__roundNo = v.roundNo;
@@ -746,6 +764,7 @@ const TURN_SEC = 15;
     const e = effective(list);
     sel = []; busy = true;
     sndStop("tick");                   /* 다 냈으니 재촉하는 소리도 멈춘다 */
+    pending = true; pendingHand = hand.length; pendingAt = Date.now();
     eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
     iMoved();
     unlockLater();
@@ -797,6 +816,7 @@ const TURN_SEC = 15;
     }
     sel = []; busy = true;
     sndStop("tick");
+    pending = true; pendingHand = -1; pendingAt = Date.now();
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     eng.passTurn();

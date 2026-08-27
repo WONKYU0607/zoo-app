@@ -202,7 +202,11 @@ export function mount(root){
   /* 세금을 실제 손패에 적용 */
   function applyTax(myGive){
     if (online){
-      if (window.__setTaxGive) window.__setTaxGive(myGive || null);
+      /* 고를 때 이미 보냈다. 그때 못 보낸 경우에만 여기서 보낸다 */
+      if (window.__setTaxGive && Array.isArray(myGive) && myGive.length &&
+          !(window.__taxGive && window.__taxGive.length)){
+        window.__setTaxGive(myGive);
+      }
       return;                       /* 실제 교환은 엔진이 한다 */
     }
     const hh = holds(), o = order();
@@ -309,6 +313,12 @@ export function mount(root){
              자리 번호만 두면, 그 사이에 손패가 다시 정렬될 때
              엉뚱한 카드가 나간다(12 를 골랐는데 카멜레온이 가던 문제) */
           selVal.push(c);
+          /* 다 골랐으면 **곧바로** 보낸다.
+             연출이 끝날 때까지 들고 있으면, 서버가 "안 낸다" 고 보고
+             대신 내버린다(카멜레온이 나가던 진짜 이유) */
+          if (sel.length === giveCount() && online && window.__setTaxGive){
+            window.__setTaxGive(selVal.slice(0, giveCount()));
+          }
         }
         draw(); };
       h.appendChild(s);
@@ -475,6 +485,7 @@ export function mount(root){
     /* 고른 것을 실제로 넘긴다 */
     submit: () => {
       window.__myGive = selVal.slice(0, giveCount());
+      if (online && window.__setTaxGive) window.__setTaxGive(window.__myGive.slice());
       return window.__myGive.slice();
     },
   };

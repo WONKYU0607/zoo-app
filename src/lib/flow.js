@@ -522,8 +522,10 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   W().__declareRev = () => eng.declareRev();
   W().__passRev    = () => eng.passRev();
   W().__setTaxGive  = cards => {
+    if (!Array.isArray(cards) || !cards.length) return;
+    if (W().__taxGive && W().__taxGive.length) return;   /* 한 번만 보낸다 */
     W().__taxGive = cards;
-    if (Array.isArray(cards) && cards.length) eng.give(cards);
+    eng.give(cards);
   };
   W().__endRoundOnline = async () => {};
 
