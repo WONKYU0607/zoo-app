@@ -77,6 +77,12 @@ export function mount(root){
   const seen = makeSeen();
   /* 화면에 처음 들어왔을 때 보이는 수는 **이미 지나간 것**이라 안 울린다 */
   let primed = false;
+  /* 내가 패스한 바퀴 번호.
+     서버 대전은 내 화면이 먼저 반영하고 서버가 다시 확인해 준다.
+     그 사이 **패스 표시가 없는 옛 상태가 한 번 더** 들어오는데,
+     그대로 그리면 프로필이 어두워졌다 밝아졌다 해서 두 번 눌린 것처럼 보인다.
+     그래서 그 바퀴가 끝날 때까지는 내 패스 표시를 붙잡아 둔다 */
+  let passHeld = null, lastTrick = null;
   let pending = null, pendingAt = 0, pendingHand = -1;
   const onScreen = () => {
     const sec = window.document.getElementById("table");
@@ -127,7 +133,13 @@ export function mount(root){
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over){ sounds(v, true); return; }
     sounds(v);
-    SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat, r: x.rank }));
+    /* 내 패스 표시 붙잡기 (위 passHeld 설명 참고).
+       바퀴가 바뀌면 놓아 준다 — 새 바퀴에서는 다시 낼 수 있어야 한다 */
+    if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
+    lastTrick = v.trickNo;
+    SEATS = v.seats.map((x, i) => ({
+      n: x.name, c: x.c, s: (i === 0 && passHeld != null) ? "pass" : x.s,
+      hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -251,6 +263,7 @@ export function mount(root){
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
     ghost = []; ghostSig = ""; holdingEnd = false;
     seen.clear(); primed = false; sndFin = 0; sndTurn = false; sndRev = 0;
+    passHeld = null; lastTrick = null;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
@@ -581,10 +594,37 @@ export function mount(root){
     el("pass").disabled = turn !== 0 || busy || !cur();   /* 선은 패스할 수 없다 */
   }
   
+  /* ---------- 손가락을 대고 있는 동안에는 다시 그리지 않는다 ----------
+
+     `renderSeats()`·`renderHand()` 는 칸을 통째로 지우고 새로 만든다.
+     손가락을 댄 칸이 그 사이에 사라지면 **손을 떼는 신호가 갈 곳을 잃어
+     누른 것이 통째로 사라진다.** 진짜 크롬에 진짜 손가락 신호를 보내
+     확인했다 (test/taplost.test.mjs).
+     서버 대전은 봇이 계속 둬서 다시 그리는 일이 잦으니 훨씬 자주 걸린다.
+
+     그래서 손가락이 닿아 있는 동안 온 요청은 **미뤄 두었다가 뗄 때 한 번에** 그린다.
+     손을 뗀 신호를 영영 못 받는 경우를 대비해 오래 쥐고 있으면 그냥 그린다 */
+  let fingerAt = 0, drawQueued = false;
+  const HOLD_MAX = 1500;
+  function fingerDown(){
+    return fingerAt > 0 && Date.now() - fingerAt < HOLD_MAX;
+  }
+  function fingerUp(){
+    fingerAt = 0;
+    /* **곧바로 그리면 안 된다.** 이 처리기는 가장 먼저(capture) 불리는데,
+       여기서 칸을 새로 만들어 버리면 정작 그 칸에 달린 처리기가 사라져
+       누른 것이 또 사라진다. 한 박자 뒤에 그린다 */
+    if (drawQueued) setTimeout(() => { if (drawQueued){ drawQueued = false; draw(); } }, 0);
+  }
+  window.document.addEventListener("touchstart", () => { fingerAt = Date.now(); }, true);
+  window.document.addEventListener("touchend", fingerUp, true);
+  window.document.addEventListener("touchcancel", fingerUp, true);
+
   function draw(){
     /* 아직 판이 없으면 그릴 것도 없다.
        화면들은 앱이 뜰 때 한꺼번에 붙으므로, 게임 전에도 draw 가 불린다 */
     if (!SEATS.length) return;
+    if (fingerDown()){ drawQueued = true; return; }
     renderSeats(); renderPile(); renderHand(); renderBottom();
     paintEmotes();   /* 자리를 새로 그렸으니 떠 있던 감정표현을 다시 붙인다 */
     el("seats").querySelectorAll(".seat__tag").forEach(keepInView);   /* 등수·패스 표도 */
@@ -789,6 +829,7 @@ const TURN_SEC = 15;
     sel = []; busy = true;
     sndStop("tick");
     pending = true; pendingHand = -1; pendingAt = Date.now();
+    passHeld = lastTrick;               /* 확인될 때까지 패스 표시를 붙잡는다 */
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     eng.passTurn();

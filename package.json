@@ -25,6 +25,7 @@
     "test:serial": "node test/boot.test.mjs && node test/face.test.mjs && node test/engine.test.js && node test/roundend.test.mjs && node test/table.test.mjs && node test/room.test.mjs && node test/auto.test.mjs && node test/login.test.mjs && node test/rank.test.mjs && node test/name.test.mjs && node test/sequence.test.mjs 2",
     "test:layout": "node test/layout.test.mjs",
     "test:snd": "node test/passsound.test.mjs",
+    "test:tap": "node test/taplost.test.mjs",
     "shot": "node test/shot.mjs"
   },
   "devDependencies": {
