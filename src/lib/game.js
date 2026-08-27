@@ -48,6 +48,20 @@ function clearPile(G, leader){
   G.table = [];
   G.passed = G.passed.map(() => false);
   G.next = leader;
+  /* 몇 번째 바퀴인지. 화면이 "이미 울린 수"를 가릴 때 쓴다.
+     판이 바뀌어도 되돌리지 않는다 — 한 게임 안에서 겹치지 않아야 한다 */
+  G.trickNo = (G.trickNo || 0) + 1;
+}
+
+/* 몇 번째 수인가.
+
+   화면이 "이 수는 이미 울렸다"를 가리는 데 쓴다.
+   바닥에 쌓인 것으로만 알아내면 **바닥을 치우는 수**(마지막 패스,
+   판 엎기, 마지막 카드)는 흔적이 안 남아 소리가 통째로 빠진다.
+   되돌림이 와도 같은 수는 같은 번호라 두 번 울리지 않는다 */
+function noteMove(G, kind, seat){
+  G.moveNo = (G.moveNo || 0) + 1;
+  G.lastMove = { k: kind, by: seat };
 }
 
 /* 카드를 다 턴 사람을 완주 목록에 올린다 */
@@ -202,7 +216,8 @@ export const ZooPresident = {
     const opts = Object.assign({ rounds: 3, tax: true, clear2: false }, setupData || {});
     const G = {
       hands: [], counts: new Array(n).fill(0), passed: new Array(n).fill(false),
-      pile: null, table: [], finished: [], next: 0,
+      pile: null, table: [], finished: [], next: 0, trickNo: 0,
+      moveNo: 0, lastMove: null,
       score: new Array(n).fill(0),
       roundNo: 1, totalRounds: Math.max(3, opts.rounds),
       opts, lastOrder: null, taxOrder: null, seatOrder: null, revolution: null,
@@ -299,6 +314,7 @@ export const ZooPresident = {
              카멜레온으로 채운 것을 화면이 알 수가 없어 숫자 카드로 거짓말을 하게 된다.
              바닥은 모두가 보는 정보라 가릴 이유도 없다 */
           G.table.push({ by: seat, num, count, cards: t.used.slice().sort((a, b) => a - b) });
+          noteMove(G, "play", seat);
           noteFinish(G, seat);
 
           const cleared = num === 1 || (G.opts.clear2 && num === 2);
@@ -324,6 +340,7 @@ export const ZooPresident = {
           const seat = Number(playerID);
           if (!G.pile) return INVALID_MOVE;            /* 선은 패스할 수 없다 */
           G.passed[seat] = true;
+          noteMove(G, "pass", seat);
 
           const still = active(G);
           if (still.length <= 1){

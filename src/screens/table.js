@@ -1,5 +1,6 @@
 import { scoped } from "../lib/scoped.js";
 import { play as snd, stop as sndStop } from "../lib/sound.js";
+import { moveEvents, makeSeen } from "../lib/sndkey.js";
 import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
@@ -70,91 +71,61 @@ export function mount(root){
 
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
-  let sndTurn = false, sndCount = -1, sndFin = 0, sndRev = 0, sndPass = 0;
-  /* 무엇을 언제 울렸는지. 같은 것이 곧바로 또 오면 메아리로 본다 */
-  const sndDone = new Map(), sndPassed = new Map();
+  let sndTurn = false, sndFin = 0, sndRev = 0;
+  /* 이미 울린 수의 번호. 되돌림은 같은 번호라 걸러지고,
+     새 수는 언제나 다른 번호라 아무리 빨라도 안 빠진다 (sndkey.js) */
+  const seen = makeSeen();
+  /* 화면에 처음 들어왔을 때 보이는 수는 **이미 지나간 것**이라 안 울린다 */
+  let primed = false;
   let pending = null, pendingAt = 0, pendingHand = -1;
-  const ECHO = 900;
-  function echo(map, key){
-    const t = Date.now(), was = map.get(key) || 0;
-    map.set(key, t);
-    if (map.size > 60) map.clear();          /* 오래된 것은 통째로 버린다 */
-    return t - was < ECHO;
-  }
   const onScreen = () => {
     const sec = window.document.getElementById("table");
     return Boolean(sec && sec.classList.contains("is-on"));
   };
-  function sounds(v){
+  function sounds(v, quiet){
     /* 세금·혁명·결과 화면을 보는 동안에는 이 화면이 뒤에서 계속 살아 있다.
-       그때 소리를 내면 **화면보다 먼저** 벨이 울린다 */
-    if (!onScreen()){
-      sndCount = (v.table || []).length;
-      sndTurn = Boolean(v.myTurn);
-      sndFin = (v.finish || []).length;
-      sndPass = (v.seats || []).filter(x => x.s === "pass").length;
-      return;
+       그때 소리를 내면 **화면보다 먼저** 벨이 울린다.
+       소리만 삼키고 **이름은 그대로 기억해 둔다** — 안 그러면
+       화면으로 돌아왔을 때 그동안 지나간 수가 뒤늦게 울린다 */
+    const mute = Boolean(quiet) || !onScreen();
+    /* 누가 카드를 냈다 / 패스했다.
+       **바닥에 쌓인 것으로 세면 안 된다.** 서버 대전은 되돌림 때문에 두 번 세고,
+       바닥을 치우는 수(마지막 패스·판 엎기·마지막 카드)는 아예 흔적이 안 남는다.
+       엔진이 매긴 수 번호로만 판단한다 (sndkey.js) */
+    const evs = moveEvents(v).filter(e => seen.add(e.key));
+    if (evs.length && primed && !mute){
+      const kinds = new Set(evs.map(e => e.kind));
+      evShow("** 소리 " + evs.map(e => e.kind + "@" + e.by).join(" "));
+      try { const d = (window.__sndDetail = window.__sndDetail || []);
+        evs.forEach(e => d.push(e.kind + ":" + e.by)); } catch(e){}
+      if (kinds.has("play")) snd("card_play");
+      if (kinds.has("pass")) snd("pass");
     }
-    /* 누가 카드를 냈다 / 패스했다 — 바닥에 쌓인 수가 바뀌는 것으로 안다 */
-    /* **장수로 세면 안 된다.**
-       서버 대전은 내 화면이 먼저 반영하고 서버가 다시 확인해 준다.
-       그 사이 바닥이 잠깐 비었다가 같은 카드로 다시 채워지는데,
-       장수만 보면 "0 → 1" 이 두 번이라 소리와 연출이 두 번 난다.
-       그래서 **마지막에 놓인 것이 정말 새것일 때만** 울린다 */
-    const tb = v.table || [];
-    const n = tb.length;
-    const last = n ? (tb[n-1].by + "-" + tb[n-1].num + "-" + tb[n-1].count) : "";
-    /* **마지막 하나만 기억하면 안 된다.**
-       서버가 화면을 다시 맞출 때 바닥이 비워졌다 채워지는데,
-       그 사이에 다른 수가 한 번 끼면 기억이 덮여 같은 수에 또 울린다.
-       그래서 이번 바퀴에 소리를 낸 수를 **모두** 기억한다 */
-    /* 같은 수를 **잠깐 사이에** 다시 보면 메아리로 친다.
-       기억을 언제 비울지 따지던 방식은, 못 비우면 다음 소리가 통째로 사라졌다.
-       한 사람이 같은 수를 1.5초 안에 두 번 둘 수는 없으므로 시각으로 가른다 */
-    /* 바닥에 몇 장째로 놓였는지까지 붙인다.
-       메아리는 같은 자리에 같은 수라 걸러지고,
-       새 바퀴에서 같은 카드를 다시 내는 것은 다른 것으로 본다 */
-    const key = last ? (last + "@" + n) : "";
-    if (sndCount >= 0 && n > 0 && key && !echo(sndDone, key)){
-      evShow("** 소리 card_play (" + last + ")");
-      try { (window.__sndDetail = window.__sndDetail || []).push("card:" + last); } catch(e){}
-      snd("card_play");
-    }
-    if (n === 0 && sndCount > 0) { /* 바닥이 치워졌다 — 소리 없음 */ }
-    sndCount = n;
+    primed = true;
     /* 내 차례가 막 왔다 */
-    if (v.myTurn && !sndTurn) snd("my_turn");
+    if (v.myTurn && !sndTurn && !mute) snd("my_turn");
     sndTurn = Boolean(v.myTurn);
     /* 누가 완주했다 */
     const fin = (v.finish || []).length;
-    if (fin > sndFin){
+    if (fin > sndFin && !mute){
       const who = v.finish[fin - 1];
-      snd(who === 0 ? "win" : "card_play");
+      /* 낸 소리는 위에서 이미 울렸다. 여기서는 완주에만 반응한다 */
+      if (who === 0) snd("win");
       /* 내가 꼴등으로 남았다 */
       if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) snd("lose");
     }
     sndFin = fin;
     /* 혁명이 확정되는 순간 한 번 */
     const rev = v.revolution && v.revolution.declared ? 1 : 0;
-    if (rev && !sndRev) snd("revolution");
+    if (rev && !sndRev && !mute) snd("revolution");
     sndRev = rev;
-    /* 패스 — **누가** 패스했는지로 본다.
-       사람 수만 세면, 서버가 화면을 다시 맞출 때 그 수가 다시 늘어나
-       같은 패스에 소리가 두 번 난다 (카드와 같은 이유) */
-    const nowPass = (v.seats || []).map((x, i) => x.s === "pass" ? i : -1).filter(i => i >= 0);
-    const fresh = nowPass.filter(i => !echo(sndPassed, "p" + i));
-    if (fresh.length){
-      evShow("** 소리 pass (자리 " + fresh.join(",") + ")");
-      try { (window.__sndDetail = window.__sndDetail || []).push("pass:" + fresh.join(",")); } catch(e){}
-      snd("pass");
-    }
   }
 
   function apply(v){
     if (!v) return;
     /* 방금 끝난 판을 세워 두는 동안에는 새 판 상태를 그리지 않는다.
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
-    if (holdingEnd && !v.over) return;
+    if (holdingEnd && !v.over){ sounds(v, true); return; }
     sounds(v);
     SEATS = v.seats.map(x => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
@@ -181,8 +152,8 @@ export function mount(root){
       const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
-      sndCount = -1; sndFin = 0; sndTurn = false; sndPass = 0; sndRev = 0;
-      sndDone.clear(); sndPassed.clear(); flew = new Set(); pending = null; pendingHand = -1;
+      sndFin = 0; sndTurn = false; sndRev = 0;
+      flew = new Set(); pending = null; pendingHand = -1;
       /* 패 나누는 소리는 **판 화면에 들어올 때** 낸다.
          여기서 내면 뽑기 화면에 있는 동안 먼저 울리고, 들어와서 또 울린다 */
       window.__roundNo = v.roundNo;
@@ -279,6 +250,7 @@ export function mount(root){
     eng.setAuto(false);
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
     ghost = []; ghostSig = ""; holdingEnd = false;
+    seen.clear(); primed = false; sndFin = 0; sndTurn = false; sndRev = 0;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();

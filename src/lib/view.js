@@ -99,6 +99,10 @@ export function screenView(G, ctx, myID, names){
     finish: (G.finished || []).map(s => toScreen(s, me, n)),
     score: G.counts.map((_, seat) => G.score[toSeat(seat, me, n)]),
     roundNo: G.roundNo,
+    trickNo: G.trickNo || 0,          /* 몇 번째 바퀴인가 */
+    /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
+    moveNo: G.moveNo || 0,
+    lastMove: G.lastMove ? { k: G.lastMove.k, by: toScreen(G.lastMove.by, me, n) } : null,
     totalRounds: G.totalRounds,
     phase: ctx.phase,
     draw,

@@ -63,12 +63,29 @@ await new Promise(r=>setTimeout(r,800));
 
 let pass=0, fail=0;
 const check=(n,ok,note)=>{ok?pass++:fail++;console.log((ok?"  [OK]   ":"  [실패] ")+n+(note?"  "+note:""));};
+/* 내 차례가 와도 **방금 둔 수가 확인될 때까지 단추가 잠겨 있다**.
+   그동안 누르면 아무 일도 안 일어나므로, 눌러 보기 전에 열릴 때까지 기다린다.
+   안 기다리면 "누르지도 않았는데 소리가 안 난다"고 잘못 잡는다 */
+async function ready(){
+  for (let i=0;i<40;i++){
+    const ok = await page.evaluate(() => {
+      const v = window.__eng && window.__eng.view;
+      if (!v || !v.myTurn) return false;
+      const q = document.querySelector("#table #pass");
+      return Boolean(!v.pile || (q && !q.disabled));      /* 선이면 패스가 원래 잠긴다 */
+    });
+    if (ok) return true;
+    await new Promise(r=>setTimeout(r,100));
+  }
+  return false;
+}
 for (let round=1; round<=6; round++){
   for (let i=0;i<300;i++){
     if (await page.evaluate(() => Boolean(window.__eng?.view?.myTurn))) break;
     await new Promise(r=>setTimeout(r,150));
   }
   if (!(await page.evaluate(() => Boolean(window.__eng?.view?.myTurn)))) break;
+  if (!(await ready())) continue;
   /* 필요한 장수만큼 고른다 — 같은 숫자를 여러 장 */
   const picked = await page.evaluate(() => {
     const need = (() => { const v = window.__eng?.view;
@@ -108,19 +125,18 @@ for (let round=1; round<=6; round++){
       fly: document.querySelectorAll("#table #pile .play--new").length,
       snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice(),
       why: (window.__sndWhy||[]).slice(-6) }));
-    const mineC = a.det.filter(x => x.startsWith("card:0-"));
+    /* `__sndDetail` 은 울린 수를 하나씩 적어 둔다 — "play:0" 은 **내 자리(0)** 가 낸 것 */
+    const mineC = a.det.filter(x => x === "play:0");
     check("카드: 내 소리 한 번", mineC.length === 1,
-      JSON.stringify(a.det) + " · 손패 " + before.c + "→" + a.c +
-      (mineC.length ? "" : "  왜? " + JSON.stringify(a.why)));
+      JSON.stringify(a.det) + " · 손패 " + before.c + "→" + a.c);
     check("카드: 날아오는 연출 한 벌", a.fly <= 1, "연출 " + a.fly);
   } else {
     await page.evaluate(() => { const b=document.querySelector("#table #pass"); if(b && !b.disabled) b.click(); });
     await new Promise(r=>setTimeout(r,700));
     const a = await page.evaluate(() => ({ snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice() }));
     /* 봇이 이어서 패스한 것까지 세면 안 된다. **내 자리(0)** 것만 본다 */
-    const mineP = a.det.filter(x => x === "pass:0" || /(^|,)0(,|$)/.test(x.replace("pass:","")));
-    check("패스: 내 소리 한 번", a.det.filter(x => x.startsWith("pass") &&
-      x.replace("pass:","").split(",").includes("0")).length <= 1, JSON.stringify(a.det));
+    check("패스: 내 소리 한 번", a.det.filter(x => x === "pass:0").length === 1,
+      JSON.stringify(a.det));
   }
 }
 /* 눌린 뒤 단추가 다시 열렸다 닫히며 깜빡이는지, 패스 소리가 빠지는지 */
@@ -131,6 +147,7 @@ for (let round=1; round<=8; round++){
     await new Promise(r=>setTimeout(r,150));
   }
   if (!(await page.evaluate(() => Boolean(window.__eng?.view?.myTurn)))) break;
+  await ready();
   const canPass = await page.evaluate(() => {
     const b = document.querySelector("#table #pass"); return Boolean(b && !b.disabled); });
   if (!canPass) { await new Promise(r=>setTimeout(r,600)); continue; }
@@ -152,13 +169,14 @@ for (let round=1; round<=8; round++){
   if (reopened) flick++;
   await new Promise(r=>setTimeout(r,500));
   const got = await page.evaluate(() => ({
-    snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice(-4),
+    snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice(),
     me: (window.__eng?.view?.seats||[])[0]?.s }));
   /* 눌렀는데 정말 패스가 됐는지부터 본다.
      이미 남이 낸 뒤라 내 차례가 아니었으면 셈에서 뺀다 */
   const c1 = await page.evaluate(() => (window.__eng?.view?.seats||[])[0]?.c);
   const reallyPassed = got.me === "pass" || c0 === c1;
-  const ok2 = got.snd.some(x => x.startsWith("pass"));
+  /* 봇 소리를 내 것으로 세면 안 된다 — **내 자리(0)** 의 패스만 본다 */
+  const ok2 = got.det.some(x => x === "pass:0");
   if (ok2) passSnd++;
   else if (!reallyPassed){ passTry--; }
   else console.log("   패스 소리 없음 · 내 표시=" + got.me + " · " + JSON.stringify(got.det) +
