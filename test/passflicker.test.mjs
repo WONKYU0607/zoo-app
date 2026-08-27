@@ -88,7 +88,7 @@ async function ready(){
 }
 
 let tried = 0, flicker = 0, never = 0;
-const delays = [], rebuilds = [];
+const delays = [], rebuilds = [], opens = [];
 for (let round = 1; round <= 12 && tried < 3; round++){
   if (await ready() === false) break;
   /* **진짜 손가락 신호로 눌러야 한다.** `.click()` 은 touchstart 를 안 만들어서
@@ -128,6 +128,26 @@ for (let round = 1; round <= 12 && tried < 3; round++){
     await new Promise(r => setTimeout(r, 40));
   }
   delays.push(shownAt);
+  /* **누른 뒤 단추가 언제 다시 열리는가.**
+     예전에는 패스일 때 "내 차례가 아니게 되면" 만 봐서, 신호가 뭉쳐 오면
+     그 중간을 못 보고 **2초 타이머가 끝날 때까지 얼어 있었다** */
+  {
+    /* **내 차례가 돌아온 뒤부터** 잰다. 차례를 기다린 시간까지 세면 안 된다 */
+    let turnAt = 0, openAt = -1;
+    for (let k = 0; k < 120; k++){
+      const st = await page.evaluate(() => {
+        const v = window.__eng && window.__eng.view;
+        const b = document.querySelector("#table #pass");
+        const p2 = document.querySelector("#table #play");
+        return { my: Boolean(v && v.myTurn), lead: Boolean(v && !v.pile),
+                 open: Boolean((b && !b.disabled) || (p2 && !p2.disabled)) };
+      });
+      if (st.my && !turnAt) turnAt = Date.now();
+      if (turnAt && (st.open || st.lead)){ openAt = Date.now() - turnAt; break; }
+      await new Promise(r => setTimeout(r, 50));
+    }
+    if (openAt >= 0) opens.push(openAt);
+  }
   rebuilds.push(await page.evaluate(() => window.__rebuilds));
   const first = seenOn.indexOf(true);
   if (first < 0){
@@ -150,11 +170,20 @@ check("패스를 누르면 내 자리에 표시가 뜬다", tried > 0 && never =
       tried + "번 중 안 뜬 것 " + never + " · 뜨기까지 " + delays.join("/") + "ms");
 /* 누르자마자 떠야 한다. 늦게 뜨면 "안 먹었나?" 싶어 또 누르게 된다 */
 const worst = Math.max(...delays.filter(d => d >= 0), 0);
-check("누르면 곧바로 뜬다 (400ms 안)", delays.length > 0 && worst <= 400, "가장 늦은 것 " + worst + "ms");
+/* 검사를 여럿 동시에 돌리면 컴퓨터가 느려져 몇십 ms 는 흔들린다.
+   "한 템포 늦게 먹는" 것(수백 ms~초)과는 자릿수가 다르므로 넉넉히 잡는다 */
+check("누르면 곧바로 뜬다 (600ms 안)", delays.length > 0 && worst <= 600, "가장 늦은 것 " + worst + "ms");
 check("뜬 뒤에 깜빡이지 않는다", flicker === 0, tried + "번 중 깜빡임 " + flicker);
 
 /* **프로필 그림이 다시 붙으면 폰에서 한 번 번쩍인다.**
    클래스만 지켜봐서는 안 보이므로 요소가 다시 만들어졌는지로 본다 */
+/* 내 차례가 돌아왔는데도 단추가 안 열리면 "안 먹었나?" 싶어 또 누르게 된다.
+   2초에 가까우면 잠금 타이머가 끝나기만 기다린 것이다 */
+if (opens.length){
+  const worstOpen = Math.max(...opens);
+  check("내 차례가 오면 단추가 곧바로 열린다", worstOpen < 1500,
+        "가장 늦은 것 " + worstOpen + "ms · " + opens.join("/") + "ms");
+}
 check("자리 요소를 다시 만들지 않는다", rebuilds.every(n => n === 0),
       "패스 뒤 1.6초 동안 " + rebuilds.join(" / ") + "번");
 

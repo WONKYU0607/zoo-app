@@ -2042,8 +2042,11 @@ var engine = {
   /* 결과를 보는 동안 다음 판을 멈춘다 */
   auto: false,
   /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
-  botMs: 3e3
+  botMs: 3e3,
   /* 봇이 생각하는 척하는 시간 */
+  moveLog: [],
+  /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
+  lastLogged: 0
 };
 var listeners = [];
 var botTimer = null;
@@ -2063,6 +2066,12 @@ function push() {
   const st2 = raw();
   if (!st2) return;
   engine.view = screenView(st2.G, st2.ctx, engine.myID, engine.names);
+  const v = engine.view;
+  if (v && v.moveNo && v.lastMove && v.moveNo !== engine.lastLogged) {
+    engine.lastLogged = v.moveNo;
+    engine.moveLog.push({ no: v.moveNo, k: v.lastMove.k, by: v.lastMove.by });
+    if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
+  }
   drainEmotes();
   listeners.forEach((f) => {
     try {
@@ -2071,7 +2080,7 @@ function push() {
       console.error(e);
     }
   });
-  if (engine.mode === "local") scheduleBot();
+  if (engine.mode === "local" || engine.auto) scheduleBot();
 }
 var emoteSeen = 0;
 var emoteFns = [];
@@ -2819,6 +2828,7 @@ function mount5(root) {
   const seen = makeSeen();
   let primed = false;
   let passHeld = null, lastTrick = null;
+  let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
   const onScreen = () => {
     const sec = window.document.getElementById("table");
@@ -3160,15 +3170,27 @@ function mount5(root) {
     const sfx = t === 1 && h !== 11 ? "st" : t === 2 && h !== 12 ? "nd" : t === 3 && h !== 13 ? "rd" : "th";
     return k2 + sfx;
   }
+  let seatNodes = [];
   function renderSeats() {
     syncRing();
     const box = el("seats");
-    box.innerHTML = "";
+    if (seatNodes.length !== SEATS.length || seatNodes.some((n) => n.parentNode !== box)) {
+      box.innerHTML = "";
+      seatNodes = SEATS.map(() => {
+        const n = document2.createElement("div");
+        box.appendChild(n);
+        return n;
+      });
+    }
     SEATS.forEach((s, i) => {
       const p = seatPos(i);
-      const d = document2.createElement("div");
+      const d = seatNodes[i];
       d.className = "seat" + (i === 0 ? " seat--me" : "") + (turn === i && SEATS[i].c > 0 ? " seat--turn" : "") + /* 봇 차례에도 표시 */
       (s.s === "pass" ? " seat--pass" : "") + (s.c === 0 ? " seat--out" : "");
+      if (i === 0 && s.s === "pass" && passPressAt) {
+        evShow("  \u2192 \uD328\uC2A4 \uD45C\uC2DC\uAE4C\uC9C0 " + (Date.now() - passPressAt) + "ms");
+        passPressAt = 0;
+      }
       d.style.left = p.x.toFixed(1) + "%";
       d.style.top = p.y.toFixed(1) + "%";
       d.dataset.nudge = p.nudge || 0;
@@ -3185,8 +3207,11 @@ function mount5(root) {
       const nm = '<span class="seat__n">' + (s.n || "") + "</span>";
       const fan = i === 0 ? "" : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T2[lang].left(s.c) + "</span>";
-      d.innerHTML = topSeat ? fan + cnt + av + nm : av + nm + fan + cnt;
-      box.appendChild(d);
+      const html = topSeat ? fan + cnt + av + nm : av + nm + fan + cnt;
+      if (d.__html !== html) {
+        d.innerHTML = html;
+        d.__html = html;
+      }
     });
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
@@ -3282,31 +3307,8 @@ function mount5(root) {
     b.textContent = turn !== 0 ? t.notTurn : ok ? t.play(list.length) : cur() ? t.play(cur().count) : t.pick;
     el("pass").disabled = turn !== 0 || busy || !cur();
   }
-  let fingerAt = 0, drawQueued = false;
-  const HOLD_MAX = 1500;
-  function fingerDown() {
-    return fingerAt > 0 && Date.now() - fingerAt < HOLD_MAX;
-  }
-  function fingerUp() {
-    fingerAt = 0;
-    if (drawQueued) setTimeout(() => {
-      if (drawQueued) {
-        drawQueued = false;
-        draw();
-      }
-    }, 0);
-  }
-  window.document.addEventListener("touchstart", () => {
-    fingerAt = Date.now();
-  }, true);
-  window.document.addEventListener("touchend", fingerUp, true);
-  window.document.addEventListener("touchcancel", fingerUp, true);
   function draw() {
     if (!SEATS.length) return;
-    if (fingerDown()) {
-      drawQueued = true;
-      return;
-    }
     renderSeats();
     renderPile();
     renderHand();
@@ -3367,6 +3369,14 @@ function mount5(root) {
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
   let touchAt = 0;
+  let tapX = 0, tapY = 0;
+  window.document.addEventListener("touchstart", (e) => {
+    const t = e.touches && e.touches[0];
+    if (t) {
+      tapX = t.clientX;
+      tapY = t.clientY;
+    }
+  }, true);
   let evBox = null;
   const EVLOG = (() => {
     try {
@@ -3395,38 +3405,34 @@ function mount5(root) {
   }
   function onTap(node, fn) {
     if (!node) return;
-    let startX = 0, startY = 0, inside = false;
-    node.addEventListener("touchstart", (e) => {
-      const t = e.touches && e.touches[0];
-      startX = t ? t.clientX : 0;
-      startY = t ? t.clientY : 0;
-      inside = true;
+    const near = (x2, y) => {
+      const r = node.getBoundingClientRect();
+      return x2 >= r.left - 8 && x2 <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
+    };
+    let lastAt = 0;
+    const fire = (e, how) => {
+      if (Date.now() - lastAt < 400) return;
+      lastAt = Date.now();
+      evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
+      fn(e);
+    };
+    node.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      touchAt = Date.now();
+      if (!near(tapX, tapY) || !near(e.clientX, e.clientY)) return;
+      fire(e, "\uC190\uAC00\uB77D");
     }, { passive: true });
     node.addEventListener("touchend", (e) => {
       if (e.cancelable) e.preventDefault();
       touchAt = Date.now();
-      if (!inside) return;
-      inside = false;
-      const t = e.changedTouches && e.changedTouches[0];
-      if (t) {
-        const r = node.getBoundingClientRect();
-        const x2 = t.clientX, y = t.clientY;
-        if (x2 < r.left - 8 || x2 > r.right + 8 || y < r.top - 8 || y > r.bottom + 8) return;
-      }
-      evShow("  \u2192 \uCC98\uB9AC(\uC190\uAC00\uB77D)");
-      fn(e);
     }, { passive: false });
-    node.addEventListener("touchcancel", () => {
-      inside = false;
-    }, { passive: true });
     node.onclick = (e) => {
       if (Date.now() - touchAt < 900) {
         evShow("  (click \uBC84\uB9BC)");
         return;
       }
       if (e && e.button != null && e.button !== 0) return;
-      evShow("  \u2192 \uCC98\uB9AC(click)");
-      fn(e);
+      fire(e, "click");
     };
     evWatch(node, "");
   }
@@ -3495,6 +3501,8 @@ function mount5(root) {
     pendingHand = -1;
     pendingAt = Date.now();
     passHeld = lastTrick;
+    passPressAt = Date.now();
+    evShow("\uD328\uC2A4 \uB204\uB984");
     if (auto) flash(T2[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();
@@ -3894,7 +3902,6 @@ function mount6(root) {
   function runTax() {
     window.__myGive = window.__myGive || [];
     clearFx();
-    play("card_deal");
     const o = order(), n = N2;
     const pairs = [[o[0], o[n - 1], 2], [o[1], o[n - 2], 1]];
     let t = 0;

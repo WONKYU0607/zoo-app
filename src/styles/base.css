@@ -255,8 +255,16 @@ button:disabled{opacity:.42}
   background:#E3C67C;border:2px solid #2A2013;box-shadow:0 1px 4px rgba(0,0,0,.7);cursor:pointer}
 
 /* ---------- 친구 창 ---------- */
-#frBox .cfg__p{max-height:76vh}
-#frBox .cfg__b{overflow:auto}
+/* **창 높이를 고정한다.**
+   탭마다 줄 수가 다르고 "추가" 탭에는 찾기 칸이 더 붙어서,
+   높이를 내용에 맡기면 탭을 옮길 때마다 창이 통째로 내려갔다 올라갔다 한다.
+   높이를 붙박아 두고 안쪽만 굴린다 */
+#frBox .cfg__p{height:76vh;max-height:76vh;display:flex;flex-direction:column}
+#frBox .cfg__b{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+/* 찾기 칸은 "추가" 탭에서만 보이지만 **자리는 늘 차지한다** — 안 그러면 그만큼 튄다 */
+#frBox .fr__find[hidden]{display:flex !important;visibility:hidden}
+/* 줄이 넘치면 창이 커지는 게 아니라 이 안에서 굴러간다 */
+#frBox .fr__body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 /* 랭킹 화면의 탭과 같은 양피지 틀을 쓴다 */
 .fr__tabs{display:flex;gap:8px;margin:2px 0 10px}
 .fr__tabs button{flex:1;min-height:0 !important;padding:4px 4px !important;

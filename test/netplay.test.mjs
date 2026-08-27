@@ -141,6 +141,7 @@ for (let round=1; round<=6; round++){
 }
 /* 눌린 뒤 단추가 다시 열렸다 닫히며 깜빡이는지, 패스 소리가 빠지는지 */
 let flick = 0, passTry = 0, passSnd = 0, noPass = 0;
+const missWhy = [];
 for (let round=1; round<=8; round++){
   for (let i=0;i<250;i++){
     if (await page.evaluate(() => Boolean(window.__eng?.view?.myTurn))) break;
@@ -180,17 +181,24 @@ for (let round=1; round<=8; round++){
   const ok2 = got.det.some(x => x === "pass:0");
   if (ok2 && reallyPassed) passSnd++;
   else if (reallyPassed){
+    /* **왜 빠졌는지 그 자리에서 남긴다.** 실패 줄에 같이 붙여야
+       `npm test` 로 돌렸을 때도 보인다 — 안 그러면 "실패 1" 만 남는다 */
     const info = await page.evaluate(() => ({
       log: (window.__eng.moveLog||[]).slice(window.__mark),
-      det: (window.__sndDetail||[]).slice() }));
-    console.log("   [빠짐] 둔 수 " + JSON.stringify(info.log) +
-                " · 울린 것 " + JSON.stringify(info.det));
+      det: (window.__sndDetail||[]).slice(),
+      screen: (document.querySelector(".page.is-on")||{}).id,
+      round: window.__eng?.view?.roundNo,
+      over: Boolean(window.__eng?.view?.lastRound) }));
+    missWhy.push("둔 수 " + JSON.stringify(info.log) + " · 울린 것 " +
+      JSON.stringify(info.det) + " · 화면 " + info.screen +
+      (info.over ? " · **판 끝 장면 중**" : ""));
   }
   else console.log("   패스 소리 없음 · 내 표시=" + got.me + " · " + JSON.stringify(got.det) +
     " 왜? " + JSON.stringify(await page.evaluate(() => (window.__sndWhy||[]).slice(-5))));
 }
 check("패스 소리가 빠지지 않는다", passTry === 0 || passSnd === passTry,
-  passSnd + "/" + passTry + "번" + (noPass ? "  (눌렀는데 패스가 안 된 것 " + noPass + "번)" : ""));
+  passSnd + "/" + passTry + "번" + (noPass ? "  (눌렀는데 패스가 안 된 것 " + noPass + "번)" : "") +
+  (missWhy.length ? "\n           빠진 까닭: " + missWhy.join("\n           ") : ""));
 check("누른 뒤 단추가 다시 열리지 않는다", flick === 0, flick + "번 깜빡임");
 
 if (!pass && !fail) console.log("  (낼 상황이 안 나와 건너뜀)");

@@ -27,6 +27,7 @@
     "test:snd": "node test/passsound.test.mjs",
     "test:tap": "node test/taplost.test.mjs",
     "test:auto": "node test/autoplay.test.mjs",
+    "test:fr": "node test/friendtab.test.mjs",
     "shot": "node test/shot.mjs"
   },
   "devDependencies": {

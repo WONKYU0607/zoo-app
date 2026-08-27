@@ -82,11 +82,13 @@ export function mount(root){
      그 사이 **패스 표시가 없는 옛 상태가 한 번 더** 들어오는데,
      그대로 그리면 프로필이 어두워졌다 밝아졌다 해서 두 번 눌린 것처럼 보인다.
      그래서 그 바퀴가 끝날 때까지는 내 패스 표시를 붙잡아 둔다 */
-  let passHeld = null, lastTrick = null;
+  let passHeld = null, lastTrick = null, lastMoveNo = -1;
   /* 패스를 누른 시각. **누른 순간을 찍기 어려우니 로그가 스스로 잰다** —
      나중에 한 장만 찍어도 얼마나 늦게 반영됐는지 알 수 있다 */
   let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
+  /* 누를 때의 수 번호. 엔진이 그 다음 수를 받으면 단추를 다시 연다 */
+  let pendingNo = -1;
   const onScreen = () => {
     const sec = window.document.getElementById("table");
     return Boolean(sec && sec.classList.contains("is-on"));
@@ -139,7 +141,7 @@ export function mount(root){
     /* 내 패스 표시 붙잡기 (위 passHeld 설명 참고).
        바퀴가 바뀌면 놓아 준다 — 새 바퀴에서는 다시 낼 수 있어야 한다 */
     if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
-    lastTrick = v.trickNo;
+    lastTrick = v.trickNo; lastMoveNo = v.moveNo;
     SEATS = v.seats.map((x, i) => ({
       n: x.name, c: x.c, s: (i === 0 && passHeld != null) ? "pass" : x.s,
       hold: x.hold || [], av: x.seat, r: x.rank }));
@@ -156,10 +158,19 @@ export function mount(root){
        자리 번호로 보면 화면 자리와 엔진 자리가 달라 안 맞는다 */
     if (pending){
       const myC = (v.seats || [])[0] ? v.seats[0].c : -1;
-      const done = (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
+      /* **엔진이 내 수를 받아 준 것이 확인되면 푼다.**
+         예전에는 패스일 때 "내 차례가 아니게 되면" 만 봤는데,
+         신호가 뭉쳐 와서 그 중간 상태를 한 번도 못 보면 영영 안 풀려
+         **2초 타이머가 끝날 때까지 단추가 얼어 있었다.**
+         수 번호는 뭉쳐 와도 반드시 올라가므로 놓칠 일이 없다 */
+      /* **한 수만 더 진행된 것으로는 풀지 않는다.** 그건 내 수가 막 반영된 순간이라,
+         그때 열면 차례가 넘어가기 전에 단추가 반짝 열렸다 닫혀 두 번 눌린 듯 보인다.
+         **두 수 이상** 지났으면 남도 이미 뒀다는 뜻이라 확실히 끝난 것이다 */
+      const done = (pendingNo >= 0 && v.moveNo > pendingNo + 1)
+                || (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
                 || (pendingHand < 0 && !v.myTurn)
                 || Date.now() - pendingAt > 2000;
-      if (done){ pending = null; pendingHand = -1; }
+      if (done){ pending = null; pendingHand = -1; pendingNo = -1; }
       else busy = true;
     }
 
@@ -168,7 +179,7 @@ export function mount(root){
       lastRound = v.roundNo;
       sel = []; animated = 0; spread = false;
       sndFin = 0; sndTurn = false; sndRev = 0;
-      flew = new Set(); pending = null; pendingHand = -1;
+      flew = new Set(); pending = null; pendingHand = -1; pendingNo = -1;
       /* 패 나누는 소리는 **판 화면에 들어올 때** 낸다.
          여기서 내면 뽑기 화면에 있는 동안 먼저 울리고, 들어와서 또 울린다 */
       window.__roundNo = v.roundNo;
@@ -798,6 +809,7 @@ const TURN_SEC = 15;
     sel = []; busy = true;
     sndStop("tick");                   /* 다 냈으니 재촉하는 소리도 멈춘다 */
     pending = true; pendingHand = hand.length; pendingAt = Date.now();
+    pendingNo = lastMoveNo;
     eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
     iMoved();
     unlockLater();
@@ -850,6 +862,7 @@ const TURN_SEC = 15;
     sel = []; busy = true;
     sndStop("tick");
     pending = true; pendingHand = -1; pendingAt = Date.now();
+    pendingNo = lastMoveNo;
     passHeld = lastTrick;               /* 확인될 때까지 패스 표시를 붙잡는다 */
     passPressAt = Date.now();           /* 표시가 뜨기까지 걸린 시간을 로그가 잰다 */
     evShow("패스 누름");
