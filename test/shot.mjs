@@ -91,7 +91,11 @@ export function serve(port = 5599){
         if (err.code === "EADDRINUSE" && ++tries < 12){ port++; go(); return; }
         reject(err);
       });
-      s.listen(port, "127.0.0.1", () => { s.__port = port; resolve(s); });
+      /* **주소를 가리지 말 것.**
+         화면을 `localhost` 로 열어야 하는데(아래 goto 참고), 윈도우에서는
+         `localhost` 가 `::1`(IPv6) 로 먼저 풀린다. `127.0.0.1` 에만 매어 두면
+         크롬이 못 붙는다. 가리지 않고 들으면 둘 다 받는다 */
+      s.listen(port, () => { s.__port = port; resolve(s); });
     };
     go();
   });
@@ -167,7 +171,11 @@ export async function open({ width = 412, height = 745, port = 5599, srv = null 
   const found = await findBrowser();
   if (!found) throw new Error("NO_BROWSER");
   const browser = await pup.launch({
-    args: [...found.args, "--no-sandbox", "--disable-dev-shm-usage"],
+    args: [...found.args, "--no-sandbox", "--disable-dev-shm-usage"]
+      /* 검사용 크로미움 꾸러미가 `--disable-web-security` 를 달고 뜬다.
+         그러면 **진짜 크롬에서는 막히는 것이 여기서만 통과**한다.
+         실제로 CORS 문제를 이것 때문에 오래 못 봤다. 그 옵션은 걷어낸다 */
+      .filter(a => !/^--disable-web-security/.test(a)),
     executablePath: found.path,
     headless: true,
   });
@@ -179,7 +187,18 @@ export async function open({ width = 412, height = 745, port = 5599, srv = null 
   const logs = [];
   page.on("console", m => logs.push(m.type() + ": " + m.text()));
   page.on("pageerror", e => logs.push("ERROR: " + e.message));
-  await page.goto("http://127.0.0.1:" + port + "/", { waitUntil: "networkidle0" });
+  /* **검사는 진짜 배포 서버에 붙으면 안 된다.**
+     `.env` 에 fly 주소가 박혀 있으면 브라우저 검사가 거기로 방을 만들러 가는데,
+     배포 서버는 `NODE_ENV=production` 이라 localhost 를 안 받아 준다(당연하다).
+     그래서 이 기기 방으로 돌린다. 서버 대전 검사는 이 뒤에 자기 주소를 직접 넣는다 */
+  await page.evaluateOnNewDocument(() => { globalThis.__ZOO_SERVER = ""; });
+  /* **`127.0.0.1` 이 아니라 `localhost` 로 연다.**
+     게임 서버(`server.js`)는 붙어도 되는 곳을 boardgame.io 의
+     `Origins.LOCALHOST_IN_DEVELOPMENT` 로 정하는데, 그 정규식이 `/localhost:\d+/` 라
+     **`127.0.0.1` 은 안 맞는다.** 그러면 서버가 CORS 허가를 안 내주고
+     브라우저가 막아서 "Failed to fetch" 만 남는다.
+     내 컨테이너의 크로미움은 `--disable-web-security` 로 떠서 이걸 못 보고 지나갔었다 */
+  await page.goto("http://localhost:" + port + "/", { waitUntil: "networkidle0" });
   return { browser, page, logs };
 }
 

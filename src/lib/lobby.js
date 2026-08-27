@@ -4,10 +4,16 @@
    자리 번호는 서버가 정한 것을 그대로 쓴다 — 여기서 돌리지 않는다. */
 
 /* 주소는 빌드 때 VITE_GAME_SERVER 로 넣는다.
-   앱 껍데기(안드로이드)나 검사에서는 globalThis.__ZOO_SERVER 로도 넣을 수 있다 */
-export const serverUrl = () =>
-  (typeof globalThis !== "undefined" && globalThis.__ZOO_SERVER) ||
-  ((import.meta && import.meta.env && import.meta.env.VITE_GAME_SERVER) || "");
+   앱 껍데기(안드로이드)나 검사에서는 globalThis.__ZOO_SERVER 로도 넣을 수 있다.
+
+   **정해져 있으면 빈 값이라도 그것이 답이다.** 빈 값 = "서버 대전 끄고 이 기기 방으로".
+   예전에는 `||` 로 이어서, 빈 값을 넣어도 빌드 때 박힌 주소로 넘어가 버렸다.
+   그래서 브라우저 검사가 **진짜 배포 서버에 붙으려다** CORS 에 막혀 다 죽었다 */
+export const serverUrl = () => {
+  if (typeof globalThis !== "undefined" && globalThis.__ZOO_SERVER != null)
+    return globalThis.__ZOO_SERVER;
+  return (import.meta && import.meta.env && import.meta.env.VITE_GAME_SERVER) || "";
+};
 export const online = () => Boolean(serverUrl());
 
 async function api(path, body){
