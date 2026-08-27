@@ -140,7 +140,7 @@ for (let round=1; round<=6; round++){
   }
 }
 /* 눌린 뒤 단추가 다시 열렸다 닫히며 깜빡이는지, 패스 소리가 빠지는지 */
-let flick = 0, passTry = 0, passSnd = 0;
+let flick = 0, passTry = 0, passSnd = 0, noPass = 0;
 for (let round=1; round<=8; round++){
   for (let i=0;i<250;i++){
     if (await page.evaluate(() => Boolean(window.__eng?.view?.myTurn))) break;
@@ -151,9 +151,8 @@ for (let round=1; round<=8; round++){
   const canPass = await page.evaluate(() => {
     const b = document.querySelector("#table #pass"); return Boolean(b && !b.disabled); });
   if (!canPass) { await new Promise(r=>setTimeout(r,600)); continue; }
-  passTry++;
-  await page.evaluate(() => { window.__snd.length = 0; window.__sndDetail = []; window.__sndWhy = []; });
-  const c0 = await page.evaluate(() => (window.__eng?.view?.seats||[])[0]?.c);
+  await page.evaluate(() => { window.__snd.length = 0; window.__sndDetail = []; window.__sndWhy = [];
+    window.__mark = (window.__eng.moveLog||[]).length; });
   await page.evaluate(() => { const b=document.querySelector("#table #pass"); b.click(); });
   /* 누른 직후 단추 상태를 촘촘히 본다 — 다시 열리면 깜빡임이다 */
   let reopened = false;
@@ -171,19 +170,27 @@ for (let round=1; round<=8; round++){
   const got = await page.evaluate(() => ({
     snd: window.__snd.slice(), det: (window.__sndDetail||[]).slice(),
     me: (window.__eng?.view?.seats||[])[0]?.s }));
-  /* 눌렀는데 정말 패스가 됐는지부터 본다.
-     이미 남이 낸 뒤라 내 차례가 아니었으면 셈에서 뺀다 */
-  const c1 = await page.evaluate(() => (window.__eng?.view?.seats||[])[0]?.c);
-  const reallyPassed = got.me === "pass" || c0 === c1;
+  /* **눌렀는데 정말 패스가 됐는가** — 엔진이 적어 둔 수 기록이 정답이다.
+     손패 장수로 짐작하면, 눌러도 패스가 안 된 경우까지 "소리가 빠졌다" 로 센다 */
+  const reallyPassed = await page.evaluate(() =>
+    (window.__eng.moveLog||[]).slice(window.__mark)
+      .some(m => m.k === "pass" && m.by === 0));
+  if (reallyPassed) passTry++; else noPass++;
   /* 봇 소리를 내 것으로 세면 안 된다 — **내 자리(0)** 의 패스만 본다 */
   const ok2 = got.det.some(x => x === "pass:0");
-  if (ok2) passSnd++;
-  else if (!reallyPassed){ passTry--; }
+  if (ok2 && reallyPassed) passSnd++;
+  else if (reallyPassed){
+    const info = await page.evaluate(() => ({
+      log: (window.__eng.moveLog||[]).slice(window.__mark),
+      det: (window.__sndDetail||[]).slice() }));
+    console.log("   [빠짐] 둔 수 " + JSON.stringify(info.log) +
+                " · 울린 것 " + JSON.stringify(info.det));
+  }
   else console.log("   패스 소리 없음 · 내 표시=" + got.me + " · " + JSON.stringify(got.det) +
     " 왜? " + JSON.stringify(await page.evaluate(() => (window.__sndWhy||[]).slice(-5))));
 }
 check("패스 소리가 빠지지 않는다", passTry === 0 || passSnd === passTry,
-  passSnd + "/" + passTry + "번");
+  passSnd + "/" + passTry + "번" + (noPass ? "  (눌렀는데 패스가 안 된 것 " + noPass + "번)" : ""));
 check("누른 뒤 단추가 다시 열리지 않는다", flick === 0, flick + "번 깜빡임");
 
 if (!pass && !fail) console.log("  (낼 상황이 안 나와 건너뜀)");

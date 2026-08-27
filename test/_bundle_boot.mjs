@@ -2818,6 +2818,7 @@ function mount5(root) {
   let sndTurn = false, sndFin = 0, sndRev = 0;
   const seen = makeSeen();
   let primed = false;
+  let passHeld = null, lastTrick = null;
   let pending = null, pendingAt = 0, pendingHand = -1;
   const onScreen = () => {
     const sec = window.document.getElementById("table");
@@ -2858,7 +2859,16 @@ function mount5(root) {
       return;
     }
     sounds(v);
-    SEATS = v.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat, r: x2.rank }));
+    if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
+    lastTrick = v.trickNo;
+    SEATS = v.seats.map((x2, i) => ({
+      n: x2.name,
+      c: x2.c,
+      s: i === 0 && passHeld != null ? "pass" : x2.s,
+      hold: x2.hold || [],
+      av: x2.seat,
+      r: x2.rank
+    }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
@@ -2983,6 +2993,8 @@ function mount5(root) {
     sndFin = 0;
     sndTurn = false;
     sndRev = 0;
+    passHeld = null;
+    lastTrick = null;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -3270,8 +3282,31 @@ function mount5(root) {
     b.textContent = turn !== 0 ? t.notTurn : ok ? t.play(list.length) : cur() ? t.play(cur().count) : t.pick;
     el("pass").disabled = turn !== 0 || busy || !cur();
   }
+  let fingerAt = 0, drawQueued = false;
+  const HOLD_MAX = 1500;
+  function fingerDown() {
+    return fingerAt > 0 && Date.now() - fingerAt < HOLD_MAX;
+  }
+  function fingerUp() {
+    fingerAt = 0;
+    if (drawQueued) setTimeout(() => {
+      if (drawQueued) {
+        drawQueued = false;
+        draw();
+      }
+    }, 0);
+  }
+  window.document.addEventListener("touchstart", () => {
+    fingerAt = Date.now();
+  }, true);
+  window.document.addEventListener("touchend", fingerUp, true);
+  window.document.addEventListener("touchcancel", fingerUp, true);
   function draw() {
     if (!SEATS.length) return;
+    if (fingerDown()) {
+      drawQueued = true;
+      return;
+    }
     renderSeats();
     renderPile();
     renderHand();
@@ -3459,6 +3494,7 @@ function mount5(root) {
     pending = true;
     pendingHand = -1;
     pendingAt = Date.now();
+    passHeld = lastTrick;
     if (auto) flash(T2[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();

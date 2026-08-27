@@ -32,6 +32,7 @@ const FAST = [
   ["낸소리",     ["test/passsound.test.mjs"]],
   ["터치씹힘",    ["test/taplost.test.mjs"]],
   ["패스깜빡",    ["test/passflicker.test.mjs"]],
+  ["자동치기",    ["test/autoplay.test.mjs"]],
   ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs", "test/tap.test.mjs"]],
   ["서버대전",    ["test/netplay.test.mjs"]],
 

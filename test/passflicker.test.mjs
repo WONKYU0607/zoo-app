@@ -88,18 +88,55 @@ async function ready(){
 }
 
 let tried = 0, flicker = 0, never = 0;
+const delays = [], rebuilds = [];
 for (let round = 1; round <= 12 && tried < 3; round++){
   if (await ready() === false) break;
-  await page.evaluate(() => { const b = document.querySelector("#table #pass"); if (b) b.click(); });
+  /* **진짜 손가락 신호로 눌러야 한다.** `.click()` 은 touchstart 를 안 만들어서
+     손가락이 닿아 있는 동안의 처리(그리기 미루기)를 통째로 건너뛴다.
+     그것 때문에 폰에서만 나는 지연을 못 잡은 적이 있다 */
+  {
+    const p = await page.evaluate(() => {
+      const b = document.querySelector("#table #pass");
+      const r = b.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: p.x, y: p.y }] });
+    await new Promise(r => setTimeout(r, 70));
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  }
   tried++;
   /* 누른 직후부터 촘촘히 본다. 되돌림은 서버 왕복 사이에 잠깐 스친다 */
+  /* 자리 요소가 몇 번이나 통째로 새로 만들어지는지 센다.
+     클래스만 봐서는 안 보이지만, 프로필 그림이 매번 새로 붙으면
+     폰에서는 한 번 번쩍이는 것으로 보인다 */
+  await page.evaluate(() => {
+    window.__rebuilds = 0;
+    if (window.__mo) window.__mo.disconnect();
+    window.__mo = new MutationObserver(ms => {
+      ms.forEach(m => { if (m.removedNodes && m.removedNodes.length) window.__rebuilds++; });
+    });
+    window.__mo.observe(document.querySelector("#table #seats"), { childList: true });
+  });
+  const trickAt = await page.evaluate(() => window.__eng?.view?.trickNo);
+  const t0 = Date.now();
   const seenOn = [];
+  let shownAt = -1;
   for (let i = 0; i < 40; i++){
-    seenOn.push(await mine());
+    const on = await mine();
+    if (on && shownAt < 0) shownAt = Date.now() - t0;
+    seenOn.push(on);
     await new Promise(r => setTimeout(r, 40));
   }
+  delays.push(shownAt);
+  rebuilds.push(await page.evaluate(() => window.__rebuilds));
   const first = seenOn.indexOf(true);
-  if (first < 0){ never++; continue; }
+  if (first < 0){
+    /* **내 패스가 그 바퀴를 끝내 버렸으면** 표시할 것이 없다.
+       모두의 패스 표시가 그 자리에서 지워지므로 셈에서 뺀다 */
+    const ended = await page.evaluate(t => (window.__eng?.view?.trickNo) !== t, trickAt);
+    if (ended){ tried--; continue; }
+    never++; continue;
+  }
   /* 한 번 붙은 뒤 그 바퀴 안에서 떨어졌다가 다시 붙으면 깜빡인 것이다 */
   const after = seenOn.slice(first);
   const off = after.indexOf(false);
@@ -110,8 +147,16 @@ for (let round = 1; round <= 12 && tried < 3; round++){
 
 console.log("");
 check("패스를 누르면 내 자리에 표시가 뜬다", tried > 0 && never === 0,
-      tried + "번 중 안 뜬 것 " + never);
+      tried + "번 중 안 뜬 것 " + never + " · 뜨기까지 " + delays.join("/") + "ms");
+/* 누르자마자 떠야 한다. 늦게 뜨면 "안 먹었나?" 싶어 또 누르게 된다 */
+const worst = Math.max(...delays.filter(d => d >= 0), 0);
+check("누르면 곧바로 뜬다 (400ms 안)", delays.length > 0 && worst <= 400, "가장 늦은 것 " + worst + "ms");
 check("뜬 뒤에 깜빡이지 않는다", flicker === 0, tried + "번 중 깜빡임 " + flicker);
+
+/* **프로필 그림이 다시 붙으면 폰에서 한 번 번쩍인다.**
+   클래스만 지켜봐서는 안 보이므로 요소가 다시 만들어졌는지로 본다 */
+check("자리 요소를 다시 만들지 않는다", rebuilds.every(n => n === 0),
+      "패스 뒤 1.6초 동안 " + rebuilds.join(" / ") + "번");
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);

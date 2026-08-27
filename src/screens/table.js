@@ -83,6 +83,9 @@ export function mount(root){
      그대로 그리면 프로필이 어두워졌다 밝아졌다 해서 두 번 눌린 것처럼 보인다.
      그래서 그 바퀴가 끝날 때까지는 내 패스 표시를 붙잡아 둔다 */
   let passHeld = null, lastTrick = null;
+  /* 패스를 누른 시각. **누른 순간을 찍기 어려우니 로그가 스스로 잰다** —
+     나중에 한 장만 찍어도 얼마나 늦게 반영됐는지 알 수 있다 */
+  let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
   const onScreen = () => {
     const sec = window.document.getElementById("table");
@@ -450,15 +453,32 @@ export function mount(root){
               : (t === 3 && h !== 13) ? "rd" : "th";
     return k + sfx;
   }
+  /* 만들어 둔 자리 요소. **매번 새로 만들면 안 된다** —
+     프로필 그림이 그때마다 다시 붙어서 폰에서 한 번 번쩍인다.
+     패스 한 번에 네 번까지 다시 만들어지고 있었다(test/passflicker.test.mjs).
+     인원이 바뀔 때만 새로 만들고, 그 뒤로는 있는 것을 고쳐 쓴다 */
+  let seatNodes = [];
   function renderSeats(){
     syncRing();
-    const box = el("seats"); box.innerHTML = "";
+    const box = el("seats");
+    if (seatNodes.length !== SEATS.length || seatNodes.some(n => n.parentNode !== box)){
+      box.innerHTML = "";
+      seatNodes = SEATS.map(() => {
+        const n = document.createElement("div");
+        box.appendChild(n);
+        return n;
+      });
+    }
     SEATS.forEach((s, i) => {
       const p = seatPos(i);
-      const d = document.createElement("div");
+      const d = seatNodes[i];
       d.className = "seat" + (i === 0 ? " seat--me" : "") +
         (turn === i && SEATS[i].c > 0 ? " seat--turn" : "") +   /* 봇 차례에도 표시 */
         (s.s === "pass" ? " seat--pass" : "") + (s.c === 0 ? " seat--out" : "");
+      if (i === 0 && s.s === "pass" && passPressAt){
+        evShow("  → 패스 표시까지 " + (Date.now() - passPressAt) + "ms");
+        passPressAt = 0;
+      }
       d.style.left = p.x.toFixed(1) + "%"; d.style.top = p.y.toFixed(1) + "%";
       d.dataset.nudge = p.nudge || 0;
       d.dataset.nudgex = p.nudgeX || 0;
@@ -482,8 +502,10 @@ export function mount(root){
       const nm = '<span class="seat__n">' + (s.n || "") + '</span>';
       const fan = i === 0 ? '' : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s.c) + '</span>';
-      d.innerHTML = topSeat ? (fan + cnt + av + nm) : (av + nm + fan + cnt);
-      box.appendChild(d);
+      /* **같은 내용이면 손대지 않는다.** 같은 글자를 다시 넣어도
+         그림이 다시 붙어 번쩍인다 */
+      const html = topSeat ? (fan + cnt + av + nm) : (av + nm + fan + cnt);
+      if (d.__html !== html){ d.innerHTML = html; d.__html = html; }
     });
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
@@ -594,37 +616,16 @@ export function mount(root){
     el("pass").disabled = turn !== 0 || busy || !cur();   /* 선은 패스할 수 없다 */
   }
   
-  /* ---------- 손가락을 대고 있는 동안에는 다시 그리지 않는다 ----------
-
-     `renderSeats()`·`renderHand()` 는 칸을 통째로 지우고 새로 만든다.
-     손가락을 댄 칸이 그 사이에 사라지면 **손을 떼는 신호가 갈 곳을 잃어
-     누른 것이 통째로 사라진다.** 진짜 크롬에 진짜 손가락 신호를 보내
-     확인했다 (test/taplost.test.mjs).
-     서버 대전은 봇이 계속 둬서 다시 그리는 일이 잦으니 훨씬 자주 걸린다.
-
-     그래서 손가락이 닿아 있는 동안 온 요청은 **미뤄 두었다가 뗄 때 한 번에** 그린다.
-     손을 뗀 신호를 영영 못 받는 경우를 대비해 오래 쥐고 있으면 그냥 그린다 */
-  let fingerAt = 0, drawQueued = false;
-  const HOLD_MAX = 1500;
-  function fingerDown(){
-    return fingerAt > 0 && Date.now() - fingerAt < HOLD_MAX;
-  }
-  function fingerUp(){
-    fingerAt = 0;
-    /* **곧바로 그리면 안 된다.** 이 처리기는 가장 먼저(capture) 불리는데,
-       여기서 칸을 새로 만들어 버리면 정작 그 칸에 달린 처리기가 사라져
-       누른 것이 또 사라진다. 한 박자 뒤에 그린다 */
-    if (drawQueued) setTimeout(() => { if (drawQueued){ drawQueued = false; draw(); } }, 0);
-  }
-  window.document.addEventListener("touchstart", () => { fingerAt = Date.now(); }, true);
-  window.document.addEventListener("touchend", fingerUp, true);
-  window.document.addEventListener("touchcancel", fingerUp, true);
+  /* 손가락을 대고 있는 동안 다시 그리지 않게 미뤄 봤다가 **되돌렸다.**
+     칸이 사라져 눌린 것이 씹히는 문제는 줄었지만, 그 대신 패스가
+     한 템포 늦게 먹어서 훨씬 나빠졌다(사용자 신고).
+     씹힘은 `touchend` 를 놓치는 것이 원인이므로, 미루기가 아니라
+     **놓치지 않는 신호로 받는 쪽**으로 다시 풀어야 한다 */
 
   function draw(){
     /* 아직 판이 없으면 그릴 것도 없다.
        화면들은 앱이 뜰 때 한꺼번에 붙으므로, 게임 전에도 draw 가 불린다 */
     if (!SEATS.length) return;
-    if (fingerDown()){ drawQueued = true; return; }
     renderSeats(); renderPile(); renderHand(); renderBottom();
     paintEmotes();   /* 자리를 새로 그렸으니 떠 있던 감정표현을 다시 붙인다 */
     el("seats").querySelectorAll(".seat__tag").forEach(keepInView);   /* 등수·패스 표도 */
@@ -702,6 +703,13 @@ const TURN_SEC = 15;
      그래서 신호 종류로 거르지 않고, **한 번 누른 뒤 잠깐은 무조건 막는다**.
      사람이 0.4초 안에 일부러 두 번 누를 일은 없다 */
   let touchAt = 0;              /* 마지막으로 손가락을 뗀 시각 (화면 전체에서 하나) */
+  /* 손가락을 **어디에 처음 댔는지**. 칸이 새로 만들어져도 좌표는 안 바뀌므로,
+     "이 칸에서 시작해 이 칸에서 뗐는가" 를 칸이 아니라 좌표로 판단한다 */
+  let tapX = 0, tapY = 0;
+  window.document.addEventListener("touchstart", e => {
+    const t = e.touches && e.touches[0];
+    if (t){ tapX = t.clientX; tapY = t.clientY; }
+  }, true);
   /* ---------- 신호 들여다보기 ----------
      주소 끝에 ?evlog=1 을 붙이면 화면 위에 신호가 그대로 찍힌다.
      폰에서는 콘솔을 열기 어려워서 눈으로 볼 수 있게 해 둔다.
@@ -738,34 +746,47 @@ const TURN_SEC = 15;
        pointer 신호로 거르려 했더니, 손가락 것과 뒤따르는 마우스 것이
        구분이 잘 안 돼 어떤 폰에서는 두 번 먹고 어떤 폰에서는 안 먹었다.
        마우스로 쓸 때는 예전처럼 click 으로 받는다 */
-    let startX = 0, startY = 0, inside = false;
-    node.addEventListener("touchstart", e => {
-      const t = e.touches && e.touches[0];
-      startX = t ? t.clientX : 0; startY = t ? t.clientY : 0;
-      inside = true;
-    }, { passive: true });
-    node.addEventListener("touchend", e => {
-      if (e.cancelable) e.preventDefault();   /* 뒤따르는 마우스 신호를 막는다 */
-      touchAt = Date.now();
-      if (!inside) return;
-      inside = false;
-      /* 손가락이 단추 밖으로 많이 나갔으면 누른 것으로 안 본다 */
-      const t = e.changedTouches && e.changedTouches[0];
-      if (t){
-        const r = node.getBoundingClientRect();
-        const x = t.clientX, y = t.clientY;
-        if (x < r.left - 8 || x > r.right + 8 || y < r.top - 8 || y > r.bottom + 8) return;
-      }
-      evShow("  → 처리(손가락)");
+    const near = (x, y) => {
+      const r = node.getBoundingClientRect();
+      return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
+    };
+    /* **손가락은 `pointerup` 으로 받는다. `touchend` 로 받으면 안 된다.**
+
+       화면이 다시 그려지면 칸을 통째로 새로 만드는데, 손가락을 댄 칸이
+       그 사이에 사라지면 `touchend` 는 사라진 칸으로 가서 **아무 데도 안 온다**.
+       그러면 그 누름은 통째로 사라진다 — 진짜 크롬에 진짜 손가락 신호를 보내
+       확인했다(test/taplost.test.mjs). 신호 기록이 이렇게 남았다:
+         먹은 경우   pointerdown, touchstart, pointerup, touchend
+         씹힌 경우   pointerdown, touchstart, pointerup            ← touchend 없음
+       `pointerup` 은 그때도 온다(그 자리에 새로 생긴 칸으로 옮겨서 온다).
+
+       한때 "손가락이 닿아 있는 동안 다시 그리지 않기"로 막아 봤는데,
+       그 대신 **패스가 한 템포 늦게 먹어서** 훨씬 나빠졌다. 되돌렸다. */
+    let lastAt = 0;
+    const fire = (e, how) => {
+      if (Date.now() - lastAt < 400) return;   /* 같은 누름이 두 번 오는 것을 막는다 */
+      lastAt = Date.now();
+      evShow("  → 처리(" + how + ")");
       fn(e);
+    };
+    node.addEventListener("pointerup", e => {
+      if (e.pointerType === "mouse") return;   /* 마우스는 예전처럼 click 으로 */
+      touchAt = Date.now();                    /* 뒤따라오는 click 을 버리게 한다 */
+      /* 이 칸에서 시작해서 이 칸에서 떼야 누른 것으로 본다.
+         **칸이 아니라 좌표로 본다** — 그 사이에 칸이 새로 만들어질 수 있다 */
+      if (!near(tapX, tapY) || !near(e.clientX, e.clientY)) return;
+      fire(e, "손가락");
+    }, { passive: true });
+    /* 뒤따르는 마우스 신호를 막는다. 처리는 위에서 이미 끝났다 */
+    node.addEventListener("touchend", e => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
     }, { passive: false });
-    node.addEventListener("touchcancel", () => { inside = false; }, { passive: true });
     node.onclick = e => {
       /* 손가락을 쓴 **직후**의 click 만 버린다. 마우스로 쓸 때는 그대로 받는다 */
       if (Date.now() - touchAt < 900){ evShow("  (click 버림)"); return; }
       if (e && e.button != null && e.button !== 0) return;
-      evShow("  → 처리(click)");
-      fn(e);
+      fire(e, "click");
     };
     evWatch(node, "");
   }
@@ -830,6 +851,8 @@ const TURN_SEC = 15;
     sndStop("tick");
     pending = true; pendingHand = -1; pendingAt = Date.now();
     passHeld = lastTrick;               /* 확인될 때까지 패스 표시를 붙잡는다 */
+    passPressAt = Date.now();           /* 표시가 뜨기까지 걸린 시간을 로그가 잰다 */
+    evShow("패스 누름");
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     eng.passTurn();

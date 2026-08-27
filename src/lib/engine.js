@@ -23,6 +23,8 @@ export const engine = {
   paused: false,       /* 결과를 보는 동안 다음 판을 멈춘다 */
   auto: false,         /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
   botMs: 3000,         /* 봇이 생각하는 척하는 시간 */
+  moveLog: [],         /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
+  lastLogged: 0,
 };
 
 let listeners = [];
@@ -46,9 +48,25 @@ function push(){
   const st = raw();
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  /* 실제로 둔 수를 그대로 적어 둔다 — **검사가 정답으로 삼을 유일한 기록**.
+     이것이 없으면 "눌렀는데 패스가 됐나"를 손패 장수 따위로 짐작해야 하고,
+     눌러도 안 된 경우를 "소리가 빠졌다" 로 잘못 세게 된다 */
+  const v = engine.view;
+  if (v && v.moveNo && v.lastMove && v.moveNo !== engine.lastLogged){
+    engine.lastLogged = v.moveNo;
+    engine.moveLog.push({ no: v.moveNo, k: v.lastMove.k, by: v.lastMove.by });
+    if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
+  }
   drainEmotes();
   listeners.forEach(f => { try { f(engine.view); } catch(e){ console.error(e); } });
-  if (engine.mode === "local") scheduleBot();
+  /* 다음 수를 예약한다.
+     **서버 대전에서도 해야 한다.** 예전에는 이 기기 판일 때만 했는데,
+     그러면 자동치기를 켜도 화면이 새로 올 때마다 다시 잡아 주는 사람이 없어
+     내 차례가 와도 아무도 안 둔다. 15초가 지나 시간 넘김으로 패스만 되니
+     "자동을 켰는데 패스만 한다" 로 보였다.
+     서버 대전에서 `engine.bots` 는 비어 있으므로, 여기서 두는 자리는
+     **자동치기를 켠 내 자리뿐**이다 (actsFor 참고) */
+  if (engine.mode === "local" || engine.auto) scheduleBot();
 }
 
 /* ---------- 감정표현 ----------

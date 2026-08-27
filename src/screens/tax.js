@@ -230,11 +230,12 @@ export function mount(root){
         flyCard(-1, i, 0, (round * 6 + i) * 55, true);
   }
   
-  /* 세금 주고받기 — 카드가 오가므로 패 나누는 소리를 쓴다 */
+  /* 세금 주고받기 — **소리는 안 낸다.**
+     예전에는 패 나누는 소리를 그대로 썼는데, 바로 앞 2단계에서 이미 같은 소리가
+     나서 몇 초 사이에 섞는 소리가 두 번 났다. 카드 날아가는 연출만 남긴다 */
   function runTax(){
     window.__myGive = window.__myGive || [];
     clearFx();
-    snd("card_deal");
     const o = order(), n = N;
     const pairs = [[o[0], o[n-1], 2], [o[1], o[n-2], 1]];
     let t = 0;
