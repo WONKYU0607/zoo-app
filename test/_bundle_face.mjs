@@ -795,6 +795,179 @@ function scoped(root) {
   };
 }
 
+// src/lib/sound.js
+var KEY = { bgm: "zk_vol_bgm", sfx: "zk_vol_sfx", mute: "zk_mute" };
+function readNum(k2, dflt) {
+  try {
+    const v2 = localStorage.getItem(k2);
+    if (v2 == null) return dflt;
+    const n2 = Number(v2);
+    return Number.isFinite(n2) ? Math.max(0, Math.min(100, n2)) : dflt;
+  } catch (e) {
+    return dflt;
+  }
+}
+function readBool(k2) {
+  try {
+    return localStorage.getItem(k2) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+var sound = {
+  bgm: readNum(KEY.bgm, 50),
+  sfx: readNum(KEY.sfx, 50),
+  muted: readBool(KEY.mute)
+};
+var sfxGain = () => sound.muted ? 0 : sound.sfx / 100;
+var SFX = {
+  card_play: "assets/snd/card_play.webm",
+  /* 카드 낼 때 */
+  card_deal: "assets/snd/card_deal.webm",
+  /* 패 나눌 때 */
+  pass: "assets/snd/pass.webm",
+  my_turn: "assets/snd/my_turn.webm",
+  win: "assets/snd/win.webm",
+  /* 완주 */
+  lose: "assets/snd/lose.webm",
+  button: "assets/snd/button.webm",
+  revolution: "assets/snd/revolution.webm",
+  tick: "assets/snd/tick.webm",
+  /* 남은 시간 */
+  join: "assets/snd/join.webm"
+  /* 대기실에 들어올 때 */
+};
+var POOL = 4;
+var pool = {};
+function voices(src) {
+  if (!pool[src]) {
+    pool[src] = { i: 0, list: Array.from({ length: POOL }, () => {
+      const a2 = new Audio(src);
+      a2.preload = "auto";
+      try {
+        a2.load();
+      } catch (e) {
+      }
+      return a2;
+    }) };
+  }
+  return pool[src];
+}
+function stop(name) {
+  const src = SFX[name];
+  if (!src || !pool[src]) return;
+  pool[src].list.forEach((a2) => {
+    try {
+      a2.pause();
+      a2.currentTime = 0;
+    } catch (e) {
+    }
+  });
+}
+function play(name) {
+  const src = SFX[name];
+  if (!src) return;
+  const g2 = sfxGain();
+  if (g2 <= 0) return;
+  try {
+    const v2 = voices(src);
+    const a2 = v2.list[v2.i];
+    v2.i = (v2.i + 1) % v2.list.length;
+    try {
+      a2.currentTime = 0;
+    } catch (e) {
+    }
+    a2.volume = g2;
+    const p2 = a2.play();
+    if (p2 && p2.catch) p2.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+
+// src/lib/sndkey.js
+function trickId(v2) {
+  if (v2 && v2.trickNo != null) return "t" + v2.trickNo;
+  return "c" + (v2 && v2.seats || []).reduce((a2, s2) => a2 + (s2.c || 0), 0);
+}
+function moveEvents(v2) {
+  if (!v2) return [];
+  if (v2.moveNo != null && v2.lastMove) {
+    if (!v2.moveNo) return [];
+    return [{ key: "m" + v2.moveNo, kind: v2.lastMove.k, by: v2.lastMove.by }];
+  }
+  const id = trickId(v2);
+  const out = [];
+  const tb = v2.table || [];
+  if (tb.length) {
+    const t2 = tb[tb.length - 1];
+    out.push({
+      key: id + "#" + tb.length + ":" + t2.by + "-" + t2.num + "-" + t2.count,
+      kind: "play",
+      by: t2.by
+    });
+  }
+  (v2.seats || []).forEach((s2, i2) => {
+    if (s2 && s2.s === "pass") out.push({ key: id + "#p" + i2, kind: "pass", by: i2 });
+  });
+  return out;
+}
+function makeSeen(limit = 240) {
+  const set2 = /* @__PURE__ */ new Set();
+  return {
+    /* 처음 보는 번호면 true (그리고 기억한다) */
+    add(key) {
+      if (!key) return false;
+      if (set2.has(key)) return false;
+      set2.add(key);
+      if (set2.size > limit) {
+        const it = set2.values();
+        for (let i2 = set2.size - limit; i2 > 0; i2--) set2.delete(it.next().value);
+      }
+      return true;
+    },
+    has(key) {
+      return set2.has(key);
+    },
+    clear() {
+      set2.clear();
+    },
+    get size() {
+      return set2.size;
+    }
+  };
+}
+
+// src/lib/assets.js
+var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
+var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
+var AVATARS = [
+  { f: "assets/avt_01.webp", ko: "\uC0DD\uC950", en: "Mouse", need: 0 },
+  { f: "assets/avt_02.webp", ko: "\uC0C8", en: "Bird", need: 0 },
+  { f: "assets/avt_03.webp", ko: "\uD1A0\uB07C", en: "Rabbit", need: 0 },
+  { f: "assets/avt_04.webp", ko: "\uC6D0\uC22D\uC774", en: "Monkey", need: 0 },
+  { f: "assets/avt_05.webp", ko: "\uBA67\uB3FC\uC9C0", en: "Boar", need: 0 },
+  { f: "assets/avt_06.webp", ko: "\uAE30\uB9B0", en: "Giraffe", need: 5e3 },
+  { f: "assets/avt_07.webp", ko: "\uC5EC\uC6B0", en: "Fox", need: 1e4 },
+  { f: "assets/avt_08.webp", ko: "\uC545\uC5B4", en: "Croc", need: 15e3 },
+  { f: "assets/avt_09.webp", ko: "\uCF54\uB07C\uB9AC", en: "Elephant", need: 2e4 },
+  { f: "assets/avt_10.webp", ko: "\uBD88\uACF0", en: "Bear", need: 25e3 },
+  { f: "assets/avt_11.webp", ko: "\uD638\uB791\uC774", en: "Tiger", need: 3e4 },
+  { f: "assets/avt_12.webp", ko: "\uC0AC\uC790", en: "Lion", need: 35e3 },
+  { f: "assets/avt_13.webp", ko: "\uACE0\uC591\uC774", en: "Cat", need: 4e4 },
+  { f: "assets/avt_14.webp", ko: "\uC6A9", en: "Dragon", need: 45e3 },
+  { f: "assets/avt_15.webp", ko: "\uC720\uB2C8\uCF58", en: "Unicorn", need: 5e4 }
+];
+var avtFile = (i2) => (AVATARS[i2] || AVATARS[0]).f;
+var EMOTES = [
+  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANKS" },
+  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "SO SAD" },
+  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
+  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
+];
+var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
+
 // src/lib/engine.js
 var engine_exports = {};
 __export(engine_exports, {
@@ -806,13 +979,13 @@ __export(engine_exports, {
   onView: () => onView,
   passRev: () => passRev,
   passTurn: () => passTurn,
-  play: () => play,
+  play: () => play2,
   sendEmote: () => sendEmote,
   setAuto: () => setAuto,
   setPaused: () => setPaused,
   startLocal: () => startLocal,
   startOnline: () => startOnline,
-  stop: () => stop,
+  stop: () => stop2,
   takeCard: () => takeCard
 });
 
@@ -4245,12 +4418,12 @@ var SvelteComponent = class {
 };
 var subscriber_queue = [];
 function writable(value2, start = noop2) {
-  let stop2;
+  let stop3;
   const subscribers = /* @__PURE__ */ new Set();
   function set2(new_value) {
     if (safe_not_equal(value2, new_value)) {
       value2 = new_value;
-      if (stop2) {
+      if (stop3) {
         const run_queue = !subscriber_queue.length;
         for (const subscriber of subscribers) {
           subscriber[1]();
@@ -4272,14 +4445,14 @@ function writable(value2, start = noop2) {
     const subscriber = [run2, invalidate];
     subscribers.add(subscriber);
     if (subscribers.size === 1) {
-      stop2 = start(set2) || noop2;
+      stop3 = start(set2) || noop2;
     }
     run2(value2);
     return () => {
       subscribers.delete(subscriber);
       if (subscribers.size === 0) {
-        stop2();
-        stop2 = null;
+        stop3();
+        stop3 = null;
       }
     };
   }
@@ -17760,6 +17933,11 @@ function clearPile(G2, leader) {
   G2.table = [];
   G2.passed = G2.passed.map(() => false);
   G2.next = leader;
+  G2.trickNo = (G2.trickNo || 0) + 1;
+}
+function noteMove(G2, kind, seat) {
+  G2.moveNo = (G2.moveNo || 0) + 1;
+  G2.lastMove = { k: kind, by: seat };
 }
 function noteFinish(G2, seat) {
   if (G2.counts[seat] === 0 && !G2.finished.includes(seat)) G2.finished.push(seat);
@@ -17883,6 +18061,9 @@ var ZooPresident = {
       table: [],
       finished: [],
       next: 0,
+      trickNo: 0,
+      moveNo: 0,
+      lastMove: null,
       score: new Array(n2).fill(0),
       roundNo: 1,
       totalRounds: Math.max(3, opts.rounds),
@@ -17986,6 +18167,7 @@ var ZooPresident = {
           G2.counts[seat] = t2.hand.length;
           G2.pile = { by: seat, num, count };
           G2.table.push({ by: seat, num, count, cards: t2.used.slice().sort((a2, b2) => a2 - b2) });
+          noteMove(G2, "play", seat);
           noteFinish(G2, seat);
           const cleared = num === 1 || G2.opts.clear2 && num === 2;
           const out = G2.counts[seat] === 0;
@@ -18010,6 +18192,7 @@ var ZooPresident = {
           const seat = Number(playerID);
           if (!G2.pile) return INVALID_MOVE;
           G2.passed[seat] = true;
+          noteMove(G2, "pass", seat);
           const still = active2(G2);
           if (still.length <= 1) {
             const last = G2.pile.by;
@@ -18202,6 +18385,11 @@ function screenView(G2, ctx, myID, names) {
     finish: (G2.finished || []).map((s2) => toScreen(s2, me, n2)),
     score: G2.counts.map((_2, seat) => G2.score[toSeat(seat, me, n2)]),
     roundNo: G2.roundNo,
+    trickNo: G2.trickNo || 0,
+    /* 몇 번째 바퀴인가 */
+    /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
+    moveNo: G2.moveNo || 0,
+    lastMove: G2.lastMove ? { k: G2.lastMove.k, by: toScreen(G2.lastMove.by, me, n2) } : null,
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
     draw,
@@ -18454,7 +18642,7 @@ function scheduleBot() {
     }, 700);
     return;
   }
-  if (engine.paused) return;
+  if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
   const g2 = ++gen;
@@ -18497,7 +18685,7 @@ function attach(client) {
   push();
 }
 function startLocal({ numPlayers = 6, opts = {}, names = [], myID = "0", bots = null } = {}) {
-  stop();
+  stop2();
   engine.mode = "local";
   engine.myID = String(myID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
@@ -18508,7 +18696,7 @@ function startLocal({ numPlayers = 6, opts = {}, names = [], myID = "0", bots = 
   attach(Client({ game, numPlayers, playerID: engine.myID }));
 }
 function startOnline({ server, matchID, playerID, credentials, numPlayers, names = [] }) {
-  stop();
+  stop2();
   engine.mode = "online";
   engine.myID = String(playerID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
@@ -18536,7 +18724,7 @@ function setPaused(on3) {
   }
   scheduleBot();
 }
-function stop() {
+function stop2() {
   gen++;
   if (botTimer) {
     clearTimeout(botTimer);
@@ -18580,7 +18768,7 @@ function autoDraw() {
   c2.updatePlayerID(engine.myID);
   push();
 }
-function play(num, count) {
+function play2(num, count) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.play(num, count);
@@ -18611,23 +18799,15 @@ function give(cards) {
   return true;
 }
 
-// src/lib/assets.js
-var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
-var EMOTES = [
-  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
-  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANK YOU" },
-  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "T_T" },
-  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
-  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
-];
-var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
-
 // src/screens/table.js
 function mount(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const HEADS2 = HEADS, ART2 = ART;
+  const ART2 = ART;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
   const T = {
@@ -18702,21 +18882,75 @@ function mount(root) {
   let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
+  let sndTurn = false, sndFin = 0, sndRev = 0;
+  const seen = makeSeen();
+  let primed = false;
+  let pending = null, pendingAt = 0, pendingHand = -1;
+  const onScreen = () => {
+    const sec = window.document.getElementById("table");
+    return Boolean(sec && sec.classList.contains("is-on"));
+  };
+  function sounds(v2, quiet) {
+    const mute = Boolean(quiet) || !onScreen();
+    const evs = moveEvents(v2).filter((e) => seen.add(e.key));
+    if (evs.length && primed && !mute) {
+      const kinds = new Set(evs.map((e) => e.kind));
+      evShow("** \uC18C\uB9AC " + evs.map((e) => e.kind + "@" + e.by).join(" "));
+      try {
+        const d2 = window.__sndDetail = window.__sndDetail || [];
+        evs.forEach((e) => d2.push(e.kind + ":" + e.by));
+      } catch (e) {
+      }
+      if (kinds.has("play")) play("card_play");
+      if (kinds.has("pass")) play("pass");
+    }
+    primed = true;
+    if (v2.myTurn && !sndTurn && !mute) play("my_turn");
+    sndTurn = Boolean(v2.myTurn);
+    const fin = (v2.finish || []).length;
+    if (fin > sndFin && !mute) {
+      const who = v2.finish[fin - 1];
+      if (who === 0) play("win");
+      if (v2.seats && fin === v2.seats.length - 1 && !v2.finish.includes(0)) play("lose");
+    }
+    sndFin = fin;
+    const rev = v2.revolution && v2.revolution.declared ? 1 : 0;
+    if (rev && !sndRev && !mute) play("revolution");
+    sndRev = rev;
+  }
   function apply(v2) {
     if (!v2) return;
-    if (holdingEnd && !v2.over) return;
+    if (holdingEnd && !v2.over) {
+      sounds(v2, true);
+      return;
+    }
+    sounds(v2);
     SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat, r: x2.rank }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v2.finish.slice();
     turn = v2.turn;
     busy = !v2.myTurn;
+    if (pending) {
+      const myC = (v2.seats || [])[0] ? v2.seats[0].c : -1;
+      const done = pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
+      if (done) {
+        pending = null;
+        pendingHand = -1;
+      } else busy = true;
+    }
     if (v2.roundNo !== lastRound) {
       const first = lastRound < 0;
       lastRound = v2.roundNo;
       sel = [];
       animated = 0;
       spread = false;
+      sndFin = 0;
+      sndTurn = false;
+      sndRev = 0;
+      flew = /* @__PURE__ */ new Set();
+      pending = null;
+      pendingHand = -1;
       window.__roundNo = v2.roundNo;
       if (!first && !v2.over && v2.lastRound && window.__onRoundEnd) {
         showLastRound(v2);
@@ -18750,7 +18984,7 @@ function mount(root) {
       ghostSig = "";
     }
     if (v2.table.length < trick.length) {
-      animated = 0;
+      if (!ghost.length) animated = 0;
       spread = false;
     }
     trick = v2.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: t2.cards.slice() }));
@@ -18811,6 +19045,11 @@ function mount(root) {
     ghost = [];
     ghostSig = "";
     holdingEnd = false;
+    seen.clear();
+    primed = false;
+    sndFin = 0;
+    sndTurn = false;
+    sndRev = 0;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -18822,6 +19061,7 @@ function mount(root) {
     emoPickOpen(false);
     paintEmoBtn();
     Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
+    if (el("emolayer")) el("emolayer").innerHTML = "";
     offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
@@ -18839,6 +19079,15 @@ function mount(root) {
   let lastPlayer = null;
   let busy = false;
   let animated = 0;
+  let flew = /* @__PURE__ */ new Set();
+  const keyOf = (t2) => t2 ? t2.by + "-" + t2.num + "-" + t2.count : "";
+  function flewKey(t2) {
+    const k2 = keyOf(t2);
+    if (!k2) return true;
+    if (flew.has(k2)) return true;
+    flew.add(k2);
+    return false;
+  }
   let spread = false;
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n2) => isJ(n2) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n2 - 1];
@@ -18980,14 +19229,14 @@ function mount(root) {
       d2.dataset.nudge = p2.nudge || 0;
       d2.dataset.nudgex = p2.nudgeX || 0;
       const big = SEATS.length <= 6;
-      d2.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d2.style.setProperty("--av", "44px");
       d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
       const tag = s2.c === 0 ? s2.r >= 0 ? rankTag(s2.r) : tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
       const topSeat = i2 !== 0 && p2.y < 22;
       if (topSeat) d2.classList.add("seat--above");
-      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(s2.av == null ? i2 : s2.av) + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s2.n || "") + "</span>";
       const fan = i2 === 0 ? "" : fanHTML(s2.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
@@ -19020,7 +19269,8 @@ function mount(root) {
       const k2 = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t2.by);
       const g2 = document2.createElement("div");
-      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
+      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (flewKey(trick2[k2]) ? "" : " play--new");
+      if (!flewKey(trick2[k2])) evShow("** \uB0A0\uC544\uC624\uB294 \uC5F0\uCD9C " + k2);
       const d2 = trick2.length - 1 - k2;
       g2.style.setProperty("--r", d2 === 0 ? "0deg" : k2 * 37 % 19 - 9 - d2 * 3 + "deg");
       g2.style.setProperty("--dy", -Math.min(d2, 3) * 6 + "px");
@@ -19046,7 +19296,7 @@ function mount(root) {
       s2.style.left = (h2.clientWidth - total) / 2 + i2 * step + "px";
       s2.style.zIndex = i2;
       s2.innerHTML = cardHTML(c2, w2);
-      s2.onclick = () => {
+      onTap(s2, () => {
         handTouched();
         if (turn !== 0 || busy) return;
         const k2 = sel.indexOf(i2);
@@ -19058,7 +19308,7 @@ function mount(root) {
         if (!canPick(i2)) return;
         sel.push(i2);
         draw();
-      };
+      });
       h2.appendChild(s2);
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
@@ -19094,6 +19344,7 @@ function mount(root) {
     renderHand();
     renderBottom();
     paintEmotes();
+    el("seats").querySelectorAll(".seat__tag").forEach(keepInView);
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -19103,17 +19354,26 @@ function mount(root) {
   const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
+  let showId = null;
   function resetTimer() {
+    if (showId) clearTimeout(showId);
+    showId = null;
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
+    stop("tick");
     tLeft = 0;
+    if (turn === 0 && !busy && !onScreen()) {
+      showId = setTimeout(resetTimer, 150);
+      return;
+    }
     if (turn === 0 && !busy) {
       tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
+        if (tLeft === 5) play("tick");
         if (tLeft <= 0) {
           clearInterval(tickId);
           tickId = null;
@@ -19138,27 +19398,110 @@ function mount(root) {
     if (numValue === 1) return true;
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
-  el("play").onclick = () => {
+  let touchAt = 0;
+  let evBox = null;
+  const EVLOG = (() => {
+    try {
+      return String(location.search || "").indexOf("evlog") >= 0;
+    } catch (e) {
+      return false;
+    }
+  })();
+  function evShow(txt) {
+    if (!EVLOG) return;
+    if (!evBox) {
+      evBox = window.document.createElement("div");
+      evBox.style.cssText = "position:fixed;left:4px;right:4px;top:4px;z-index:99999;background:rgba(0,0,0,.86);color:#7CFF9B;font:11px/1.35 monospace;padding:6px 8px;border-radius:4px;white-space:pre-wrap;max-height:36vh;overflow:auto";
+      window.document.body.appendChild(evBox);
+      evBox.onclick = () => {
+        evBox.textContent = "";
+      };
+    }
+    evBox.textContent = (txt + "\n" + evBox.textContent).slice(0, 1400);
+  }
+  function evWatch(node, tag) {
+    if (!EVLOG || !node) return;
+    ["touchstart", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click"].forEach((n2) => node.addEventListener(n2, (e) => {
+      evShow(tag + " " + n2 + (e.pointerType ? ":" + e.pointerType : "") + (e.cancelable ? "" : " (\uBABB\uB9C9\uC74C)") + " " + Date.now() % 1e5);
+    }, true));
+  }
+  function onTap(node, fn2) {
+    if (!node) return;
+    let startX = 0, startY = 0, inside = false;
+    node.addEventListener("touchstart", (e) => {
+      const t2 = e.touches && e.touches[0];
+      startX = t2 ? t2.clientX : 0;
+      startY = t2 ? t2.clientY : 0;
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", (e) => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t2 = e.changedTouches && e.changedTouches[0];
+      if (t2) {
+        const r2 = node.getBoundingClientRect();
+        const x2 = t2.clientX, y2 = t2.clientY;
+        if (x2 < r2.left - 8 || x2 > r2.right + 8 || y2 < r2.top - 8 || y2 > r2.bottom + 8) return;
+      }
+      evShow("  \u2192 \uCC98\uB9AC(\uC190\uAC00\uB77D)");
+      fn2(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => {
+      inside = false;
+    }, { passive: true });
+    node.onclick = (e) => {
+      if (Date.now() - touchAt < 900) {
+        evShow("  (click \uBC84\uB9BC)");
+        return;
+      }
+      if (e && e.button != null && e.button !== 0) return;
+      evShow("  \u2192 \uCC98\uB9AC(click)");
+      fn2(e);
+    };
+    evWatch(node, "");
+  }
+  onTap(el("play"), () => {
     const list = sel.map((i2) => hand[i2]);
     if (!legal(list) || turn !== 0 || busy) return;
     const e = effective(list);
     sel = [];
     busy = true;
-    play(e, list.length);
+    stop("tick");
+    pending = true;
+    pendingHand = hand.length;
+    pendingAt = Date.now();
+    play2(e, list.length);
     iMoved();
     unlockLater();
-  };
+  });
   let unlockId = null;
+  function viewSig(v2) {
+    if (!v2) return "";
+    return v2.turn + "|" + (v2.table || []).length + "|" + (v2.seats || []).map((x2) => x2.c + (x2.s || "")).join(",");
+  }
   function unlockLater() {
     if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
+    const sent = viewSig(engine.view);
+    let tries = 0;
+    const look = () => {
       unlockId = null;
       const v2 = engine.view;
-      if (v2 && v2.myTurn && busy) {
+      if (!busy) return;
+      if (viewSig(v2) !== sent) {
+        return;
+      }
+      if (++tries < 5) {
+        unlockId = setTimeout(look, 1200);
+        return;
+      }
+      if (v2 && v2.myTurn) {
         busy = false;
         draw();
       }
-    }, 1200);
+    };
+    unlockId = setTimeout(look, 1200);
   }
   function iMoved() {
     if (window.__iMoved) window.__iMoved();
@@ -19173,12 +19516,16 @@ function mount(root) {
       sel = [];
       busy = true;
       flash(T[lang].autoPass, true);
-      play(w2.num, w2.count);
+      play2(w2.num, w2.count);
       if (auto) toAuto();
       return;
     }
     sel = [];
     busy = true;
+    stop("tick");
+    pending = true;
+    pendingHand = -1;
+    pendingAt = Date.now();
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();
@@ -19198,7 +19545,7 @@ function mount(root) {
     if (best !== null) return { num: best, count: 1 };
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
-  el("pass").onclick = () => doPass(false);
+  onTap(el("pass"), () => doPass(false));
   function setAuto2(on3) {
     setAuto(on3);
     const b2 = el("auto");
@@ -19266,30 +19613,50 @@ function mount(root) {
   }
   const emoNow = {};
   function paintEmote(pos) {
+    const layer = el("emolayer");
     const seats = el("seats");
     const d2 = seats && seats.children[pos];
-    if (!d2) return;
-    const wrap = d2.querySelector(".seat__avwrap");
-    if (!wrap) return;
-    const old = wrap.querySelector(".seat__emo");
+    if (!layer || !d2) return;
+    const old = layer.querySelector('[data-pos="' + pos + '"]');
     if (old) old.remove();
     const cur2 = emoNow[pos];
-    const tag = wrap.querySelector(".seat__tag");
+    const wrap = d2.querySelector(".seat__avwrap");
+    const tag = wrap && wrap.querySelector(".seat__tag");
     if (!cur2 || Date.now() >= cur2.until) {
       if (tag) tag.style.visibility = "";
       return;
     }
     if (tag) tag.style.visibility = "hidden";
+    const av = d2.querySelector(".seat__av");
+    if (!av) return;
     const box = document2.createElement("span");
     box.className = "seat__emo";
+    box.dataset.pos = String(pos);
     box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
-    wrap.appendChild(box);
+    if (cur2.shown) box.style.animation = "none";
+    else cur2.shown = true;
+    layer.appendChild(box);
+    const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
+    box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";
+    box.style.bottom = Math.round(lb.bottom - ab.bottom - 10) + "px";
+    keepInView(box);
+  }
+  function keepInView(box) {
+    if (!box) return;
+    const stage = window.document.getElementById("stage") || window.document.documentElement;
+    const W2 = stage.getBoundingClientRect();
+    const r2 = box.getBoundingClientRect();
+    if (!r2.width) return;
+    let dx = 0;
+    if (r2.left < W2.left + 2) dx = W2.left + 2 - r2.left;
+    else if (r2.right > W2.right - 2) dx = W2.right - 2 - r2.right;
+    box.style.marginLeft = dx ? Math.round(dx) + "px" : "";
   }
   function paintEmotes() {
     Object.keys(emoNow).forEach((p2) => paintEmote(Number(p2)));
   }
   function showEmote(pos, k2) {
-    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW };
+    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW, shown: false };
     paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
@@ -19325,13 +19692,18 @@ function mount(root) {
 
 // src/screens/draw.js
 function mount2(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
   const faceOf = (i2) => {
     const g2 = window.GAME || {};
     const f2 = g2.seatFaces || g2.faces;
     return f2 && f2[i2] != null ? f2[i2] : i2;
   };
   const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const ART2 = ART_DECK;
   const el = (id) => document2.getElementById(id);
   const isJ = (c2) => c2 >= 13;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
@@ -19380,7 +19752,7 @@ function mount2(root) {
   const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
   const val = (c2) => isJ(c2) ? 13 : c2;
   let drawn = Array(N2).fill(null);
-  let pool = [];
+  let pool2 = [];
   let takenK = [];
   let plan = null;
   let waiting = [];
@@ -19441,12 +19813,12 @@ function mount2(root) {
   }
   function layout(players) {
     const v2 = engine.view;
-    pool = v2 && v2.draw ? v2.draw.pool.slice() : new Array(players.length).fill(null);
+    pool2 = v2 && v2.draw ? v2.draw.pool.slice() : new Array(players.length).fill(null);
     plan = null;
     waiting = players.slice();
     const deck = el("deck");
     deck.innerHTML = "";
-    const n2 = pool.length;
+    const n2 = pool2.length;
     const cols = n2 <= 4 ? n2 : Math.min(4, Math.ceil(n2 / 2));
     const rows = Math.ceil(n2 / cols);
     const ringEl = el("ring");
@@ -19454,10 +19826,10 @@ function mount2(root) {
     const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
     const byW = Math.floor((avail - (cols - 1) * 9) / cols);
     const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
-    const pw = Math.max(26, Math.min(46, byW, byH));
+    const pw = Math.round(Math.max(26, Math.min(46, byW, byH)) * 0.8);
     deck.style.setProperty("--cols", cols);
     deck.style.setProperty("--pw", pw + "px");
-    pool.forEach((c2, k2) => {
+    pool2.forEach((c2, k2) => {
       const w2 = document2.createElement("div");
       w2.className = "pk";
       w2.dataset.k = k2;
@@ -19518,9 +19890,16 @@ function mount2(root) {
     d2.by.forEach((seat, k2) => {
       if (seat == null) return;
       const w2 = deck.querySelector('.pk[data-k="' + k2 + '"]');
-      if (!w2 || w2.classList.contains("taken")) return;
+      if (!w2) return;
+      const val2 = d2.pool[k2];
+      if (val2 == null) return;
       const face = w2.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(d2.pool[k2]);
+      if (face && w2.dataset.val !== String(val2)) {
+        face.innerHTML = cardFace(val2);
+        w2.dataset.val = String(val2);
+      }
+      if (w2.classList.contains("taken")) return;
+      play("card_play");
       w2.classList.add("flip", "taken");
       w2.dataset.seat = seat;
       takenK.push(k2);
@@ -19599,13 +19978,13 @@ function mount2(root) {
       d2.style.left = p2.x.toFixed(1) + "%";
       d2.style.top = p2.y.toFixed(1) + "%";
       const big = N2 <= 6;
-      d2.style.setProperty("--av", (big ? 42 : 33) + "px");
+      d2.style.setProperty("--av", "42px");
       d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       const first = phase === "done" && i2 === winner();
       const dv = drawn[i2] == null ? "" : val(drawn[i2]);
       const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
       const upper = Math.sin(Math.PI / 2 + i2 * 2 * Math.PI / N2) < 0;
-      d2.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i2) % HEADS2.length] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>" + (upper ? "" : chip);
+      d2.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(faceOf(i2)) + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>" + (upper ? "" : chip);
       box.appendChild(d2);
     }
     const md = el("mid");
@@ -19637,7 +20016,8 @@ function mount2(root) {
     const dbox0 = el("deck");
     if (dbox0) dbox0.innerHTML = "";
     online = Boolean(window.__net);
-    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
+    const dv = engine.view;
+    N2 = dv && dv.draw && dv.draw.pool.length || (online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6);
     if (cdId) {
       clearInterval(cdId);
       cdId = null;
@@ -19652,6 +20032,11 @@ function mount2(root) {
       window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
     }
     phase = "pick";
+    {
+      const sb = el("seats"), db = el("deck");
+      if (sb) sb.innerHTML = "";
+      if (db) db.innerHTML = "";
+    }
     layout(Array.from({ length: N2 }, (_2, i2) => i2));
     if (offView) offView();
     offView = onView((v2) => {
@@ -19706,9 +20091,9 @@ function mount2(root) {
 
 // src/screens/_markup.js
 var MARKUP = {
-  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
-  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
+  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
   "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
   "table": `<main class="screen">
   <div class="bar">
@@ -19731,6 +20116,7 @@ var MARKUP = {
   </div>
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
+  <div class="emolayer" id="emolayer"></div>
   <div class="emopick" id="emopick" hidden></div>
   <div class="acts">
     <button class="bt-pass bt-emo" id="emo" aria-label="\uAC10\uC815\uD45C\uD604"></button><button class="bt-pass" id="pass">\uD328\uC2A4</button>

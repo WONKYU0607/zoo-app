@@ -7,12 +7,14 @@ var __export = (target, all) => {
 // src/lib/account.js
 var account_exports = {};
 __export(account_exports, {
+  AVT_NEED: () => AVT_NEED,
   NAME_MAX: () => NAME_MAX,
   TICKET_MAX: () => TICKET_MAX,
   TICKET_MS: () => TICKET_MS,
   TIER_STEP: () => TIER_STEP,
   account: () => account,
   addTicket: () => addTicket,
+  avatarOpen: () => avatarOpen,
   changeName: () => changeName,
   checkName: () => checkName,
   finishGame: () => finishGame,
@@ -23,6 +25,7 @@ __export(account_exports, {
   pending: () => pending,
   periodKeys: () => periodKeys,
   scoreFor: () => scoreFor,
+  setAvatar: () => setAvatar,
   setNickname: () => setNickname,
   signInGoogle: () => signInGoogle,
   signInGuest: () => signInGuest,
@@ -21282,15 +21285,18 @@ if (ready) {
 }
 
 // src/lib/account.js
+var TICKET_MAX = 3;
+var TICKET_MS = 30 * 60 * 1e3;
 var account = {
   uid: null,
   name: "",
   photo: "",
   score: 0,
   tier: 0,
-  tickets: 5,
+  tickets: TICKET_MAX,
   ticketAt: 0,
   games: 0,
+  avatar: 0,
   wk: 0,
   mo: 0,
   wkKey: "",
@@ -21324,8 +21330,6 @@ function scoreFor(rank, n, earned, quit) {
   const s = Math.max(0, Math.round(earned || 0));
   return quit ? Math.floor(s / 2) : s;
 }
-var TICKET_MAX = 5;
-var TICKET_MS = 30 * 60 * 1e3;
 function refill(tickets, at2) {
   const now = Date.now();
   let t = typeof tickets === "number" ? tickets : TICKET_MAX;
@@ -21373,6 +21377,26 @@ async function nextGuestName() {
     tx.set(ref, { seq: no }, { merge: true });
   });
   return "\uAC8C\uC2A4\uD2B8" + no;
+}
+var AVT_NEED = (i) => i < 5 ? 0 : (i - 4) * TIER_STEP;
+function avatarOpen(i) {
+  return (account.score || 0) >= AVT_NEED(i);
+}
+async function setAvatar(i) {
+  i = Number(i) || 0;
+  if (!avatarOpen(i)) return { ok: false, why: "locked", need: AVT_NEED(i) };
+  account.avatar = i;
+  if (ready && account.uid) {
+    try {
+      await updateDoc(doc(db, "users", account.uid), { avatar: i });
+    } catch (e) {
+    }
+  }
+  try {
+    localStorage.setItem("zk_avatar", String(i));
+  } catch (e) {
+  }
+  return { ok: true };
 }
 async function setNickname(wanted) {
   if (!ready || !account.uid) throw new Error("\uB85C\uADF8\uC778 \uC0C1\uD0DC\uAC00 \uC544\uB2D9\uB2C8\uB2E4");
@@ -21564,7 +21588,8 @@ async function loadProfile(user) {
       ticketAt: Date.now(),
       createdAt: serverTimestamp(),
       guest,
-      needName: !guest
+      needName: !guest,
+      avatar: 0
     };
     await setDoc(ref, fresh);
     Object.assign(account, fresh);
@@ -21580,6 +21605,8 @@ async function loadProfile(user) {
     account.ticketAt = r.at;
   }
   account.tier = tierOf(account.score);
+  account.avatar = Number(account.avatar) || 0;
+  if (!avatarOpen(account.avatar)) account.avatar = 0;
   account.guest = Boolean(user.isAnonymous);
   account.needName = !account.guest && Boolean(account.needName);
   account.signedIn = true;
@@ -21596,7 +21623,7 @@ async function signOutNow() {
     photo: "",
     score: 0,
     tier: 0,
-    tickets: 5,
+    tickets: TICKET_MAX,
     games: 0,
     signedIn: false
   });

@@ -6,9 +6,9 @@ var __export = (target, all) => {
 
 // src/screens/_markup.js
 var MARKUP = {
-  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
-  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
+  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
   "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
   "table": `<main class="screen">
   <div class="bar">
@@ -31,6 +31,7 @@ var MARKUP = {
   </div>
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
+  <div class="emolayer" id="emolayer"></div>
   <div class="emopick" id="emopick" hidden></div>
   <div class="acts">
     <button class="bt-pass bt-emo" id="emo" aria-label="\uAC10\uC815\uD45C\uD604"></button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
@@ -46,6 +47,241 @@ var MARKUP = {
   "tax": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div style="display:flex;gap:6px">\n      <div class="lang" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="ring">\n    <div class="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="fx" id="fx"></div>\n      <div class="flash" id="flash"></div>\n      <div class="mid" id="mid"></div>\n    </div>\n  </div>\n\n  <div class="hint" id="hint"></div>\n  <div class="hand" id="hand"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="back"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>',
   "result": '<main class="screen">\n  <div class="lang" id="lang">\n    <button data-l="ko" aria-pressed="true">\uD55C</button>\n    <button data-l="en" aria-pressed="false">EN</button>\n  </div>\n  <div class="head">\n    <div class="head__k" id="kicker"></div>\n    <div class="head__t" id="title"></div>\n    <div class="head__s" id="sub"></div>\n  </div>\n  <div class="legend" id="legend"></div>\n  <div class="list" id="list"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="quit"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>'
 };
+
+// src/lib/assets.js
+var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
+var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
+var LOBBY_ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp" };
+var HERO = { "02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp" };
+var AVATARS = [
+  { f: "assets/avt_01.webp", ko: "\uC0DD\uC950", en: "Mouse", need: 0 },
+  { f: "assets/avt_02.webp", ko: "\uC0C8", en: "Bird", need: 0 },
+  { f: "assets/avt_03.webp", ko: "\uD1A0\uB07C", en: "Rabbit", need: 0 },
+  { f: "assets/avt_04.webp", ko: "\uC6D0\uC22D\uC774", en: "Monkey", need: 0 },
+  { f: "assets/avt_05.webp", ko: "\uBA67\uB3FC\uC9C0", en: "Boar", need: 0 },
+  { f: "assets/avt_06.webp", ko: "\uAE30\uB9B0", en: "Giraffe", need: 5e3 },
+  { f: "assets/avt_07.webp", ko: "\uC5EC\uC6B0", en: "Fox", need: 1e4 },
+  { f: "assets/avt_08.webp", ko: "\uC545\uC5B4", en: "Croc", need: 15e3 },
+  { f: "assets/avt_09.webp", ko: "\uCF54\uB07C\uB9AC", en: "Elephant", need: 2e4 },
+  { f: "assets/avt_10.webp", ko: "\uBD88\uACF0", en: "Bear", need: 25e3 },
+  { f: "assets/avt_11.webp", ko: "\uD638\uB791\uC774", en: "Tiger", need: 3e4 },
+  { f: "assets/avt_12.webp", ko: "\uC0AC\uC790", en: "Lion", need: 35e3 },
+  { f: "assets/avt_13.webp", ko: "\uACE0\uC591\uC774", en: "Cat", need: 4e4 },
+  { f: "assets/avt_14.webp", ko: "\uC6A9", en: "Dragon", need: 45e3 },
+  { f: "assets/avt_15.webp", ko: "\uC720\uB2C8\uCF58", en: "Unicorn", need: 5e4 }
+];
+var AVT_FREE = 5;
+var avtFile = (i) => (AVATARS[i] || AVATARS[0]).f;
+var EMOTES = [
+  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANKS" },
+  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "SO SAD" },
+  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
+  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
+];
+var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
+
+// src/lib/sound.js
+var KEY = { bgm: "zk_vol_bgm", sfx: "zk_vol_sfx", mute: "zk_mute" };
+function readNum(k2, dflt) {
+  try {
+    const v = localStorage.getItem(k2);
+    if (v == null) return dflt;
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : dflt;
+  } catch (e) {
+    return dflt;
+  }
+}
+function readBool(k2) {
+  try {
+    return localStorage.getItem(k2) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+function write(k2, v) {
+  try {
+    localStorage.setItem(k2, String(v));
+  } catch (e) {
+  }
+}
+var sound = {
+  bgm: readNum(KEY.bgm, 50),
+  sfx: readNum(KEY.sfx, 50),
+  muted: readBool(KEY.mute)
+};
+var bgmGain = () => sound.muted ? 0 : sound.bgm / 100;
+var sfxGain = () => sound.muted ? 0 : sound.sfx / 100;
+var fns = [];
+function onSound(fn) {
+  fns.push(fn);
+  return () => {
+    const i = fns.indexOf(fn);
+    if (i >= 0) fns.splice(i, 1);
+  };
+}
+function tell() {
+  applyBgm();
+  fns.forEach((f) => {
+    try {
+      f(sound);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+function setBgm(v) {
+  sound.bgm = Math.max(0, Math.min(100, Number(v) || 0));
+  write(KEY.bgm, sound.bgm);
+  tell();
+}
+function setSfx(v) {
+  sound.sfx = Math.max(0, Math.min(100, Number(v) || 0));
+  write(KEY.sfx, sound.sfx);
+  tell();
+}
+function setMuted(on2) {
+  sound.muted = Boolean(on2);
+  write(KEY.mute, sound.muted ? 1 : 0);
+  tell();
+}
+function toggleMute() {
+  setMuted(!sound.muted);
+  return sound.muted;
+}
+var SFX = {
+  card_play: "assets/snd/card_play.webm",
+  /* 카드 낼 때 */
+  card_deal: "assets/snd/card_deal.webm",
+  /* 패 나눌 때 */
+  pass: "assets/snd/pass.webm",
+  my_turn: "assets/snd/my_turn.webm",
+  win: "assets/snd/win.webm",
+  /* 완주 */
+  lose: "assets/snd/lose.webm",
+  button: "assets/snd/button.webm",
+  revolution: "assets/snd/revolution.webm",
+  tick: "assets/snd/tick.webm",
+  /* 남은 시간 */
+  join: "assets/snd/join.webm"
+  /* 대기실에 들어올 때 */
+};
+var BGM = {
+  lobby: "assets/snd/bgm_lobby.webm"
+};
+var POOL = 4;
+var pool = {};
+function voices(src) {
+  if (!pool[src]) {
+    pool[src] = { i: 0, list: Array.from({ length: POOL }, () => {
+      const a = new Audio(src);
+      a.preload = "auto";
+      try {
+        a.load();
+      } catch (e) {
+      }
+      return a;
+    }) };
+  }
+  return pool[src];
+}
+function warm() {
+  Object.keys(SFX).forEach((k2) => {
+    try {
+      voices(SFX[k2]);
+    } catch (e) {
+    }
+  });
+}
+function stop(name4) {
+  const src = SFX[name4];
+  if (!src || !pool[src]) return;
+  pool[src].list.forEach((a) => {
+    try {
+      a.pause();
+      a.currentTime = 0;
+    } catch (e) {
+    }
+  });
+}
+function play(name4) {
+  const src = SFX[name4];
+  if (!src) return;
+  const g = sfxGain();
+  if (g <= 0) return;
+  try {
+    const v = voices(src);
+    const a = v.list[v.i];
+    v.i = (v.i + 1) % v.list.length;
+    try {
+      a.currentTime = 0;
+    } catch (e) {
+    }
+    a.volume = g;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+var bgmEl = null;
+var bgmName = "";
+function playBgm(name4) {
+  const src = BGM[name4];
+  if (!src) {
+    stopBgm();
+    return;
+  }
+  if (bgmName === name4 && bgmEl) {
+    applyBgm();
+    return;
+  }
+  stopBgm();
+  try {
+    bgmEl = new Audio(src);
+    bgmEl.loop = true;
+    bgmEl.volume = bgmGain();
+    bgmName = name4;
+    try {
+      window.__bgmOn = true;
+    } catch (e) {
+    }
+    const p = bgmEl.play();
+    if (p && p.catch) p.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+function stopBgm() {
+  if (bgmEl) {
+    try {
+      bgmEl.pause();
+    } catch (e) {
+    }
+  }
+  bgmEl = null;
+  bgmName = "";
+  try {
+    window.__bgmOn = false;
+  } catch (e) {
+  }
+}
+function applyBgm() {
+  if (!bgmEl) return;
+  const g = bgmGain();
+  bgmEl.volume = g;
+  if (g <= 0) {
+    try {
+      bgmEl.pause();
+    } catch (e) {
+    }
+  } else {
+    const p = bgmEl.play();
+    if (p && p.catch) p.catch(() => {
+    });
+  }
+}
 
 // src/state.js
 var opts = { cap: 4, rounds: 3, tax: true, clear2: false, seated: 0 };
@@ -72,8 +308,8 @@ var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="
 var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
 var PENCIL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>';
 var CROWN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 17h16M4 17 3 7l4.5 3.5L12 5l4.5 5.5L21 7l-1 10"/></svg>';
-var ACCT_HTML = '<div class="cfg" id="acctBox" role="dialog" aria-modal="true"><div class="cfg__v" data-acctclose></div><div class="cfg__p"><div class="cfg__h"><span id="acBoxT"></span><button class="cfg__x" data-acctclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="ac__name"><span id="acNick"></span><button id="acName" class="ac__edit" aria-label="rename"></button></div><p class="cfg__n" id="acLine"></p><div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div><div class="cfg__row"><button id="acOut"></button></div></div></div></div>';
-var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
+var ACCT_HTML = '<div class="cfg" id="acctBox" role="dialog" aria-modal="true"><div class="cfg__v" data-acctclose></div><div class="cfg__p"><div class="cfg__h"><span id="acBoxT"></span><button class="cfg__x" data-acctclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="ac__name"><span id="acNick"></span><button id="acName" class="ac__edit" aria-label="rename"></button></div><p class="cfg__n" id="acLine"></p><div class="cfg__l" id="acAvtL"></div><div class="avt" id="acAvt"></div><div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div><div class="cfg__row"><button id="acOut"></button></div></div></div></div>';
+var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p><div class="cfg__l" id="cfgVolL"></div><div class="vol"><span class="vol__n" id="volBgmN"></span><input class="vol__b" id="volBgm" type="range" min="0" max="100" step="5"><span class="vol__v" id="volBgmV"></span></div><div class="vol"><span class="vol__n" id="volSfxN"></span><input class="vol__b" id="volSfx" type="range" min="0" max="100" step="5"><span class="vol__v" id="volSfxV"></span></div></div></div></div>';
 function initNav() {
   window.__lang = function() {
     try {
@@ -113,6 +349,7 @@ function initNav() {
       rnd: ["\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815", "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791"],
       tax: ["\uC138\uAE08\uACFC \uD601\uBA85", "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4."],
       cut: ["2\uBC88 \uCEF7", "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4."],
+      friends: ["\uCE5C\uAD6C\uB4E4\uB07C\uB9AC \uD558\uAE30", ""],
       unit: "\uD310"
     },
     en: {
@@ -124,6 +361,7 @@ function initNav() {
       rnd: ["Number of rounds", "Three at least"],
       tax: ["Tax and revolution", "Cards change hands by standing, and two jokers overturn it."],
       cut: ["Two-cut", "Playing a 2 clears the pile and you lead again."],
+      friends: ["Friends only", ""],
       unit: ""
     }
   };
@@ -141,7 +379,7 @@ function initNav() {
     const mk = optMode === "create";
     document.getElementById("optT").textContent = mk ? t.create : t.edit;
     document.getElementById("optGo").textContent = mk ? t.goCreate : t.goEdit;
-    document.getElementById("optBody").innerHTML = optRow(t.cap, optStep("cap", o.cap, 4, 8)) + optRow(t.rnd, optStep("rnd", o.rounds, 3, 99, t.unit)) + optRow(t.tax, optSw("tax", o.tax)) + optRow(t.cut, optSw("cut", o.clear2));
+    document.getElementById("optBody").innerHTML = optRow(t.cap, optStep("cap", o.cap, 4, 8)) + optRow(t.rnd, optStep("rnd", o.rounds, 3, 99, t.unit)) + optRow(t.tax, optSw("tax", o.tax)) + optRow(t.cut, optSw("cut", o.clear2)) + optRow(t.friends, optSw("friends", o.friends));
   }
   function openOpts(mode) {
     optMode = mode;
@@ -158,6 +396,7 @@ function initNav() {
       if (v === "rnd+") o.rounds = o.rounds + 1;
       if (v === "tax") o.tax = !o.tax;
       if (v === "cut") o.clear2 = !o.clear2;
+      if (v === "friends") o.friends = !o.friends;
       optRender();
     }
     if (e.target.closest("[data-optclose]")) document.getElementById("opts").classList.remove("on");
@@ -196,11 +435,297 @@ function initNav() {
     document.getElementById("cfgT").textContent = t.title;
     document.getElementById("cfgLangL").textContent = t.lang;
     document.getElementById("cfgNote").textContent = "";
+    paintVol();
     document.getElementById("cfg").classList.add("on");
   }
+  function paintVol() {
+    const ko = (window.__lang || "ko") === "ko";
+    const set = (id, v) => {
+      const e = document.getElementById(id);
+      if (e) e.textContent = v;
+    };
+    set("cfgVolL", ko ? "\uC74C\uB7C9" : "Volume");
+    set("volBgmN", ko ? "\uBC30\uACBD\uC74C\uC545" : "Music");
+    set("volSfxN", ko ? "\uD6A8\uACFC\uC74C" : "Effects");
+    set("volBgmV", sound.bgm + "");
+    set("volSfxV", sound.sfx + "");
+    const b = document.getElementById("volBgm"), f = document.getElementById("volSfx");
+    if (b) b.value = String(sound.bgm);
+    if (f) f.value = String(sound.sfx);
+  }
+  function paintMute() {
+    const b = document.getElementById("btMute");
+    if (!b) return;
+    b.setAttribute("aria-pressed", String(!sound.muted));
+    b.classList.toggle("is-off", sound.muted);
+    b.setAttribute("aria-label", sound.muted ? "\uC18C\uB9AC \uCF1C\uAE30" : "\uC18C\uB9AC \uB044\uAE30");
+  }
+  document.addEventListener("input", (e) => {
+    if (e.target.id === "volBgm") {
+      setBgm(e.target.value);
+      paintVol();
+    }
+    if (e.target.id === "volSfx") {
+      setSfx(e.target.value);
+      paintVol();
+    }
+  });
+  let lastBtnAt = 0;
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#btMute")) {
+      toggleMute();
+      paintMute();
+      paintVol();
+      return;
+    }
+    const b = e.target.closest("button");
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    const quiet = e.target.closest(".emopick") || e.target.closest("#emo");
+    const t = Date.now();
+    if (t - lastBtnAt < 350) return;
+    if (b && !b.disabled && now !== "entry" && !quiet) {
+      lastBtnAt = t;
+      play("button");
+    }
+  });
+  let touched = false;
+  onSound(() => {
+    paintMute();
+  });
+  const esc = (t) => String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const FR_T = {
+    ko: {
+      title: "\uCE5C\uAD6C",
+      list: "\uBAA9\uB85D",
+      add: "\uCD94\uAC00",
+      rank: "\uC21C\uC704",
+      find: "\uBCC4\uBA85\uC73C\uB85C \uCC3E\uAE30",
+      search: "\uCC3E\uAE30",
+      none: "\uC544\uC9C1 \uCE5C\uAD6C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4",
+      noReq: "",
+      online: "\uC811\uC18D \uC911",
+      inGame: "\uAC8C\uC784 \uC911",
+      off: "\uC624\uD504\uB77C\uC778",
+      invite: "\uCD08\uB300",
+      del: "\uC0AD\uC81C",
+      accept: "\uC218\uB77D",
+      no: "\uAC70\uC808",
+      req: "\uBC1B\uC740 \uC2E0\uCCAD",
+      sent: "\uC2E0\uCCAD\uD588\uC2B5\uB2C8\uB2E4",
+      already: "\uC774\uBBF8 \uCE5C\uAD6C\uC785\uB2C8\uB2E4",
+      notFound: "\uADF8\uB7F0 \uBCC4\uBA85\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
+      self: "\uC790\uAE30 \uC790\uC2E0\uC740 \uC548 \uB429\uB2C8\uB2E4",
+      needRoom: "\uBC29\uC5D0 \uC788\uC744 \uB54C\uB9CC \uBD80\uB97C \uC218 \uC788\uC2B5\uB2C8\uB2E4",
+      invited: "\uBD88\uB800\uC2B5\uB2C8\uB2E4",
+      busy: "\uAC8C\uC784 \uC911\uC774\uB77C \uBABB \uBD80\uB985\uB2C8\uB2E4",
+      pts: "\uC810"
+    },
+    en: {
+      title: "Friends",
+      list: "List",
+      add: "Add",
+      rank: "Rank",
+      find: "Find by name",
+      search: "Find",
+      none: "No friends yet",
+      noReq: "",
+      online: "Online",
+      inGame: "In game",
+      off: "Offline",
+      invite: "Invite",
+      del: "Remove",
+      accept: "Accept",
+      no: "Decline",
+      req: "Requests",
+      sent: "Request sent",
+      already: "Already friends",
+      notFound: "No such name",
+      self: "That's you",
+      needRoom: "Open a room first",
+      invited: "Invited",
+      busy: "They're in a game",
+      pts: "pts"
+    }
+  };
+  let frTab = "list";
+  let frInviteMode = false;
+  const FR = () => window.__friends || {};
+  const frT = () => FR_T[window.__lang] || FR_T.ko;
+  function frNote(msg) {
+    const e = document.getElementById("frNote");
+    if (e) e.textContent = msg || "";
+  }
+  async function frPaint() {
+    const t = frT();
+    const box = document.getElementById("frBody");
+    if (!box) return;
+    document.getElementById("frT").textContent = frInviteMode ? (window.__lang || "ko") === "ko" ? "\uCE5C\uAD6C \uBD80\uB974\uAE30" : "Invite a friend" : t.title;
+    document.querySelector('[data-frtab="list"]').textContent = t.list;
+    document.querySelector('[data-frtab="add"]').textContent = t.add;
+    document.querySelector('[data-frtab="rank"]').textContent = t.rank;
+    document.querySelectorAll("[data-frtab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.frtab === frTab)));
+    document.getElementById("frFind").hidden = frTab !== "add";
+    document.getElementById("frSearch").textContent = t.search;
+    document.getElementById("frName").placeholder = t.find;
+    const want = frTab;
+    let html = "";
+    if (frTab === "add") {
+      const reqs = await FR().incoming();
+      html = !reqs.length ? "" : '<div class="fr__h">' + t.req + "</div>" + reqs.map((r) => '<div class="fr__row"><span class="fr__n">' + esc(r.name || "") + '</span><button class="fr__b" data-fraccept="' + r.uid + '" data-frname="' + esc(r.name || "") + '">' + t.accept + '</button><button class="fr__b fr__b--off" data-frno="' + r.uid + '">' + t.no + "</button></div>").join("");
+    } else if (frTab === "rank") {
+      const rows = await FR().friendRank();
+      html = rows.map((r, i) => '<div class="fr__row' + (r.mine ? " fr__row--me" : "") + '"><span class="fr__k">' + (i + 1) + '</span><span class="fr__n">' + esc(r.name || "") + '</span><span class="fr__s">' + (r.score || 0).toLocaleString() + t.pts + "</span></div>").join("");
+    } else {
+      const rows = await FR().listFriends();
+      html = !rows.length ? '<p class="cfg__n">' + t.none + "</p>" : rows.map((r) => {
+        const where2 = !r.online ? t.off : r.state === "game" ? t.inGame : t.online;
+        const dot = !r.online ? "off" : r.state === "game" ? "game" : "on";
+        if (frInviteMode) {
+          const busy = r.online && r.state === "game";
+          return '<div class="fr__row' + (busy || !r.online ? " fr__row--off" : "") + '"' + (busy || !r.online ? "" : ' data-frinv="' + r.uid + '"') + '><i class="fr__dot fr__dot--' + dot + '"></i><span class="fr__n">' + esc(r.name || "") + '</span><span class="fr__w">' + (busy ? t.busy : where2) + "</span></div>";
+        }
+        return '<div class="fr__row"><i class="fr__dot fr__dot--' + dot + '"></i><span class="fr__n">' + esc(r.name || "") + '</span><span class="fr__w">' + where2 + '</span><button class="fr__b fr__b--off" data-frdel="' + r.uid + '">' + t.del + "</button></div>";
+      }).join("");
+    }
+    if (want !== frTab) return;
+    box.innerHTML = html;
+  }
+  window.__openFriends = (mode) => {
+    frInviteMode = mode === "invite";
+    frTab = "list";
+    frNote("");
+    document.getElementById("frBox").classList.add("on");
+    frPaint();
+  };
+  document.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-friendopen]")) {
+      window.__openFriends();
+      return;
+    }
+    if (e.target.closest("[data-frclose]")) {
+      document.getElementById("frBox").classList.remove("on");
+      return;
+    }
+    const tb = e.target.closest("[data-frtab]");
+    if (tb) {
+      frTab = tb.dataset.frtab;
+      frNote("");
+      frPaint();
+      return;
+    }
+    if (e.target.closest("#frSearch")) {
+      const t = frT();
+      const v = (document.getElementById("frName").value || "").trim();
+      const f = await FR().findByName(v);
+      if (!f) {
+        frNote(t.notFound);
+        return;
+      }
+      if (f.self) {
+        frNote(t.self);
+        return;
+      }
+      const r = await FR().sendRequest(f.uid, f.name);
+      frNote(r.ok ? t.sent : r.why === "already" ? t.already : t.notFound);
+      return;
+    }
+    const ac = e.target.closest("[data-fraccept]");
+    if (ac) {
+      await FR().accept(ac.dataset.fraccept, ac.dataset.frname);
+      frPaint();
+      return;
+    }
+    const no = e.target.closest("[data-frno]");
+    if (no) {
+      await FR().reject(no.dataset.frno);
+      frPaint();
+      return;
+    }
+    const del = e.target.closest("[data-frdel]");
+    if (del) {
+      await FR().removeFriend(del.dataset.frdel);
+      frPaint();
+      return;
+    }
+    const inv = e.target.closest("[data-frinv]");
+    if (inv) {
+      const t = frT();
+      const code = (window.__room || {}).code;
+      if (!code) {
+        frNote(t.needRoom);
+        return;
+      }
+      await FR().invite(inv.dataset.frinv, code);
+      if (frInviteMode) {
+        document.getElementById("frBox").classList.remove("on");
+        return;
+      }
+      frNote(t.invited);
+      return;
+    }
+  });
+  const PLAY = ["table", "draw", "tax", "result"];
+  let lastState = "";
+  function pushPresence() {
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (now === "entry") return;
+    const st2 = PLAY.includes(now) ? "game" : "lobby";
+    if (st2 === lastState) return;
+    lastState = st2;
+    if (FR().setPresence) FR().setPresence(st2);
+  }
+  setInterval(() => {
+    lastState = "";
+    pushPresence();
+  }, 6e4);
+  let invSeen = {};
+  async function checkInvites() {
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (now === "entry" || PLAY.includes(now)) return;
+    if (!FR().invites) return;
+    const rows = await FR().invites();
+    const t = frT();
+    for (const r of rows) {
+      if (invSeen[r.uid] === r.code) continue;
+      invSeen[r.uid] = r.code;
+      const ko = (window.__lang || "ko") === "ko";
+      ask(
+        ko ? "\uCD08\uB300" : "Invite",
+        (r.name || "") + (ko ? " \uB2D8\uC774 \uBD88\uB800\uC2B5\uB2C8\uB2E4" : " invited you"),
+        ko ? "\uB4E4\uC5B4\uAC00\uAE30" : "Join",
+        async () => {
+          await FR().dropInvite(r.uid);
+          if (window.__joinRoom) {
+            const seat = await window.__joinRoom(r.code);
+            if (seat != null) go("room");
+          }
+        }
+      );
+      break;
+    }
+  }
+  setInterval(checkInvites, 1e4);
+  function paintAvatars() {
+    const wrap2 = document.getElementById("acAvt");
+    const lab = document.getElementById("acAvtL");
+    if (!wrap2 || !lab) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const a = window.ACCOUNT || {};
+    const score = a.score || 0;
+    const mine = Number(a.avatar) || 0;
+    lab.textContent = ko ? "\uD504\uB85C\uD544 \uC124\uC815" : "Profile";
+    wrap2.innerHTML = AVATARS.map((v, i) => {
+      const open = score >= (i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5e3);
+      const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5e3;
+      const lock = open ? "" : '<i class="avt__lk"></i><span class="avt__need"><b>' + need.toLocaleString() + (ko ? "\uC810" : "") + "</b><i>" + (ko ? "\uB2EC\uC131 \uC2DC \uD574\uC81C" : "to unlock") + "</i></span>";
+      return '<button class="avt__i' + (open ? "" : " avt__i--lock") + (i === mine ? " avt__i--on" : "") + '" data-avt="' + i + '" style="background-image:url(' + v.f + ')" aria-label="' + (ko ? v.ko : v.en) + '">' + lock + "</button>";
+    }).join("");
+  }
   function paintAcct() {
+    paintVol();
     const ko = (window.__lang || "ko") === "ko";
     const a = window.ACCOUNT;
+    paintAvatars();
     const lab = document.getElementById("acBoxT");
     const line = document.getElementById("acLine");
     const row = document.getElementById("acLinkRow");
@@ -352,14 +877,21 @@ function initNav() {
     }
     if (e.target.closest("#acOut")) {
       const ko2 = (window.__lang || "ko") === "ko";
-      conflictOn = false;
-      try {
-        if (window.signOutNow) await window.signOutNow();
-      } catch (err) {
-        window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
-      }
-      closeAcct();
-      go("entry");
+      ask(
+        ko2 ? "\uB85C\uADF8\uC544\uC6C3" : "Sign out",
+        ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC744 \uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?" : "Sign out of this account?",
+        ko2 ? "\uC608" : "Sign out",
+        async () => {
+          conflictOn = false;
+          try {
+            if (window.signOutNow) await window.signOutNow();
+          } catch (err) {
+            window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
+          }
+          closeAcct();
+          go("entry");
+        }
+      );
     }
   });
   document.addEventListener("click", async (e) => {
@@ -393,6 +925,16 @@ function initNav() {
     go("table");
   };
   function go(id) {
+    if (id === "tax" && window.__holdPlay) window.__holdPlay(true);
+    if (id === "lobby") {
+      touched = true;
+      warm();
+    }
+    setTimeout(pushPresence, 0);
+    if (touched) {
+      if (id === "lobby" || id === "rank") playBgm("lobby");
+      else stopBgm();
+    }
     if (id === "draw" && window.__bootDraw) window.__bootDraw();
     if (id === "table" && window.__bootTable) {
       window.__bootTable(window.__fresh !== false);
@@ -408,8 +950,9 @@ function initNav() {
   }
   document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
-    if (window.__createRoom) {
-      const code = await window.__createRoom();
+    const f = window.__quickJoin || window.__createRoom;
+    if (f) {
+      const code = await f();
       if (!code) return;
     }
     go("room");
@@ -470,6 +1013,134 @@ function initNav() {
       setTimeout(() => go("table"), 140);
     }
   });
+  const ASK_T = {
+    ko: {
+      quit: "\uAC8C\uC784 \uC885\uB8CC",
+      quitM: "\uAC8C\uC784\uC744 \uC885\uB8CC\uD560\uAE4C\uC694?",
+      yes: "\uC885\uB8CC",
+      no: "\uCDE8\uC18C",
+      leave: "\uD310\uC5D0\uC11C \uB098\uAC00\uAE30",
+      leaveM: "\uB098\uAC00\uBA74 \uC644\uC8FC \uC2E4\uD328\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4",
+      leaveY: "\uB098\uAC00\uAE30",
+      room: "\uBC29 \uB098\uAC00\uAE30",
+      roomM: "\uBC29\uC5D0\uC11C \uB098\uAC08\uAE4C\uC694?"
+    },
+    en: {
+      quit: "Quit",
+      quitM: "Close the game?",
+      yes: "Quit",
+      no: "Cancel",
+      leave: "Leave the game",
+      leaveM: "Leaving counts as a forfeit",
+      leaveY: "Leave",
+      room: "Leave room",
+      roomM: "Leave this room?"
+    }
+  };
+  let askYes = null;
+  function ask(title, msg, yesLabel, onYes) {
+    const t = ASK_T[window.__lang] || ASK_T.ko;
+    if (!document.getElementById("askT")) {
+      if (onYes) onYes();
+      return;
+    }
+    document.getElementById("askT").textContent = title;
+    document.getElementById("askM").textContent = msg;
+    document.getElementById("askYes").textContent = yesLabel;
+    document.getElementById("askNo").textContent = t.no;
+    askYes = onYes;
+    document.getElementById("ask").classList.add("on");
+  }
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-avt]");
+    if (!b) return;
+    const i = Number(b.dataset.avt);
+    const ko = (window.__lang || "ko") === "ko";
+    const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5e3;
+    const score = (window.ACCOUNT || {}).score || 0;
+    if (score < need) return;
+    if (window.__setAvatar) await window.__setAvatar(i);
+    paintAvatars();
+  });
+  function askClose() {
+    document.getElementById("ask").classList.remove("on");
+    askYes = null;
+  }
+  function askOpen() {
+    return document.getElementById("ask").classList.contains("on");
+  }
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-askno]")) {
+      askClose();
+      return;
+    }
+    if (e.target.closest("#askYes")) {
+      const f = askYes;
+      askClose();
+      if (f) f();
+    }
+  });
+  function onBack() {
+    if (askOpen()) {
+      askClose();
+      return;
+    }
+    const box = document.querySelector(".cfg.on");
+    if (box) {
+      box.classList.remove("on");
+      return;
+    }
+    const now = (document.querySelector(".page.is-on") || {}).id || "entry";
+    const t = ASK_T[window.__lang] || ASK_T.ko;
+    if (now === "lobby" || now === "entry") {
+      ask(t.quit, t.quitM, t.yes, quitApp);
+      return;
+    }
+    if (now === "rank") {
+      go("lobby");
+      return;
+    }
+    if (now === "room") {
+      ask(t.room, t.roomM, t.roomY || t.leaveY, () => {
+        if (window.__quitGame) window.__quitGame();
+        go("lobby");
+      });
+      return;
+    }
+    if (now === "table" || now === "tax") {
+      ask(t.leave, t.leaveM, t.leaveY, () => {
+        if (window.__quitGame) window.__quitGame();
+        go("lobby");
+      });
+      return;
+    }
+  }
+  window.__back = onBack;
+  function quitApp() {
+    const cap = window.Capacitor;
+    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.exitApp) {
+      cap.Plugins.App.exitApp();
+      return;
+    }
+    try {
+      window.close();
+    } catch (e) {
+    }
+  }
+  try {
+    history.pushState({ zoo: 1 }, "");
+    window.addEventListener("popstate", () => {
+      history.pushState({ zoo: 1 }, "");
+      onBack();
+    });
+  } catch (e) {
+  }
+  try {
+    const cap = window.Capacitor;
+    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
+      cap.Plugins.App.addListener("backButton", () => onBack());
+  } catch (e) {
+  }
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-back]");
     if (!b) return;
@@ -528,21 +1199,6 @@ function scoped(root) {
     addEventListener: (...a) => window.document.addEventListener(...a)
   };
 }
-
-// src/lib/assets.js
-var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
-var LOBBY_ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
-var HERO = { "02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp" };
-var EMOTES = [
-  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
-  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANK YOU" },
-  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "T_T" },
-  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
-  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
-];
-var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/entry.js
 function mount(root) {
@@ -855,12 +1511,20 @@ __export(room_exports, {
   mount: () => mount3
 });
 function mount3(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
+  function avtSeat(p, seat) {
+    if (p && p.avatar != null) return avtFile(Number(p.avatar) || 0);
+    return avtOf(seat);
+  }
   const faceOf = (i) => {
     const f = window.GAME && window.GAME.faces;
     return f && f[i] != null ? f[i] : i;
   };
   const document2 = scoped(root);
-  const HEADS2 = HEADS;
   const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
   const PLAYERS_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
   const L2 = {
@@ -876,6 +1540,7 @@ function mount3(root) {
       full: "\uC790\uB9AC\uAC00 \uB2E4 \uCC3C\uC2B5\uB2C8\uB2E4",
       empty: "\uBE48 \uC790\uB9AC",
       hostTag: "\uBC29\uC7A5",
+      inviteHere: "\uCD08\uB300\uD558\uAE30",
       capT: "\uBC29 \uC778\uC6D0",
       capD: "4\uBA85 \u2013 8\uBA85",
       capDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
@@ -915,6 +1580,7 @@ function mount3(root) {
       full: "The table is full",
       empty: "Open seat",
       hostTag: "HOST",
+      inviteHere: "Invite",
       capT: "Table size",
       capD: "4 \u2013 8 players",
       capDG: "The host decides.",
@@ -1015,6 +1681,8 @@ function mount3(root) {
     if (R && R.seats) {
       return asArray(R.seats, R.cap || cap).map((s, i) => s ? {
         name: s.name || "",
+        avatar: Number(s.avatar) || 0,
+        /* 이걸 안 실어서 대기실이 전부 생쥐였다 */
         me: i === R.me,
         host: s.uid && s.uid === R.host,
         off: Boolean(s.off),
@@ -1030,11 +1698,47 @@ function mount3(root) {
       left: false
     }));
   }
+  let sndSeated = 0;
+  function seatSound(n) {
+    const sec = window.document.getElementById("room");
+    const on2 = sec && sec.classList.contains("is-on");
+    if (on2 && n > sndSeated && sndSeated > 0) play("join");
+    sndSeated = n;
+  }
+  let touchAt = 0;
+  function onTap(node, fn) {
+    if (!node) return;
+    let inside = false;
+    node.addEventListener("touchstart", () => {
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", (e) => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) {
+        const r = node.getBoundingClientRect();
+        if (t.clientX < r.left - 8 || t.clientX > r.right + 8 || t.clientY < r.top - 8 || t.clientY > r.bottom + 8) return;
+      }
+      fn(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => {
+      inside = false;
+    }, { passive: true });
+    node.onclick = (e) => {
+      if (Date.now() - touchAt < 900) return;
+      if (e && e.button != null && e.button !== 0) return;
+      fn(e);
+    };
+  }
   function renderSeats() {
     RB = ringBox();
     const box = document2.getElementById("seats");
     box.innerHTML = "";
     const list = seatList();
+    seatSound(list.filter((x2) => x2 && x2.name).length);
     const R = window.__room;
     if (R) cap = R.cap || cap;
     for (let i = 0; i < cap; i++) {
@@ -1050,9 +1754,12 @@ function mount3(root) {
       el.style.left = left.toFixed(2) + "%";
       el.style.top = top.toFixed(2) + "%";
       const big = cap <= 6;
-      el.style.setProperty("--av", (big ? 46 : 36) + "px");
+      el.style.setProperty("--av", "46px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtSeat(p, faceOf(i)) + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span><span class="seat__n seat__inv">' + L2[lang].inviteHere + "</span>";
+      if (!filled) onTap(el, () => {
+        if (window.__openFriends) window.__openFriends("invite");
+      });
       box.appendChild(el);
     }
     const sm = document2.getElementById("sum");
@@ -1061,8 +1768,6 @@ function mount3(root) {
     document2.getElementById("bt").textContent = t.title;
     document2.getElementById("rl").textContent = t.roomL;
     document2.getElementById("rc").textContent = t.copy;
-    document2.querySelector('#view [data-v="host"]').textContent = t.host;
-    document2.querySelector('#view [data-v="guest"]').textContent = t.guest;
     const fc = document2.querySelector(".felt__c");
     if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
     const R2 = window.__room;
@@ -1089,7 +1794,9 @@ function mount3(root) {
     sm.disabled = !iamHost;
     const a = document2.getElementById("action");
     if (iamHost) {
-      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + ">" + (now < 4 ? t.needFour : t.start) + "</button>";
+      const lf = window.__roomLeft;
+      const lbl = now < 4 ? t.needFour : t.start + (lf != null && lf > 0 ? " " + lf : "");
+      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + ">" + lbl + "</button>";
     } else {
       a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
     }
@@ -1159,13 +1866,6 @@ function mount3(root) {
       lang = b.dataset.l;
       document2.documentElement.lang = lang;
       document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
-      draw();
-    });
-  });
-  document2.querySelectorAll("#view button").forEach((b) => {
-    b.addEventListener("click", () => {
-      role = b.dataset.v;
-      document2.querySelectorAll("#view button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b)));
       draw();
     });
   });
@@ -1264,6 +1964,11 @@ function screenView(G2, ctx, myID, names) {
     finish: (G2.finished || []).map((s) => toScreen(s, me2, n)),
     score: G2.counts.map((_, seat) => G2.score[toSeat(seat, me2, n)]),
     roundNo: G2.roundNo,
+    trickNo: G2.trickNo || 0,
+    /* 몇 번째 바퀴인가 */
+    /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
+    moveNo: G2.moveNo || 0,
+    lastMove: G2.lastMove ? { k: G2.lastMove.k, by: toScreen(G2.lastMove.by, me2, n) } : null,
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
     draw,
@@ -1515,7 +2220,7 @@ function scheduleBot() {
     }, 700);
     return;
   }
-  if (engine.paused) return;
+  if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
   const g = ++gen;
@@ -1556,7 +2261,7 @@ function takeCard(idx) {
   c.updatePlayerID(engine.myID);
   c.moves.takeCard(idx);
 }
-function play(num, count2) {
+function play2(num, count2) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.play(num, count2);
@@ -1571,13 +2276,18 @@ function passTurn() {
 
 // src/screens/draw.js
 function mount4(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const faceOf = (i) => {
     const g = window.GAME || {};
     const f = g.seatFaces || g.faces;
     return f && f[i] != null ? f[i] : i;
   };
   const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const ART2 = ART_DECK;
   const el = (id) => document2.getElementById(id);
   const isJ = (c) => c >= 13;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
@@ -1626,7 +2336,7 @@ function mount4(root) {
   const art = (n) => n === 13 ? ART2.jokerA : n === 14 ? ART2.jokerB : ART2[String(n).padStart(2, "0")];
   const val = (c) => isJ(c) ? 13 : c;
   let drawn = Array(N2).fill(null);
-  let pool = [];
+  let pool2 = [];
   let takenK = [];
   let plan = null;
   let waiting = [];
@@ -1687,12 +2397,12 @@ function mount4(root) {
   }
   function layout(players) {
     const v = engine.view;
-    pool = v && v.draw ? v.draw.pool.slice() : new Array(players.length).fill(null);
+    pool2 = v && v.draw ? v.draw.pool.slice() : new Array(players.length).fill(null);
     plan = null;
     waiting = players.slice();
     const deck = el("deck");
     deck.innerHTML = "";
-    const n = pool.length;
+    const n = pool2.length;
     const cols = n <= 4 ? n : Math.min(4, Math.ceil(n / 2));
     const rows = Math.ceil(n / cols);
     const ringEl = el("ring");
@@ -1700,10 +2410,10 @@ function mount4(root) {
     const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
     const byW = Math.floor((avail - (cols - 1) * 9) / cols);
     const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
-    const pw = Math.max(26, Math.min(46, byW, byH));
+    const pw = Math.round(Math.max(26, Math.min(46, byW, byH)) * 0.8);
     deck.style.setProperty("--cols", cols);
     deck.style.setProperty("--pw", pw + "px");
-    pool.forEach((c, k2) => {
+    pool2.forEach((c, k2) => {
       const w = document2.createElement("div");
       w.className = "pk";
       w.dataset.k = k2;
@@ -1764,9 +2474,16 @@ function mount4(root) {
     d.by.forEach((seat, k2) => {
       if (seat == null) return;
       const w = deck.querySelector('.pk[data-k="' + k2 + '"]');
-      if (!w || w.classList.contains("taken")) return;
+      if (!w) return;
+      const val2 = d.pool[k2];
+      if (val2 == null) return;
       const face = w.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(d.pool[k2]);
+      if (face && w.dataset.val !== String(val2)) {
+        face.innerHTML = cardFace(val2);
+        w.dataset.val = String(val2);
+      }
+      if (w.classList.contains("taken")) return;
+      play("card_play");
       w.classList.add("flip", "taken");
       w.dataset.seat = seat;
       takenK.push(k2);
@@ -1845,13 +2562,13 @@ function mount4(root) {
       d.style.left = p.x.toFixed(1) + "%";
       d.style.top = p.y.toFixed(1) + "%";
       const big = N2 <= 6;
-      d.style.setProperty("--av", (big ? 42 : 33) + "px");
+      d.style.setProperty("--av", "42px");
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       const first = phase === "done" && i === winner();
       const dv = drawn[i] == null ? "" : val(drawn[i]);
       const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
       const upper = Math.sin(Math.PI / 2 + i * 2 * Math.PI / N2) < 0;
-      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
+      d.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T2[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(faceOf(i)) + ')"></span><span class="seat__n">' + nameOf(i) + "</span>" + (upper ? "" : chip);
       box.appendChild(d);
     }
     const md = el("mid");
@@ -1883,7 +2600,8 @@ function mount4(root) {
     const dbox0 = el("deck");
     if (dbox0) dbox0.innerHTML = "";
     online = Boolean(window.__net);
-    N2 = online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
+    const dv = engine.view;
+    N2 = dv && dv.draw && dv.draw.pool.length || (online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6);
     if (cdId) {
       clearInterval(cdId);
       cdId = null;
@@ -1898,6 +2616,11 @@ function mount4(root) {
       window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
     }
     phase = "pick";
+    {
+      const sb = el("seats"), db2 = el("deck");
+      if (sb) sb.innerHTML = "";
+      if (db2) db2.innerHTML = "";
+    }
     layout(Array.from({ length: N2 }, (_, i) => i));
     if (offView) offView();
     offView = onView((v) => {
@@ -1955,9 +2678,69 @@ var table_exports = {};
 __export(table_exports, {
   mount: () => mount5
 });
+
+// src/lib/sndkey.js
+function trickId(v) {
+  if (v && v.trickNo != null) return "t" + v.trickNo;
+  return "c" + (v && v.seats || []).reduce((a, s) => a + (s.c || 0), 0);
+}
+function moveEvents(v) {
+  if (!v) return [];
+  if (v.moveNo != null && v.lastMove) {
+    if (!v.moveNo) return [];
+    return [{ key: "m" + v.moveNo, kind: v.lastMove.k, by: v.lastMove.by }];
+  }
+  const id = trickId(v);
+  const out = [];
+  const tb = v.table || [];
+  if (tb.length) {
+    const t = tb[tb.length - 1];
+    out.push({
+      key: id + "#" + tb.length + ":" + t.by + "-" + t.num + "-" + t.count,
+      kind: "play",
+      by: t.by
+    });
+  }
+  (v.seats || []).forEach((s, i) => {
+    if (s && s.s === "pass") out.push({ key: id + "#p" + i, kind: "pass", by: i });
+  });
+  return out;
+}
+function makeSeen(limit2 = 240) {
+  const set = /* @__PURE__ */ new Set();
+  return {
+    /* 처음 보는 번호면 true (그리고 기억한다) */
+    add(key) {
+      if (!key) return false;
+      if (set.has(key)) return false;
+      set.add(key);
+      if (set.size > limit2) {
+        const it2 = set.values();
+        for (let i = set.size - limit2; i > 0; i--) set.delete(it2.next().value);
+      }
+      return true;
+    },
+    has(key) {
+      return set.has(key);
+    },
+    clear() {
+      set.clear();
+    },
+    get size() {
+      return set.size;
+    }
+  };
+}
+
+// src/screens/table.js
 function mount5(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const HEADS2 = HEADS, ART2 = ART;
+  const ART2 = ART;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
   const T2 = {
@@ -2032,21 +2815,75 @@ function mount5(root) {
   let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
+  let sndTurn = false, sndFin = 0, sndRev = 0;
+  const seen = makeSeen();
+  let primed = false;
+  let pending = null, pendingAt = 0, pendingHand = -1;
+  const onScreen = () => {
+    const sec = window.document.getElementById("table");
+    return Boolean(sec && sec.classList.contains("is-on"));
+  };
+  function sounds(v, quiet) {
+    const mute = Boolean(quiet) || !onScreen();
+    const evs = moveEvents(v).filter((e) => seen.add(e.key));
+    if (evs.length && primed && !mute) {
+      const kinds = new Set(evs.map((e) => e.kind));
+      evShow("** \uC18C\uB9AC " + evs.map((e) => e.kind + "@" + e.by).join(" "));
+      try {
+        const d = window.__sndDetail = window.__sndDetail || [];
+        evs.forEach((e) => d.push(e.kind + ":" + e.by));
+      } catch (e) {
+      }
+      if (kinds.has("play")) play("card_play");
+      if (kinds.has("pass")) play("pass");
+    }
+    primed = true;
+    if (v.myTurn && !sndTurn && !mute) play("my_turn");
+    sndTurn = Boolean(v.myTurn);
+    const fin = (v.finish || []).length;
+    if (fin > sndFin && !mute) {
+      const who = v.finish[fin - 1];
+      if (who === 0) play("win");
+      if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) play("lose");
+    }
+    sndFin = fin;
+    const rev = v.revolution && v.revolution.declared ? 1 : 0;
+    if (rev && !sndRev && !mute) play("revolution");
+    sndRev = rev;
+  }
   function apply(v) {
     if (!v) return;
-    if (holdingEnd && !v.over) return;
+    if (holdingEnd && !v.over) {
+      sounds(v, true);
+      return;
+    }
+    sounds(v);
     SEATS = v.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat, r: x2.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
     turn = v.turn;
     busy = !v.myTurn;
+    if (pending) {
+      const myC = (v.seats || [])[0] ? v.seats[0].c : -1;
+      const done = pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v.myTurn || Date.now() - pendingAt > 2e3;
+      if (done) {
+        pending = null;
+        pendingHand = -1;
+      } else busy = true;
+    }
     if (v.roundNo !== lastRound) {
       const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = [];
       animated = 0;
       spread = false;
+      sndFin = 0;
+      sndTurn = false;
+      sndRev = 0;
+      flew = /* @__PURE__ */ new Set();
+      pending = null;
+      pendingHand = -1;
       window.__roundNo = v.roundNo;
       if (!first && !v.over && v.lastRound && window.__onRoundEnd) {
         showLastRound(v);
@@ -2080,7 +2917,7 @@ function mount5(root) {
       ghostSig = "";
     }
     if (v.table.length < trick.length) {
-      animated = 0;
+      if (!ghost.length) animated = 0;
       spread = false;
     }
     trick = v.table.map((t) => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
@@ -2141,6 +2978,11 @@ function mount5(root) {
     ghost = [];
     ghostSig = "";
     holdingEnd = false;
+    seen.clear();
+    primed = false;
+    sndFin = 0;
+    sndTurn = false;
+    sndRev = 0;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -2152,6 +2994,7 @@ function mount5(root) {
     emoPickOpen(false);
     paintEmoBtn();
     Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
+    if (el("emolayer")) el("emolayer").innerHTML = "";
     offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
@@ -2169,6 +3012,15 @@ function mount5(root) {
   let lastPlayer = null;
   let busy = false;
   let animated = 0;
+  let flew = /* @__PURE__ */ new Set();
+  const keyOf = (t) => t ? t.by + "-" + t.num + "-" + t.count : "";
+  function flewKey(t) {
+    const k2 = keyOf(t);
+    if (!k2) return true;
+    if (flew.has(k2)) return true;
+    flew.add(k2);
+    return false;
+  }
   let spread = false;
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n) => isJ(n) ? T2[lang].joker : (lang === "ko" ? KO_N : EN_N)[n - 1];
@@ -2310,14 +3162,14 @@ function mount5(root) {
       d.dataset.nudge = p.nudge || 0;
       d.dataset.nudgex = p.nudgeX || 0;
       const big = SEATS.length <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d.style.setProperty("--av", "44px");
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T2[lang];
       const tag = s.c === 0 ? s.r >= 0 ? rankTag(s.r) : tg.tagOut : s.s === "pass" ? tg.tagPass : "";
       const topSeat = i !== 0 && p.y < 22;
       if (topSeat) d.classList.add("seat--above");
-      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(s.av == null ? i : s.av) + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s.n || "") + "</span>";
       const fan = i === 0 ? "" : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T2[lang].left(s.c) + "</span>";
@@ -2350,7 +3202,8 @@ function mount5(root) {
       const k2 = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t.by);
       const g = document2.createElement("div");
-      g.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
+      g.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (flewKey(trick2[k2]) ? "" : " play--new");
+      if (!flewKey(trick2[k2])) evShow("** \uB0A0\uC544\uC624\uB294 \uC5F0\uCD9C " + k2);
       const d = trick2.length - 1 - k2;
       g.style.setProperty("--r", d === 0 ? "0deg" : k2 * 37 % 19 - 9 - d * 3 + "deg");
       g.style.setProperty("--dy", -Math.min(d, 3) * 6 + "px");
@@ -2376,7 +3229,7 @@ function mount5(root) {
       s.style.left = (h.clientWidth - total) / 2 + i * step + "px";
       s.style.zIndex = i;
       s.innerHTML = cardHTML(c, w);
-      s.onclick = () => {
+      onTap(s, () => {
         handTouched();
         if (turn !== 0 || busy) return;
         const k2 = sel.indexOf(i);
@@ -2388,7 +3241,7 @@ function mount5(root) {
         if (!canPick(i)) return;
         sel.push(i);
         draw();
-      };
+      });
       h.appendChild(s);
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
@@ -2424,6 +3277,7 @@ function mount5(root) {
     renderHand();
     renderBottom();
     paintEmotes();
+    el("seats").querySelectorAll(".seat__tag").forEach(keepInView);
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -2433,17 +3287,26 @@ function mount5(root) {
   const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
+  let showId = null;
   function resetTimer() {
+    if (showId) clearTimeout(showId);
+    showId = null;
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
+    stop("tick");
     tLeft = 0;
+    if (turn === 0 && !busy && !onScreen()) {
+      showId = setTimeout(resetTimer, 150);
+      return;
+    }
     if (turn === 0 && !busy) {
       tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
+        if (tLeft === 5) play("tick");
         if (tLeft <= 0) {
           clearInterval(tickId);
           tickId = null;
@@ -2468,27 +3331,110 @@ function mount5(root) {
     if (numValue === 1) return true;
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
-  el("play").onclick = () => {
+  let touchAt = 0;
+  let evBox = null;
+  const EVLOG = (() => {
+    try {
+      return String(location.search || "").indexOf("evlog") >= 0;
+    } catch (e) {
+      return false;
+    }
+  })();
+  function evShow(txt) {
+    if (!EVLOG) return;
+    if (!evBox) {
+      evBox = window.document.createElement("div");
+      evBox.style.cssText = "position:fixed;left:4px;right:4px;top:4px;z-index:99999;background:rgba(0,0,0,.86);color:#7CFF9B;font:11px/1.35 monospace;padding:6px 8px;border-radius:4px;white-space:pre-wrap;max-height:36vh;overflow:auto";
+      window.document.body.appendChild(evBox);
+      evBox.onclick = () => {
+        evBox.textContent = "";
+      };
+    }
+    evBox.textContent = (txt + "\n" + evBox.textContent).slice(0, 1400);
+  }
+  function evWatch(node, tag) {
+    if (!EVLOG || !node) return;
+    ["touchstart", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click"].forEach((n) => node.addEventListener(n, (e) => {
+      evShow(tag + " " + n + (e.pointerType ? ":" + e.pointerType : "") + (e.cancelable ? "" : " (\uBABB\uB9C9\uC74C)") + " " + Date.now() % 1e5);
+    }, true));
+  }
+  function onTap(node, fn) {
+    if (!node) return;
+    let startX = 0, startY = 0, inside = false;
+    node.addEventListener("touchstart", (e) => {
+      const t = e.touches && e.touches[0];
+      startX = t ? t.clientX : 0;
+      startY = t ? t.clientY : 0;
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", (e) => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) {
+        const r = node.getBoundingClientRect();
+        const x2 = t.clientX, y = t.clientY;
+        if (x2 < r.left - 8 || x2 > r.right + 8 || y < r.top - 8 || y > r.bottom + 8) return;
+      }
+      evShow("  \u2192 \uCC98\uB9AC(\uC190\uAC00\uB77D)");
+      fn(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => {
+      inside = false;
+    }, { passive: true });
+    node.onclick = (e) => {
+      if (Date.now() - touchAt < 900) {
+        evShow("  (click \uBC84\uB9BC)");
+        return;
+      }
+      if (e && e.button != null && e.button !== 0) return;
+      evShow("  \u2192 \uCC98\uB9AC(click)");
+      fn(e);
+    };
+    evWatch(node, "");
+  }
+  onTap(el("play"), () => {
     const list = sel.map((i) => hand[i]);
     if (!legal(list) || turn !== 0 || busy) return;
     const e = effective(list);
     sel = [];
     busy = true;
-    play(e, list.length);
+    stop("tick");
+    pending = true;
+    pendingHand = hand.length;
+    pendingAt = Date.now();
+    play2(e, list.length);
     iMoved();
     unlockLater();
-  };
+  });
   let unlockId = null;
+  function viewSig(v) {
+    if (!v) return "";
+    return v.turn + "|" + (v.table || []).length + "|" + (v.seats || []).map((x2) => x2.c + (x2.s || "")).join(",");
+  }
   function unlockLater() {
     if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
+    const sent = viewSig(engine.view);
+    let tries = 0;
+    const look = () => {
       unlockId = null;
       const v = engine.view;
-      if (v && v.myTurn && busy) {
+      if (!busy) return;
+      if (viewSig(v) !== sent) {
+        return;
+      }
+      if (++tries < 5) {
+        unlockId = setTimeout(look, 1200);
+        return;
+      }
+      if (v && v.myTurn) {
         busy = false;
         draw();
       }
-    }, 1200);
+    };
+    unlockId = setTimeout(look, 1200);
   }
   function iMoved() {
     if (window.__iMoved) window.__iMoved();
@@ -2503,12 +3449,16 @@ function mount5(root) {
       sel = [];
       busy = true;
       flash(T2[lang].autoPass, true);
-      play(w.num, w.count);
+      play2(w.num, w.count);
       if (auto) toAuto();
       return;
     }
     sel = [];
     busy = true;
+    stop("tick");
+    pending = true;
+    pendingHand = -1;
+    pendingAt = Date.now();
     if (auto) flash(T2[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();
@@ -2528,7 +3478,7 @@ function mount5(root) {
     if (best !== null) return { num: best, count: 1 };
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
-  el("pass").onclick = () => doPass(false);
+  onTap(el("pass"), () => doPass(false));
   function setAuto2(on2) {
     setAuto(on2);
     const b = el("auto");
@@ -2596,30 +3546,50 @@ function mount5(root) {
   }
   const emoNow = {};
   function paintEmote(pos) {
+    const layer = el("emolayer");
     const seats = el("seats");
     const d = seats && seats.children[pos];
-    if (!d) return;
-    const wrap2 = d.querySelector(".seat__avwrap");
-    if (!wrap2) return;
-    const old = wrap2.querySelector(".seat__emo");
+    if (!layer || !d) return;
+    const old = layer.querySelector('[data-pos="' + pos + '"]');
     if (old) old.remove();
     const cur2 = emoNow[pos];
-    const tag = wrap2.querySelector(".seat__tag");
+    const wrap2 = d.querySelector(".seat__avwrap");
+    const tag = wrap2 && wrap2.querySelector(".seat__tag");
     if (!cur2 || Date.now() >= cur2.until) {
       if (tag) tag.style.visibility = "";
       return;
     }
     if (tag) tag.style.visibility = "hidden";
+    const av = d.querySelector(".seat__av");
+    if (!av) return;
     const box = document2.createElement("span");
     box.className = "seat__emo";
+    box.dataset.pos = String(pos);
     box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
-    wrap2.appendChild(box);
+    if (cur2.shown) box.style.animation = "none";
+    else cur2.shown = true;
+    layer.appendChild(box);
+    const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
+    box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";
+    box.style.bottom = Math.round(lb.bottom - ab.bottom - 10) + "px";
+    keepInView(box);
+  }
+  function keepInView(box) {
+    if (!box) return;
+    const stage = window.document.getElementById("stage") || window.document.documentElement;
+    const W = stage.getBoundingClientRect();
+    const r = box.getBoundingClientRect();
+    if (!r.width) return;
+    let dx = 0;
+    if (r.left < W.left + 2) dx = W.left + 2 - r.left;
+    else if (r.right > W.right - 2) dx = W.right - 2 - r.right;
+    box.style.marginLeft = dx ? Math.round(dx) + "px" : "";
   }
   function paintEmotes() {
     Object.keys(emoNow).forEach((p) => paintEmote(Number(p)));
   }
   function showEmote(pos, k2) {
-    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW };
+    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW, shown: false };
     paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
@@ -2659,8 +3629,13 @@ __export(tax_exports, {
   mount: () => mount6
 });
 function mount6(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const ART2 = ART_DECK;
   const el = (id) => document2.getElementById(id);
   const isJ = (c) => c >= 13;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
@@ -2739,7 +3714,7 @@ function mount6(root) {
       joker: "CHAMELEON"
     }
   };
-  let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
+  let lang = "ko", step = 0, sel = [], selVal = [], declared = false, reversed = false, revSeat = null;
   let N2 = 6;
   let online = false;
   let ranks = [];
@@ -2856,7 +3831,9 @@ function mount6(root) {
   }
   function applyTax(myGive) {
     if (online) {
-      if (window.__setTaxGive) window.__setTaxGive(myGive || null);
+      if (window.__setTaxGive && Array.isArray(myGive) && myGive.length && !(window.__taxGive && window.__taxGive.length)) {
+        window.__setTaxGive(myGive);
+      }
       return;
     }
     const hh = holds(), o = order();
@@ -2873,6 +3850,7 @@ function mount6(root) {
   }
   function runDeal() {
     clearFx();
+    play("card_deal");
     for (let round = 0; round < 3; round++)
       for (let i = 0; i < N2; i++)
         flyCard(-1, i, 0, (round * 6 + i) * 55, true);
@@ -2880,6 +3858,7 @@ function mount6(root) {
   function runTax() {
     window.__myGive = window.__myGive || [];
     clearFx();
+    play("card_deal");
     const o = order(), n = N2;
     const pairs = [[o[0], o[n - 1], 2], [o[1], o[n - 2], 1]];
     let t = 0;
@@ -2923,9 +3902,9 @@ function mount6(root) {
       d.style.left = p.x.toFixed(1) + "%";
       d.style.top = p.y.toFixed(1) + "%";
       const big = N2 <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d.style.setProperty("--av", "44px");
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      d.innerHTML = '<span class="seat__r on">' + rankLabel(r) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i] + ')"></span><span class="seat__n">' + nameOf(i) + "</span>";
+      d.innerHTML = '<span class="seat__r on">' + rankLabel(r) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(i) + ')"></span><span class="seat__n">' + nameOf(i) + "</span>";
       box.appendChild(d);
     }
     const hn = el("hint");
@@ -2948,8 +3927,16 @@ function mount6(root) {
       s.onclick = () => {
         if (!giveCount()) return;
         const k2 = sel.indexOf(i);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else if (sel.length < giveCount()) sel.push(i);
+        if (k2 >= 0) {
+          sel.splice(k2, 1);
+          selVal.splice(k2, 1);
+        } else if (sel.length < giveCount()) {
+          sel.push(i);
+          selVal.push(c);
+          if (sel.length === giveCount() && online && window.__setTaxGive) {
+            window.__setTaxGive(selVal.slice(0, giveCount()));
+          }
+        }
         draw();
       };
       h.appendChild(s);
@@ -3039,6 +4026,7 @@ function mount6(root) {
     ranks = g.finish && g.finish.length === N2 ? g.finish.slice() : Array.from({ length: N2 }, (_, i) => i);
     step = 0;
     sel = [];
+    selVal = [];
     declared = false;
     reversed = false;
     revSeat = null;
@@ -3051,6 +4039,48 @@ function mount6(root) {
   window.__bootTax = () => {
     boot();
     autoNext();
+  };
+  window.__taxProbe = {
+    step: () => step,
+    rank: () => rankOf(0),
+    giveCount: () => giveCount(),
+    hand: () => myHand().slice(),
+    sel: () => sel.slice(),
+    selVal: () => selVal.slice(),
+    /* 고르는 단계(3)로 바로 세운다. ranks 를 주면 등수도 바꾼다 */
+    toGive: (order2) => {
+      if (Array.isArray(order2) && order2.length === N2) ranks = order2.slice();
+      declared = true;
+      reversed = false;
+      revSeat = null;
+      hideHand = false;
+      step = 3;
+      sel = [];
+      selVal = [];
+      clearFx();
+      draw();
+      return { step, rank: rankOf(0), give: giveCount() };
+    },
+    /* 카드 값으로 고른다 */
+    pick: (vals) => {
+      const hand = myHand();
+      const out = [];
+      (vals || []).forEach((v) => {
+        const i = hand.indexOf(v);
+        if (i < 0 || sel.includes(i) || sel.length >= giveCount()) return;
+        sel.push(i);
+        selVal.push(hand[i]);
+        out.push(hand[i]);
+      });
+      draw();
+      return out;
+    },
+    /* 고른 것을 실제로 넘긴다 */
+    submit: () => {
+      window.__myGive = selVal.slice(0, giveCount());
+      if (online && window.__setTaxGive) window.__setTaxGive(window.__myGive.slice());
+      return window.__myGive.slice();
+    }
   };
   boot();
   autoNext();
@@ -3172,11 +4202,12 @@ function mount6(root) {
       return;
     }
     if (step === 3 && !taxSkipped()) {
-      window.__myGive = sel.map((i) => myHand()[i]);
+      window.__myGive = selVal.slice(0, giveCount());
       taxShown = true;
       runTax();
       applyTax(window.__myGive);
       sel = [];
+      selVal = [];
     }
     if (step < 4) step++;
     while (step < 4 && !needStep(step)) step++;
@@ -3229,8 +4260,12 @@ __export(result_exports, {
   mount: () => mount7
 });
 function mount7(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const HEADS2 = HEADS;
   const el = (id) => document2.getElementById(id);
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
@@ -3301,7 +4336,7 @@ function mount7(root) {
     el("list").innerHTML = rows.map((seat, idx) => {
       const place = last ? idx : finish.indexOf(seat);
       const gained = place < cut ? 100 - place * 10 : 0;
-      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + (!last && idx === cut - 1 ? " row--cut" : "") + (gained === 0 ? " row--none" : "") + '"><span class="row__p">' + (idx + 1) + '</span><img class="row__av" src="' + HEADS2[seat % HEADS2.length] + '" alt=""><span class="row__n">' + (names[seat] || "") + '</span><span class="row__r">' + rankLabel(place) + '</span><span class="row__g">+' + gained + '</span><span class="row__t">' + (score[seat] || 0) + "</span></div>";
+      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + (!last && idx === cut - 1 ? " row--cut" : "") + (gained === 0 ? " row--none" : "") + '"><span class="row__p">' + (idx + 1) + '</span><img class="row__av" src="' + avtOf(seat) + '" alt=""><span class="row__n">' + (names[seat] || "") + '</span><span class="row__r">' + rankLabel(place) + '</span><span class="row__g">+' + gained + '</span><span class="row__t">' + (score[seat] || 0) + "</span></div>";
     }).join("");
     el("next").textContent = last ? t.nextF : t.next;
     el("quit").textContent = t.quit;
@@ -9717,10 +10752,10 @@ var IndexedDBLocalPersistence = class {
     }
     return false;
   }
-  async _withPendingWrite(write) {
+  async _withPendingWrite(write2) {
     this.pendingWrites++;
     try {
-      await write();
+      await write2();
     } finally {
       this.pendingWrites--;
     }
@@ -23516,15 +24551,18 @@ if (ready) {
 }
 
 // src/lib/account.js
+var TICKET_MAX = 3;
+var TICKET_MS = 30 * 60 * 1e3;
 var account = {
   uid: null,
   name: "",
   photo: "",
   score: 0,
   tier: 0,
-  tickets: 5,
+  tickets: TICKET_MAX,
   ticketAt: 0,
   games: 0,
+  avatar: 0,
   wk: 0,
   mo: 0,
   wkKey: "",
@@ -23551,7 +24589,6 @@ var TIER_STEP = 5e3;
 function tierOf(score) {
   return Math.floor(score / TIER_STEP);
 }
-var TICKET_MS = 30 * 60 * 1e3;
 var isLocal = typeof location !== "undefined" && /^(localhost|127\.0\.0\.1|192\.168\.|10\.)/.test(location.hostname);
 var FIELD = { all: "score", week: "wk", month: "mo" };
 var KEYF = { week: "wkKey", month: "moKey" };

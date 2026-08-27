@@ -21,13 +21,120 @@ function scoped(root) {
   };
 }
 
+// src/lib/sound.js
+var KEY = { bgm: "zk_vol_bgm", sfx: "zk_vol_sfx", mute: "zk_mute" };
+function readNum(k, dflt) {
+  try {
+    const v = localStorage.getItem(k);
+    if (v == null) return dflt;
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : dflt;
+  } catch (e) {
+    return dflt;
+  }
+}
+function readBool(k) {
+  try {
+    return localStorage.getItem(k) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+var sound = {
+  bgm: readNum(KEY.bgm, 50),
+  sfx: readNum(KEY.sfx, 50),
+  muted: readBool(KEY.mute)
+};
+var sfxGain = () => sound.muted ? 0 : sound.sfx / 100;
+var SFX = {
+  card_play: "assets/snd/card_play.webm",
+  /* 카드 낼 때 */
+  card_deal: "assets/snd/card_deal.webm",
+  /* 패 나눌 때 */
+  pass: "assets/snd/pass.webm",
+  my_turn: "assets/snd/my_turn.webm",
+  win: "assets/snd/win.webm",
+  /* 완주 */
+  lose: "assets/snd/lose.webm",
+  button: "assets/snd/button.webm",
+  revolution: "assets/snd/revolution.webm",
+  tick: "assets/snd/tick.webm",
+  /* 남은 시간 */
+  join: "assets/snd/join.webm"
+  /* 대기실에 들어올 때 */
+};
+var POOL = 4;
+var pool = {};
+function voices(src) {
+  if (!pool[src]) {
+    pool[src] = { i: 0, list: Array.from({ length: POOL }, () => {
+      const a = new Audio(src);
+      a.preload = "auto";
+      try {
+        a.load();
+      } catch (e) {
+      }
+      return a;
+    }) };
+  }
+  return pool[src];
+}
+function stop(name) {
+  const src = SFX[name];
+  if (!src || !pool[src]) return;
+  pool[src].list.forEach((a) => {
+    try {
+      a.pause();
+      a.currentTime = 0;
+    } catch (e) {
+    }
+  });
+}
+function play(name) {
+  const src = SFX[name];
+  if (!src) return;
+  const g = sfxGain();
+  if (g <= 0) return;
+  try {
+    const v = voices(src);
+    const a = v.list[v.i];
+    v.i = (v.i + 1) % v.list.length;
+    try {
+      a.currentTime = 0;
+    } catch (e) {
+    }
+    a.volume = g;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+
 // src/lib/assets.js
 var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
+var AVATARS = [
+  { f: "assets/avt_01.webp", ko: "\uC0DD\uC950", en: "Mouse", need: 0 },
+  { f: "assets/avt_02.webp", ko: "\uC0C8", en: "Bird", need: 0 },
+  { f: "assets/avt_03.webp", ko: "\uD1A0\uB07C", en: "Rabbit", need: 0 },
+  { f: "assets/avt_04.webp", ko: "\uC6D0\uC22D\uC774", en: "Monkey", need: 0 },
+  { f: "assets/avt_05.webp", ko: "\uBA67\uB3FC\uC9C0", en: "Boar", need: 0 },
+  { f: "assets/avt_06.webp", ko: "\uAE30\uB9B0", en: "Giraffe", need: 5e3 },
+  { f: "assets/avt_07.webp", ko: "\uC5EC\uC6B0", en: "Fox", need: 1e4 },
+  { f: "assets/avt_08.webp", ko: "\uC545\uC5B4", en: "Croc", need: 15e3 },
+  { f: "assets/avt_09.webp", ko: "\uCF54\uB07C\uB9AC", en: "Elephant", need: 2e4 },
+  { f: "assets/avt_10.webp", ko: "\uBD88\uACF0", en: "Bear", need: 25e3 },
+  { f: "assets/avt_11.webp", ko: "\uD638\uB791\uC774", en: "Tiger", need: 3e4 },
+  { f: "assets/avt_12.webp", ko: "\uC0AC\uC790", en: "Lion", need: 35e3 },
+  { f: "assets/avt_13.webp", ko: "\uACE0\uC591\uC774", en: "Cat", need: 4e4 },
+  { f: "assets/avt_14.webp", ko: "\uC6A9", en: "Dragon", need: 45e3 },
+  { f: "assets/avt_15.webp", ko: "\uC720\uB2C8\uCF58", en: "Unicorn", need: 5e4 }
+];
+var avtFile = (i) => (AVATARS[i] || AVATARS[0]).f;
 var EMOTES = [
   { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
-  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANK YOU" },
-  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "T_T" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANKS" },
+  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "SO SAD" },
   { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
   { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
 ];
@@ -35,12 +142,20 @@ var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
 
 // src/screens/room.js
 function mount(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
+  function avtSeat(p, seat) {
+    if (p && p.avatar != null) return avtFile(Number(p.avatar) || 0);
+    return avtOf(seat);
+  }
   const faceOf = (i) => {
     const f = window.GAME && window.GAME.faces;
     return f && f[i] != null ? f[i] : i;
   };
   const document = scoped(root);
-  const HEADS2 = HEADS;
   const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
   const PLAYERS_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
   const L = {
@@ -56,6 +171,7 @@ function mount(root) {
       full: "\uC790\uB9AC\uAC00 \uB2E4 \uCC3C\uC2B5\uB2C8\uB2E4",
       empty: "\uBE48 \uC790\uB9AC",
       hostTag: "\uBC29\uC7A5",
+      inviteHere: "\uCD08\uB300\uD558\uAE30",
       capT: "\uBC29 \uC778\uC6D0",
       capD: "4\uBA85 \u2013 8\uBA85",
       capDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
@@ -95,6 +211,7 @@ function mount(root) {
       full: "The table is full",
       empty: "Open seat",
       hostTag: "HOST",
+      inviteHere: "Invite",
       capT: "Table size",
       capD: "4 \u2013 8 players",
       capDG: "The host decides.",
@@ -195,6 +312,8 @@ function mount(root) {
     if (R && R.seats) {
       return asArray(R.seats, R.cap || cap).map((s, i) => s ? {
         name: s.name || "",
+        avatar: Number(s.avatar) || 0,
+        /* 이걸 안 실어서 대기실이 전부 생쥐였다 */
         me: i === R.me,
         host: s.uid && s.uid === R.host,
         off: Boolean(s.off),
@@ -210,11 +329,47 @@ function mount(root) {
       left: false
     }));
   }
+  let sndSeated = 0;
+  function seatSound(n) {
+    const sec = window.document.getElementById("room");
+    const on = sec && sec.classList.contains("is-on");
+    if (on && n > sndSeated && sndSeated > 0) play("join");
+    sndSeated = n;
+  }
+  let touchAt = 0;
+  function onTap(node, fn) {
+    if (!node) return;
+    let inside = false;
+    node.addEventListener("touchstart", () => {
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", (e) => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) {
+        const r = node.getBoundingClientRect();
+        if (t.clientX < r.left - 8 || t.clientX > r.right + 8 || t.clientY < r.top - 8 || t.clientY > r.bottom + 8) return;
+      }
+      fn(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => {
+      inside = false;
+    }, { passive: true });
+    node.onclick = (e) => {
+      if (Date.now() - touchAt < 900) return;
+      if (e && e.button != null && e.button !== 0) return;
+      fn(e);
+    };
+  }
   function renderSeats() {
     RB = ringBox();
     const box = document.getElementById("seats");
     box.innerHTML = "";
     const list = seatList();
+    seatSound(list.filter((x) => x && x.name).length);
     const R = window.__room;
     if (R) cap = R.cap || cap;
     for (let i = 0; i < cap; i++) {
@@ -230,9 +385,12 @@ function mount(root) {
       el.style.left = left.toFixed(2) + "%";
       el.style.top = top.toFixed(2) + "%";
       const big = cap <= 6;
-      el.style.setProperty("--av", (big ? 46 : 36) + "px");
+      el.style.setProperty("--av", "46px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i) % HEADS2.length] + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtSeat(p, faceOf(i)) + ')"></span>' + (p.off || p.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p.name + "</span>" + (p.host ? '<span class="seat__b">' + L[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span><span class="seat__n seat__inv">' + L[lang].inviteHere + "</span>";
+      if (!filled) onTap(el, () => {
+        if (window.__openFriends) window.__openFriends("invite");
+      });
       box.appendChild(el);
     }
     const sm = document.getElementById("sum");
@@ -241,8 +399,6 @@ function mount(root) {
     document.getElementById("bt").textContent = t.title;
     document.getElementById("rl").textContent = t.roomL;
     document.getElementById("rc").textContent = t.copy;
-    document.querySelector('#view [data-v="host"]').textContent = t.host;
-    document.querySelector('#view [data-v="guest"]').textContent = t.guest;
     const fc = document.querySelector(".felt__c");
     if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
     const R2 = window.__room;
@@ -269,7 +425,9 @@ function mount(root) {
     sm.disabled = !iamHost;
     const a = document.getElementById("action");
     if (iamHost) {
-      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + ">" + (now < 4 ? t.needFour : t.start) + "</button>";
+      const lf = window.__roomLeft;
+      const lbl = now < 4 ? t.needFour : t.start + (lf != null && lf > 0 ? " " + lf : "");
+      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + ">" + lbl + "</button>";
     } else {
       a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
     }
@@ -342,13 +500,6 @@ function mount(root) {
       draw();
     });
   });
-  document.querySelectorAll("#view button").forEach((b) => {
-    b.addEventListener("click", () => {
-      role = b.dataset.v;
-      document.querySelectorAll("#view button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      draw();
-    });
-  });
   setInterval(() => {
     if (window.__room) return;
     joined = joined < cap ? joined + 1 : 2;
@@ -358,6 +509,59 @@ function mount(root) {
     lang = window.__lang;
     draw();
   });
+}
+
+// src/lib/sndkey.js
+function trickId(v) {
+  if (v && v.trickNo != null) return "t" + v.trickNo;
+  return "c" + (v && v.seats || []).reduce((a, s) => a + (s.c || 0), 0);
+}
+function moveEvents(v) {
+  if (!v) return [];
+  if (v.moveNo != null && v.lastMove) {
+    if (!v.moveNo) return [];
+    return [{ key: "m" + v.moveNo, kind: v.lastMove.k, by: v.lastMove.by }];
+  }
+  const id = trickId(v);
+  const out = [];
+  const tb = v.table || [];
+  if (tb.length) {
+    const t = tb[tb.length - 1];
+    out.push({
+      key: id + "#" + tb.length + ":" + t.by + "-" + t.num + "-" + t.count,
+      kind: "play",
+      by: t.by
+    });
+  }
+  (v.seats || []).forEach((s, i) => {
+    if (s && s.s === "pass") out.push({ key: id + "#p" + i, kind: "pass", by: i });
+  });
+  return out;
+}
+function makeSeen(limit = 240) {
+  const set = /* @__PURE__ */ new Set();
+  return {
+    /* 처음 보는 번호면 true (그리고 기억한다) */
+    add(key) {
+      if (!key) return false;
+      if (set.has(key)) return false;
+      set.add(key);
+      if (set.size > limit) {
+        const it = set.values();
+        for (let i = set.size - limit; i > 0; i--) set.delete(it.next().value);
+      }
+      return true;
+    },
+    has(key) {
+      return set.has(key);
+    },
+    clear() {
+      set.clear();
+    },
+    get size() {
+      return set.size;
+    }
+  };
 }
 
 // src/lib/deck.js
@@ -438,6 +642,11 @@ function screenView(G, ctx, myID, names) {
     finish: (G.finished || []).map((s) => toScreen(s, me, n)),
     score: G.counts.map((_, seat) => G.score[toSeat(seat, me, n)]),
     roundNo: G.roundNo,
+    trickNo: G.trickNo || 0,
+    /* 몇 번째 바퀴인가 */
+    /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
+    moveNo: G.moveNo || 0,
+    lastMove: G.lastMove ? { k: G.lastMove.k, by: toScreen(G.lastMove.by, me, n) } : null,
     totalRounds: G.totalRounds,
     phase: ctx.phase,
     draw,
@@ -689,7 +898,7 @@ function scheduleBot() {
     }, 700);
     return;
   }
-  if (engine.paused) return;
+  if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
   const g = ++gen;
@@ -724,7 +933,7 @@ function setAuto(on) {
   scheduleBot();
 }
 if (typeof window !== "undefined") window.__eng = engine;
-function play(num, count) {
+function play2(num, count) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.play(num, count);
@@ -739,8 +948,13 @@ function passTurn() {
 
 // src/screens/table.js
 function mount2(root) {
+  function avtOf(seat) {
+    const g = window.GAME || {};
+    const a = g.avatars || [];
+    return avtFile(Number(a[seat]) || 0);
+  }
   const document = scoped(root);
-  const HEADS2 = HEADS, ART2 = ART;
+  const ART2 = ART;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
   const T = {
@@ -815,21 +1029,75 @@ function mount2(root) {
   let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
+  let sndTurn = false, sndFin = 0, sndRev = 0;
+  const seen = makeSeen();
+  let primed = false;
+  let pending = null, pendingAt = 0, pendingHand = -1;
+  const onScreen = () => {
+    const sec = window.document.getElementById("table");
+    return Boolean(sec && sec.classList.contains("is-on"));
+  };
+  function sounds(v, quiet) {
+    const mute = Boolean(quiet) || !onScreen();
+    const evs = moveEvents(v).filter((e) => seen.add(e.key));
+    if (evs.length && primed && !mute) {
+      const kinds = new Set(evs.map((e) => e.kind));
+      evShow("** \uC18C\uB9AC " + evs.map((e) => e.kind + "@" + e.by).join(" "));
+      try {
+        const d = window.__sndDetail = window.__sndDetail || [];
+        evs.forEach((e) => d.push(e.kind + ":" + e.by));
+      } catch (e) {
+      }
+      if (kinds.has("play")) play("card_play");
+      if (kinds.has("pass")) play("pass");
+    }
+    primed = true;
+    if (v.myTurn && !sndTurn && !mute) play("my_turn");
+    sndTurn = Boolean(v.myTurn);
+    const fin = (v.finish || []).length;
+    if (fin > sndFin && !mute) {
+      const who = v.finish[fin - 1];
+      if (who === 0) play("win");
+      if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) play("lose");
+    }
+    sndFin = fin;
+    const rev = v.revolution && v.revolution.declared ? 1 : 0;
+    if (rev && !sndRev && !mute) play("revolution");
+    sndRev = rev;
+  }
   function apply(v) {
     if (!v) return;
-    if (holdingEnd && !v.over) return;
+    if (holdingEnd && !v.over) {
+      sounds(v, true);
+      return;
+    }
+    sounds(v);
     SEATS = v.seats.map((x) => ({ n: x.name, c: x.c, s: x.s, hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
     turn = v.turn;
     busy = !v.myTurn;
+    if (pending) {
+      const myC = (v.seats || [])[0] ? v.seats[0].c : -1;
+      const done = pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v.myTurn || Date.now() - pendingAt > 2e3;
+      if (done) {
+        pending = null;
+        pendingHand = -1;
+      } else busy = true;
+    }
     if (v.roundNo !== lastRound) {
       const first = lastRound < 0;
       lastRound = v.roundNo;
       sel = [];
       animated = 0;
       spread = false;
+      sndFin = 0;
+      sndTurn = false;
+      sndRev = 0;
+      flew = /* @__PURE__ */ new Set();
+      pending = null;
+      pendingHand = -1;
       window.__roundNo = v.roundNo;
       if (!first && !v.over && v.lastRound && window.__onRoundEnd) {
         showLastRound(v);
@@ -863,7 +1131,7 @@ function mount2(root) {
       ghostSig = "";
     }
     if (v.table.length < trick.length) {
-      animated = 0;
+      if (!ghost.length) animated = 0;
       spread = false;
     }
     trick = v.table.map((t) => ({ by: t.by, num: t.num, count: t.count, cards: t.cards.slice() }));
@@ -924,6 +1192,11 @@ function mount2(root) {
     ghost = [];
     ghostSig = "";
     holdingEnd = false;
+    seen.clear();
+    primed = false;
+    sndFin = 0;
+    sndTurn = false;
+    sndRev = 0;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -935,6 +1208,7 @@ function mount2(root) {
     emoPickOpen(false);
     paintEmoBtn();
     Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
+    if (el("emolayer")) el("emolayer").innerHTML = "";
     offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
@@ -952,6 +1226,15 @@ function mount2(root) {
   let lastPlayer = null;
   let busy = false;
   let animated = 0;
+  let flew = /* @__PURE__ */ new Set();
+  const keyOf = (t) => t ? t.by + "-" + t.num + "-" + t.count : "";
+  function flewKey(t) {
+    const k = keyOf(t);
+    if (!k) return true;
+    if (flew.has(k)) return true;
+    flew.add(k);
+    return false;
+  }
   let spread = false;
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n) => isJ(n) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n - 1];
@@ -1093,14 +1376,14 @@ function mount2(root) {
       d.dataset.nudge = p.nudge || 0;
       d.dataset.nudgex = p.nudgeX || 0;
       const big = SEATS.length <= 6;
-      d.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d.style.setProperty("--av", "44px");
       d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d.style.zIndex = 6 + Math.round(p.y);
       const tg = T[lang];
       const tag = s.c === 0 ? s.r >= 0 ? rankTag(s.r) : tg.tagOut : s.s === "pass" ? tg.tagPass : "";
       const topSeat = i !== 0 && p.y < 22;
       if (topSeat) d.classList.add("seat--above");
-      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s.av == null ? i : s.av) % HEADS2.length] + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(s.av == null ? i : s.av) + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s.n || "") + "</span>";
       const fan = i === 0 ? "" : fanHTML(s.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s.c) + "</span>";
@@ -1133,7 +1416,8 @@ function mount2(root) {
       const k = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t.by);
       const g = document.createElement("div");
-      g.className = "play" + (k < trick2.length - 1 ? " play--old" : "") + (k >= animated ? " play--new" : "");
+      g.className = "play" + (k < trick2.length - 1 ? " play--old" : "") + (flewKey(trick2[k]) ? "" : " play--new");
+      if (!flewKey(trick2[k])) evShow("** \uB0A0\uC544\uC624\uB294 \uC5F0\uCD9C " + k);
       const d = trick2.length - 1 - k;
       g.style.setProperty("--r", d === 0 ? "0deg" : k * 37 % 19 - 9 - d * 3 + "deg");
       g.style.setProperty("--dy", -Math.min(d, 3) * 6 + "px");
@@ -1159,7 +1443,7 @@ function mount2(root) {
       s.style.left = (h.clientWidth - total) / 2 + i * step + "px";
       s.style.zIndex = i;
       s.innerHTML = cardHTML(c, w);
-      s.onclick = () => {
+      onTap(s, () => {
         handTouched();
         if (turn !== 0 || busy) return;
         const k = sel.indexOf(i);
@@ -1171,7 +1455,7 @@ function mount2(root) {
         if (!canPick(i)) return;
         sel.push(i);
         draw();
-      };
+      });
       h.appendChild(s);
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
@@ -1207,6 +1491,7 @@ function mount2(root) {
     renderHand();
     renderBottom();
     paintEmotes();
+    el("seats").querySelectorAll(".seat__tag").forEach(keepInView);
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -1216,17 +1501,26 @@ function mount2(root) {
   const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
+  let showId = null;
   function resetTimer() {
+    if (showId) clearTimeout(showId);
+    showId = null;
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
+    stop("tick");
     tLeft = 0;
+    if (turn === 0 && !busy && !onScreen()) {
+      showId = setTimeout(resetTimer, 150);
+      return;
+    }
     if (turn === 0 && !busy) {
       tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
+        if (tLeft === 5) play("tick");
         if (tLeft <= 0) {
           clearInterval(tickId);
           tickId = null;
@@ -1251,27 +1545,110 @@ function mount2(root) {
     if (numValue === 1) return true;
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
-  el("play").onclick = () => {
+  let touchAt = 0;
+  let evBox = null;
+  const EVLOG = (() => {
+    try {
+      return String(location.search || "").indexOf("evlog") >= 0;
+    } catch (e) {
+      return false;
+    }
+  })();
+  function evShow(txt) {
+    if (!EVLOG) return;
+    if (!evBox) {
+      evBox = window.document.createElement("div");
+      evBox.style.cssText = "position:fixed;left:4px;right:4px;top:4px;z-index:99999;background:rgba(0,0,0,.86);color:#7CFF9B;font:11px/1.35 monospace;padding:6px 8px;border-radius:4px;white-space:pre-wrap;max-height:36vh;overflow:auto";
+      window.document.body.appendChild(evBox);
+      evBox.onclick = () => {
+        evBox.textContent = "";
+      };
+    }
+    evBox.textContent = (txt + "\n" + evBox.textContent).slice(0, 1400);
+  }
+  function evWatch(node, tag) {
+    if (!EVLOG || !node) return;
+    ["touchstart", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click"].forEach((n) => node.addEventListener(n, (e) => {
+      evShow(tag + " " + n + (e.pointerType ? ":" + e.pointerType : "") + (e.cancelable ? "" : " (\uBABB\uB9C9\uC74C)") + " " + Date.now() % 1e5);
+    }, true));
+  }
+  function onTap(node, fn) {
+    if (!node) return;
+    let startX = 0, startY = 0, inside = false;
+    node.addEventListener("touchstart", (e) => {
+      const t = e.touches && e.touches[0];
+      startX = t ? t.clientX : 0;
+      startY = t ? t.clientY : 0;
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", (e) => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) {
+        const r = node.getBoundingClientRect();
+        const x = t.clientX, y = t.clientY;
+        if (x < r.left - 8 || x > r.right + 8 || y < r.top - 8 || y > r.bottom + 8) return;
+      }
+      evShow("  \u2192 \uCC98\uB9AC(\uC190\uAC00\uB77D)");
+      fn(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => {
+      inside = false;
+    }, { passive: true });
+    node.onclick = (e) => {
+      if (Date.now() - touchAt < 900) {
+        evShow("  (click \uBC84\uB9BC)");
+        return;
+      }
+      if (e && e.button != null && e.button !== 0) return;
+      evShow("  \u2192 \uCC98\uB9AC(click)");
+      fn(e);
+    };
+    evWatch(node, "");
+  }
+  onTap(el("play"), () => {
     const list = sel.map((i) => hand[i]);
     if (!legal(list) || turn !== 0 || busy) return;
     const e = effective(list);
     sel = [];
     busy = true;
-    play(e, list.length);
+    stop("tick");
+    pending = true;
+    pendingHand = hand.length;
+    pendingAt = Date.now();
+    play2(e, list.length);
     iMoved();
     unlockLater();
-  };
+  });
   let unlockId = null;
+  function viewSig(v) {
+    if (!v) return "";
+    return v.turn + "|" + (v.table || []).length + "|" + (v.seats || []).map((x) => x.c + (x.s || "")).join(",");
+  }
   function unlockLater() {
     if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
+    const sent = viewSig(engine.view);
+    let tries = 0;
+    const look = () => {
       unlockId = null;
       const v = engine.view;
-      if (v && v.myTurn && busy) {
+      if (!busy) return;
+      if (viewSig(v) !== sent) {
+        return;
+      }
+      if (++tries < 5) {
+        unlockId = setTimeout(look, 1200);
+        return;
+      }
+      if (v && v.myTurn) {
         busy = false;
         draw();
       }
-    }, 1200);
+    };
+    unlockId = setTimeout(look, 1200);
   }
   function iMoved() {
     if (window.__iMoved) window.__iMoved();
@@ -1286,12 +1663,16 @@ function mount2(root) {
       sel = [];
       busy = true;
       flash(T[lang].autoPass, true);
-      play(w.num, w.count);
+      play2(w.num, w.count);
       if (auto) toAuto();
       return;
     }
     sel = [];
     busy = true;
+    stop("tick");
+    pending = true;
+    pendingHand = -1;
+    pendingAt = Date.now();
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();
@@ -1311,7 +1692,7 @@ function mount2(root) {
     if (best !== null) return { num: best, count: 1 };
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
-  el("pass").onclick = () => doPass(false);
+  onTap(el("pass"), () => doPass(false));
   function setAuto2(on) {
     setAuto(on);
     const b = el("auto");
@@ -1379,30 +1760,50 @@ function mount2(root) {
   }
   const emoNow = {};
   function paintEmote(pos) {
+    const layer = el("emolayer");
     const seats = el("seats");
     const d = seats && seats.children[pos];
-    if (!d) return;
-    const wrap = d.querySelector(".seat__avwrap");
-    if (!wrap) return;
-    const old = wrap.querySelector(".seat__emo");
+    if (!layer || !d) return;
+    const old = layer.querySelector('[data-pos="' + pos + '"]');
     if (old) old.remove();
     const cur2 = emoNow[pos];
-    const tag = wrap.querySelector(".seat__tag");
+    const wrap = d.querySelector(".seat__avwrap");
+    const tag = wrap && wrap.querySelector(".seat__tag");
     if (!cur2 || Date.now() >= cur2.until) {
       if (tag) tag.style.visibility = "";
       return;
     }
     if (tag) tag.style.visibility = "hidden";
+    const av = d.querySelector(".seat__av");
+    if (!av) return;
     const box = document.createElement("span");
     box.className = "seat__emo";
+    box.dataset.pos = String(pos);
     box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
-    wrap.appendChild(box);
+    if (cur2.shown) box.style.animation = "none";
+    else cur2.shown = true;
+    layer.appendChild(box);
+    const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
+    box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";
+    box.style.bottom = Math.round(lb.bottom - ab.bottom - 10) + "px";
+    keepInView(box);
+  }
+  function keepInView(box) {
+    if (!box) return;
+    const stage = window.document.getElementById("stage") || window.document.documentElement;
+    const W = stage.getBoundingClientRect();
+    const r = box.getBoundingClientRect();
+    if (!r.width) return;
+    let dx = 0;
+    if (r.left < W.left + 2) dx = W.left + 2 - r.left;
+    else if (r.right > W.right - 2) dx = W.right - 2 - r.right;
+    box.style.marginLeft = dx ? Math.round(dx) + "px" : "";
   }
   function paintEmotes() {
     Object.keys(emoNow).forEach((p) => paintEmote(Number(p)));
   }
   function showEmote(pos, k) {
-    emoNow[pos] = { k, until: Date.now() + EMO_SHOW };
+    emoNow[pos] = { k, until: Date.now() + EMO_SHOW, shown: false };
     paintEmote(pos);
     if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
     emoTimers[pos] = setTimeout(() => {
@@ -1449,12 +1850,13 @@ __export(localroom_exports, {
 var BOT_NAMES = ["\uC11C\uC5F0", "\uC900\uD638", "\uBBFC\uC9C0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
 var ME = "me";
 var newCode = () => String(Math.floor(1e3 + Math.random() * 9e3));
-function createRoom({ cap = 4, name = "\uB098" } = {}) {
+var botAvatar = () => Math.floor(Math.random() * 5);
+function createRoom({ cap = 4, name = "\uB098", avatar = 0 } = {}) {
   return {
     code: newCode(),
     cap: Math.min(8, Math.max(4, cap)),
     phase: "waiting",
-    seats: [{ uid: ME, name: String(name || "\uB098"), bot: false }]
+    seats: [{ uid: ME, name: String(name || "\uB098"), bot: false, avatar: Number(avatar) || 0 }]
   };
 }
 function addBot(room) {
@@ -1462,7 +1864,7 @@ function addBot(room) {
   if (room.seats.length >= room.cap) return false;
   const used = room.seats.map((s) => s && s.name);
   const name = BOT_NAMES.find((n) => !used.includes(n)) || "\uBD07" + room.seats.length;
-  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true });
+  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true, avatar: botAvatar() });
   return true;
 }
 function setCap(room, cap) {
@@ -1486,9 +1888,9 @@ var seatCount = (room) => room ? room.seats.length : 0;
 
 // src/screens/_markup.js
 var MARKUP = {
-  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
-  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
+  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
   "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
   "table": `<main class="screen">
   <div class="bar">
@@ -1511,6 +1913,7 @@ var MARKUP = {
   </div>
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
+  <div class="emolayer" id="emolayer"></div>
   <div class="emopick" id="emopick" hidden></div>
   <div class="acts">
     <button class="bt-pass bt-emo" id="emo" aria-label="\uAC10\uC815\uD45C\uD604"></button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
