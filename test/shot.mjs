@@ -7,7 +7,7 @@
    쓰는 법: node test/shot.mjs [내보낼그림.png] */
 
 import { createServer } from "node:http";
-import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, statSync, readdirSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { extname, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,9 +45,31 @@ export function ensureBuild(){
     need = src > built;
   }
   if (!need) return;
-  console.log("  (dist 를 새로 빌드합니다)");
-  execFileSync(process.execPath, [join(ROOT, "node_modules/vite/bin/vite.js"), "build"],
-               { cwd: ROOT, stdio: "ignore" });
+
+  /* **여러 검사가 동시에 돌면 빌드가 겹친다.**
+     같은 `dist` 폴더에 vite 가 둘 이상 붙으면 서로 지우고 쓰다가 터지고,
+     운 좋게 안 터져도 반쪽짜리 `dist` 가 떠서 "Failed to fetch" 가 난다.
+     실제로 소리·얼굴·뒤로가기·배치 네 개가 한꺼번에 실패한 적이 있다.
+     폴더 만들기는 원자적이라, 먼저 만든 쪽만 빌드하고 나머지는 기다린다 */
+  const lock = join(ROOT, "node_modules", ".zoo-build-lock");
+  const nap = (ms) => { try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); } catch(e){} };
+  /* 앞서 돌던 것이 터져서 남은 자물쇠는 5분 뒤 무시한다 */
+  try { if (Date.now() - statSync(lock).mtimeMs > 300000) rmSync(lock, { recursive: true, force: true }); } catch(e){}
+  let mine = false;
+  try { mkdirSync(lock); mine = true; } catch(e){ mine = false; }
+  if (!mine){
+    const until = Date.now() + 240000;
+    while (existsSync(lock) && Date.now() < until) nap(200);
+    if (existsSync(join(DIST, "index.html"))) return;      /* 남이 다 만들어 줬다 */
+    try { mkdirSync(lock); } catch(e){}                    /* 그래도 없으면 내가 만든다 */
+  }
+  try {
+    console.log("  (dist 를 새로 빌드합니다)");
+    execFileSync(process.execPath, [join(ROOT, "node_modules/vite/bin/vite.js"), "build"],
+                 { cwd: ROOT, stdio: "ignore" });
+  } finally {
+    try { rmSync(lock, { recursive: true, force: true }); } catch(e){}
+  }
 }
 
 export function serve(port = 5599){

@@ -82,6 +82,13 @@ async function worker(){
 
 console.log("\n=== " + (all ? "전체" : "빠른") + " 검사 · " + jobs.length +
             "개 파일 · 동시 " + LIMIT + "개 ===\n");
+/* **검사를 뿌리기 전에 dist 를 한 번 만들어 둔다.**
+   안 그러면 브라우저 검사 여러 개가 동시에 vite 를 돌려 서로 밟는다 */
+try {
+  const { ensureBuild } = await import("./shot.mjs");
+  ensureBuild();
+} catch(e){ console.log("  (dist 빌드 건너뜀: " + e.message + ")"); }
+
 await Promise.all(Array.from({ length: LIMIT }, worker));
 
 const bad = done.filter(r => r.code !== 0);
