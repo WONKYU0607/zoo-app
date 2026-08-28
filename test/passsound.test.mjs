@@ -176,7 +176,8 @@ console.log("\n=== 낸 소리 · 패스 소리 검사 ===\n");
   playGame(6, v => { box.push(v); });
   const ear = makeEar();
   /* 두 개 중 하나만 흘려 넣는다 = 신호가 뭉쳐 온 것과 같다 */
-  box.forEach((v, i) => { if (i % 2 === 0) ear.hear(v); });
+  /* 마지막 상태는 반드시 넣는다 — 안 넣으면 마지막 수가 검사 탓으로 빠진다 */
+  box.forEach((v, i) => { if (i % 2 === 0 || i === box.length - 1) ear.hear(v); });
   const last = box[box.length - 1];
   const want = (last && last.moveNo) || 0;
   const got = new Set(ear.heard.map(h => h.key));

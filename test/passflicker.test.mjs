@@ -89,7 +89,7 @@ async function ready(){
 
 let tried = 0, flicker = 0, never = 0;
 const delays = [], rebuilds = [], opens = [], why = [];
-let sendFail = 0;   /* 검사가 손가락 신호를 못 보낸 횟수 */
+let sendFail = 0, notSent = 0;   /* 검사가 손가락 신호를 못 보낸 횟수 */
 for (let round = 1; round <= 12 && tried < 3; round++){
   if (await ready() === false) break;
   const markAt = await page.evaluate(() => (window.__eng.moveLog||[]).length);
@@ -131,9 +131,14 @@ for (let round = 1; round <= 12 && tried < 3; round++){
       sendFail++;
       await new Promise(r => setTimeout(r, 250));
     }
-    /* 세 번 보내도 안 들어갔으면 그대로 진행한다 — 진짜 씹힘일 수도 있으니
-       숨기지 않고 아래에서 까닭과 함께 보고한다 */
-    void sent;
+    /* 세 번 보내도 안 들어갔을 때, **신호 자체가 화면에 안 닿았으면 검사 쪽 문제**다.
+       컴퓨터가 바쁘면 CDP 로 보낸 가짜 손가락이 통째로 안 들어온다.
+       그 판은 셈에서 뺀다. 신호는 닿았는데 안 됐으면 진짜 씹힘이므로 그대로 센다 */
+    if (!sent){
+      const reached = await page.evaluate(() =>
+        (window.__ev || []).some(x => x.startsWith("pointerdown")));
+      if (!reached){ notSent++; continue; }
+    }
   }
   tried++;
   /* 누른 직후부터 촘촘히 본다. 되돌림은 서버 왕복 사이에 잠깐 스친다 */
@@ -210,7 +215,8 @@ for (let round = 1; round <= 12 && tried < 3; round++){
   await new Promise(r => setTimeout(r, 900));
 }
 
-if (sendFail) console.log("  (검사가 손가락 신호를 못 보내 다시 보낸 횟수: " + sendFail + ")");
+if (sendFail) console.log("  (검사가 손가락 신호를 못 보내 다시 보낸 횟수: " + sendFail +
+  ", 아예 안 닿아 건너뛴 판: " + notSent + ")");
 console.log("");
 if (tried <= 0){
   console.log("\n손가락 신호가 한 번도 안 들어가 건너뜁니다 (컴퓨터가 너무 바쁩니다)\n");

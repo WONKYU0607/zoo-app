@@ -754,6 +754,7 @@ const TURN_SEC = 15;
      "이 칸에서 시작해 이 칸에서 뗐는가" 를 칸이 아니라 좌표로 판단한다 */
   let tapX = 0, tapY = 0;
   window.document.addEventListener("touchstart", e => {
+    /* 좌표만 적어 둔다 — 아무것도 막지 않으므로 화면 전체에서 들어도 된다 */
     const t = e.touches && e.touches[0];
     if (t){ tapX = t.clientX; tapY = t.clientY; }
   }, true);
@@ -837,17 +838,26 @@ const TURN_SEC = 15;
       return;
     }
   }
-  window.document.addEventListener("pointerup", e => {
+  /* **판 화면 안에서만 듣는다.**
+     처음에 `document` 에 걸었더니 `touchend` 기본동작 막기가 화면 전체에 적용돼
+     **진입창의 게임시작 단추까지 죽었다.** 판 화면 밖은 건드리면 안 된다 */
+  const tableSec = () => window.document.getElementById("table");
+  const rootOn = (name, fn, opt) => {
+    const r = tableSec();
+    if (r) r.addEventListener(name, fn, opt);
+  };
+  rootOn("pointerup", e => {
     if (e.pointerType === "mouse") return;      /* 마우스는 click 으로 */
     touchAt = Date.now();                       /* 뒤따라오는 click 을 버리게 한다 */
     hitTap(e, "손가락");
   }, true);
-  window.document.addEventListener("touchend", e => {
-    /* 처리는 위에서 끝났다. 여기서는 뒤따르는 마우스 신호만 막는다 */
+  rootOn("touchend", e => {
+    /* 처리는 위에서 끝났다. 여기서는 뒤따르는 마우스 신호만 막는다.
+       **판 화면 안에서만** 막아야 한다 */
     if (e.cancelable) e.preventDefault();
     touchAt = Date.now();
   }, { passive: false, capture: true });
-  window.document.addEventListener("click", e => {
+  rootOn("click", e => {
     if (Date.now() - touchAt < 900){ evShow("  (click 버림)"); return; }
     if (e.button != null && e.button !== 0) return;
     hitTap(e, "click");

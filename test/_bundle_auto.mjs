@@ -19537,16 +19537,21 @@ function mount(root) {
       return;
     }
   }
-  window.document.addEventListener("pointerup", (e) => {
+  const tableSec = () => window.document.getElementById("table");
+  const rootOn = (name, fn2, opt) => {
+    const r2 = tableSec();
+    if (r2) r2.addEventListener(name, fn2, opt);
+  };
+  rootOn("pointerup", (e) => {
     if (e.pointerType === "mouse") return;
     touchAt = Date.now();
     hitTap(e, "\uC190\uAC00\uB77D");
   }, true);
-  window.document.addEventListener("touchend", (e) => {
+  rootOn("touchend", (e) => {
     if (e.cancelable) e.preventDefault();
     touchAt = Date.now();
   }, { passive: false, capture: true });
-  window.document.addEventListener("click", (e) => {
+  rootOn("click", (e) => {
     if (Date.now() - touchAt < 900) {
       evShow("  (click \uBC84\uB9BC)");
       return;

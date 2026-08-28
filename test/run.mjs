@@ -34,6 +34,7 @@ const FAST = [
   ["패스깜빡",    ["test/passflicker.test.mjs"]],
   ["자동치기",    ["test/autoplay.test.mjs"]],
   ["친구창",     ["test/friendtab.test.mjs"]],
+  ["밖단추",     ["test/tapscreens.test.mjs"]],
   ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs", "test/tap.test.mjs"]],
   ["서버대전",    ["test/netplay.test.mjs"]],
 

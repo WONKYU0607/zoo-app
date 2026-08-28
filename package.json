@@ -28,6 +28,7 @@
     "test:tap": "node test/taplost.test.mjs",
     "test:auto": "node test/autoplay.test.mjs",
     "test:fr": "node test/friendtab.test.mjs",
+    "test:screens": "node test/tapscreens.test.mjs",
     "shot": "node test/shot.mjs"
   },
   "devDependencies": {
