@@ -103,6 +103,8 @@ export function screenView(G, ctx, myID, names){
     /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
     moveNo: G.moveNo || 0,
     lastMove: G.lastMove ? { k: G.lastMove.k, by: toScreen(G.lastMove.by, me, n) } : null,
+    /* 최근 몇 수. 신호가 뭉쳐 와도 화면이 빠짐없이 집어 갈 수 있게 한다 */
+    recent: (G.recent || []).map(m => ({ no: m.no, k: m.k, by: toScreen(m.by, me, n) })),
     totalRounds: G.totalRounds,
     phase: ctx.phase,
     draw,

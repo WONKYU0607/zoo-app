@@ -62,6 +62,11 @@ function clearPile(G, leader){
 function noteMove(G, kind, seat){
   G.moveNo = (G.moveNo || 0) + 1;
   G.lastMove = { k: kind, by: seat };
+  /* **마지막 수 하나만 실어 보내면 안 된다.**
+     신호가 뭉쳐 오면 화면은 그 중 마지막만 받는다. 실제로 수 번호가
+     `2 → 4` 처럼 건너뛰었고, 건너뛴 그 수는 소리가 통째로 빠졌다.
+     최근 몇 수를 같이 실어서 화면이 빠짐없이 집어 가게 한다 */
+  G.recent = (G.recent || []).concat([{ no: G.moveNo, k: kind, by: seat }]).slice(-8);
 }
 
 /* 카드를 다 턴 사람을 완주 목록에 올린다 */
@@ -217,7 +222,7 @@ export const ZooPresident = {
     const G = {
       hands: [], counts: new Array(n).fill(0), passed: new Array(n).fill(false),
       pile: null, table: [], finished: [], next: 0, trickNo: 0,
-      moveNo: 0, lastMove: null,
+      moveNo: 0, lastMove: null, recent: [],
       score: new Array(n).fill(0),
       roundNo: 1, totalRounds: Math.max(3, opts.rounds),
       opts, lastOrder: null, taxOrder: null, seatOrder: null, revolution: null,

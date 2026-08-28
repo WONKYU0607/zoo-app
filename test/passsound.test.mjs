@@ -167,6 +167,25 @@ console.log("\n=== 낸 소리 · 패스 소리 검사 ===\n");
         heardClearing + "/" + clearing + "번");
 }
 
+/* ---------- 2.5 신호가 뭉쳐 와도 빠지지 않는가 ----------
+   서버 대전은 여러 수가 한 번에 올 수 있다. 화면이 **마지막 수 하나만** 보면
+   그 사이 수의 소리가 통째로 빠진다. 실제로 수 번호가 `2 → 4` 처럼 건너뛰었다.
+   여기서는 상태 몇 개를 일부러 건너뛰어 그 상황을 만든다 */
+{
+  const box = [];
+  playGame(6, v => { box.push(v); });
+  const ear = makeEar();
+  /* 두 개 중 하나만 흘려 넣는다 = 신호가 뭉쳐 온 것과 같다 */
+  box.forEach((v, i) => { if (i % 2 === 0) ear.hear(v); });
+  const last = box[box.length - 1];
+  const want = (last && last.moveNo) || 0;
+  const got = new Set(ear.heard.map(h => h.key));
+  let miss = 0;
+  for (let no = 2; no <= want; no++) if (!got.has("m" + no)) miss++;
+  check("신호가 뭉쳐 와도 소리가 안 빠진다", miss === 0,
+        "둔 수 " + want + " 중 빠짐 " + miss);
+}
+
 /* ---------- 3. 되돌림이 와도 두 번 안 울리는가 ----------
    서버가 확인해 줄 때 옛 상태가 한 번 더 들어오는 상황을 흉내낸다 */
 {

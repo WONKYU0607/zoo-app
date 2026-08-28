@@ -52,11 +52,16 @@ function push(){
      이것이 없으면 "눌렀는데 패스가 됐나"를 손패 장수 따위로 짐작해야 하고,
      눌러도 안 된 경우를 "소리가 빠졌다" 로 잘못 세게 된다 */
   const v = engine.view;
-  if (v && v.moveNo && v.lastMove && v.moveNo !== engine.lastLogged){
-    engine.lastLogged = v.moveNo;
-    engine.moveLog.push({ no: v.moveNo, k: v.lastMove.k, by: v.lastMove.by });
-    if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
-  }
+  /* 최근 몇 수를 다 실어 보내 주면 그것을 쓴다 — 뭉쳐 온 신호도 빠짐없이 적힌다.
+     마지막 하나만 적으면 검사의 정답지 자체에 구멍이 생긴다 */
+  const ms = (v && v.recent && v.recent.length) ? v.recent
+    : (v && v.moveNo && v.lastMove ? [{ no: v.moveNo, k: v.lastMove.k, by: v.lastMove.by }] : []);
+  ms.forEach(m => {
+    if (!m || m.no <= engine.lastLogged) return;
+    engine.lastLogged = m.no;
+    engine.moveLog.push({ no: m.no, k: m.k, by: m.by });
+  });
+  if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
   drainEmotes();
   listeners.forEach(f => { try { f(engine.view); } catch(e){ console.error(e); } });
   /* 다음 수를 예약한다.

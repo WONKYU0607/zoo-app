@@ -277,6 +277,7 @@ export function mount(root){
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
     ghost = []; ghostSig = ""; holdingEnd = false;
     seen.clear(); primed = false; sndFin = 0; sndTurn = false; sndRev = 0;
+    handNodes = []; seatNodes = []; pileSig = null;
     passHeld = null; lastTrick = null;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
@@ -523,11 +524,25 @@ export function mount(root){
   }
   
   const outerTrick = () => trick;
+  /* 바닥에 마지막으로 그린 것의 표식. 같으면 아예 손대지 않는다 */
+  let pileSig = null;
   function renderPile(){
-    const p = el("pile"); p.innerHTML = "";
+    const p = el("pile");
     /* 바닥이 비었으면 잔상을 잠깐 대신 보여준다. 여기서만 쓴다 */
     const shown = outerTrick().length ? outerTrick() : ghost;
     const trick = shown;
+    /* **바뀐 게 없으면 다시 그리지 않는다.**
+       바닥도 매번 지우고 새로 만들고 있었다. 서버 대전은 초당 몇 번씩 다시 그리는데,
+       그때마다 카드 그림이 새로 붙어 폰에서 번쩍이고 날아오는 연출도 끊긴다.
+       연출 계산은 손대지 않고, **같은 그림이면 건너뛰기만** 한다 */
+    const r0 = el("ring").getBoundingClientRect();
+    const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" +
+      Math.round(r0.height) + "|" + animated + "|" +
+      trick.map(t => t.by + "-" + t.num + "-" + t.count +
+        ":" + (flewKey(t) ? "1" : "0")).join(",");
+    if (sig === pileSig) return;
+    pileSig = sig;
+    p.innerHTML = "";
     if (spread && trick.length){
       const t = T[lang];
       const maxC = Math.min(6, Math.max(...trick.map(x => x.count)));
@@ -571,24 +586,45 @@ export function mount(root){
     animated = trick.length;
   }
   
+  /* 만들어 둔 손패 칸.
+
+     **매번 지우고 새로 만들면 안 된다.** 서버 대전은 봇이 계속 둬서 초당 몇 번씩
+     다시 그리는데, 손가락을 대고 있는 칸이 그 사이에 사라지면 **떼는 신호가
+     갈 곳을 잃어 누른 것이 통째로 사라진다.** 부하가 걸릴수록 자주 걸린다.
+     칸은 장수가 바뀔 때만 새로 만들고, 그 뒤로는 있는 것을 고쳐 쓴다.
+     누름 처리도 그때 한 번만 붙인다 — 칸이 살아 있으니 다시 붙일 일이 없다 */
+  let handNodes = [];
   function renderHand(){
-    const h = el("hand"); h.innerHTML = "";
+    const h = el("hand");
     const w = 60, n = hand.length;
+    if (handNodes.length !== n || handNodes.some(x => x.parentNode !== h)){
+      h.innerHTML = "";
+      handNodes = hand.map((c, i) => {
+        const s = document.createElement("div");
+        s.__i = i;                    /* 몇 번째 칸인가. 칸을 다시 쓰므로 여기서 읽는다 */
+        onTap(s, () => { handTouched(); if (turn !== 0 || busy) return;
+          const i = s.__i;                    /* 칸을 다시 쓰므로 번호는 여기서 읽는다 */
+          const k = sel.indexOf(i);
+          if (k >= 0){ sel.splice(k, 1); draw(); return; }
+          if (!canPick(i)) return;            /* 못 내는 카드는 아예 안 골린다 */
+          sel.push(i); draw(); });
+        h.appendChild(s);
+        return s;
+      });
+    }
     const step = n > 1 ? Math.min(36, (h.clientWidth - w) / (n - 1)) : 0;
     const total = w + step * (n - 1);
     hand.forEach((c, i) => {
-      const s = document.createElement("div");
-      s.className = "slot" + (sel.includes(i) ? " slot--sel" : "") +
+      const s = handNodes[i];
+      s.__i = i;
+      const cls = "slot" + (sel.includes(i) ? " slot--sel" : "") +
         (turn === 0 && !busy && !canPick(i) ? " slot--dead" : "");
-      s.style.left = ((h.clientWidth - total) / 2 + i * step) + "px";
-      s.style.zIndex = i;
-      s.innerHTML = cardHTML(c, w);
-      onTap(s, () => { handTouched(); if (turn !== 0 || busy) return;
-        const k = sel.indexOf(i);
-        if (k >= 0){ sel.splice(k, 1); draw(); return; }
-        if (!canPick(i)) return;               /* 못 내는 카드는 아예 안 골린다 */
-        sel.push(i); draw(); });
-      h.appendChild(s);
+      if (s.className !== cls) s.className = cls;
+      const left = ((h.clientWidth - total) / 2 + i * step) + "px";
+      if (s.style.left !== left) s.style.left = left;
+      if (s.style.zIndex !== String(i)) s.style.zIndex = i;
+      /* 같은 카드면 손대지 않는다. 같은 그림을 다시 넣어도 한 번 번쩍인다 */
+      if (s.__card !== c){ s.innerHTML = cardHTML(c, w); s.__card = c; }
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
   }
@@ -750,57 +786,77 @@ const TURN_SEC = 15;
       }, true));
   }
 
+  /* ---------- 누름은 **화면 층에서 한 번만** 받는다 ----------
+
+     예전에는 단추·칸마다 처리기를 붙였다. 두 가지로 새어 나갔다.
+       (1) 다시 그리면서 그 칸이 사라지면 떼는 신호가 갈 곳을 잃는다
+       (2) **단추가 `disabled` 로 바뀌면 크롬은 그 단추에 신호를 아예 안 보낸다.**
+           누르는 도중에 잠기면 그 누름은 통째로 사라진다
+     그래서 화면 전체에서 한 번 받고, **좌표로 무엇을 눌렀는지 찾는다.**
+     좌표는 다시 그려도 안 바뀌고, 잠긴 단추도 좌표로는 찾힌다.
+     "지금 눌러도 되는가"는 각 처리기가 스스로 다시 따지므로
+     `disabled` 는 보이기용으로만 쓴다 */
+  const taps = [];                       /* {node, fn} */
   function onTap(node, fn){
     if (!node) return;
-    /* 손가락은 **touchend** 로 받고 그 자리에서 기본 동작을 막는다.
-       그러면 폰이 뒤따라 보내는 mousedown·mouseup·click 이 아예 안 생긴다.
-       pointer 신호로 거르려 했더니, 손가락 것과 뒤따르는 마우스 것이
-       구분이 잘 안 돼 어떤 폰에서는 두 번 먹고 어떤 폰에서는 안 먹었다.
-       마우스로 쓸 때는 예전처럼 click 으로 받는다 */
-    const near = (x, y) => {
-      const r = node.getBoundingClientRect();
-      return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
-    };
-    /* **손가락은 `pointerup` 으로 받는다. `touchend` 로 받으면 안 된다.**
-
-       화면이 다시 그려지면 칸을 통째로 새로 만드는데, 손가락을 댄 칸이
-       그 사이에 사라지면 `touchend` 는 사라진 칸으로 가서 **아무 데도 안 온다**.
-       그러면 그 누름은 통째로 사라진다 — 진짜 크롬에 진짜 손가락 신호를 보내
-       확인했다(test/taplost.test.mjs). 신호 기록이 이렇게 남았다:
-         먹은 경우   pointerdown, touchstart, pointerup, touchend
-         씹힌 경우   pointerdown, touchstart, pointerup            ← touchend 없음
-       `pointerup` 은 그때도 온다(그 자리에 새로 생긴 칸으로 옮겨서 온다).
-
-       한때 "손가락이 닿아 있는 동안 다시 그리지 않기"로 막아 봤는데,
-       그 대신 **패스가 한 템포 늦게 먹어서** 훨씬 나빠졌다. 되돌렸다. */
-    let lastAt = 0;
-    const fire = (e, how) => {
-      if (Date.now() - lastAt < 400) return;   /* 같은 누름이 두 번 오는 것을 막는다 */
-      lastAt = Date.now();
-      evShow("  → 처리(" + how + ")");
-      fn(e);
-    };
-    node.addEventListener("pointerup", e => {
-      if (e.pointerType === "mouse") return;   /* 마우스는 예전처럼 click 으로 */
-      touchAt = Date.now();                    /* 뒤따라오는 click 을 버리게 한다 */
-      /* 이 칸에서 시작해서 이 칸에서 떼야 누른 것으로 본다.
-         **칸이 아니라 좌표로 본다** — 그 사이에 칸이 새로 만들어질 수 있다 */
-      if (!near(tapX, tapY) || !near(e.clientX, e.clientY)) return;
-      fire(e, "손가락");
-    }, { passive: true });
-    /* 뒤따르는 마우스 신호를 막는다. 처리는 위에서 이미 끝났다 */
-    node.addEventListener("touchend", e => {
-      if (e.cancelable) e.preventDefault();
-      touchAt = Date.now();
-    }, { passive: false });
-    node.onclick = e => {
-      /* 손가락을 쓴 **직후**의 click 만 버린다. 마우스로 쓸 때는 그대로 받는다 */
-      if (Date.now() - touchAt < 900){ evShow("  (click 버림)"); return; }
-      if (e && e.button != null && e.button !== 0) return;
-      fire(e, "click");
-    };
+    taps.push({ node, fn });
     evWatch(node, "");
   }
+  const inNode = (node, x, y) => {
+    const r = node.getBoundingClientRect();
+    return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
+  };
+  function hitTap(e, how){
+    const x = e.clientX, y = e.clientY;
+    /* 겹쳐 있는 것 중 **맨 위**를 고른다. 쌓임 순서는 브라우저가 안다.
+       화면 계산을 안 하는 검사 환경(jsdom)에서는 좌표가 없으므로
+       **눌린 대상으로 되돌아가 찾는다** */
+    /* **눌린 대상을 먼저 본다.** 그것이 답인 경우가 대부분이고,
+       좌표가 없는 누름(검사의 `click()`, 손가락 없는 환경)도 이걸로 잡힌다.
+       대상으로 못 찾을 때만 좌표로 되짚는다 — **단추가 잠기면 신호가
+       그 단추가 아니라 바깥으로 가기 때문에** 그 경우가 여기 걸린다 */
+    let aim = e.target;
+    let byPoint = false;
+    if (!aim || !taps.some(it => it.node.isConnected && (it.node === aim || it.node.contains(aim)))){
+      const top = (x != null && window.document.elementFromPoint)
+        ? window.document.elementFromPoint(x, y) : null;
+      if (top){ aim = top; byPoint = true; }
+    }
+    if (!aim) return;
+    for (let k = taps.length - 1; k >= 0; k--){
+      const it = taps[k];
+      if (!it.node.isConnected) continue;
+      if (!(it.node === aim || it.node.contains(aim))) continue;
+      /* 좌표로 찾은 경우에만 "댄 자리와 뗀 자리가 같은가"를 따진다.
+         눌린 대상으로 찾았으면 그 자체가 답이라 더 볼 것이 없다.
+         자리·크기를 알 수 없는 환경(jsdom)에서도 건너뛴다 */
+      const r = it.node.getBoundingClientRect();
+      if (byPoint && r.width > 0 && (!inNode(it.node, tapX, tapY) || !inNode(it.node, x, y))) return;
+      evShow("  → 처리(" + how + ")");
+      it.fn(e);
+      return;
+    }
+  }
+  window.document.addEventListener("pointerup", e => {
+    if (e.pointerType === "mouse") return;      /* 마우스는 click 으로 */
+    touchAt = Date.now();                       /* 뒤따라오는 click 을 버리게 한다 */
+    hitTap(e, "손가락");
+  }, true);
+  window.document.addEventListener("touchend", e => {
+    /* 처리는 위에서 끝났다. 여기서는 뒤따르는 마우스 신호만 막는다 */
+    if (e.cancelable) e.preventDefault();
+    touchAt = Date.now();
+  }, { passive: false, capture: true });
+  window.document.addEventListener("click", e => {
+    if (Date.now() - touchAt < 900){ evShow("  (click 버림)"); return; }
+    if (e.button != null && e.button !== 0) return;
+    hitTap(e, "click");
+  }, true);
+  /* 사라진 칸은 이따금 걷어낸다 — 안 그러면 목록이 계속 길어진다 */
+  setInterval(() => {
+    for (let k = taps.length - 1; k >= 0; k--)
+      if (!taps[k].node.isConnected) taps.splice(k, 1);
+  }, 5000);
 
   onTap(el("play"), () => {
     const list = sel.map(i => hand[i]);

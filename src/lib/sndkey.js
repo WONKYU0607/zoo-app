@@ -34,6 +34,10 @@ export function trickId(v){
 /* 이 화면 상태가 알려 주는 수들. `[{ key, kind, by }]`, kind 는 "play" | "pass" */
 export function moveEvents(v){
   if (!v) return [];
+  /* 최근 몇 수를 다 실어 보내 주면 그것을 쓴다.
+     마지막 하나만 보면, 신호가 뭉쳐 올 때 그 사이 수의 소리가 통째로 빠진다 */
+  if (v.recent && v.recent.length)
+    return v.recent.map(m => ({ key: "m" + m.no, kind: m.k, by: m.by }));
   if (v.moveNo != null && v.lastMove){
     if (!v.moveNo) return [];                    /* 아직 아무도 안 뒀다 */
     return [{ key: "m" + v.moveNo, kind: v.lastMove.k, by: v.lastMove.by }];

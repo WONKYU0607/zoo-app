@@ -892,6 +892,8 @@ function trickId(v2) {
 }
 function moveEvents(v2) {
   if (!v2) return [];
+  if (v2.recent && v2.recent.length)
+    return v2.recent.map((m) => ({ key: "m" + m.no, kind: m.k, by: m.by }));
   if (v2.moveNo != null && v2.lastMove) {
     if (!v2.moveNo) return [];
     return [{ key: "m" + v2.moveNo, kind: v2.lastMove.k, by: v2.lastMove.by }];
@@ -17938,6 +17940,7 @@ function clearPile(G2, leader) {
 function noteMove(G2, kind, seat) {
   G2.moveNo = (G2.moveNo || 0) + 1;
   G2.lastMove = { k: kind, by: seat };
+  G2.recent = (G2.recent || []).concat([{ no: G2.moveNo, k: kind, by: seat }]).slice(-8);
 }
 function noteFinish(G2, seat) {
   if (G2.counts[seat] === 0 && !G2.finished.includes(seat)) G2.finished.push(seat);
@@ -18064,6 +18067,7 @@ var ZooPresident = {
       trickNo: 0,
       moveNo: 0,
       lastMove: null,
+      recent: [],
       score: new Array(n2).fill(0),
       roundNo: 1,
       totalRounds: Math.max(3, opts.rounds),
@@ -18390,6 +18394,8 @@ function screenView(G2, ctx, myID, names) {
     /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
     moveNo: G2.moveNo || 0,
     lastMove: G2.lastMove ? { k: G2.lastMove.k, by: toScreen(G2.lastMove.by, me, n2) } : null,
+    /* 최근 몇 수. 신호가 뭉쳐 와도 화면이 빠짐없이 집어 갈 수 있게 한다 */
+    recent: (G2.recent || []).map((m) => ({ no: m.no, k: m.k, by: toScreen(m.by, me, n2) })),
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
     draw,
@@ -18489,11 +18495,13 @@ function push() {
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
   const v2 = engine.view;
-  if (v2 && v2.moveNo && v2.lastMove && v2.moveNo !== engine.lastLogged) {
-    engine.lastLogged = v2.moveNo;
-    engine.moveLog.push({ no: v2.moveNo, k: v2.lastMove.k, by: v2.lastMove.by });
-    if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
-  }
+  const ms = v2 && v2.recent && v2.recent.length ? v2.recent : v2 && v2.moveNo && v2.lastMove ? [{ no: v2.moveNo, k: v2.lastMove.k, by: v2.lastMove.by }] : [];
+  ms.forEach((m) => {
+    if (!m || m.no <= engine.lastLogged) return;
+    engine.lastLogged = m.no;
+    engine.moveLog.push({ no: m.no, k: m.k, by: m.by });
+  });
+  if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
   drainEmotes();
   listeners.forEach((f2) => {
     try {
@@ -19074,6 +19082,9 @@ function mount(root) {
     sndFin = 0;
     sndTurn = false;
     sndRev = 0;
+    handNodes = [];
+    seatNodes = [];
+    pileSig = null;
     passHeld = null;
     lastTrick = null;
     lastRound = -1;
@@ -19288,11 +19299,16 @@ function mount(root) {
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
   const outerTrick = () => trick;
+  let pileSig = null;
   function renderPile() {
     const p2 = el("pile");
-    p2.innerHTML = "";
     const shown = outerTrick().length ? outerTrick() : ghost;
     const trick2 = shown;
+    const r0 = el("ring").getBoundingClientRect();
+    const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" + Math.round(r0.height) + "|" + animated + "|" + trick2.map((t2) => t2.by + "-" + t2.num + "-" + t2.count + ":" + (flewKey(t2) ? "1" : "0")).join(",");
+    if (sig === pileSig) return;
+    pileSig = sig;
+    p2.innerHTML = "";
     if (spread && trick2.length) {
       const t2 = T[lang];
       const maxC = Math.min(6, Math.max(...trick2.map((x2) => x2.count)));
@@ -19325,32 +19341,47 @@ function mount(root) {
     });
     animated = trick2.length;
   }
+  let handNodes = [];
   function renderHand() {
     const h2 = el("hand");
-    h2.innerHTML = "";
     const w2 = 60, n2 = hand.length;
+    if (handNodes.length !== n2 || handNodes.some((x2) => x2.parentNode !== h2)) {
+      h2.innerHTML = "";
+      handNodes = hand.map((c2, i2) => {
+        const s2 = document2.createElement("div");
+        s2.__i = i2;
+        onTap(s2, () => {
+          handTouched();
+          if (turn !== 0 || busy) return;
+          const i3 = s2.__i;
+          const k2 = sel.indexOf(i3);
+          if (k2 >= 0) {
+            sel.splice(k2, 1);
+            draw();
+            return;
+          }
+          if (!canPick(i3)) return;
+          sel.push(i3);
+          draw();
+        });
+        h2.appendChild(s2);
+        return s2;
+      });
+    }
     const step = n2 > 1 ? Math.min(36, (h2.clientWidth - w2) / (n2 - 1)) : 0;
     const total = w2 + step * (n2 - 1);
     hand.forEach((c2, i2) => {
-      const s2 = document2.createElement("div");
-      s2.className = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (turn === 0 && !busy && !canPick(i2) ? " slot--dead" : "");
-      s2.style.left = (h2.clientWidth - total) / 2 + i2 * step + "px";
-      s2.style.zIndex = i2;
-      s2.innerHTML = cardHTML(c2, w2);
-      onTap(s2, () => {
-        handTouched();
-        if (turn !== 0 || busy) return;
-        const k2 = sel.indexOf(i2);
-        if (k2 >= 0) {
-          sel.splice(k2, 1);
-          draw();
-          return;
-        }
-        if (!canPick(i2)) return;
-        sel.push(i2);
-        draw();
-      });
-      h2.appendChild(s2);
+      const s2 = handNodes[i2];
+      s2.__i = i2;
+      const cls = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (turn === 0 && !busy && !canPick(i2) ? " slot--dead" : "");
+      if (s2.className !== cls) s2.className = cls;
+      const left = (h2.clientWidth - total) / 2 + i2 * step + "px";
+      if (s2.style.left !== left) s2.style.left = left;
+      if (s2.style.zIndex !== String(i2)) s2.style.zIndex = i2;
+      if (s2.__card !== c2) {
+        s2.innerHTML = cardHTML(c2, w2);
+        s2.__card = c2;
+      }
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
   }
@@ -19474,39 +19505,60 @@ function mount(root) {
       evShow(tag + " " + n2 + (e.pointerType ? ":" + e.pointerType : "") + (e.cancelable ? "" : " (\uBABB\uB9C9\uC74C)") + " " + Date.now() % 1e5);
     }, true));
   }
+  const taps = [];
   function onTap(node, fn2) {
     if (!node) return;
-    const near = (x2, y2) => {
-      const r2 = node.getBoundingClientRect();
-      return x2 >= r2.left - 8 && x2 <= r2.right + 8 && y2 >= r2.top - 8 && y2 <= r2.bottom + 8;
-    };
-    let lastAt = 0;
-    const fire = (e, how) => {
-      if (Date.now() - lastAt < 400) return;
-      lastAt = Date.now();
-      evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
-      fn2(e);
-    };
-    node.addEventListener("pointerup", (e) => {
-      if (e.pointerType === "mouse") return;
-      touchAt = Date.now();
-      if (!near(tapX, tapY) || !near(e.clientX, e.clientY)) return;
-      fire(e, "\uC190\uAC00\uB77D");
-    }, { passive: true });
-    node.addEventListener("touchend", (e) => {
-      if (e.cancelable) e.preventDefault();
-      touchAt = Date.now();
-    }, { passive: false });
-    node.onclick = (e) => {
-      if (Date.now() - touchAt < 900) {
-        evShow("  (click \uBC84\uB9BC)");
-        return;
-      }
-      if (e && e.button != null && e.button !== 0) return;
-      fire(e, "click");
-    };
+    taps.push({ node, fn: fn2 });
     evWatch(node, "");
   }
+  const inNode = (node, x2, y2) => {
+    const r2 = node.getBoundingClientRect();
+    return x2 >= r2.left - 8 && x2 <= r2.right + 8 && y2 >= r2.top - 8 && y2 <= r2.bottom + 8;
+  };
+  function hitTap(e, how) {
+    const x2 = e.clientX, y2 = e.clientY;
+    let aim = e.target;
+    let byPoint = false;
+    if (!aim || !taps.some((it) => it.node.isConnected && (it.node === aim || it.node.contains(aim)))) {
+      const top = x2 != null && window.document.elementFromPoint ? window.document.elementFromPoint(x2, y2) : null;
+      if (top) {
+        aim = top;
+        byPoint = true;
+      }
+    }
+    if (!aim) return;
+    for (let k2 = taps.length - 1; k2 >= 0; k2--) {
+      const it = taps[k2];
+      if (!it.node.isConnected) continue;
+      if (!(it.node === aim || it.node.contains(aim))) continue;
+      const r2 = it.node.getBoundingClientRect();
+      if (byPoint && r2.width > 0 && (!inNode(it.node, tapX, tapY) || !inNode(it.node, x2, y2))) return;
+      evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
+      it.fn(e);
+      return;
+    }
+  }
+  window.document.addEventListener("pointerup", (e) => {
+    if (e.pointerType === "mouse") return;
+    touchAt = Date.now();
+    hitTap(e, "\uC190\uAC00\uB77D");
+  }, true);
+  window.document.addEventListener("touchend", (e) => {
+    if (e.cancelable) e.preventDefault();
+    touchAt = Date.now();
+  }, { passive: false, capture: true });
+  window.document.addEventListener("click", (e) => {
+    if (Date.now() - touchAt < 900) {
+      evShow("  (click \uBC84\uB9BC)");
+      return;
+    }
+    if (e.button != null && e.button !== 0) return;
+    hitTap(e, "click");
+  }, true);
+  setInterval(() => {
+    for (let k2 = taps.length - 1; k2 >= 0; k2--)
+      if (!taps[k2].node.isConnected) taps.splice(k2, 1);
+  }, 5e3);
   onTap(el("play"), () => {
     const list = sel.map((i2) => hand[i2]);
     if (!legal(list) || turn !== 0 || busy) return;

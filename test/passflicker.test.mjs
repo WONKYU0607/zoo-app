@@ -88,9 +88,22 @@ async function ready(){
 }
 
 let tried = 0, flicker = 0, never = 0;
-const delays = [], rebuilds = [], opens = [];
+const delays = [], rebuilds = [], opens = [], why = [];
+let sendFail = 0;   /* 검사가 손가락 신호를 못 보낸 횟수 */
 for (let round = 1; round <= 12 && tried < 3; round++){
   if (await ready() === false) break;
+  const markAt = await page.evaluate(() => (window.__eng.moveLog||[]).length);
+  await page.evaluate(() => {
+    if (window.__evOn) return;
+    window.__ev = [];
+    window.__evOn = true;
+    ["pointerdown","touchstart","pointerup","touchend","touchcancel","click","pointercancel"]
+      .forEach(n => document.addEventListener(n, e => {
+        const t = e.target;
+        window.__ev.push(n + "@" + (t && t.id ? "#"+t.id : (t && t.className) || "?") +
+          (t && t.disabled ? "(잠김)" : ""));
+      }, true));
+  });
   /* **진짜 손가락 신호로 눌러야 한다.** `.click()` 은 touchstart 를 안 만들어서
      손가락이 닿아 있는 동안의 처리(그리기 미루기)를 통째로 건너뛴다.
      그것 때문에 폰에서만 나는 지연을 못 잡은 적이 있다 */
@@ -100,9 +113,27 @@ for (let round = 1; round <= 12 && tried < 3; round++){
       const r = b.getBoundingClientRect();
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     });
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: p.x, y: p.y }] });
-    await new Promise(r => setTimeout(r, 70));
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    /* **보낸 손가락 신호가 진짜 도착했는지 확인하고, 안 왔으면 다시 보낸다.**
+       컴퓨터가 바쁘면 CDP 로 보낸 가짜 손가락이 통째로 안 들어오는 일이 있다.
+       그걸 "앱이 씹었다"로 세면 헛다리를 짚는다 — 실제로 그랬다 */
+    let sent = false;
+    for (let a = 0; a < 3; a++){
+      await page.evaluate(() => { window.__ev = []; });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: p.x, y: p.y }] });
+      await new Promise(r => setTimeout(r, 70));
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await new Promise(r => setTimeout(r, 60));
+      /* 엔진이 내 패스를 받았으면 들어간 것이다. 신호 기록이 아니라
+         **결과로** 확인한다 — 기록 장치 자체가 못 미더울 수 있다 */
+      const got = await page.evaluate(m => (window.__eng.moveLog||[]).slice(m)
+        .some(x => x.k === "pass" && x.by === 0), markAt);
+      if (got){ sent = true; break; }
+      sendFail++;
+      await new Promise(r => setTimeout(r, 250));
+    }
+    /* 세 번 보내도 안 들어갔으면 그대로 진행한다 — 진짜 씹힘일 수도 있으니
+       숨기지 않고 아래에서 까닭과 함께 보고한다 */
+    void sent;
   }
   tried++;
   /* 누른 직후부터 촘촘히 본다. 되돌림은 서버 왕복 사이에 잠깐 스친다 */
@@ -118,6 +149,7 @@ for (let round = 1; round <= 12 && tried < 3; round++){
     window.__mo.observe(document.querySelector("#table #seats"), { childList: true });
   });
   const trickAt = await page.evaluate(() => window.__eng?.view?.trickNo);
+
   const t0 = Date.now();
   const seenOn = [];
   let shownAt = -1;
@@ -149,7 +181,20 @@ for (let round = 1; round <= 12 && tried < 3; round++){
     if (openAt >= 0) opens.push(openAt);
   }
   rebuilds.push(await page.evaluate(() => window.__rebuilds));
+  /* **안 떴으면 그 자리에서 까닭을 남긴다.**
+     "눌렀는데 패스 자체가 안 된 것"과 "패스는 됐는데 표시가 안 뜬 것"은 다른 문제다.
+     엔진이 적어 둔 수 기록이 유일한 정답지다 */
+  const did = await page.evaluate(m => (window.__eng.moveLog||[]).slice(m)
+    .some(x => x.k === "pass" && x.by === 0), markAt);
   const first = seenOn.indexOf(true);
+  if (first < 0 || (did === false)){
+    why.push((did ? "패스는 됐는데 표시가 안 뜸" : "**패스 자체가 안 됨(눌린 것이 씹힘)**") +
+      " · 화면 " + (await page.evaluate(() => (document.querySelector(".page.is-on")||{}).id)) +
+      " · 신호 " + JSON.stringify(await page.evaluate(() => (window.__ev||[]).slice(0, 10))));
+    await new Promise(r => setTimeout(r, 1500));
+    why.push("   1.5초 더 기다린 뒤 신호: " +
+      JSON.stringify(await page.evaluate(() => (window.__ev||[]).slice(0, 10))));
+  }
   if (first < 0){
     /* **내 패스가 그 바퀴를 끝내 버렸으면** 표시할 것이 없다.
        모두의 패스 표시가 그 자리에서 지워지므로 셈에서 뺀다 */
@@ -165,9 +210,15 @@ for (let round = 1; round <= 12 && tried < 3; round++){
   await new Promise(r => setTimeout(r, 900));
 }
 
+if (sendFail) console.log("  (검사가 손가락 신호를 못 보내 다시 보낸 횟수: " + sendFail + ")");
 console.log("");
+if (tried <= 0){
+  console.log("\n손가락 신호가 한 번도 안 들어가 건너뜁니다 (컴퓨터가 너무 바쁩니다)\n");
+  shut(srv, browser); process.exit(0);
+}
 check("패스를 누르면 내 자리에 표시가 뜬다", tried > 0 && never === 0,
-      tried + "번 중 안 뜬 것 " + never + " · 뜨기까지 " + delays.join("/") + "ms");
+      tried + "번 중 안 뜬 것 " + never + " · 뜨기까지 " + delays.join("/") + "ms" +
+      (why.length ? "\n           까닭: " + why.join("\n           ") : ""));
 /* 누르자마자 떠야 한다. 늦게 뜨면 "안 먹었나?" 싶어 또 누르게 된다 */
 const worst = Math.max(...delays.filter(d => d >= 0), 0);
 /* 검사를 여럿 동시에 돌리면 컴퓨터가 느려져 몇십 ms 는 흔들린다.
