@@ -18894,9 +18894,10 @@ function mount(root) {
   let sndTurn = false, sndFin = 0, sndRev = 0;
   const seen = makeSeen();
   let primed = false;
-  let passHeld = null, lastTrick = null;
+  let passHeld = null, lastTrick = null, lastMoveNo = -1;
   let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
+  let pendingNo = -1;
   const onScreen = () => {
     const sec = window.document.getElementById("table");
     return Boolean(sec && sec.classList.contains("is-on"));
@@ -18938,6 +18939,7 @@ function mount(root) {
     sounds(v2);
     if (passHeld != null && v2.trickNo !== passHeld) passHeld = null;
     lastTrick = v2.trickNo;
+    lastMoveNo = v2.moveNo;
     SEATS = v2.seats.map((x2, i2) => ({
       n: x2.name,
       c: x2.c,
@@ -18953,10 +18955,11 @@ function mount(root) {
     busy = !v2.myTurn;
     if (pending) {
       const myC = (v2.seats || [])[0] ? v2.seats[0].c : -1;
-      const done = pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
+      const done = pendingNo >= 0 && v2.moveNo > pendingNo + 1 || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
       if (done) {
         pending = null;
         pendingHand = -1;
+        pendingNo = -1;
       } else busy = true;
     }
     if (v2.roundNo !== lastRound) {
@@ -18971,6 +18974,7 @@ function mount(root) {
       flew = /* @__PURE__ */ new Set();
       pending = null;
       pendingHand = -1;
+      pendingNo = -1;
       window.__roundNo = v2.roundNo;
       if (!first && !v2.over && v2.lastRound && window.__onRoundEnd) {
         showLastRound(v2);
@@ -19513,6 +19517,7 @@ function mount(root) {
     pending = true;
     pendingHand = hand.length;
     pendingAt = Date.now();
+    pendingNo = lastMoveNo;
     play2(e, list.length);
     iMoved();
     unlockLater();
@@ -19567,6 +19572,7 @@ function mount(root) {
     pending = true;
     pendingHand = -1;
     pendingAt = Date.now();
+    pendingNo = lastMoveNo;
     passHeld = lastTrick;
     passPressAt = Date.now();
     evShow("\uD328\uC2A4 \uB204\uB984");
