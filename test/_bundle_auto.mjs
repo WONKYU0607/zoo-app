@@ -18944,6 +18944,12 @@ function mount(root) {
       return;
     }
     sounds(v2);
+    if (wantPlay && Date.now() - wantPlay < 800) {
+      const w2 = wantPlay;
+      wantPlay = 0;
+      if (!tryPlay(true)) wantPlay = w2;
+      else evShow("  \u2192 \uBCF4\uB958\uD588\uB358 \uB0B4\uAE30\uB97C \uB0C8\uB2E4");
+    } else if (wantPlay) wantPlay = 0;
     if (passHeld != null && v2.trickNo !== passHeld) passHeld = null;
     lastTrick = v2.trickNo;
     lastMoveNo = v2.moveNo;
@@ -19505,6 +19511,7 @@ function mount(root) {
     }, true));
   }
   const taps = [];
+  let tapDone = false;
   function onTap(node, fn2) {
     if (!node) return;
     taps.push({ node, fn: fn2 });
@@ -19533,6 +19540,7 @@ function mount(root) {
       const r2 = it.node.getBoundingClientRect();
       if (byPoint && r2.width > 0 && (!inNode(it.node, tapX, tapY) || !inNode(it.node, x2, y2))) return;
       evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
+      tapDone = true;
       it.fn(e);
       return;
     }
@@ -19544,12 +19552,12 @@ function mount(root) {
   };
   rootOn("pointerup", (e) => {
     if (e.pointerType === "mouse") return;
-    touchAt = Date.now();
+    tapDone = false;
     hitTap(e, "\uC190\uAC00\uB77D");
+    if (tapDone) touchAt = Date.now();
   }, true);
   rootOn("touchend", (e) => {
-    if (e.cancelable) e.preventDefault();
-    touchAt = Date.now();
+    if (tapDone && e.cancelable) e.preventDefault();
   }, { passive: false, capture: true });
   rootOn("click", (e) => {
     if (Date.now() - touchAt < 900) {
@@ -19563,9 +19571,16 @@ function mount(root) {
     for (let k2 = taps.length - 1; k2 >= 0; k2--)
       if (!taps[k2].node.isConnected) taps.splice(k2, 1);
   }, 5e3);
-  onTap(el("play"), () => {
+  let wantPlay = 0;
+  function tryPlay(fromWait) {
     const list = sel.map((i2) => hand[i2]);
-    if (!legal(list) || turn !== 0 || busy) return;
+    if (!legal(list) || turn !== 0 || busy) {
+      if (!fromWait) {
+        wantPlay = Date.now();
+        evShow("  (\uB0B4\uAE30 \uBCF4\uB958: " + (!legal(list) ? "\uBABB \uB0B4\uB294 \uC870\uD569" : busy ? "\uB0B4 \uCC28\uB840 \uC544\uB2D8" : "\uCC28\uB840 \uC544\uB2D8") + ")");
+      }
+      return false;
+    }
     const e = effective(list);
     sel = [];
     busy = true;
@@ -19577,6 +19592,11 @@ function mount(root) {
     play2(e, list.length);
     iMoved();
     unlockLater();
+    return true;
+  }
+  onTap(el("play"), () => {
+    wantPlay = 0;
+    tryPlay(false);
   });
   let unlockId = null;
   function viewSig(v2) {

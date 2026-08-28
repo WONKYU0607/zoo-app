@@ -138,6 +138,12 @@ export function mount(root){
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over){ sounds(v, true); return; }
     sounds(v);
+    /* 잠깐 전에 눌렀던 내기를 이제 낼 수 있으면 그때 낸다 (위 wantPlay 설명 참고) */
+    if (wantPlay && Date.now() - wantPlay < 800){
+      const w = wantPlay; wantPlay = 0;
+      if (!tryPlay(true)) wantPlay = w;      /* 아직도 안 되면 계속 기다린다 */
+      else evShow("  → 보류했던 내기를 냈다");
+    } else if (wantPlay) wantPlay = 0;
     /* 내 패스 표시 붙잡기 (위 passHeld 설명 참고).
        바퀴가 바뀌면 놓아 준다 — 새 바퀴에서는 다시 낼 수 있어야 한다 */
     if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
@@ -798,6 +804,7 @@ const TURN_SEC = 15;
      "지금 눌러도 되는가"는 각 처리기가 스스로 다시 따지므로
      `disabled` 는 보이기용으로만 쓴다 */
   const taps = [];                       /* {node, fn} */
+  let tapDone = false;                   /* 이번 누름을 우리가 처리했는가 */
   function onTap(node, fn){
     if (!node) return;
     taps.push({ node, fn });
@@ -834,6 +841,7 @@ const TURN_SEC = 15;
       const r = it.node.getBoundingClientRect();
       if (byPoint && r.width > 0 && (!inNode(it.node, tapX, tapY) || !inNode(it.node, x, y))) return;
       evShow("  → 처리(" + how + ")");
+      tapDone = true;
       it.fn(e);
       return;
     }
@@ -848,14 +856,15 @@ const TURN_SEC = 15;
   };
   rootOn("pointerup", e => {
     if (e.pointerType === "mouse") return;      /* 마우스는 click 으로 */
-    touchAt = Date.now();                       /* 뒤따라오는 click 을 버리게 한다 */
+    tapDone = false;
     hitTap(e, "손가락");
+    if (tapDone) touchAt = Date.now();          /* 우리가 처리했을 때만 click 을 버린다 */
   }, true);
   rootOn("touchend", e => {
-    /* 처리는 위에서 끝났다. 여기서는 뒤따르는 마우스 신호만 막는다.
-       **판 화면 안에서만** 막아야 한다 */
-    if (e.cancelable) e.preventDefault();
-    touchAt = Date.now();
+    /* **우리가 처리한 누름만** 뒤따르는 마우스 신호를 막는다.
+       무조건 막으면 `onTap` 에 안 걸린 것들(자동·이모티콘 단추, 바닥 펼치기)이
+       `click` 으로 도는데 그 click 이 통째로 사라져 **단추가 죽는다** */
+    if (tapDone && e.cancelable) e.preventDefault();
   }, { passive: false, capture: true });
   rootOn("click", e => {
     if (Date.now() - touchAt < 900){ evShow("  (click 버림)"); return; }
@@ -868,9 +877,21 @@ const TURN_SEC = 15;
       if (!taps[k].node.isConnected) taps.splice(k, 1);
   }, 5000);
 
-  onTap(el("play"), () => {
+  /* 내기 단추를 눌렀는데 그 순간 낼 수 없는 상태였을 때, **그 누름을 버리지 않는다.**
+     서버 대전은 상태가 잠깐씩 어긋나서(내 차례가 아니게 보였다가 돌아옴)
+     눌러도 아무 일이 안 일어나는 때가 있다. 그러면 다시 눌러야 하는데,
+     "10번 내면 9번은 두 번 눌러야 한다"는 신고가 그것이었다.
+     잠깐(0.8초) 기억했다가 낼 수 있게 되면 그때 내보낸다 */
+  let wantPlay = 0;
+  function tryPlay(fromWait){
     const list = sel.map(i => hand[i]);
-    if (!legal(list) || turn !== 0 || busy) return;
+    if (!legal(list) || turn !== 0 || busy){
+      if (!fromWait){
+        wantPlay = Date.now();
+        evShow("  (내기 보류: " + (!legal(list) ? "못 내는 조합" : busy ? "내 차례 아님" : "차례 아님") + ")");
+      }
+      return false;
+    }
     const e = effective(list);
     sel = []; busy = true;
     sndStop("tick");                   /* 다 냈으니 재촉하는 소리도 멈춘다 */
@@ -879,7 +900,9 @@ const TURN_SEC = 15;
     eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
     iMoved();
     unlockLater();
-  });
+    return true;
+  }
+  onTap(el("play"), () => { wantPlay = 0; tryPlay(false); });
 
   /* 수가 거부되면 새 상태가 안 온다. 그때 화면이 굳지 않게 잠금을 풀어 준다.
 
