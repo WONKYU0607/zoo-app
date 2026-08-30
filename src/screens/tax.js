@@ -443,7 +443,11 @@ export function mount(root){
     ranks = (g.finish && g.finish.length === N) ? g.finish.slice()
           : Array.from({length: N}, (_, i) => i);
     step = 0; sel = []; selVal = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
-    hideHand = false;
+    /* **처음부터 손패를 감춘다.**
+       엔진은 판이 끝나는 즉시 다음 판을 나눠 놓기 때문에, 등수 발표 단계(0)에서
+       이미 다음 판의 패가 손에 들어와 있다. 감추지 않으면
+       **나누지도 않았는데 받을 패가 미리 보인다.** 나누는 모션이 끝나면 푼다 */
+    hideHand = true;
     waitOn = 0;                 /* 기다린 횟수를 되돌린다. 안 하면 다음에 자동 진행이 안 걸린다 */
     clearFx();
     draw();
@@ -630,6 +634,8 @@ export function mount(root){
     /* 10번: 패는 나누는 모션이 끝난 뒤에 손에 들어온다.
        미리 넣어 두면 나누기 전에 이미 패가 보인다 */
     if (step === 1){ dealAll(); hideHand = true; }
+    /* 나누기 단계를 건너뛰는 판이면 여기서 풀어 준다. 안 그러면 손패가 영영 안 보인다 */
+    else if (step >= 1) hideHand = false;
     draw();
     if (step === 1){
       runDeal();

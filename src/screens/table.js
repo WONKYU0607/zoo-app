@@ -72,6 +72,8 @@ export function mount(root){
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
   let sndTurn = false, sndFin = 0, sndRev = 0;
+  /* 판 화면에 들어온 직후 벨을 미루는 시각 */
+  let bellAfter = 0, bellTimer = null;
   /* 이미 울린 수의 번호. 되돌림은 같은 번호라 걸러지고,
      새 수는 언제나 다른 번호라 아무리 빨라도 안 빠진다 (sndkey.js) */
   const seen = makeSeen();
@@ -83,6 +85,8 @@ export function mount(root){
      그대로 그리면 프로필이 어두워졌다 밝아졌다 해서 두 번 눌린 것처럼 보인다.
      그래서 그 바퀴가 끝날 때까지는 내 패스 표시를 붙잡아 둔다 */
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
+  /* 바퀴를 끝낸 마지막 패스 {by, at} — 상태에 안 남아서 따로 붙잡는다 */
+  let lastPass = null;
   /* 패스를 누른 시각. **누른 순간을 찍기 어려우니 로그가 스스로 잰다** —
      나중에 한 장만 찍어도 얼마나 늦게 반영됐는지 알 수 있다 */
   let passPressAt = 0;
@@ -114,7 +118,21 @@ export function mount(root){
     }
     primed = true;
     /* 내 차례가 막 왔다 */
-    if (v.myTurn && !sndTurn && !mute) snd("my_turn");
+    /* 내 차례 벨.
+       **판 화면에 막 들어온 직후에는 잠깐 미룬다.** 화면은 넘어가는 데 시간이 걸리는데
+       상태는 먼저 도착해서, 세금 화면이 아직 보이는 중에 벨이 울렸다.
+       삼키는 것이 아니라 화면이 자리를 잡은 뒤에 울린다 */
+    if (v.myTurn && !sndTurn && !mute){
+      const wait = bellAfter - Date.now();
+      if (wait > 0){
+        if (bellTimer) clearTimeout(bellTimer);
+        bellTimer = setTimeout(() => {
+          bellTimer = null;
+          const cv = eng.engine.view;
+          if (cv && cv.myTurn && onScreen()) snd("my_turn");
+        }, wait);
+      } else snd("my_turn");
+    }
     sndTurn = Boolean(v.myTurn);
     /* 누가 완주했다 */
     const fin = (v.finish || []).length;
@@ -147,9 +165,21 @@ export function mount(root){
     /* 내 패스 표시 붙잡기 (위 passHeld 설명 참고).
        바퀴가 바뀌면 놓아 준다 — 새 바퀴에서는 다시 낼 수 있어야 한다 */
     if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
+    /* **바퀴를 끝낸 마지막 패스는 표시가 안 남는다.**
+       그 패스로 바닥이 치워지면서 모두의 패스 표시가 같이 지워지기 때문이다.
+       그래서 마지막에 패스한 사람만 아무 표시 없이 넘어갔다.
+       최근 수 목록에 그 패스가 남아 있으므로, 바퀴가 바뀌는 순간
+       **누가 마지막으로 패스했는지 따로 기억해 두었다가** 잠깐 더 보여 준다 */
+    if (v.trickNo !== lastTrick && lastTrick != null){
+      const ps = (v.recent || []).filter(m => m.k === "pass");
+      lastPass = ps.length ? { by: ps[ps.length - 1].by, at: Date.now() } : null;
+    }
+    if (lastPass && Date.now() - lastPass.at > 1200) lastPass = null;
     lastTrick = v.trickNo; lastMoveNo = v.moveNo;
     SEATS = v.seats.map((x, i) => ({
-      n: x.name, c: x.c, s: (i === 0 && passHeld != null) ? "pass" : x.s,
+      n: x.name, c: x.c,
+      s: (i === 0 && passHeld != null) ? "pass"
+        : (x.s ? x.s : (lastPass && lastPass.by === i && x.c > 0 ? "pass" : "")),
       hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
@@ -283,8 +313,10 @@ export function mount(root){
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
     ghost = []; ghostSig = ""; holdingEnd = false;
     seen.clear(); primed = false; sndFin = 0; sndTurn = false; sndRev = 0;
+    bellAfter = Date.now() + 700;
+    if (bellTimer){ clearTimeout(bellTimer); bellTimer = null; }
     handNodes = []; seatNodes = []; pileSig = null;
-    passHeld = null; lastTrick = null;
+    passHeld = null; lastTrick = null; lastPass = null;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
@@ -544,8 +576,10 @@ export function mount(root){
     const r0 = el("ring").getBoundingClientRect();
     const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" +
       Math.round(r0.height) + "|" + animated + "|" +
-      trick.map(t => t.by + "-" + t.num + "-" + t.count +
-        ":" + (flewKey(t) ? "1" : "0")).join(",");
+      /* **`flewKey` 를 부르면 안 된다.** 그 함수는 "이미 날아왔다"고 표시까지 해서,
+         표식을 만드는 것만으로 연출 상태를 먹어치운다.
+         그것 때문에 카드가 깜빡이고 앞사람 카드가 다시 날아왔다 */
+      trick.map(t => t.by + "-" + t.num + "-" + t.count).join(",");
     if (sig === pileSig) return;
     pileSig = sig;
     p.innerHTML = "";
@@ -897,6 +931,7 @@ const TURN_SEC = 15;
     sndStop("tick");                   /* 다 냈으니 재촉하는 소리도 멈춘다 */
     pending = true; pendingHand = hand.length; pendingAt = Date.now();
     pendingNo = lastMoveNo;
+    lastSend = { num: e, count: list.length, no: lastMoveNo, retried: false };
     eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
     iMoved();
     unlockLater();
@@ -911,6 +946,8 @@ const TURN_SEC = 15;
      다시 누르면 **같은 수가 두 번 나갔다**(카드가 티틱 하고 두 장 날아가던 것).
      그래서 **판이 그대로일 때만** 푼다. 조금이라도 움직였으면 처리된 것이다 */
   let unlockId = null;
+  /* 마지막으로 보낸 카드. 거부된 것 같을 때 한 번만 다시 보내는 데 쓴다 */
+  let lastSend = null;
   function viewSig(v){
     if (!v) return "";
     return v.turn + "|" + (v.table || []).length + "|" +
@@ -925,6 +962,18 @@ const TURN_SEC = 15;
       const v = eng.engine.view;
       if (!busy) return;
       if (viewSig(v) !== sent){ return; }        /* 움직였다 — 잘 갔다 */
+      /* **거부된 것 같으면 한 번은 대신 다시 보낸다.**
+         내 화면이 조금 뒤처져 있으면 엔진이 그 수를 거절하는데, 예전에는
+         6초를 기다렸다 풀어 주기만 해서 **사람이 손으로 다시 눌러야 했다**.
+         두 번 나가지 않도록, 판이 하나도 안 움직였을 때만 한 번 */
+      if (lastSend && !lastSend.retried && v && v.myTurn && v.moveNo === lastSend.no){
+        lastSend.retried = true;
+        evShow("  (거부된 듯해 다시 보냄)");
+        eng.play(lastSend.num, lastSend.count);
+        iMoved();
+        unlockId = setTimeout(look, 1200);
+        return;
+      }
       if (++tries < 5){ unlockId = setTimeout(look, 1200); return; }
       if (v && v.myTurn){ busy = false; draw(); }  /* 6초가 지나도 그대로면 거부된 것 */
     };

@@ -1456,7 +1456,10 @@ function mount2(root) {
     const shown = outerTrick().length ? outerTrick() : ghost;
     const trick2 = shown;
     const r0 = el("ring").getBoundingClientRect();
-    const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" + Math.round(r0.height) + "|" + animated + "|" + trick2.map((t) => t.by + "-" + t.num + "-" + t.count + ":" + (flewKey(t) ? "1" : "0")).join(",");
+    const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" + Math.round(r0.height) + "|" + animated + "|" + /* **`flewKey` 를 부르면 안 된다.** 그 함수는 "이미 날아왔다"고 표시까지 해서,
+       표식을 만드는 것만으로 연출 상태를 먹어치운다.
+       그것 때문에 카드가 깜빡이고 앞사람 카드가 다시 날아왔다 */
+    trick2.map((t) => t.by + "-" + t.num + "-" + t.count).join(",");
     if (sig === pileSig) return;
     pileSig = sig;
     p.innerHTML = "";

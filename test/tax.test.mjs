@@ -85,6 +85,22 @@ check("3등은 안 준다", st.give === 0, JSON.stringify(st));
 picked = await page.evaluate(() => window.__taxProbe.pick([12]));
 check("안 주는 자리는 안 골린다", picked.length === 0, JSON.stringify(picked));
 
+/* ---- 등수 발표 단계에서는 손패가 안 보여야 한다 ----
+   엔진은 판이 끝나는 즉시 다음 판을 나눠 놓는다. 감추지 않으면
+   **나누지도 않았는데 받을 패가 미리 보인다** */
+await setup([0,1,2,3]);
+await page.evaluate(() => window.__goto("tax"));
+await new Promise(r=>setTimeout(r,400));
+await page.evaluate(() => window.__bootTax && window.__bootTax());
+await new Promise(r=>setTimeout(r,300));
+{
+  const st0 = await page.evaluate(() => window.__taxProbe.step());
+  const shown = await page.evaluate(() =>
+    document.querySelectorAll("#tax .hand .slot, #tax .hand > *").length);
+  check("등수 발표 단계에서는 손패가 안 보인다", st0 !== 1 ? shown === 0 : true,
+        "단계 " + st0 + " · 보이는 칸 " + shown);
+}
+
 check("터진 것 없음", logs.filter(l => /^ERROR/.test(l)).length === 0,
   JSON.stringify(logs.filter(l => /^ERROR/.test(l)).slice(0,2)));
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
