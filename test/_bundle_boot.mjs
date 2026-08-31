@@ -2831,9 +2831,11 @@ function mount5(root) {
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
   let sndTurn = false, sndFin = 0, sndRev = 0;
+  let bellAfter = 0, bellTimer = null;
   const seen = makeSeen();
   let primed = false;
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
+  let lastPass = null;
   let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
   let pendingNo = -1;
@@ -2856,7 +2858,17 @@ function mount5(root) {
       if (kinds.has("pass")) play("pass");
     }
     primed = true;
-    if (v.myTurn && !sndTurn && !mute) play("my_turn");
+    if (v.myTurn && !sndTurn && !mute) {
+      const wait = bellAfter - Date.now();
+      if (wait > 0) {
+        if (bellTimer) clearTimeout(bellTimer);
+        bellTimer = setTimeout(() => {
+          bellTimer = null;
+          const cv = engine.view;
+          if (cv && cv.myTurn && onScreen()) play("my_turn");
+        }, wait);
+      } else play("my_turn");
+    }
     sndTurn = Boolean(v.myTurn);
     const fin = (v.finish || []).length;
     if (fin > sndFin && !mute) {
@@ -2883,12 +2895,17 @@ function mount5(root) {
       else evShow("  \u2192 \uBCF4\uB958\uD588\uB358 \uB0B4\uAE30\uB97C \uB0C8\uB2E4");
     } else if (wantPlay) wantPlay = 0;
     if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
+    if (v.trickNo !== lastTrick && lastTrick != null) {
+      const ps = (v.recent || []).filter((m) => m.k === "pass");
+      lastPass = ps.length ? { by: ps[ps.length - 1].by, at: Date.now() } : null;
+    }
+    if (lastPass && Date.now() - lastPass.at > 1200) lastPass = null;
     lastTrick = v.trickNo;
     lastMoveNo = v.moveNo;
     SEATS = v.seats.map((x2, i) => ({
       n: x2.name,
       c: x2.c,
-      s: i === 0 && passHeld != null ? "pass" : x2.s,
+      s: i === 0 && passHeld != null ? "pass" : x2.s ? x2.s : lastPass && lastPass.by === i && x2.c > 0 ? "pass" : "",
       hold: x2.hold || [],
       av: x2.seat,
       r: x2.rank
@@ -3019,11 +3036,17 @@ function mount5(root) {
     sndFin = 0;
     sndTurn = false;
     sndRev = 0;
+    bellAfter = Date.now() + 700;
+    if (bellTimer) {
+      clearTimeout(bellTimer);
+      bellTimer = null;
+    }
     handNodes = [];
     seatNodes = [];
     pileSig = null;
     passHeld = null;
     lastTrick = null;
+    lastPass = null;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -3524,6 +3547,7 @@ function mount5(root) {
     pendingHand = hand.length;
     pendingAt = Date.now();
     pendingNo = lastMoveNo;
+    lastSend = { num: e, count: list.length, no: lastMoveNo, retried: false };
     play2(e, list.length);
     iMoved();
     unlockLater();
@@ -3534,6 +3558,7 @@ function mount5(root) {
     tryPlay(false);
   });
   let unlockId = null;
+  let lastSend = null;
   function viewSig(v) {
     if (!v) return "";
     return v.turn + "|" + (v.table || []).length + "|" + (v.seats || []).map((x2) => x2.c + (x2.s || "")).join(",");
@@ -3547,6 +3572,14 @@ function mount5(root) {
       const v = engine.view;
       if (!busy) return;
       if (viewSig(v) !== sent) {
+        return;
+      }
+      if (lastSend && !lastSend.retried && v && v.myTurn && v.moveNo === lastSend.no) {
+        lastSend.retried = true;
+        evShow("  (\uAC70\uBD80\uB41C \uB4EF\uD574 \uB2E4\uC2DC \uBCF4\uB0C4)");
+        play2(lastSend.num, lastSend.count);
+        iMoved();
+        unlockId = setTimeout(look, 1200);
         return;
       }
       if (++tries < 5) {
@@ -4158,7 +4191,7 @@ function mount6(root) {
     reversed = false;
     revSeat = null;
     wasGreat = false;
-    hideHand = false;
+    hideHand = true;
     waitOn = 0;
     clearFx();
     draw();
@@ -4341,7 +4374,7 @@ function mount6(root) {
     if (step === 1) {
       dealAll();
       hideHand = true;
-    }
+    } else if (step >= 1) hideHand = false;
     draw();
     if (step === 1) {
       runDeal();
