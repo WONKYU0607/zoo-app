@@ -62,3 +62,9 @@ export const startRoom = code => api(`/zoo/rooms/${code}/start`, {});
 /* 내가 직접 뒀다고 알린다 — 자리비움 판정을 되돌린다 */
 export const keepAlive = (code, seat) =>
   api(`/zoo/rooms/${code}/alive`, { seat }).catch(() => null);
+
+/* 판 화면에 들어섰다고 알린다.
+   이 신호가 다 모일 때까지 서버 봇은 새 판에서 한 수도 두지 않는다.
+   안 알리면 등수·세금 화면을 보는 동안 봇이 다 둬 버린다 */
+export const sayReady = (code, seat) =>
+  api(`/zoo/rooms/${code}/ready`, { seat }).catch(() => null);

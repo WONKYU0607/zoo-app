@@ -1131,7 +1131,7 @@ function mount2(root) {
     busy = !v.myTurn;
     if (pending) {
       const myC = (v.seats || [])[0] ? v.seats[0].c : -1;
-      const done = pendingNo >= 0 && v.moveNo > pendingNo + 1 || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v.myTurn || Date.now() - pendingAt > 2e3;
+      const done = pendingNo >= 0 && v.moveNo > pendingNo && !v.myTurn || pendingNo >= 0 && v.moveNo > pendingNo + 1 || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v.myTurn || Date.now() - pendingAt > 2e3;
       if (done) {
         pending = null;
         pendingHand = -1;

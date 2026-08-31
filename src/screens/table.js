@@ -202,7 +202,11 @@ export function mount(root){
       /* **한 수만 더 진행된 것으로는 풀지 않는다.** 그건 내 수가 막 반영된 순간이라,
          그때 열면 차례가 넘어가기 전에 단추가 반짝 열렸다 닫혀 두 번 눌린 듯 보인다.
          **두 수 이상** 지났으면 남도 이미 뒀다는 뜻이라 확실히 끝난 것이다 */
-      const done = (pendingNo >= 0 && v.moveNo > pendingNo + 1)
+      /* 내 수가 확인되고 차례가 넘어갔으면 그 자리에서 푼다.
+         **두 수를 기다리면 1~2초씩 화면이 굳은 것처럼 보인다**(신고받음).
+         신호가 뭉쳐 와 그 중간을 못 볼 때를 위해 "두 수 이상"도 같이 본다 */
+      const done = (pendingNo >= 0 && v.moveNo > pendingNo && !v.myTurn)
+                || (pendingNo >= 0 && v.moveNo > pendingNo + 1)
                 || (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
                 || (pendingHand < 0 && !v.myTurn)
                 || Date.now() - pendingAt > 2000;

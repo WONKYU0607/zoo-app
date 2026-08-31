@@ -540,11 +540,15 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (G0 && G0.seatFaces) G0.faces = G0.seatFaces.slice();
     ensureTaxGiven();                      /* 안 낸 세금이 있으면 대신 낸다 */
     eng.setPaused(false);
+    /* 서버 봇에게도 "이제 봐도 된다"고 알린다.
+       화면 쪽 멈춤은 이 기기 판에만 통하고, 서버 대전의 봇은 서버에서 돈다 */
+    if (net) lobby.sayReady(net.code, Number(net.playerID));
     if (typeof prevBootTable === "function") prevBootTable(fresh);
   };
   const prevToTable = W().__toTable;
   W().__toTable = () => {
     eng.setPaused(false);
+    if (net) lobby.sayReady(net.code, Number(net.playerID));
     if (typeof prevToTable === "function") prevToTable();
     else opt.goto("table");
   };
