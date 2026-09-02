@@ -466,6 +466,15 @@ export function mount(root){
     hand: () => myHand().slice(),
     sel: () => sel.slice(),
     selVal: () => selVal.slice(),
+    /* 혁명 선언 단계(2)로 바로 세운다. 검사에서 소리 시점을 보려고 쓴다 */
+    toRev: (seat) => {
+      revSeat = Number.isInteger(seat) ? seat : 0;
+      declared = false; wasGreat = false; reversed = false;
+      hideHand = false;
+      step = 2; sel = []; selVal = [];
+      clearFx(); draw();
+      return { step, revSeat };
+    },
     /* 고르는 단계(3)로 바로 세운다. ranks 를 주면 등수도 바꾼다 */
     toGive: (order) => {
       if (Array.isArray(order) && order.length === N) ranks = order.slice();
@@ -604,6 +613,10 @@ export function mount(root){
     if (step === 2 && revSeat !== null && !declared){
       declared = true;
       wasGreat = great;
+      /* **혁명 소리는 여기서 낸다.**
+         판 화면에도 같은 소리가 있었는데, 그때는 이 화면이 떠 있어서
+         소리가 삼켜지고, 판 화면에 들어설 때 뒤늦게 울렸다 */
+      snd("revolution");
       /* 엔진에 실제로 선언한다. 이걸 안 부르면 세금이 그대로 걷힌다 */
       if (online && revSeat === 0 && window.__declareRev) window.__declareRev();
       if (great){

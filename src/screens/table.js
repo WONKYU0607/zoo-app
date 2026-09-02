@@ -144,10 +144,11 @@ export function mount(root){
       if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) snd("lose");
     }
     sndFin = fin;
-    /* 혁명이 확정되는 순간 한 번 */
-    const rev = v.revolution && v.revolution.declared ? 1 : 0;
-    if (rev && !sndRev && !mute) snd("revolution");
-    sndRev = rev;
+    /* 혁명 소리는 **세금 화면에서 선언하는 순간** 낸다(tax.js).
+       여기서 내면, 선언할 때는 이 화면이 안 보여 삼켜지고
+       판이 시작될 때 뒤늦게 울린다 — 실제로 그런 신고를 받았다.
+       상태만 따라가 두고 소리는 내지 않는다 */
+    sndRev = v.revolution && v.revolution.declared ? 1 : 0;
   }
 
   function apply(v){

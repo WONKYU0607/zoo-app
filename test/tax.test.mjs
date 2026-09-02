@@ -15,7 +15,16 @@ if (!(await findBrowser())){
 ensureBuild();
 const srv = await serve(5699);
 const { browser, page, logs } = await open({ srv });
-await page.evaluateOnNewDocument(() => { try { localStorage.setItem("zk_lang","ko"); } catch(e){} });
+await page.evaluateOnNewDocument(() => {
+  try { localStorage.setItem("zk_lang","ko"); } catch(e){}
+  /* 어떤 소리가 언제 났는지 적어 둔다 — 소리 시점을 보는 검사에 쓴다 */
+  window.__snd = [];
+  HTMLMediaElement.prototype.play = function(){
+    const m = (this.currentSrc || this.src || "").match(/snd\/([a-z_]+)\.webm/);
+    if (m) window.__snd.push(m[1]);
+    return Promise.resolve();
+  };
+});
 await page.reload({ waitUntil: "networkidle0" });
 let pass = 0, fail = 0;
 const check = (n, ok, note) => { ok ? pass++ : fail++;
@@ -99,6 +108,26 @@ await new Promise(r=>setTimeout(r,300));
     document.querySelectorAll("#tax .hand .slot, #tax .hand > *").length);
   check("등수 발표 단계에서는 손패가 안 보인다", st0 !== 1 ? shown === 0 : true,
         "단계 " + st0 + " · 보이는 칸 " + shown);
+}
+
+/* ---- 혁명 소리는 **선언하는 그 순간** 나야 한다 ----
+   판 화면에서 내면, 선언할 때는 그 화면이 안 보여 소리가 삼켜지고
+   판이 시작될 때 뒤늦게 울린다. 실제로 그런 신고를 받았다 */
+await setup([0,1,2,3]);
+await page.evaluate(() => window.__goto("tax"));
+await new Promise(r=>setTimeout(r,300));
+{
+  await page.evaluate(() => { window.__snd = []; });
+  const st2 = await page.evaluate(() => window.__taxProbe.toRev(0));
+  await new Promise(r=>setTimeout(r,200));
+  const before = await page.evaluate(() => window.__snd.slice());
+  await page.evaluate(() => { const b = document.querySelector("#tax #next"); if (b) b.click(); });
+  await new Promise(r=>setTimeout(r,400));
+  const after = await page.evaluate(() => window.__snd.slice());
+  check("혁명 선언 전에는 혁명 소리가 안 난다", !before.includes("revolution"),
+        JSON.stringify(before));
+  check("혁명을 선언하면 그 자리에서 소리가 난다", after.includes("revolution"),
+        "단계 " + st2.step + " · 울린 것 " + JSON.stringify(after));
 }
 
 check("터진 것 없음", logs.filter(l => /^ERROR/.test(l)).length === 0,
