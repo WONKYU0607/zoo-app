@@ -2877,9 +2877,7 @@ function mount5(root) {
       if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) play("lose");
     }
     sndFin = fin;
-    const rev = v.revolution && v.revolution.declared ? 1 : 0;
-    if (rev && !sndRev && !mute) play("revolution");
-    sndRev = rev;
+    sndRev = v.revolution && v.revolution.declared ? 1 : 0;
   }
   function apply(v) {
     if (!v) return;
@@ -4207,6 +4205,20 @@ function mount6(root) {
     hand: () => myHand().slice(),
     sel: () => sel.slice(),
     selVal: () => selVal.slice(),
+    /* 혁명 선언 단계(2)로 바로 세운다. 검사에서 소리 시점을 보려고 쓴다 */
+    toRev: (seat) => {
+      revSeat = Number.isInteger(seat) ? seat : 0;
+      declared = false;
+      wasGreat = false;
+      reversed = false;
+      hideHand = false;
+      step = 2;
+      sel = [];
+      selVal = [];
+      clearFx();
+      draw();
+      return { step, revSeat };
+    },
     /* 고르는 단계(3)로 바로 세운다. ranks 를 주면 등수도 바꾼다 */
     toGive: (order2) => {
       if (Array.isArray(order2) && order2.length === N2) ranks = order2.slice();
@@ -4345,6 +4357,7 @@ function mount6(root) {
     if (step === 2 && revSeat !== null && !declared) {
       declared = true;
       wasGreat = great;
+      play("revolution");
       if (online && revSeat === 0 && window.__declareRev) window.__declareRev();
       if (great) {
         reversed = true;

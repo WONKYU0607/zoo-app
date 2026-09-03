@@ -1091,9 +1091,7 @@ function mount2(root) {
       if (v.seats && fin === v.seats.length - 1 && !v.finish.includes(0)) play("lose");
     }
     sndFin = fin;
-    const rev = v.revolution && v.revolution.declared ? 1 : 0;
-    if (rev && !sndRev && !mute) play("revolution");
-    sndRev = rev;
+    sndRev = v.revolution && v.revolution.declared ? 1 : 0;
   }
   function apply(v) {
     if (!v) return;
