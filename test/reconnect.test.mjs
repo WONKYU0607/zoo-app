@@ -21,7 +21,20 @@ if (!(await findBrowser())){ console.log("\n크롬이 없어 건너뜁니다\n")
 const PORT = Number(process.env.ZOO_TEST_PORT || 8137);
 const SRV = "http://127.0.0.1:" + PORT;
 const DIR = mkdtempSync(join(tmpdir(), "zoo-recon-"));
-const SERVER_DIR = process.env.ZOO_SERVER_DIR || "/home/claude/zoo-server";
+/* 게임 서버 폴더. 보통 앱 폴더와 나란히 있다.
+   내 컴퓨터 경로를 박아 두면 다른 사람 컴퓨터에서는 못 찾는다 —
+   실제로 `spawn ... ENOENT` 로 터졌다 */
+import { existsSync } from "node:fs";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SERVER_DIR = process.env.ZOO_SERVER_DIR ||
+  [join(HERE, "..", "..", "zoo-server"), "/home/claude/zoo-server"]
+    .find(p => existsSync(join(p, "server.js"))) || "";
+if (!SERVER_DIR){
+  console.log("\n게임 서버 폴더를 못 찾아 건너뜁니다 (zoo-server 가 zoo-app 과 나란히 있어야 합니다)\n");
+  process.exit(0);
+}
 
 let pass = 0, fail = 0;
 const check = (n, ok, note) => {
@@ -112,14 +125,22 @@ const askMsg = await page.evaluate(() => (document.getElementById("askM")||{}).t
 check("로비에 이어서 하기 창이 뜬다", askOn, askMsg || "안 뜸");
 
 if (askOn){
+  console.log("    (서버가 말하는 방 상태: " + JSON.stringify(await page.evaluate(async () => {
+    try { const r = await window.__resumable(); return r; } catch(e){ return "읽기 실패"; }
+  })) + ")");
   await page.evaluate(() => { const b = document.getElementById("askYes"); if (b) b.click(); });
-  let back = false;
+  let back = false, sawDraw = false;
   for (let i = 0; i < 40; i++){
     await nap(500);
     const on = await now();
+    if (on === "draw") sawDraw = true;          /* 뽑기를 다시 하면 안 된다 */
     if (on === "table" || on === "room"){ back = true; break; }
   }
   check("눌러서 하던 방으로 돌아간다", back, "화면 " + (await now()));
+  /* **이미 굴러가던 판이면 판 화면으로 바로 가야 한다.**
+     무조건 뽑기 길을 타면 패 뽑기와 시작 카운트가 다시 뜬다 */
+  check("뽑기를 다시 하지 않는다", !sawDraw, sawDraw ? "뽑기 화면을 또 지나감" : "");
+  check("판 화면으로 바로 간다", (await now()) === "table", "화면 " + (await now()));
 }
 
 kill();

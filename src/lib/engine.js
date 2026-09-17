@@ -23,13 +23,16 @@ export const engine = {
   paused: false,       /* 결과를 보는 동안 다음 판을 멈춘다 */
   auto: false,         /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
   botMs: 3000,         /* 봇이 생각하는 척하는 시간 */
+  /* 자동치기가 **내 자리**를 둘 때 기다리는 시간.
+     봇은 남이라 생각하는 척해야 하지만, 내 자리는 그럴 이유가 없다.
+     3초로 두었더니 서버 왕복까지 붙어 4~5초씩 걸렸다 */
+  autoMs: 1000,
   moveLog: [],         /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
   lastLogged: 0,
 };
 
 let listeners = [];
 let unsub = null;
-let sentAt = null;   /* 방금 보낸 수 {seat,no,at} — 같은 수를 두 번 보내지 않으려고 */
 let botTimer = null;
 let gen = 0;           /* 판이 바뀌면 올려서 예전 예약을 무효화한다 */
 
@@ -247,9 +250,11 @@ function scheduleBot(){
      그때 다시 두면 같은 수가 두 번 나간다 —
      화면에서는 "패스가 살짝 눌렸다 풀리고 곧바로 또 패스" 로 보인다.
      수 번호가 올라가면 확인된 것이다. 거부됐을 때를 대비해 오래는 안 기다린다 */
-  const no = (G.moveNo || 0);
-  if (sentAt && sentAt.seat === seat && no <= sentAt.no &&
-      Date.now() - sentAt.at < 2500) return;
+  /* 같은 수를 두 번 보내지 않으려고 "방금 보낸 수" 를 기억해 두고 막아 봤는데,
+     **판이 통째로 멈추는 일이 생겨 걷어냈다**(엔진 검사가 "4001수에서 멈춤" 으로 잡음).
+     막는 동안 아무도 안 두면 화면이 안 바뀌고, 화면이 안 바뀌면 여기를 다시
+     부르는 사람이 없다. 잠깐 뒤 다시 보게 해도 마찬가지였다.
+     중복은 다른 방법으로 막아야 한다 — 멈추는 것보다는 두 번 두는 편이 낫다 */
 
   const g = ++gen;
   botTimer = setTimeout(() => {
@@ -259,17 +264,18 @@ function scheduleBot(){
     if (!s2 || s2.ctx.gameover || s2.ctx.phase !== "play") { push(); return; }
     const now = Number(s2.ctx.currentPlayer);
     if (!actsFor(now)) { push(); return; }
-    const n2 = (s2.G.moveNo || 0);
-    if (sentAt && sentAt.seat === now && n2 <= sentAt.no &&
-        Date.now() - sentAt.at < 2500){ push(); return; }
     const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
-    sentAt = { seat: now, no: n2, at: Date.now() };
     engine.client.updatePlayerID(String(now));
     if (mv) engine.client.moves.play(mv.num, mv.count);
     else    engine.client.moves.pass();
     engine.client.updatePlayerID(engine.myID);
     push();
-  }, engine.botMs);
+  /* 내 자리는 생각하는 척할 이유가 없어 짧게 간다.
+     다만 **봇보다 오래 기다리지는 않는다** — 검사처럼 봇을 아주 빠르게 맞춰 둔
+     경우에도 내 자리만 느리면 판이 안 굴러간다 */
+  }, seat === Number(engine.myID)
+       ? Math.min(engine.autoMs, engine.botMs)
+       : engine.botMs);
 }
 
 /* 자동치기를 켜면 내 자리도 봇과 같은 판단으로 둔다.

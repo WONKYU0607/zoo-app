@@ -284,7 +284,12 @@ function openTable(v, n, names){
   W().__myRankIdx = null;
   W().__scored = null;
   W().__gameOver = null;
-  opt.goto("draw");
+  /* **이미 굴러가고 있는 판이면 뽑기를 다시 하면 안 된다.**
+     하던 방으로 돌아올 때 이 길을 그대로 타는데, 무조건 뽑기로 보내는 바람에
+     **패 뽑기와 시작 카운트가 다시 떴다**(사용자 신고).
+     아직 뽑는 중이면 뽑기로, 이미 시작했으면 판으로 바로 보낸다 */
+  if (v.phase === "draw") opt.goto("draw");
+  else { opt.goto("table"); if (W().__bootTable) W().__bootTable(true); }
 }
 
 /* ---------- 판이 끝났을 때 ---------- */

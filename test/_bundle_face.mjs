@@ -18477,6 +18477,7 @@ var engine = {
 };
 var listeners = [];
 var unsub = null;
+var sentAt = null;
 var botTimer = null;
 var gen = 0;
 function onView(fn2) {
@@ -18662,6 +18663,8 @@ function scheduleBot() {
   if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
+  const no = G2.moveNo || 0;
+  if (sentAt && sentAt.seat === seat && no <= sentAt.no && Date.now() - sentAt.at < 2500) return;
   const g2 = ++gen;
   botTimer = setTimeout(() => {
     botTimer = null;
@@ -18676,7 +18679,13 @@ function scheduleBot() {
       push();
       return;
     }
+    const n2 = s2.G.moveNo || 0;
+    if (sentAt && sentAt.seat === now2 && n2 <= sentAt.no && Date.now() - sentAt.at < 2500) {
+      push();
+      return;
+    }
     const mv = botPick(s2.G.hands[now2] || [], s2.G.pile);
+    sentAt = { seat: now2, no: n2, at: Date.now() };
     engine.client.updatePlayerID(String(now2));
     if (mv) engine.client.moves.play(mv.num, mv.count);
     else engine.client.moves.pass();

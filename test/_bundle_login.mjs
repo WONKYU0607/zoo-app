@@ -1022,6 +1022,7 @@ function initNav() {
     if (id === "lobby") {
       touched = true;
       warm();
+      askResume();
     }
     setTimeout(pushPresence, 0);
     if (touched) {
@@ -1130,6 +1131,35 @@ function initNav() {
       roomM: "Leave this room?"
     }
   };
+  const BACK_T = {
+    ko: {
+      t: "\uD558\uB358 \uBC29\uC774 \uC788\uC2B5\uB2C8\uB2E4",
+      m: (code) => "\uBC29 " + code + " \uB85C \uB3CC\uC544\uAC08\uAE4C\uC694?",
+      y: "\uC774\uC5B4\uC11C \uD558\uAE30"
+    },
+    en: {
+      t: "You left a game",
+      m: (code) => "Go back to room " + code + "?",
+      y: "Resume"
+    }
+  };
+  let resumeAsked = false;
+  async function askResume() {
+    if (resumeAsked) return;
+    resumeAsked = true;
+    if (!window.__resumable) return;
+    let r = null;
+    try {
+      r = await window.__resumable();
+    } catch (e) {
+      r = null;
+    }
+    if (!r) return;
+    const t = BACK_T[window.__lang] || BACK_T.ko;
+    ask(t.t, t.m(r.code), t.y, () => {
+      if (window.__resume) window.__resume();
+    });
+  }
   let askYes = null;
   function ask(title, msg, yesLabel, onYes) {
     const t = ASK_T[window.__lang] || ASK_T.ko;

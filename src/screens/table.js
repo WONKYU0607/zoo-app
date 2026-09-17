@@ -157,12 +157,6 @@ export function mount(root){
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over){ sounds(v, true); return; }
     sounds(v);
-    /* 잠깐 전에 눌렀던 내기를 이제 낼 수 있으면 그때 낸다 (위 wantPlay 설명 참고) */
-    if (wantPlay && Date.now() - wantPlay < 800){
-      const w = wantPlay; wantPlay = 0;
-      if (!tryPlay(true)) wantPlay = w;      /* 아직도 안 되면 계속 기다린다 */
-      else evShow("  → 보류했던 내기를 냈다");
-    } else if (wantPlay) wantPlay = 0;
     /* 내 패스 표시 붙잡기 (위 passHeld 설명 참고).
        바퀴가 바뀌면 놓아 준다 — 새 바퀴에서는 다시 낼 수 있어야 한다 */
     if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
@@ -200,20 +194,29 @@ export function mount(root){
          신호가 뭉쳐 와서 그 중간 상태를 한 번도 못 보면 영영 안 풀려
          **2초 타이머가 끝날 때까지 단추가 얼어 있었다.**
          수 번호는 뭉쳐 와도 반드시 올라가므로 놓칠 일이 없다 */
-      /* **한 수만 더 진행된 것으로는 풀지 않는다.** 그건 내 수가 막 반영된 순간이라,
-         그때 열면 차례가 넘어가기 전에 단추가 반짝 열렸다 닫혀 두 번 눌린 듯 보인다.
-         **두 수 이상** 지났으면 남도 이미 뒀다는 뜻이라 확실히 끝난 것이다 */
-      /* 내 수가 확인되고 차례가 넘어갔으면 그 자리에서 푼다.
-         **두 수를 기다리면 1~2초씩 화면이 굳은 것처럼 보인다**(신고받음).
-         신호가 뭉쳐 와 그 중간을 못 볼 때를 위해 "두 수 이상"도 같이 본다 */
-      const done = (pendingNo >= 0 && v.moveNo > pendingNo && !v.myTurn)
-                || (pendingNo >= 0 && v.moveNo > pendingNo + 1)
+      /* **내 수가 엔진에 들어갔으면 그걸로 끝이다.**
+
+         예전에는 "내 차례가 아니게 됨" 이나 "손패가 줄었음" 으로만 풀었다.
+         그런데 **내가 바퀴를 끝내고 다시 내 선이 되면** 둘 다 해당이 안 된다.
+         그러면 2초 타이머가 끝날 때까지 잠겨 있고, 그 사이에 누른 것은
+         `busy` 에 걸려 통째로 버려졌다 — **두 번 눌러야 했던 자리가 여기다.**
+         (검사 기록: "아직 처리 중 / turn0 / busytrue", 손패 12 → 12)
+
+         수 번호는 내 수가 반영되면 반드시 올라간다. 그거면 충분하다.
+         예전에 이것만으로 했다가 단추가 반짝 열려 되돌린 적이 있는데,
+         그때는 큐가 없어서 그 틈에 누른 것이 사라졌다. 지금은 큐가 받아 준다 */
+      const done = (pendingNo >= 0 && v.moveNo > pendingNo)
                 || (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
                 || (pendingHand < 0 && !v.myTurn)
                 || Date.now() - pendingAt > 2000;
       if (done){ pending = null; pendingHand = -1; pendingNo = -1; }
       else busy = true;
     }
+
+    /* 큐에 든 누름이 있으면 여기서 다시 본다.
+       **`busy`·`pending` 이 이 화면 기준으로 정해진 뒤에 봐야 한다.**
+       앞에서 부르면 옛 값을 보고 "아직 처리 중" 으로 판단해 영영 못 나간다 */
+    if (queued) flush();
 
     if (v.roundNo !== lastRound){          /* 새 판 */
       const first = lastRound < 0;
@@ -812,6 +815,13 @@ const TURN_SEC = 15;
     return String(location.search || "").indexOf("evlog") >= 0;
   } catch(e){ return false; } })();
   function evShow(txt){
+    /* 화면에 안 띄우더라도 **마지막 몇 줄은 늘 남긴다.**
+       누른 것이 왜 못 나갔는지는 안내 글자를 뺐어도 알 수 있어야 한다 */
+    try {
+      const L = (window.__evLines = window.__evLines || []);
+      L.push(txt);
+      if (L.length > 40) L.splice(0, L.length - 40);
+    } catch(e){}
     if (!EVLOG) return;
     if (!evBox){
       evBox = window.document.createElement("div");
@@ -916,33 +926,94 @@ const TURN_SEC = 15;
       if (!taps[k].node.isConnected) taps.splice(k, 1);
   }, 5000);
 
-  /* 내기 단추를 눌렀는데 그 순간 낼 수 없는 상태였을 때, **그 누름을 버리지 않는다.**
-     서버 대전은 상태가 잠깐씩 어긋나서(내 차례가 아니게 보였다가 돌아옴)
-     눌러도 아무 일이 안 일어나는 때가 있다. 그러면 다시 눌러야 하는데,
-     "10번 내면 9번은 두 번 눌러야 한다"는 신고가 그것이었다.
-     잠깐(0.8초) 기억했다가 낼 수 있게 되면 그때 내보낸다 */
-  let wantPlay = 0;
-  function tryPlay(fromWait){
-    const list = sel.map(i => hand[i]);
-    if (!legal(list) || turn !== 0 || busy){
-      if (!fromWait){
-        wantPlay = Date.now();
-        evShow("  (내기 보류: " + (!legal(list) ? "못 내는 조합" : busy ? "내 차례 아님" : "차례 아님") + ")");
-      }
-      return false;
-    }
-    const e = effective(list);
-    sel = []; busy = true;
-    sndStop("tick");                   /* 다 냈으니 재촉하는 소리도 멈춘다 */
-    pending = true; pendingHand = hand.length; pendingAt = Date.now();
-    pendingNo = lastMoveNo;
-    lastSend = { num: e, count: list.length, no: lastMoveNo, retried: false };
-    eng.play(e, list.length);          /* 자리 번호를 붙이지 않는다. 엔진이 나를 안다 */
-    iMoved();
-    unlockLater();
-    return true;
+  /* ---------- 누른 것은 버리지 않는다 ----------
+
+     예전에는 이렇게 되어 있었다.
+
+         if (!legal(list) || turn !== 0 || busy) return;   // 그냥 버림
+
+     조건이 안 맞으면 **그 누름이 없던 일이 됐다.** 그래서 다시 눌러야 했다.
+     서버 대전은 상태가 잠깐씩 어긋나므로(내 차례가 아니게 보였다가 곧 돌아옴)
+     고르자마자 누르면 그 찰나에 걸릴 확률이 높다.
+
+     이제는 **큐에 넣어 두고**, 낼 수 있게 되는 순간 보낸다.
+     그래도 못 보내면 **조용히 사라지지 않고 이유를 화면에 띄운다.**
+
+     **다시 보내지는 않는다.** 예전에 "거부된 것 같으면 한 번 더" 를 넣었다가,
+     실은 성공했는데 화면이 늦게 온 경우까지 또 보내서
+     손패는 줄었는데 바닥에는 안 나타나는 상태를 만들었다. 그 길은 막아 둔다 */
+  const WAIT_MAX = 2500;      /* 이만큼 기다려도 못 내면 포기하고 알린다 */
+  let queued = null;          /* { kind, list, at, sentNo } */
+  const seeQ = () => { try { window.__pressQ = queued ? { k: queued.kind, sent: queued.sentNo } : null; } catch(e){} };
+  let flushId = null;
+
+  function why(list){
+    if (turn !== 0) return "내 차례가 아님";
+    if (busy) return "아직 처리 중";
+    if (!legal(list)) return "못 내는 조합";
+    return "";
   }
-  onTap(el("play"), () => { wantPlay = 0; tryPlay(false); });
+
+  function queueMove(kind){
+    const list = kind === "play" ? sel.map(i => hand[i]) : [];
+    queued = { kind, list, at: Date.now(), sentNo: -1 }; seeQ();
+    evShow("  (" + (kind === "play" ? "내기" : "패스") + " 대기열에 넣음)");
+    flush();
+  }
+
+  /* 낼 수 있으면 보낸다. 아직이면 그대로 두고 다음 기회에 다시 본다 */
+  function flush(){
+    if (flushId){ clearTimeout(flushId); flushId = null; }
+    if (!queued){ seeQ(); return; }
+    const q = queued;
+
+    /* 이미 보냈으면 확인될 때까지 기다리기만 한다 */
+    if (q.sentNo >= 0){
+      if (lastMoveNo > q.sentNo){ queued = null; seeQ(); return; }   /* 들어갔다 */
+      if (Date.now() - q.at > WAIT_MAX + 2000){
+        queued = null; seeQ();
+        evShow("  (보냈는데 확인이 안 됨)");
+        return;
+      }
+      flushId = setTimeout(flush, 200);
+      return;
+    }
+
+    if (q.kind === "pass" ? (turn === 0 && !busy && cur()) 
+                          : (turn === 0 && !busy && legal(q.list))){
+      q.sentNo = lastMoveNo;
+      sndStop("tick");
+      pending = true; pendingAt = Date.now(); pendingNo = lastMoveNo;
+      if (q.kind === "play"){
+        pendingHand = hand.length;
+        sel = [];
+        eng.play(effective(q.list), q.list.length);
+      } else {
+        pendingHand = -1;
+        passHeld = lastTrick;
+        passPressAt = Date.now();
+        eng.passTurn();
+      }
+      busy = true;
+      iMoved();
+      unlockLater();
+      evShow("  → 보냄(" + (q.kind === "play" ? "내기" : "패스") + ")");
+      flushId = setTimeout(flush, 200);
+      return;
+    }
+
+    /* 아직 못 낸다 — 기다린다. 너무 오래면 포기하고 이유를 알린다 */
+    if (Date.now() - q.at > WAIT_MAX){
+      /* 안내 글자는 안 띄운다(사용자 요청). 기록에만 남긴다 —
+         `?evlog=1` 로 보면 왜 못 냈는지 알 수 있다 */
+      evShow("  (대기열 버림: " + why(q.list) + ")");
+      queued = null; seeQ();
+      return;
+    }
+    flushId = setTimeout(flush, 120);
+  }
+
+  onTap(el("play"), () => queueMove("play"));
 
   /* 수가 거부되면 새 상태가 안 온다. 그때 화면이 굳지 않게 잠금을 풀어 준다.
 
@@ -951,8 +1022,6 @@ const TURN_SEC = 15;
      다시 누르면 **같은 수가 두 번 나갔다**(카드가 티틱 하고 두 장 날아가던 것).
      그래서 **판이 그대로일 때만** 푼다. 조금이라도 움직였으면 처리된 것이다 */
   let unlockId = null;
-  /* 마지막으로 보낸 카드. 거부된 것 같을 때 한 번만 다시 보내는 데 쓴다 */
-  let lastSend = null;
   function viewSig(v){
     if (!v) return "";
     return v.turn + "|" + (v.table || []).length + "|" +
@@ -967,18 +1036,12 @@ const TURN_SEC = 15;
       const v = eng.engine.view;
       if (!busy) return;
       if (viewSig(v) !== sent){ return; }        /* 움직였다 — 잘 갔다 */
-      /* **거부된 것 같으면 한 번은 대신 다시 보낸다.**
-         내 화면이 조금 뒤처져 있으면 엔진이 그 수를 거절하는데, 예전에는
-         6초를 기다렸다 풀어 주기만 해서 **사람이 손으로 다시 눌러야 했다**.
-         두 번 나가지 않도록, 판이 하나도 안 움직였을 때만 한 번 */
-      if (lastSend && !lastSend.retried && v && v.myTurn && v.moveNo === lastSend.no){
-        lastSend.retried = true;
-        evShow("  (거부된 듯해 다시 보냄)");
-        eng.play(lastSend.num, lastSend.count);
-        iMoved();
-        unlockId = setTimeout(look, 1200);
-        return;
-      }
+      /* 거부된 것 같을 때 한 번 대신 다시 보내 봤는데 **걷어냈다.**
+         첫 번째가 실제로는 성공했는데 화면이 늦게 오면 같은 수를 또 보내게 되고,
+         보내는 순간 내 화면에서 카드가 손에서 또 빠진다.
+         그래서 **손패는 줄었는데 바닥에는 안 나타나는** 상태가 됐다(사용자 신고).
+         원래 증상("가끔 두 번 눌러야 함")보다 나빠졌다.
+         **재현부터 하고 다시 잡을 것.** 짐작으로 넣지 말 것 */
       if (++tries < 5){ unlockId = setTimeout(look, 1200); return; }
       if (v && v.myTurn){ busy = false; draw(); }  /* 6초가 지나도 그대로면 거부된 것 */
     };
@@ -989,6 +1052,16 @@ const TURN_SEC = 15;
   function iMoved(){ if (window.__iMoved) window.__iMoved(); }
 
   function doPass(auto){
+    /* 사람이 누른 것은 **버리지 않는다.** 지금 못 내면 큐에 넣어 두고
+       낼 수 있게 되는 순간 보낸다 (위 queueMove 설명 참고).
+       시간 넘김으로 부르는 자동 패스는 그대로 즉시 처리한다 */
+    if (!auto){
+      if (timerId) clearTimeout(timerId);
+      if (!cur()) return;                 /* 선은 패스할 수 없다 */
+      evShow("패스 누름");
+      queueMove("pass");
+      return;
+    }
     if (turn !== 0 || busy) return;
     if (timerId) clearTimeout(timerId);
     /* 선은 패스할 수 없다. 시간이 다 됐으면 가장 약한 카드를 대신 낸다 */

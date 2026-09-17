@@ -138,14 +138,23 @@ async function playOne(gi){
     quiet("고르면 내기 단추가 열림", !btn.disabled, "게임 " + gi + " " + wanted.num + "x" + wanted.count);
     await wait(260);
     btn.dispatchEvent(new W.MouseEvent("click", { bubbles: true }));
-    await wait(6);
+    /* **곧바로 확인하면 안 된다.** 누른 것은 이제 큐에 들어갔다가 낼 수 있게
+       되는 순간 나간다(table.js 의 queueMove 참고). 앞 수가 아직 엔진에
+       기록되기 전이면 잠깐 기다렸다 나간다. 손패가 줄 때까지 본다 */
+    for (let w = 0; w < 60; w++){
+      const nv = eng.engine.view;
+      if (!nv || nv.roundNo !== beforeRound || nv.over) break;
+      if (nv.hand.length !== before) break;
+      await wait(50);
+    }
 
     const after = eng.engine.view;
     /* 마지막 장을 내면 새 판이 바로 열려 손패가 다시 찬다. 그때는 건너뛴다 */
     if (after.roundNo === beforeRound && !after.over)
       quiet("낸 만큼 손패가 줄어듦",
             after.hand.length === before - wanted.count,
-            "게임 " + gi + " " + before + " → " + after.hand.length + " (" + wanted.count + "장 냄)");
+            "게임 " + gi + " " + before + " → " + after.hand.length + " (" + wanted.count + "장 냄)" +
+            "");
   }
   if (guard >= 4000){ check("진행", false, "게임 " + gi + " 4000수 넘김"); return null; }
   return eng.engine.view;
