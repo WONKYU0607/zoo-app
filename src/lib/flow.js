@@ -397,6 +397,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       /* 얼굴을 안 실으면 서버가 알려 줄 때까지(1.5초) 생쥐로 보였다가 바뀐다 */
       net = Object.assign({ started: false, inGame: false }, r,
         { players: [{ id: 0, name: opt.myName(), avatar: myAvatar() }] });
+      lobby.saveSeat(net);           /* 새로고침·서버 재시작에도 돌아올 수 있게 */
       W().__opts = Object.assign(W().__opts || {}, { cap: r.numPlayers, seated: 1 });
       emitRoom();
       pollStart();
@@ -419,6 +420,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     }
     botFillStop(); stopRoomCount(); pollStop();
     net = null;
+    lobby.clearSeat();               /* 자리를 비웠으니 돌아갈 곳도 없다 */
   }
 
   W().__quickJoin = async () => {
@@ -432,6 +434,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     });
     net = Object.assign({ started: false, inGame: false }, r,
       { players: [{ id: Number(r.playerID), name: opt.myName(), avatar: myAvatar() }] });
+    lobby.saveSeat(net);
     W().__opts = Object.assign(W().__opts || {},
       { cap: r.numPlayers, rounds: (r.opts && r.opts.rounds) || o.rounds || 3 });
     /* 화면을 열기 **전에** 먼저 방 상태를 받아 온다.
@@ -451,6 +454,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     const r = await lobby.joinRoom(String(code).trim(), opt.myName(), myAvatar());
     net = Object.assign({ started: false, inGame: false }, r,
       { players: [{ id: Number(r.playerID), name: opt.myName(), avatar: myAvatar() }] });
+    lobby.saveSeat(net);
     W().__opts = Object.assign(W().__opts || {}, {
       cap: r.numPlayers, rounds: (r.opts && r.opts.rounds) || 3,
       tax: !(r.opts && r.opts.tax === false), clear2: Boolean(r.opts && r.opts.clear2),
@@ -472,7 +476,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       lobby.leaveRoom(net.code, net.playerID);
     }
     botFillStop(); stopRoomCount(); pollStop(); eng.stop();
-    myRoom = null; net = null; emitRoom();
+    myRoom = null; net = null; lobby.clearSeat(); emitRoom();
   };
   W().__saveOpts = async () => {
     /* 서버 방이면 서버가 판을 새로 만들어야 한다 — 인원수는 판을 만들 때 정해진다 */
@@ -518,6 +522,53 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   W().__onTax       = v => { W().__myNeedGive = v.taxGive; };
   /* 내가 직접 뒀다는 신호. 안 보내면 서버가 자리비움으로 본다 */
   W().__iMoved = () => { if (net) lobby.keepAlive(net.code, Number(net.playerID)); };
+
+  /* ---------- 하던 방으로 돌아가기 ----------
+
+     새로고침하거나 서버가 껐다 켜지면 앱은 진입창부터 다시 시작한다.
+     그런데 **서버는 방을 그대로 들고 있다**(판을 디스크에 적어 두므로).
+     적어 둔 자리표로 그 방을 찾아 들어간다.
+
+     `__resumable()` — 돌아갈 방이 아직 살아 있으면 그 정보를, 없으면 null.
+       살아 있는지 서버에 직접 물어본다. 지워진 방으로 데려가면 안 되니까.
+     `__resume()` — 실제로 들어간다. 시작 전이면 방 화면, 시작했으면 판 화면 */
+  W().__resumable = async () => {
+    const s = lobby.loadSeat();
+    if (!s || !lobby.online()) return null;
+    let r = null;
+    try { r = await lobby.peekRoom(s.code, s.playerID); } catch(e){ r = null; }
+    /* 방이 없어졌거나 내가 그 자리에 없으면 돌아갈 곳이 아니다 */
+    if (!r || !r.code){ lobby.clearSeat(); return null; }
+    const me = (r.players || []).find(p => p && Number(p.id) === Number(s.playerID));
+    if (!me || me.left){ lobby.clearSeat(); return null; }
+    return { code: s.code, started: Boolean(r.started), players: r.players || [] };
+  };
+
+  W().__resume = async () => {
+    const s = lobby.loadSeat();
+    if (!s) return false;
+    let r = null;
+    try { r = await lobby.peekRoom(s.code, s.playerID); } catch(e){ r = null; }
+    if (!r || !r.code){ lobby.clearSeat(); return false; }
+
+    net = Object.assign({ started: Boolean(r.started), inGame: false }, {
+      code: s.code, matchID: s.matchID, playerID: s.playerID,
+      credentials: s.credentials, numPlayers: s.numPlayers || r.numPlayers,
+      opts: r.opts || s.opts || null, players: r.players || [],
+    });
+    myRoom = s.code;
+    W().__opts = Object.assign(W().__opts || {}, {
+      cap: net.numPlayers,
+      rounds: (net.opts && net.opts.rounds) || 3,
+      tax: !(net.opts && net.opts.tax === false),
+      clear2: Boolean(net.opts && net.opts.clear2),
+      seated: (r.players || []).filter(Boolean).length,
+    });
+    emitRoom();
+    if (net.started){ enterOnlineGame(); }      /* 이미 시작한 방 — 판으로 */
+    else { W().__goto("room"); pollStart(); }   /* 아직 대기 중 — 방으로 */
+    return true;
+  };
   /* 혁명 선언 — 화면의 단추가 부른다 */
   W().__declareRev = () => eng.declareRev();
   W().__passRev    = () => eng.passRev();

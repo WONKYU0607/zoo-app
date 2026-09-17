@@ -63,6 +63,37 @@ export const startRoom = code => api(`/zoo/rooms/${code}/start`, {});
 export const keepAlive = (code, seat) =>
   api(`/zoo/rooms/${code}/alive`, { seat }).catch(() => null);
 
+/* ---------- 하던 방 적어 두기 ----------
+
+   방 번호·자리·자리표는 **브라우저 메모리에만** 있었다.
+   그래서 새로고침하거나 서버가 껐다 켜지면 진입창으로 돌아가 버렸다.
+   서버가 판을 들고 있어도 앱이 어디로 돌아가야 할지 몰랐던 것이다.
+   여기에 적어 두고, 앱이 뜰 때 다시 찾아간다 */
+const SEAT_KEY = "zk_seat";
+
+export function saveSeat(net){
+  try {
+    if (!net || net.code == null) return;
+    localStorage.setItem(SEAT_KEY, JSON.stringify({
+      code: net.code, matchID: net.matchID, playerID: net.playerID,
+      credentials: net.credentials, numPlayers: net.numPlayers,
+      opts: net.opts || null, at: Date.now(),
+    }));
+  } catch(e){}
+}
+export function loadSeat(){
+  try {
+    const raw = localStorage.getItem(SEAT_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s || s.code == null) return null;
+    /* 너무 오래된 것은 안 쓴다 — 서버에서도 이미 지워졌을 것이다 */
+    if (Date.now() - (s.at || 0) > 6 * 60 * 60 * 1000){ clearSeat(); return null; }
+    return s;
+  } catch(e){ return null; }
+}
+export function clearSeat(){ try { localStorage.removeItem(SEAT_KEY); } catch(e){} }
+
 /* 판 화면에 들어섰다고 알린다.
    이 신호가 다 모일 때까지 서버 봇은 새 판에서 한 수도 두지 않는다.
    안 알리면 등수·세금 화면을 보는 동안 봇이 다 둬 버린다 */

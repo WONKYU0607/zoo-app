@@ -92,6 +92,27 @@ check("자동치기가 카드도 낸다 (패스만 하지 않는다)", played > 
 check("내 차례에서 멈춰 있지 않는다", worstStuck <= 10,
       "가장 오래 멈춘 것 " + (worstStuck * 0.5) + "초");
 
+/* **같은 수를 두 번 보내면 안 된다.**
+   서버 대전은 내 화면이 먼저 반영하고 서버가 다시 확인해 주는데,
+   그 사이 잠깐 내 차례로 되돌아온 것처럼 보인다. 그때 또 두면 두 번 나간다 —
+   화면에서는 "패스가 살짝 눌렸다 풀리고 곧바로 또 패스" 로 보인다.
+   한 바퀴에서 같은 자리가 두 번 패스할 수는 없으므로, 그것으로 잡는다 */
+{
+  const log = await page.evaluate(() => (window.__eng.moveLog||[]).slice());
+  const seen = new Set();
+  let dup = 0;
+  const trick = [];
+  log.forEach(m => {
+    if (m.k === "pass"){
+      if (seen.has(m.by)) { dup++; trick.push(m.by); }
+      seen.add(m.by);
+    } else seen.clear();          /* 카드가 나가면 바퀴가 이어진다 */
+  });
+  check("자동이 같은 수를 두 번 보내지 않는다", dup === 0,
+        "한 바퀴에 같은 자리가 또 패스한 횟수 " + dup +
+        (dup ? " (자리 " + trick.slice(0,5).join(",") + ")" : ""));
+}
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);
 process.exit(fail ? 1 : 0);

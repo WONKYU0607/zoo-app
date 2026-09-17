@@ -29,6 +29,7 @@ export const engine = {
 
 let listeners = [];
 let unsub = null;
+let sentAt = null;   /* 방금 보낸 수 {seat,no,at} — 같은 수를 두 번 보내지 않으려고 */
 let botTimer = null;
 let gen = 0;           /* 판이 바뀌면 올려서 예전 예약을 무효화한다 */
 
@@ -240,6 +241,16 @@ function scheduleBot(){
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
 
+  /* **방금 보낸 수가 아직 확인되기 전이면 또 보내지 않는다.**
+     서버 대전은 내 화면이 먼저 반영하고 서버가 다시 확인해 주는데,
+     그 사이 잠깐 **내 차례로 되돌아온 것처럼** 보인다.
+     그때 다시 두면 같은 수가 두 번 나간다 —
+     화면에서는 "패스가 살짝 눌렸다 풀리고 곧바로 또 패스" 로 보인다.
+     수 번호가 올라가면 확인된 것이다. 거부됐을 때를 대비해 오래는 안 기다린다 */
+  const no = (G.moveNo || 0);
+  if (sentAt && sentAt.seat === seat && no <= sentAt.no &&
+      Date.now() - sentAt.at < 2500) return;
+
   const g = ++gen;
   botTimer = setTimeout(() => {
     botTimer = null;
@@ -248,7 +259,11 @@ function scheduleBot(){
     if (!s2 || s2.ctx.gameover || s2.ctx.phase !== "play") { push(); return; }
     const now = Number(s2.ctx.currentPlayer);
     if (!actsFor(now)) { push(); return; }
+    const n2 = (s2.G.moveNo || 0);
+    if (sentAt && sentAt.seat === now && n2 <= sentAt.no &&
+        Date.now() - sentAt.at < 2500){ push(); return; }
     const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
+    sentAt = { seat: now, no: n2, at: Date.now() };
     engine.client.updatePlayerID(String(now));
     if (mv) engine.client.moves.play(mv.num, mv.count);
     else    engine.client.moves.pass();

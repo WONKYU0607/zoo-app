@@ -659,7 +659,7 @@ export function initNav(){
     if (id === "tax" && window.__holdPlay) window.__holdPlay(true);
     /* 로비에 들어오는 순간 배경음악을 켠다.
        판에서는 끈다 — 효과음이 많아 겹치면 시끄럽다 */
-    if (id === "lobby"){ touched = true; warm(); }   /* 소리를 미리 받아 둔다 */
+    if (id === "lobby"){ touched = true; warm(); askResume(); }   /* 소리를 미리 받아 둔다 */
     setTimeout(pushPresence, 0);
     if (touched){
       /* 로비와 랭킹에서만 배경음악. 방 대기실부터는 끈다 */
@@ -765,6 +765,28 @@ export function initNav(){
           leave: "Leave the game", leaveM: "Leaving counts as a forfeit",
           leaveY: "Leave", room: "Leave room", roomM: "Leave this room?" },
   };
+  /* 하던 방으로 돌아가기 — 로비에 들어올 때 한 번 묻는다 */
+  const BACK_T = {
+    ko: { t: "하던 방이 있습니다", m: code => "방 " + code + " 로 돌아갈까요?",
+          y: "이어서 하기" },
+    en: { t: "You left a game", m: code => "Go back to room " + code + "?",
+          y: "Resume" },
+  };
+  /* 서버는 판을 디스크에 들고 있으므로, 새로고침하거나 서버가 껐다 켜져도
+     하던 방이 그대로 살아 있다. 로비에 들어올 때 한 번만 물어본다.
+     말없이 끌고 들어가지는 않는다 — 끝내고 나온 사람까지 다시 들어가면 안 된다 */
+  let resumeAsked = false;
+  async function askResume(){
+    if (resumeAsked) return;
+    resumeAsked = true;
+    if (!window.__resumable) return;
+    let r = null;
+    try { r = await window.__resumable(); } catch(e){ r = null; }
+    if (!r) return;
+    const t = BACK_T[window.__lang] || BACK_T.ko;
+    ask(t.t, t.m(r.code), t.y, () => { if (window.__resume) window.__resume(); });
+  }
+
   let askYes = null;
   function ask(title, msg, yesLabel, onYes){
     const t = ASK_T[window.__lang] || ASK_T.ko;
