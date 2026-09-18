@@ -217,6 +217,49 @@ for (let round = 1; round <= 12 && tried < 3; round++){
 
 if (sendFail) console.log("  (검사가 손가락 신호를 못 보내 다시 보낸 횟수: " + sendFail +
   ", 아예 안 닿아 건너뛴 판: " + notSent + ")");
+/* ---- 낸 카드가 손으로 돌아오지 않는가 ----
+   내 화면이 먼저 반영하고 서버가 다시 확인해 주는 사이, 서버가 보내 준 옛
+   상태에는 그 카드가 아직 손에 있다. 그대로 그리면 **나갔다 → 돌아왔다 →
+   다시 나간다**. 짧게 누를수록 눈에 띈다는 신고를 받았다 */
+{
+  let backAgain = 0, plays = 0;
+  for (let round = 0; round < 6 && plays < 3; round++){
+    let can = false;
+    for (let i = 0; i < 120; i++){
+      can = await page.evaluate(() => {
+        const v = window.__eng && window.__eng.view;
+        const b = document.querySelector("#table #play");
+        if (!v || !v.myTurn) return false;
+        /* 낼 수 있는 카드를 골라 둔다 */
+        const slots = [...document.querySelectorAll("#table .hand .slot")];
+        const pick = slots.find(x => !x.className.includes("slot--dead") && !x.className.includes("slot--sel"));
+        if (pick && b && b.disabled) pick.click();
+        return Boolean(b && !b.disabled);
+      });
+      if (can) break;
+      await new Promise(r => setTimeout(r, 150));
+    }
+    if (!can){ console.log("    (낼 수 있는 상태를 못 잡음)"); break; }
+    const n0 = await page.evaluate(() => (window.__eng.view.hand || []).length);
+    await page.evaluate(() => { const b = document.querySelector("#table #play"); if (b) b.click(); });
+    plays++;
+    /* 손패 길이를 촘촘히 지켜본다. 줄었다가 다시 늘면 돌아온 것이다 */
+    let low = n0, wentBack = false;
+    for (let i = 0; i < 30; i++){
+      await new Promise(r => setTimeout(r, 60));
+      const n = await page.evaluate(() => (window.__eng.view.hand || []).length);
+      if (n < low) low = n;
+      if (n > low){ wentBack = true; break; }
+    }
+    if (wentBack) backAgain++;
+    await new Promise(r => setTimeout(r, 700));
+  }
+  if (plays > 0)
+    check("낸 카드가 손으로 돌아오지 않는다", backAgain === 0,
+          plays + "번 중 돌아온 것 " + backAgain);
+  else console.log("    (카드를 한 번도 못 내 건너뜀)");
+}
+
 console.log("");
 if (tried <= 0){
   console.log("\n손가락 신호가 한 번도 안 들어가 건너뜁니다 (컴퓨터가 너무 바쁩니다)\n");

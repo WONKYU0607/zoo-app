@@ -18470,13 +18470,16 @@ var engine = {
   /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
   botMs: 3e3,
   /* 봇이 생각하는 척하는 시간 */
+  /* 자동치기가 **내 자리**를 둘 때 기다리는 시간.
+     봇은 남이라 생각하는 척해야 하지만, 내 자리는 그럴 이유가 없다.
+     3초로 두었더니 서버 왕복까지 붙어 4~5초씩 걸렸다 */
+  autoMs: 1e3,
   moveLog: [],
   /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
   lastLogged: 0
 };
 var listeners = [];
 var unsub = null;
-var sentAt = null;
 var botTimer = null;
 var gen = 0;
 function onView(fn2) {
@@ -18662,8 +18665,6 @@ function scheduleBot() {
   if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
-  const no = G2.moveNo || 0;
-  if (sentAt && sentAt.seat === seat && no <= sentAt.no && Date.now() - sentAt.at < 2500) return;
   const g2 = ++gen;
   botTimer = setTimeout(() => {
     botTimer = null;
@@ -18678,19 +18679,13 @@ function scheduleBot() {
       push();
       return;
     }
-    const n2 = s2.G.moveNo || 0;
-    if (sentAt && sentAt.seat === now2 && n2 <= sentAt.no && Date.now() - sentAt.at < 2500) {
-      push();
-      return;
-    }
     const mv = botPick(s2.G.hands[now2] || [], s2.G.pile);
-    sentAt = { seat: now2, no: n2, at: Date.now() };
     engine.client.updatePlayerID(String(now2));
     if (mv) engine.client.moves.play(mv.num, mv.count);
     else engine.client.moves.pass();
     engine.client.updatePlayerID(engine.myID);
     push();
-  }, engine.botMs);
+  }, seat === Number(engine.myID) ? Math.min(engine.autoMs, engine.botMs) : engine.botMs);
 }
 function setAuto(on3) {
   engine.auto = Boolean(on3);
@@ -18912,6 +18907,7 @@ function mount(root) {
   const seen = makeSeen();
   let primed = false;
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
+  let justSent = null;
   let lastPass = null;
   let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
@@ -18963,12 +18959,6 @@ function mount(root) {
       return;
     }
     sounds(v2);
-    if (wantPlay && Date.now() - wantPlay < 800) {
-      const w2 = wantPlay;
-      wantPlay = 0;
-      if (!tryPlay(true)) wantPlay = w2;
-      else evShow("  \u2192 \uBCF4\uB958\uD588\uB358 \uB0B4\uAE30\uB97C \uB0C8\uB2E4");
-    } else if (wantPlay) wantPlay = 0;
     if (passHeld != null && v2.trickNo !== passHeld) passHeld = null;
     if (v2.trickNo !== lastTrick && lastTrick != null) {
       const ps = (v2.recent || []).filter((m) => m.k === "pass");
@@ -18986,19 +18976,26 @@ function mount(root) {
       r: x2.rank
     }));
     hand = v2.hand.slice();
+    if (justSent && v2.moveNo <= justSent.no && Date.now() - justSent.at < 2e3) {
+      justSent.cards.forEach((c2) => {
+        const i2 = hand.indexOf(c2);
+        if (i2 >= 0) hand.splice(i2, 1);
+      });
+    } else justSent = null;
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v2.finish.slice();
     turn = v2.turn;
     busy = !v2.myTurn;
     if (pending) {
       const myC = (v2.seats || [])[0] ? v2.seats[0].c : -1;
-      const done = pendingNo >= 0 && v2.moveNo > pendingNo && !v2.myTurn || pendingNo >= 0 && v2.moveNo > pendingNo + 1 || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
+      const done = pendingNo >= 0 && v2.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
       if (done) {
         pending = null;
         pendingHand = -1;
         pendingNo = -1;
       } else busy = true;
     }
+    if (queued) flush2();
     if (v2.roundNo !== lastRound) {
       const first = lastRound < 0;
       lastRound = v2.roundNo;
@@ -19122,6 +19119,7 @@ function mount(root) {
     passHeld = null;
     lastTrick = null;
     lastPass = null;
+    justSent = null;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -19510,11 +19508,22 @@ function mount(root) {
   }
   let touchAt = 0;
   let tapX = 0, tapY = 0;
+  let tapNode = null;
   window.document.addEventListener("touchstart", (e) => {
     const t2 = e.touches && e.touches[0];
-    if (t2) {
-      tapX = t2.clientX;
-      tapY = t2.clientY;
+    if (!t2) return;
+    tapX = t2.clientX;
+    tapY = t2.clientY;
+    tapNode = null;
+    const top = window.document.elementFromPoint ? window.document.elementFromPoint(tapX, tapY) : null;
+    const aim = top || e.target;
+    if (!aim) return;
+    for (let k2 = taps.length - 1; k2 >= 0; k2--) {
+      const it = taps[k2];
+      if (it.node.isConnected && (it.node === aim || it.node.contains(aim))) {
+        tapNode = it;
+        break;
+      }
     }
   }, true);
   let evBox = null;
@@ -19526,6 +19535,12 @@ function mount(root) {
     }
   })();
   function evShow(txt) {
+    try {
+      const L2 = window.__evLines = window.__evLines || [];
+      L2.push(txt);
+      if (L2.length > 40) L2.splice(0, L2.length - 40);
+    } catch (e) {
+    }
     if (!EVLOG) return;
     if (!evBox) {
       evBox = window.document.createElement("div");
@@ -19554,8 +19569,17 @@ function mount(root) {
     const r2 = node.getBoundingClientRect();
     return x2 >= r2.left - 8 && x2 <= r2.right + 8 && y2 >= r2.top - 8 && y2 <= r2.bottom + 8;
   };
+  const SLIP_MAX = 28;
   function hitTap(e, how) {
     const x2 = e.clientX, y2 = e.clientY;
+    if (how === "\uC190\uAC00\uB77D" && tapNode && tapNode.node.isConnected) {
+      const dx = x2 == null ? 0 : x2 - tapX, dy = y2 == null ? 0 : y2 - tapY;
+      if (Math.sqrt(dx * dx + dy * dy) > SLIP_MAX) return;
+      evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
+      tapDone = true;
+      tapNode.fn(e);
+      return;
+    }
     let aim = e.target;
     let byPoint = false;
     if (!aim || !taps.some((it) => it.node.isConnected && (it.node === aim || it.node.contains(aim)))) {
@@ -19604,36 +19628,87 @@ function mount(root) {
     for (let k2 = taps.length - 1; k2 >= 0; k2--)
       if (!taps[k2].node.isConnected) taps.splice(k2, 1);
   }, 5e3);
-  let wantPlay = 0;
-  function tryPlay(fromWait) {
-    const list = sel.map((i2) => hand[i2]);
-    if (!legal(list) || turn !== 0 || busy) {
-      if (!fromWait) {
-        wantPlay = Date.now();
-        evShow("  (\uB0B4\uAE30 \uBCF4\uB958: " + (!legal(list) ? "\uBABB \uB0B4\uB294 \uC870\uD569" : busy ? "\uB0B4 \uCC28\uB840 \uC544\uB2D8" : "\uCC28\uB840 \uC544\uB2D8") + ")");
-      }
-      return false;
+  const WAIT_MAX = 2500;
+  let queued = null;
+  const seeQ = () => {
+    try {
+      window.__pressQ = queued ? { k: queued.kind, sent: queued.sentNo } : null;
+    } catch (e) {
     }
-    const e = effective(list);
-    sel = [];
-    busy = true;
-    stop("tick");
-    pending = true;
-    pendingHand = hand.length;
-    pendingAt = Date.now();
-    pendingNo = lastMoveNo;
-    lastSend = { num: e, count: list.length, no: lastMoveNo, retried: false };
-    play2(e, list.length);
-    iMoved();
-    unlockLater();
-    return true;
+  };
+  let flushId = null;
+  function why(list) {
+    if (turn !== 0) return "\uB0B4 \uCC28\uB840\uAC00 \uC544\uB2D8";
+    if (busy) return "\uC544\uC9C1 \uCC98\uB9AC \uC911";
+    if (!legal(list)) return "\uBABB \uB0B4\uB294 \uC870\uD569";
+    return "";
   }
-  onTap(el("play"), () => {
-    wantPlay = 0;
-    tryPlay(false);
-  });
+  function queueMove(kind) {
+    const list = kind === "play" ? sel.map((i2) => hand[i2]) : [];
+    queued = { kind, list, at: Date.now(), sentNo: -1 };
+    seeQ();
+    evShow("  (" + (kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + " \uB300\uAE30\uC5F4\uC5D0 \uB123\uC74C)");
+    flush2();
+  }
+  function flush2() {
+    if (flushId) {
+      clearTimeout(flushId);
+      flushId = null;
+    }
+    if (!queued) {
+      seeQ();
+      return;
+    }
+    const q2 = queued;
+    if (q2.sentNo >= 0) {
+      if (lastMoveNo > q2.sentNo) {
+        queued = null;
+        seeQ();
+        return;
+      }
+      if (Date.now() - q2.at > WAIT_MAX + 2e3) {
+        queued = null;
+        seeQ();
+        evShow("  (\uBCF4\uB0C8\uB294\uB370 \uD655\uC778\uC774 \uC548 \uB428)");
+        return;
+      }
+      flushId = setTimeout(flush2, 200);
+      return;
+    }
+    if (q2.kind === "pass" ? turn === 0 && !busy && cur() : turn === 0 && !busy && legal(q2.list)) {
+      q2.sentNo = lastMoveNo;
+      stop("tick");
+      pending = true;
+      pendingAt = Date.now();
+      pendingNo = lastMoveNo;
+      if (q2.kind === "play") {
+        pendingHand = hand.length;
+        sel = [];
+        justSent = { cards: q2.list.slice(), no: lastMoveNo, at: Date.now() };
+        play2(effective(q2.list), q2.list.length);
+      } else {
+        pendingHand = -1;
+        passHeld = lastTrick;
+        passPressAt = Date.now();
+        passTurn();
+      }
+      busy = true;
+      iMoved();
+      unlockLater();
+      evShow("  \u2192 \uBCF4\uB0C4(" + (q2.kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + ")");
+      flushId = setTimeout(flush2, 200);
+      return;
+    }
+    if (Date.now() - q2.at > WAIT_MAX) {
+      evShow("  (\uB300\uAE30\uC5F4 \uBC84\uB9BC: " + why(q2.list) + ")");
+      queued = null;
+      seeQ();
+      return;
+    }
+    flushId = setTimeout(flush2, 120);
+  }
+  onTap(el("play"), () => queueMove("play"));
   let unlockId = null;
-  let lastSend = null;
   function viewSig(v2) {
     if (!v2) return "";
     return v2.turn + "|" + (v2.table || []).length + "|" + (v2.seats || []).map((x2) => x2.c + (x2.s || "")).join(",");
@@ -19647,14 +19722,6 @@ function mount(root) {
       const v2 = engine.view;
       if (!busy) return;
       if (viewSig(v2) !== sent) {
-        return;
-      }
-      if (lastSend && !lastSend.retried && v2 && v2.myTurn && v2.moveNo === lastSend.no) {
-        lastSend.retried = true;
-        evShow("  (\uAC70\uBD80\uB41C \uB4EF\uD574 \uB2E4\uC2DC \uBCF4\uB0C4)");
-        play2(lastSend.num, lastSend.count);
-        iMoved();
-        unlockId = setTimeout(look, 1200);
         return;
       }
       if (++tries < 5) {
@@ -19672,6 +19739,13 @@ function mount(root) {
     if (window.__iMoved) window.__iMoved();
   }
   function doPass(auto) {
+    if (!auto) {
+      if (timerId) clearTimeout(timerId);
+      if (!cur()) return;
+      evShow("\uD328\uC2A4 \uB204\uB984");
+      queueMove("pass");
+      return;
+    }
     if (turn !== 0 || busy) return;
     if (timerId) clearTimeout(timerId);
     if (!cur()) {

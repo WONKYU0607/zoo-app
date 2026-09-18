@@ -85,6 +85,8 @@ export function mount(root){
      그대로 그리면 프로필이 어두워졌다 밝아졌다 해서 두 번 눌린 것처럼 보인다.
      그래서 그 바퀴가 끝날 때까지는 내 패스 표시를 붙잡아 둔다 */
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
+  /* 방금 보낸 카드 {cards,no,at} — 확인 전 되돌림에서 도로 안 보이게 붙잡는다 */
+  let justSent = null;
   /* 바퀴를 끝낸 마지막 패스 {by, at} — 상태에 안 남아서 따로 붙잡는다 */
   let lastPass = null;
   /* 패스를 누른 시각. **누른 순간을 찍기 어려우니 로그가 스스로 잰다** —
@@ -177,6 +179,17 @@ export function mount(root){
         : (x.s ? x.s : (lastPass && lastPass.by === i && x.c > 0 ? "pass" : "")),
       hold: x.hold || [], av: x.seat, r: x.rank }));
     hand = v.hand.slice();
+    /* **방금 낸 카드는 확인될 때까지 손에 도로 넣지 않는다.**
+       내 화면이 먼저 반영하고 서버가 다시 확인해 주는 사이,
+       서버가 보내 준 옛 상태에는 그 카드가 아직 손에 있다.
+       그대로 그리면 **카드가 나갔다 → 돌아왔다 → 다시 나간다**
+       (짧게 누를수록 눈에 띈다는 신고). 확인될 때까지 빼 둔다 */
+    if (justSent && v.moveNo <= justSent.no && Date.now() - justSent.at < 2000){
+      justSent.cards.forEach(c => {
+        const i = hand.indexOf(c);
+        if (i >= 0) hand.splice(i, 1);
+      });
+    } else justSent = null;
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
     turn = v.turn;
@@ -324,7 +337,7 @@ export function mount(root){
     bellAfter = Date.now() + 700;
     if (bellTimer){ clearTimeout(bellTimer); bellTimer = null; }
     handNodes = []; seatNodes = []; pileSig = null;
-    passHeld = null; lastTrick = null; lastPass = null;
+    passHeld = null; lastTrick = null; lastPass = null; justSent = null;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
@@ -801,10 +814,26 @@ const TURN_SEC = 15;
   /* 손가락을 **어디에 처음 댔는지**. 칸이 새로 만들어져도 좌표는 안 바뀌므로,
      "이 칸에서 시작해 이 칸에서 뗐는가" 를 칸이 아니라 좌표로 판단한다 */
   let tapX = 0, tapY = 0;
+  let tapNode = null;          /* 손가락을 처음 댄 자리에서 짚은 칸 */
   window.document.addEventListener("touchstart", e => {
-    /* 좌표만 적어 둔다 — 아무것도 막지 않으므로 화면 전체에서 들어도 된다 */
+    /* **손가락을 처음 댄 자리와 그때 짚은 칸을 적어 둔다.**
+       뗄 때의 자리로 판단하면 안 된다 — 짧게 툭 치면 손가락이 몇십 px 미끄러지는데,
+       손패 카드는 겹쳐 있어서 그만큼만 밀려도 **옆 카드를 짚은 것**이 된다.
+       그러면 엉뚱한 카드가 골리거나(못 내는 카드면) 아무 일도 안 일어난다.
+       "짧게 누르면 두 번 눌러야 한다" 는 신고가 이것이었다(20px 미끄러짐부터 재현됨).
+       탭은 **처음 짚은 칸의 것**이고, 많이 끌었으면 그건 탭이 아니다 */
     const t = e.touches && e.touches[0];
-    if (t){ tapX = t.clientX; tapY = t.clientY; }
+    if (!t) return;
+    tapX = t.clientX; tapY = t.clientY;
+    tapNode = null;
+    const top = window.document.elementFromPoint
+      ? window.document.elementFromPoint(tapX, tapY) : null;
+    const aim = top || e.target;
+    if (!aim) return;
+    for (let k = taps.length - 1; k >= 0; k--){
+      const it = taps[k];
+      if (it.node.isConnected && (it.node === aim || it.node.contains(aim))){ tapNode = it; break; }
+    }
   }, true);
   /* ---------- 신호 들여다보기 ----------
      주소 끝에 ?evlog=1 을 붙이면 화면 위에 신호가 그대로 찍힌다.
@@ -863,8 +892,19 @@ const TURN_SEC = 15;
     const r = node.getBoundingClientRect();
     return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
   };
+  /* 탭으로 볼 수 있는 최대 미끄러짐. 이보다 많이 끌었으면 탭이 아니다 */
+  const SLIP_MAX = 28;
   function hitTap(e, how){
     const x = e.clientX, y = e.clientY;
+    /* 손가락이면 **처음 짚은 칸**의 것으로 친다 (위 touchstart 설명 참고) */
+    if (how === "손가락" && tapNode && tapNode.node.isConnected){
+      const dx = (x == null ? 0 : x - tapX), dy = (y == null ? 0 : y - tapY);
+      if (Math.sqrt(dx * dx + dy * dy) > SLIP_MAX) return;   /* 끌었다 — 탭이 아니다 */
+      evShow("  → 처리(" + how + ")");
+      tapDone = true;
+      tapNode.fn(e);
+      return;
+    }
     /* 겹쳐 있는 것 중 **맨 위**를 고른다. 쌓임 순서는 브라우저가 안다.
        화면 계산을 안 하는 검사 환경(jsdom)에서는 좌표가 없으므로
        **눌린 대상으로 되돌아가 찾는다** */
@@ -987,6 +1027,7 @@ const TURN_SEC = 15;
       if (q.kind === "play"){
         pendingHand = hand.length;
         sel = [];
+        justSent = { cards: q.list.slice(), no: lastMoveNo, at: Date.now() };
         eng.play(effective(q.list), q.list.length);
       } else {
         pendingHand = -1;

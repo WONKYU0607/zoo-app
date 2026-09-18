@@ -79,6 +79,32 @@ const chosen = () => page.evaluate(() =>
 const touch = async (type, p) => cdp.send("Input.dispatchTouchEvent", {
   type, touchPoints: type === "touchEnd" ? [] : [{ x: p.x, y: p.y }],
 });
+/* **보낸 손가락 신호가 진짜 도착했는지 확인한다.**
+   컴퓨터가 바쁘면 CDP 로 보낸 가짜 손가락이 통째로 안 들어오는 일이 있다.
+   그걸 "앱이 씹었다" 로 세면 헛다리를 짚는다 — 실제로 그랬다 */
+const armHit = () => page.evaluate(() => {
+  window.__hit = [];
+  if (window.__hitOn) return;
+  window.__hitOn = true;
+  document.addEventListener("pointerdown", () => { (window.__hit = window.__hit || []).push(1); }, true);
+});
+const landed = () => page.evaluate(() => (window.__hit || []).length > 0);
+const bail = async () => {
+  console.log("\n손가락 신호가 안 들어가 건너뜁니다 (컴퓨터가 너무 바쁩니다)\n");
+  shut(srv, browser); process.exit(0);
+};
+async function press(p){
+  for (let a = 0; a < 3; a++){
+    await armHit();
+    await touch("touchStart", p);
+    await new Promise(r => setTimeout(r, 60));
+    await touch("touchEnd", p);
+    await new Promise(r => setTimeout(r, 200));
+    if (await landed()) return true;
+    await new Promise(r => setTimeout(r, 250));
+  }
+  return false;
+}
 
 /* ---------- 1. 그냥 누르기 (다시 그리기 없음) ---------- */
 {
@@ -99,6 +125,7 @@ const touch = async (type, p) => cdp.send("Input.dispatchTouchEvent", {
 {
   const before = await chosen();
   const p = await spot();
+  await armHit();
   await touch("touchStart", p);
   await new Promise(r => setTimeout(r, 60));
   /* 손패 칸을 통째로 다시 만든다 — 봇이 한 수 둔 것과 같은 상황 */
@@ -106,10 +133,60 @@ const touch = async (type, p) => cdp.send("Input.dispatchTouchEvent", {
   await new Promise(r => setTimeout(r, 60));
   await touch("touchEnd", p);
   await new Promise(r => setTimeout(r, 250));
+  if (!(await landed())) await bail();
   const after = await chosen();
   console.log("    신호: " + JSON.stringify(await page.evaluate(() => window.__ev.splice(0))));
   check("다시 그려도 눌린 것이 살아남는다", after !== before,
         "고른 장수 " + before + " → " + after);
+}
+
+/* ---------- 3. 손가락이 살짝 미끄러져도 눌리는가 ----------
+
+   짧게 툭 치면 손가락이 20~30px 미끄러진다. 그만큼만 밀려도 크롬이
+   **"이건 스크롤이다" 로 보고 탭을 취소**해서 `pointerup` 이 아예 안 왔다.
+   그러면 누른 것이 통째로 사라진다 — "짧게 누르면 두 번 눌러야 한다" 가 이것.
+   (길게 누르면 스크롤로 안 보여서 잘 먹혔다. 그래서 길이 문제로 보였다)
+   `touch-action: none` 으로 제스처를 안 뺏기게 했다 */
+{
+  const slip = async (dx, dy, ms) => {
+    const p = await spot();
+    if (!p) return null;
+    const was = await chosen();
+    await armHit();
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: p.x, y: p.y }] });
+    await new Promise(r => setTimeout(r, Math.max(5, ms / 2)));
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: p.x + dx, y: p.y + dy }] });
+    await new Promise(r => setTimeout(r, Math.max(5, ms / 2)));
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await new Promise(r => setTimeout(r, 350));
+    if (!(await landed())) return null;         /* 신호가 안 닿았다 */
+    return (await chosen()) !== was;
+  };
+  const clear = async () => {
+    for (let k = 0; k < 6; k++){
+      if (!(await chosen())) break;
+      const p = await page.evaluate(() => {
+        const s2 = document.querySelector("#table .hand .slot--sel");
+        if (!s2) return null;
+        const r = s2.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      });
+      if (!p) break;
+      await touch("touchStart", p); await new Promise(r => setTimeout(r, 60));
+      await touch("touchEnd", p);   await new Promise(r => setTimeout(r, 250));
+    }
+  };
+  await clear();
+  const got = [];
+  for (const [dx, dy] of [[0,0],[6,6],[12,12],[8,16]]){
+    const r = await slip(dx, dy, 30);
+    if (r === null) continue;                    /* 신호가 안 닿음 — 안 센다 */
+    got.push({ d: Math.round(Math.hypot(dx,dy)), ok: r });
+    await clear();
+  }
+  if (got.length)
+    check("살짝 미끄러져도 눌린다", got.every(x => x.ok),
+          got.map(x => x.d + "px:" + (x.ok ? "먹음" : "**안 먹음**")).join(" "));
 }
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");

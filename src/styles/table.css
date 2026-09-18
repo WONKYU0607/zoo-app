@@ -260,3 +260,17 @@ html[lang="en"] #table .emobub{font-size:6.1px;letter-spacing:-.02em}
 html[lang="en"] #table .seat__emo .emobub{font-size:7.5px}
 @keyframes emopop{from{opacity:0;transform:translate(-50%,6px) scale(.86)}
   to{opacity:1;transform:translateX(-50%)}}
+
+/* ---------- 손가락 제스처를 브라우저에 뺏기지 않는다 ----------
+
+   짧게 툭 치면 손가락이 20~30px 미끄러지는데, 그만큼만 밀려도 크롬이
+   **"이건 스크롤이다" 로 보고 탭을 취소**한다. 그러면 `pointerup` 이 아예 안 와서
+   누른 것이 통째로 사라진다 — "짧게 누르면 두 번 눌러야 한다" 가 이것이었다.
+   (20px 미끄러짐부터 재현됨. 길게 누르면 스크롤로 안 보여서 잘 먹혔다)
+
+   판 화면은 스크롤할 것이 없으므로 제스처를 넘기지 않는다 */
+#table{ touch-action: none; }
+#table .slot,
+#table .acts button,
+#table #auto,
+#table #emo{ touch-action: none; }

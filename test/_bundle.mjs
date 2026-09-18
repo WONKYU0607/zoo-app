@@ -795,21 +795,199 @@ function scoped(root) {
   };
 }
 
+// src/lib/sound.js
+var KEY = { bgm: "zk_vol_bgm", sfx: "zk_vol_sfx", mute: "zk_mute" };
+function readNum(k2, dflt) {
+  try {
+    const v2 = localStorage.getItem(k2);
+    if (v2 == null) return dflt;
+    const n2 = Number(v2);
+    return Number.isFinite(n2) ? Math.max(0, Math.min(100, n2)) : dflt;
+  } catch (e) {
+    return dflt;
+  }
+}
+function readBool(k2) {
+  try {
+    return localStorage.getItem(k2) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+var sound = {
+  bgm: readNum(KEY.bgm, 50),
+  sfx: readNum(KEY.sfx, 50),
+  muted: readBool(KEY.mute)
+};
+var sfxGain = () => sound.muted ? 0 : sound.sfx / 100;
+var SFX = {
+  card_play: "assets/snd/card_play.webm",
+  /* 카드 낼 때 */
+  card_deal: "assets/snd/card_deal.webm",
+  /* 패 나눌 때 */
+  pass: "assets/snd/pass.webm",
+  my_turn: "assets/snd/my_turn.webm",
+  win: "assets/snd/win.webm",
+  /* 완주 */
+  lose: "assets/snd/lose.webm",
+  button: "assets/snd/button.webm",
+  revolution: "assets/snd/revolution.webm",
+  tick: "assets/snd/tick.webm",
+  /* 남은 시간 */
+  join: "assets/snd/join.webm"
+  /* 대기실에 들어올 때 */
+};
+var POOL = 4;
+var pool = {};
+function voices(src) {
+  if (!pool[src]) {
+    pool[src] = { i: 0, list: Array.from({ length: POOL }, () => {
+      const a2 = new Audio(src);
+      a2.preload = "auto";
+      try {
+        a2.load();
+      } catch (e) {
+      }
+      return a2;
+    }) };
+  }
+  return pool[src];
+}
+function stop(name) {
+  const src = SFX[name];
+  if (!src || !pool[src]) return;
+  pool[src].list.forEach((a2) => {
+    try {
+      a2.pause();
+      a2.currentTime = 0;
+    } catch (e) {
+    }
+  });
+}
+function play(name) {
+  const src = SFX[name];
+  if (!src) return;
+  const g2 = sfxGain();
+  if (g2 <= 0) return;
+  try {
+    const v2 = voices(src);
+    const a2 = v2.list[v2.i];
+    v2.i = (v2.i + 1) % v2.list.length;
+    try {
+      a2.currentTime = 0;
+    } catch (e) {
+    }
+    a2.volume = g2;
+    const p2 = a2.play();
+    if (p2 && p2.catch) p2.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+
+// src/lib/sndkey.js
+function trickId(v2) {
+  if (v2 && v2.trickNo != null) return "t" + v2.trickNo;
+  return "c" + (v2 && v2.seats || []).reduce((a2, s2) => a2 + (s2.c || 0), 0);
+}
+function moveEvents(v2) {
+  if (!v2) return [];
+  if (v2.recent && v2.recent.length)
+    return v2.recent.map((m) => ({ key: "m" + m.no, kind: m.k, by: m.by }));
+  if (v2.moveNo != null && v2.lastMove) {
+    if (!v2.moveNo) return [];
+    return [{ key: "m" + v2.moveNo, kind: v2.lastMove.k, by: v2.lastMove.by }];
+  }
+  const id = trickId(v2);
+  const out = [];
+  const tb = v2.table || [];
+  if (tb.length) {
+    const t2 = tb[tb.length - 1];
+    out.push({
+      key: id + "#" + tb.length + ":" + t2.by + "-" + t2.num + "-" + t2.count,
+      kind: "play",
+      by: t2.by
+    });
+  }
+  (v2.seats || []).forEach((s2, i2) => {
+    if (s2 && s2.s === "pass") out.push({ key: id + "#p" + i2, kind: "pass", by: i2 });
+  });
+  return out;
+}
+function makeSeen(limit = 240) {
+  const set2 = /* @__PURE__ */ new Set();
+  return {
+    /* 처음 보는 번호면 true (그리고 기억한다) */
+    add(key) {
+      if (!key) return false;
+      if (set2.has(key)) return false;
+      set2.add(key);
+      if (set2.size > limit) {
+        const it = set2.values();
+        for (let i2 = set2.size - limit; i2 > 0; i2--) set2.delete(it.next().value);
+      }
+      return true;
+    },
+    has(key) {
+      return set2.has(key);
+    },
+    clear() {
+      set2.clear();
+    },
+    get size() {
+      return set2.size;
+    }
+  };
+}
+
+// src/lib/assets.js
+var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
+var AVATARS = [
+  { f: "assets/avt_01.webp", ko: "\uC0DD\uC950", en: "Mouse", need: 0 },
+  { f: "assets/avt_02.webp", ko: "\uC0C8", en: "Bird", need: 0 },
+  { f: "assets/avt_03.webp", ko: "\uD1A0\uB07C", en: "Rabbit", need: 0 },
+  { f: "assets/avt_04.webp", ko: "\uC6D0\uC22D\uC774", en: "Monkey", need: 0 },
+  { f: "assets/avt_05.webp", ko: "\uBA67\uB3FC\uC9C0", en: "Boar", need: 0 },
+  { f: "assets/avt_06.webp", ko: "\uAE30\uB9B0", en: "Giraffe", need: 5e3 },
+  { f: "assets/avt_07.webp", ko: "\uC5EC\uC6B0", en: "Fox", need: 1e4 },
+  { f: "assets/avt_08.webp", ko: "\uC545\uC5B4", en: "Croc", need: 15e3 },
+  { f: "assets/avt_09.webp", ko: "\uCF54\uB07C\uB9AC", en: "Elephant", need: 2e4 },
+  { f: "assets/avt_10.webp", ko: "\uBD88\uACF0", en: "Bear", need: 25e3 },
+  { f: "assets/avt_11.webp", ko: "\uD638\uB791\uC774", en: "Tiger", need: 3e4 },
+  { f: "assets/avt_12.webp", ko: "\uC0AC\uC790", en: "Lion", need: 35e3 },
+  { f: "assets/avt_13.webp", ko: "\uACE0\uC591\uC774", en: "Cat", need: 4e4 },
+  { f: "assets/avt_14.webp", ko: "\uC6A9", en: "Dragon", need: 45e3 },
+  { f: "assets/avt_15.webp", ko: "\uC720\uB2C8\uCF58", en: "Unicorn", need: 5e4 }
+];
+var avtFile = (i2) => (AVATARS[i2] || AVATARS[0]).f;
+var EMOTES = [
+  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANKS" },
+  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "SO SAD" },
+  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
+  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
+];
+var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
+
 // src/lib/engine.js
 var engine_exports = {};
 __export(engine_exports, {
+  autoDraw: () => autoDraw,
   declareRev: () => declareRev,
   engine: () => engine,
   give: () => give,
+  onEmote: () => onEmote,
   onView: () => onView,
   passRev: () => passRev,
   passTurn: () => passTurn,
-  play: () => play,
+  play: () => play2,
+  sendEmote: () => sendEmote,
   setAuto: () => setAuto,
   setPaused: () => setPaused,
   startLocal: () => startLocal,
   startOnline: () => startOnline,
-  stop: () => stop
+  stop: () => stop2,
+  takeCard: () => takeCard
 });
 
 // node_modules/nanoid/non-secure/index.js
@@ -4241,12 +4419,12 @@ var SvelteComponent = class {
 };
 var subscriber_queue = [];
 function writable(value2, start = noop2) {
-  let stop2;
+  let stop3;
   const subscribers = /* @__PURE__ */ new Set();
   function set2(new_value) {
     if (safe_not_equal(value2, new_value)) {
       value2 = new_value;
-      if (stop2) {
+      if (stop3) {
         const run_queue = !subscriber_queue.length;
         for (const subscriber of subscribers) {
           subscriber[1]();
@@ -4268,14 +4446,14 @@ function writable(value2, start = noop2) {
     const subscriber = [run2, invalidate];
     subscribers.add(subscriber);
     if (subscribers.size === 1) {
-      stop2 = start(set2) || noop2;
+      stop3 = start(set2) || noop2;
     }
     run2(value2);
     return () => {
       subscribers.delete(subscriber);
       if (subscribers.size === 0) {
-        stop2();
-        stop2 = null;
+        stop3();
+        stop3 = null;
       }
     };
   }
@@ -17747,10 +17925,21 @@ var nextActive = (G2, from) => nextBy(G2, from, (i2) => G2.counts[i2] > 0 && !G2
 var nextAlive = (G2, from) => nextBy(G2, from, (i2) => G2.counts[i2] > 0);
 function clearPile(G2, leader) {
   G2.pile = null;
-  if ((G2.table || []).length) G2.shown = G2.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count }));
+  if ((G2.table || []).length) G2.shown = G2.table.map((t2) => ({
+    by: t2.by,
+    num: t2.num,
+    count: t2.count,
+    cards: (t2.cards || []).slice()
+  }));
   G2.table = [];
   G2.passed = G2.passed.map(() => false);
   G2.next = leader;
+  G2.trickNo = (G2.trickNo || 0) + 1;
+}
+function noteMove(G2, kind, seat) {
+  G2.moveNo = (G2.moveNo || 0) + 1;
+  G2.lastMove = { k: kind, by: seat };
+  G2.recent = (G2.recent || []).concat([{ no: G2.moveNo, k: kind, by: seat }]).slice(-8);
 }
 function noteFinish(G2, seat) {
   if (G2.counts[seat] === 0 && !G2.finished.includes(seat)) G2.finished.push(seat);
@@ -17818,7 +18007,10 @@ function openNextRound(G2, random) {
   const n2 = G2.counts.length;
   G2.lastRound = {
     order: order.slice(),
-    table: ((G2.table || []).length ? G2.table : G2.shown || []).map((t2) => ({ by: t2.by, num: t2.num, count: t2.count })),
+    /* 판이 끝난 순간의 손패 장수. 바로 다음 판을 나누므로 이걸 안 남기면
+       마지막까지 남은 꼴등의 손패가 갑자기 새 판 장수로 바뀐다 */
+    counts: G2.counts.slice(),
+    table: ((G2.table || []).length ? G2.table : G2.shown || []).map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: (t2.cards || []).slice() })),
     points: order.map((seat, rank) => roundPoints(rank, n2)),
     roundNo: G2.roundNo
   };
@@ -17845,6 +18037,19 @@ function openNextRound(G2, random) {
   G2.next = order[0];
   G2.given = {};
 }
+function pickDistinct(random, n2) {
+  const all = [];
+  for (let v2 = 1; v2 <= 12; v2++) all.push(v2);
+  return random.Shuffle(all).slice(0, n2);
+}
+function drawOrder(d2, n2) {
+  const seats = Array.from({ length: n2 }, (_2, i2) => i2);
+  return seats.sort((a2, b2) => {
+    const va = d2.pool[d2.took[a2]], vb = d2.pool[d2.took[b2]];
+    if (va !== vb) return va - vb;
+    return d2.seq.indexOf(a2) - d2.seq.indexOf(b2);
+  });
+}
 var ZooPresident = {
   name: "zoo-president",
   setup: ({ ctx, random }, setupData) => {
@@ -17858,6 +18063,10 @@ var ZooPresident = {
       table: [],
       finished: [],
       next: 0,
+      trickNo: 0,
+      moveNo: 0,
+      lastMove: null,
+      recent: [],
       score: new Array(n2).fill(0),
       roundNo: 1,
       totalRounds: Math.max(3, opts.rounds),
@@ -17877,19 +18086,65 @@ var ZooPresident = {
       gameOver: false
     };
     dealRound(G2, random);
-    G2.seatOrder = random.Shuffle(Array.from({ length: n2 }, (_2, i2) => i2));
-    G2.next = G2.seatOrder[0];
+    G2.seatOrder = null;
+    G2.next = 0;
+    G2.draw = {
+      pool: pickDistinct(random, n2),
+      /* 자리마다 한 장씩, 서로 다른 숫자 */
+      by: new Array(n2).fill(null),
+      /* 카드 자리 → 가져간 사람 */
+      took: new Array(n2).fill(null),
+      /* 사람 → 가져간 카드 자리 */
+      seq: []
+      /* 고른 차례. 같은 숫자면 먼저 고른 쪽이 위 */
+    };
     return G2;
   },
   /* 남의 손패는 장수만 보인다 */
   playerView: ({ G: G2, playerID }) => {
     const out = Object.assign({}, G2);
     out.hands = G2.hands.map((h2, i2) => String(i2) === String(playerID) ? h2.slice() : null);
+    if (G2.draw) {
+      out.draw = Object.assign({}, G2.draw, {
+        pool: G2.draw.pool.map((v2, i2) => G2.draw.by[i2] == null ? null : v2)
+      });
+    }
     return out;
   },
   phases: {
-    play: {
+    /* 첫 순서 정하기. 모두가 동시에 참여하므로 activePlayers 로 열어 둔다.
+       한 장씩만 가져갈 수 있고, 남이 가져간 자리는 못 가져간다 */
+    draw: {
       start: true,
+      turn: {
+        activePlayers: { all: "picking" },
+        stages: {
+          picking: {
+            moves: {
+              takeCard: ({ G: G2, playerID }, idx) => {
+                const seat = Number(playerID);
+                const d2 = G2.draw;
+                if (!d2) return INVALID_MOVE;
+                if (d2.took[seat] != null) return INVALID_MOVE;
+                if (!(idx >= 0 && idx < d2.pool.length)) return INVALID_MOVE;
+                if (d2.by[idx] != null) return INVALID_MOVE;
+                d2.by[idx] = seat;
+                d2.took[seat] = idx;
+                d2.seq.push(seat);
+              }
+            }
+          }
+        }
+      },
+      endIf: ({ G: G2, ctx }) => G2.draw && G2.draw.took.every((x2, i2) => x2 != null || i2 >= ctx.numPlayers),
+      onEnd: ({ G: G2, ctx }) => {
+        const order = drawOrder(G2.draw, ctx.numPlayers);
+        G2.seatOrder = order.slice();
+        G2.next = order[0];
+      },
+      next: "play"
+    },
+    play: {
       turn: {
         /* 한 사람이 한 번 두면 차례가 넘어간다. 다음 사람은 G.next 가 정한다 */
         minMoves: 1,
@@ -17914,7 +18169,8 @@ var ZooPresident = {
           G2.hands[seat] = t2.hand;
           G2.counts[seat] = t2.hand.length;
           G2.pile = { by: seat, num, count };
-          G2.table.push({ by: seat, num, count });
+          G2.table.push({ by: seat, num, count, cards: t2.used.slice().sort((a2, b2) => a2 - b2) });
+          noteMove(G2, "play", seat);
           noteFinish(G2, seat);
           const cleared = num === 1 || G2.opts.clear2 && num === 2;
           const out = G2.counts[seat] === 0;
@@ -17939,6 +18195,7 @@ var ZooPresident = {
           const seat = Number(playerID);
           if (!G2.pile) return INVALID_MOVE;
           G2.passed[seat] = true;
+          noteMove(G2, "pass", seat);
           const still = active2(G2);
           if (still.length <= 1) {
             const last = G2.pile.by;
@@ -18084,16 +18341,31 @@ function screenView(G2, ctx, myID, names) {
       c: G2.counts[seat],
       s: G2.passed[seat] ? "pass" : "",
       out: G2.counts[seat] === 0,
+      /* 몇 번째로 끝냈는가. 0부터, 아직이면 -1 */
+      rank: (G2.finished || []).indexOf(seat),
       hold: seat === me ? (G2.hands[seat] || []).slice() : null
     };
   }
+  const realCards = (t2) => t2.cards && t2.cards.length === t2.count ? t2.cards.slice() : new Array(t2.count).fill(t2.num);
   const table = (G2.table || []).map((t2) => ({
     by: toScreen(t2.by, me, n2),
     num: t2.num,
     count: t2.count,
-    cards: new Array(t2.count).fill(t2.num)
-    /* 남의 카드는 숫자만 안다 */
+    cards: realCards(t2)
   }));
+  const draw = G2.draw ? {
+    /* 아직 아무도 안 집은 카드의 숫자는 화면에 주지 않는다.
+       이 기기 방은 판 상태를 그대로 읽으므로 여기서 가려야 한다 —
+       안 가리면 낮은 카드가 어디 있는지 다 보인다 */
+    pool: G2.draw.pool.map((v2, i2) => G2.draw.by[i2] == null ? null : v2),
+    /* 뽑기 화면 자리는 **방에 앉은 순서** 그대로다(나를 아래로 돌려놓기만 한다).
+       등수 자리로 바꾸는 것은 뽑기가 끝난 뒤 판에서 한다 —
+       여기서 ord 를 쓰면 마지막 사람이 고르는 순간 자리가 통째로 흔들린다 */
+    by: G2.draw.by.map((s2) => s2 == null ? null : (s2 - me + n2) % n2),
+    mine: G2.draw.took[Number(myID)],
+    /* 내가 가져간 카드 자리 */
+    left: G2.draw.took.filter((x2) => x2 == null).length
+  } : null;
   return {
     N: n2,
     me: 0,
@@ -18111,13 +18383,21 @@ function screenView(G2, ctx, myID, names) {
       by: toScreen(t2.by, me, n2),
       num: t2.num,
       count: t2.count,
-      cards: new Array(t2.count).fill(t2.num)
+      cards: realCards(t2)
     })),
     finish: (G2.finished || []).map((s2) => toScreen(s2, me, n2)),
     score: G2.counts.map((_2, seat) => G2.score[toSeat(seat, me, n2)]),
     roundNo: G2.roundNo,
+    trickNo: G2.trickNo || 0,
+    /* 몇 번째 바퀴인가 */
+    /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
+    moveNo: G2.moveNo || 0,
+    lastMove: G2.lastMove ? { k: G2.lastMove.k, by: toScreen(G2.lastMove.by, me, n2) } : null,
+    /* 최근 몇 수. 신호가 뭉쳐 와도 화면이 빠짐없이 집어 갈 수 있게 한다 */
+    recent: (G2.recent || []).map((m) => ({ no: m.no, k: m.k, by: toScreen(m.by, me, n2) })),
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
+    draw,
     revolution: G2.revolution ? {
       seat: toScreen(G2.revolution.seat, me, n2),
       great: G2.revolution.great,
@@ -18151,12 +18431,20 @@ function screenView(G2, ctx, myID, names) {
     lastRound: G2.lastRound ? {
       roundNo: G2.lastRound.roundNo,
       order: G2.lastRound.order.map((s2) => toScreen(s2, me, n2)),
+      /* 화면 자리 순서로 옮긴 '그때의 장수' */
+      counts: (() => {
+        const c2 = new Array(n2).fill(0);
+        (G2.lastRound.counts || []).forEach((v2, seat) => {
+          c2[toScreen(seat, me, n2)] = v2;
+        });
+        return c2;
+      })(),
       points: G2.lastRound.points.slice(),
       table: G2.lastRound.table.map((t2) => ({
         by: toScreen(t2.by, me, n2),
         num: t2.num,
         count: t2.count,
-        cards: new Array(t2.count).fill(t2.num)
+        cards: realCards(t2)
       }))
     } : null,
     over: ctx.gameover ? {
@@ -18180,8 +18468,15 @@ var engine = {
   /* 결과를 보는 동안 다음 판을 멈춘다 */
   auto: false,
   /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
-  botMs: 3e3
+  botMs: 3e3,
   /* 봇이 생각하는 척하는 시간 */
+  /* 자동치기가 **내 자리**를 둘 때 기다리는 시간.
+     봇은 남이라 생각하는 척해야 하지만, 내 자리는 그럴 이유가 없다.
+     3초로 두었더니 서버 왕복까지 붙어 4~5초씩 걸렸다 */
+  autoMs: 1e3,
+  moveLog: [],
+  /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
+  lastLogged: 0
 };
 var listeners = [];
 var unsub = null;
@@ -18202,6 +18497,15 @@ function push() {
   const st = raw();
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  const v2 = engine.view;
+  const ms = v2 && v2.recent && v2.recent.length ? v2.recent : v2 && v2.moveNo && v2.lastMove ? [{ no: v2.moveNo, k: v2.lastMove.k, by: v2.lastMove.by }] : [];
+  ms.forEach((m) => {
+    if (!m || m.no <= engine.lastLogged) return;
+    engine.lastLogged = m.no;
+    engine.moveLog.push({ no: m.no, k: m.k, by: m.by });
+  });
+  if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
+  drainEmotes();
   listeners.forEach((f2) => {
     try {
       f2(engine.view);
@@ -18209,7 +18513,53 @@ function push() {
       console.error(e);
     }
   });
-  if (engine.mode === "local") scheduleBot();
+  if (engine.mode === "local" || engine.auto) scheduleBot();
+}
+var emoteSeen = 0;
+var emoteFns = [];
+function onEmote(fn2) {
+  emoteFns.push(fn2);
+  return () => {
+    const i2 = emoteFns.indexOf(fn2);
+    if (i2 >= 0) emoteFns.splice(i2, 1);
+  };
+}
+function fireEmote(seat, k2) {
+  const n2 = engine.view && engine.view.N || 0;
+  if (!n2) return;
+  const pos = toScreenSeat(seat);
+  emoteFns.forEach((f2) => {
+    try {
+      f2({ pos, seat, k: k2 });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+function toScreenSeat(seat) {
+  const v2 = engine.view;
+  if (!v2 || !v2.seats) return 0;
+  const i2 = v2.seats.findIndex((x2) => x2.seat === Number(seat));
+  return i2 < 0 ? 0 : i2;
+}
+function drainEmotes() {
+  const c2 = engine.client;
+  const list = c2 && c2.chatMessages || [];
+  for (; emoteSeen < list.length; emoteSeen++) {
+    const m = list[emoteSeen];
+    const p2 = m && m.payload;
+    if (!p2 || p2.t !== "emote") continue;
+    fireEmote(m.sender, p2.k);
+  }
+}
+function sendEmote(k2) {
+  const c2 = engine.client;
+  if (!c2) return;
+  if (engine.mode === "local") {
+    fireEmote(Number(engine.myID), k2);
+    return;
+  }
+  c2.sendChatMessage({ t: "emote", k: k2 });
 }
 function botPick(hand, pile) {
   const cnt = {};
@@ -18247,6 +18597,35 @@ function scheduleBot() {
   const st = raw();
   if (!st || st.ctx.gameover) return;
   const G2 = st.G, ctx = st.ctx;
+  if (ctx.phase === "draw") {
+    const d2 = G2.draw;
+    if (!d2) return;
+    const todo = d2.took.map((x2, seat2) => x2 == null && actsFor(seat2) ? seat2 : -1).filter((x2) => x2 >= 0);
+    if (!todo.length) return;
+    const g3 = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g3 !== gen) return;
+      const s2 = raw();
+      if (!s2 || s2.ctx.phase !== "draw") {
+        push();
+        return;
+      }
+      const d22 = s2.G.draw;
+      const seat2 = todo[0];
+      if (d22.took[seat2] != null) {
+        push();
+        return;
+      }
+      const free = d22.by.map((v2, i2) => v2 == null ? i2 : -1).filter((i2) => i2 >= 0);
+      if (!free.length) return;
+      engine.client.updatePlayerID(String(seat2));
+      engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, Math.min(engine.botMs, 800));
+    return;
+  }
   if (ctx.phase === "tax") {
     const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
     const revTodo = revSeat >= 0 && actsFor(revSeat);
@@ -18283,7 +18662,7 @@ function scheduleBot() {
     }, 700);
     return;
   }
-  if (engine.paused) return;
+  if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
   const g2 = ++gen;
@@ -18306,7 +18685,7 @@ function scheduleBot() {
     else engine.client.moves.pass();
     engine.client.updatePlayerID(engine.myID);
     push();
-  }, engine.botMs);
+  }, seat === Number(engine.myID) ? Math.min(engine.autoMs, engine.botMs) : engine.botMs);
 }
 function setAuto(on3) {
   engine.auto = Boolean(on3);
@@ -18317,6 +18696,7 @@ function setAuto(on3) {
   }
   scheduleBot();
 }
+if (typeof window !== "undefined") window.__eng = engine;
 function attach(client) {
   engine.client = client;
   client.start();
@@ -18325,7 +18705,7 @@ function attach(client) {
   push();
 }
 function startLocal({ numPlayers = 6, opts = {}, names = [], myID = "0", bots = null } = {}) {
-  stop();
+  stop2();
   engine.mode = "local";
   engine.myID = String(myID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
@@ -18336,7 +18716,7 @@ function startLocal({ numPlayers = 6, opts = {}, names = [], myID = "0", bots = 
   attach(Client({ game, numPlayers, playerID: engine.myID }));
 }
 function startOnline({ server, matchID, playerID, credentials, numPlayers, names = [] }) {
-  stop();
+  stop2();
   engine.mode = "online";
   engine.myID = String(playerID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
@@ -18364,7 +18744,7 @@ function setPaused(on3) {
   }
   scheduleBot();
 }
-function stop() {
+function stop2() {
   gen++;
   if (botTimer) {
     clearTimeout(botTimer);
@@ -18382,8 +18762,33 @@ function stop() {
   }
   engine.client = null;
   engine.view = null;
+  emoteSeen = 0;
 }
-function play(num, count) {
+function takeCard(idx) {
+  const c2 = engine.client;
+  if (!c2) return;
+  c2.updatePlayerID(engine.myID);
+  c2.moves.takeCard(idx);
+}
+function autoDraw() {
+  const c2 = engine.client;
+  const st = raw();
+  if (!c2 || !st || st.ctx.phase !== "draw") return;
+  const d2 = st.G.draw;
+  if (!d2) return;
+  for (let seat = 0; seat < d2.took.length; seat++) {
+    const s2 = raw();
+    if (!s2 || s2.ctx.phase !== "draw") break;
+    if (s2.G.draw.took[seat] != null) continue;
+    const free = s2.G.draw.by.map((v2, i2) => v2 == null ? i2 : -1).filter((i2) => i2 >= 0);
+    if (!free.length) break;
+    c2.updatePlayerID(String(seat));
+    c2.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+  }
+  c2.updatePlayerID(engine.myID);
+  push();
+}
+function play2(num, count) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.play(num, count);
@@ -18414,15 +18819,15 @@ function give(cards) {
   return true;
 }
 
-// src/lib/assets.js
-var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
-var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
-
 // src/screens/table.js
 function mount(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const HEADS2 = HEADS, ART2 = ART;
+  const ART2 = ART;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
   const T = {
@@ -18440,19 +18845,19 @@ function mount(root) {
       need: (c2, n2) => "<b>" + c2 + "\uC7A5</b>\uC744 <b>" + n2 + "\uBC88 \uC774\uD558</b>\uB85C \uBC1B\uC73C\uC138\uC694",
       emptyPile: "\uBC14\uB2E5\uC774 \uBE44\uC5C8\uC2B5\uB2C8\uB2E4<br>\uC6D0\uD558\uB294 \uCE74\uB4DC\uB97C \uB0B4\uC138\uC694",
       pass: "\uD328\uC2A4",
-      pick: "\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694",
+      pick: "\uB300\uAE30\uC911",
       play: (n2) => n2 + "\uC7A5 \uB0B4\uAE30",
-      notTurn: "\uC0C1\uB300 \uCC28\uB840\uC785\uB2C8\uB2E4",
+      notTurn: "\uB300\uAE30\uC911",
       mix: "\uAC19\uC740 \uC22B\uC790\uB9CC \uD568\uAED8 \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4",
       cnt: (n2) => n2 + "\uC7A5\uC744 \uB9DE\uCDB0 \uC8FC\uC138\uC694",
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
-      autoOff: "\uC790\uB3D9",
-      autoOn: "\uC790\uB3D9 \uB044\uAE30",
-      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4 \xB7 \uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
+      autoOff: "\uC790\uB3D9 OFF",
+      autoOn: "\uC790\uB3D9 ON",
+      emoBtn: "\uC774\uBAA8\uD2F0\uCF58",
+      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4\n\uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n2) => n2 + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
-      endR: "\uD310 \uC885\uB8CC",
       close: "\uB2E4\uC2DC \uB204\uB974\uBA74 \uC811\uD799\uB2C8\uB2E4"
     },
     en: {
@@ -18469,19 +18874,19 @@ function mount(root) {
       need: (c2, n2) => "Beat with <b>" + c2 + (c2 === 1 ? " card" : " cards") + "</b> of <b>" + n2 + " or lower</b>",
       emptyPile: "The pile is empty<br>Play anything you like",
       pass: "Pass",
-      pick: "Select cards",
+      pick: "Waiting",
       play: (n2) => "Play " + n2,
-      notTurn: "Opponent's turn",
+      notTurn: "Waiting",
       mix: "Cards must share one number",
       cnt: (n2) => "Play exactly " + n2,
       lower: "Play a lower number",
-      autoOff: "Auto",
-      autoOn: "Auto off",
-      autoOnMsg: "Auto play on \xB7 tap a card to take over",
+      autoOff: "AUTO OFF",
+      autoOn: "AUTO ON",
+      emoBtn: "EMOJI",
+      autoOnMsg: "Auto play on\nTap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n2) => n2 + "s",
       cleared: "Pile cleared \xB7 you lead again",
-      endR: "End round",
       close: "Tap again to close"
     }
   };
@@ -18494,24 +18899,109 @@ function mount(root) {
   let SEATS = [];
   let hand = [];
   let finish = [];
-  let offView = null;
+  let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
+  let sndTurn = false, sndFin = 0, sndRev = 0;
+  let bellAfter = 0, bellTimer = null;
+  const seen = makeSeen();
+  let primed = false;
+  let passHeld = null, lastTrick = null, lastMoveNo = -1;
+  let lastPass = null;
+  let passPressAt = 0;
+  let pending = null, pendingAt = 0, pendingHand = -1;
+  let pendingNo = -1;
+  const onScreen = () => {
+    const sec = window.document.getElementById("table");
+    return Boolean(sec && sec.classList.contains("is-on"));
+  };
+  function sounds(v2, quiet) {
+    const mute = Boolean(quiet) || !onScreen();
+    const evs = moveEvents(v2).filter((e) => seen.add(e.key));
+    if (evs.length && primed && !mute) {
+      const kinds = new Set(evs.map((e) => e.kind));
+      evShow("** \uC18C\uB9AC " + evs.map((e) => e.kind + "@" + e.by).join(" "));
+      try {
+        const d2 = window.__sndDetail = window.__sndDetail || [];
+        evs.forEach((e) => d2.push(e.kind + ":" + e.by));
+      } catch (e) {
+      }
+      if (kinds.has("play")) play("card_play");
+      if (kinds.has("pass")) play("pass");
+    }
+    primed = true;
+    if (v2.myTurn && !sndTurn && !mute) {
+      const wait2 = bellAfter - Date.now();
+      if (wait2 > 0) {
+        if (bellTimer) clearTimeout(bellTimer);
+        bellTimer = setTimeout(() => {
+          bellTimer = null;
+          const cv = engine.view;
+          if (cv && cv.myTurn && onScreen()) play("my_turn");
+        }, wait2);
+      } else play("my_turn");
+    }
+    sndTurn = Boolean(v2.myTurn);
+    const fin = (v2.finish || []).length;
+    if (fin > sndFin && !mute) {
+      const who = v2.finish[fin - 1];
+      if (who === 0) play("win");
+      if (v2.seats && fin === v2.seats.length - 1 && !v2.finish.includes(0)) play("lose");
+    }
+    sndFin = fin;
+    sndRev = v2.revolution && v2.revolution.declared ? 1 : 0;
+  }
   function apply(v2) {
     if (!v2) return;
-    if (holdingEnd && !v2.over) return;
-    SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat }));
+    if (holdingEnd && !v2.over) {
+      sounds(v2, true);
+      return;
+    }
+    sounds(v2);
+    if (passHeld != null && v2.trickNo !== passHeld) passHeld = null;
+    if (v2.trickNo !== lastTrick && lastTrick != null) {
+      const ps = (v2.recent || []).filter((m) => m.k === "pass");
+      lastPass = ps.length ? { by: ps[ps.length - 1].by, at: Date.now() } : null;
+    }
+    if (lastPass && Date.now() - lastPass.at > 1200) lastPass = null;
+    lastTrick = v2.trickNo;
+    lastMoveNo = v2.moveNo;
+    SEATS = v2.seats.map((x2, i2) => ({
+      n: x2.name,
+      c: x2.c,
+      s: i2 === 0 && passHeld != null ? "pass" : x2.s ? x2.s : lastPass && lastPass.by === i2 && x2.c > 0 ? "pass" : "",
+      hold: x2.hold || [],
+      av: x2.seat,
+      r: x2.rank
+    }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v2.finish.slice();
     turn = v2.turn;
     busy = !v2.myTurn;
+    if (pending) {
+      const myC = (v2.seats || [])[0] ? v2.seats[0].c : -1;
+      const done = pendingNo >= 0 && v2.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
+      if (done) {
+        pending = null;
+        pendingHand = -1;
+        pendingNo = -1;
+      } else busy = true;
+    }
+    if (queued) flush2();
     if (v2.roundNo !== lastRound) {
       const first = lastRound < 0;
       lastRound = v2.roundNo;
       sel = [];
       animated = 0;
       spread = false;
+      sndFin = 0;
+      sndTurn = false;
+      sndRev = 0;
+      flew = /* @__PURE__ */ new Set();
+      pending = null;
+      pendingHand = -1;
+      pendingNo = -1;
       window.__roundNo = v2.roundNo;
       if (!first && !v2.over && v2.lastRound && window.__onRoundEnd) {
         showLastRound(v2);
@@ -18545,7 +19035,7 @@ function mount(root) {
       ghostSig = "";
     }
     if (v2.table.length < trick.length) {
-      animated = 0;
+      if (!ghost.length) animated = 0;
       spread = false;
     }
     trick = v2.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: t2.cards.slice() }));
@@ -18568,12 +19058,14 @@ function mount(root) {
   function showLastRound(v2) {
     holdingEnd = true;
     const lr = v2.lastRound;
+    const lc = lr.counts || [];
     SEATS = v2.seats.map((x2, i2) => ({
       n: x2.name,
-      c: i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
+      c: lc[i2] != null ? lc[i2] : i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
       s: "",
       hold: [],
-      av: x2.seat
+      av: x2.seat,
+      r: lr.order.indexOf(i2)
     }));
     hand = [];
     finish = lr.order.slice();
@@ -18594,10 +19086,8 @@ function mount(root) {
   }
   function boot() {
     if (offView) offView();
-    if (el("auto")) {
-      el("auto").textContent = T[lang].autoOff;
-      el("auto").classList.remove("on");
-    }
+    if (offEmote) offEmote();
+    if (el("auto")) setAuto2(false);
     setAuto(false);
     if (holdPile) {
       clearTimeout(holdPile);
@@ -18606,6 +19096,22 @@ function mount(root) {
     ghost = [];
     ghostSig = "";
     holdingEnd = false;
+    seen.clear();
+    primed = false;
+    sndFin = 0;
+    sndTurn = false;
+    sndRev = 0;
+    bellAfter = Date.now() + 700;
+    if (bellTimer) {
+      clearTimeout(bellTimer);
+      bellTimer = null;
+    }
+    handNodes = [];
+    seatNodes = [];
+    pileSig = null;
+    passHeld = null;
+    lastTrick = null;
+    lastPass = null;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -18613,6 +19119,12 @@ function mount(root) {
     busy = false;
     animated = 0;
     spread = false;
+    emoUntil = 0;
+    emoPickOpen(false);
+    paintEmoBtn();
+    Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
+    if (el("emolayer")) el("emolayer").innerHTML = "";
+    offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView = onView(apply);
     if (engine.view) apply(engine.view);
   }
@@ -18629,12 +19141,24 @@ function mount(root) {
   let lastPlayer = null;
   let busy = false;
   let animated = 0;
+  let flew = /* @__PURE__ */ new Set();
+  const keyOf = (t2) => t2 ? t2.by + "-" + t2.num + "-" + t2.count : "";
+  function flewKey(t2) {
+    const k2 = keyOf(t2);
+    if (!k2) return true;
+    if (flew.has(k2)) return true;
+    flew.add(k2);
+    return false;
+  }
   let spread = false;
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n2) => isJ(n2) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n2 - 1];
   const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
-  function cardHTML(n2, w2) {
-    if (isJ(n2)) return '<div class="card is-joker" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__name">\uCE74\uBA5C\uB808\uC628</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"></div></div>';
+  function cardHTML(n2, w2, as) {
+    if (isJ(n2)) {
+      const num = as == null || as >= 13 ? '<span class="card__num as"></span>' : '<span class="card__num as">' + as + "</span>";
+      return '<div class="card is-joker" style="--w:' + w2 + 'px"><div class="card__band">' + num + '<span class="card__name">' + T[lang].joker + "</span>" + num + '</div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band">' + num + num + "</div></div>";
+    }
     return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__name">' + label(n2) + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
   }
   const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
@@ -18676,7 +19200,8 @@ function mount(root) {
     const s2 = Math.sin(a2);
     const bias = 0;
     const side = Math.abs(s2) < 0.05;
-    const nudge = s2 > 0.9 ? 9 : side ? 4 : s2 > 0.25 ? 2 : 0;
+    const top = s2 < -0.85;
+    const nudge = top ? 22 : s2 > 0.9 ? 9 : side ? 4 : s2 > 0.25 ? 2 : 0;
     const nudgeX = side ? Math.cos(a2) < 0 ? 2 : -2 : 0;
     return {
       x: RING.cx + Math.cos(a2) * -RING.rx,
@@ -18694,6 +19219,17 @@ function mount(root) {
     if (!c2) return false;
     if (isJ(n2)) return !KO_N.some((_2, i2) => i2 + 1 < c2.num && maxCount(i2 + 1) >= c2.count);
     return !(n2 < c2.num && maxCount(n2) >= c2.count);
+  }
+  function canPick(i2) {
+    if (sel.includes(i2)) return true;
+    const card = hand[i2];
+    if (isDead(card)) return false;
+    const c2 = cur();
+    if (c2 && sel.length >= c2.count) return false;
+    const next = sel.map((k2) => hand[k2]).concat([card]);
+    if (effective(next) === null) return false;
+    if (c2 && next.every(isJ) && next.length >= c2.count) return false;
+    return true;
   }
   function effective(l2) {
     const r2 = l2.filter((x2) => !isJ(x2));
@@ -18734,43 +19270,73 @@ function mount(root) {
       if (ox !== nx || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  function rankTag(r2) {
+    const k2 = r2 + 1;
+    if (lang === "ko") return k2 + "\uB4F1";
+    const t2 = k2 % 10, h2 = k2 % 100;
+    const sfx = t2 === 1 && h2 !== 11 ? "st" : t2 === 2 && h2 !== 12 ? "nd" : t2 === 3 && h2 !== 13 ? "rd" : "th";
+    return k2 + sfx;
+  }
+  let seatNodes = [];
   function renderSeats() {
     syncRing();
     const box = el("seats");
-    box.innerHTML = "";
+    if (seatNodes.length !== SEATS.length || seatNodes.some((n2) => n2.parentNode !== box)) {
+      box.innerHTML = "";
+      seatNodes = SEATS.map(() => {
+        const n2 = document2.createElement("div");
+        box.appendChild(n2);
+        return n2;
+      });
+    }
     SEATS.forEach((s2, i2) => {
       const p2 = seatPos(i2);
-      const d2 = document2.createElement("div");
+      const d2 = seatNodes[i2];
       d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (turn === i2 && SEATS[i2].c > 0 ? " seat--turn" : "") + /* 봇 차례에도 표시 */
       (s2.s === "pass" ? " seat--pass" : "") + (s2.c === 0 ? " seat--out" : "");
+      if (i2 === 0 && s2.s === "pass" && passPressAt) {
+        evShow("  \u2192 \uD328\uC2A4 \uD45C\uC2DC\uAE4C\uC9C0 " + (Date.now() - passPressAt) + "ms");
+        passPressAt = 0;
+      }
       d2.style.left = p2.x.toFixed(1) + "%";
       d2.style.top = p2.y.toFixed(1) + "%";
       d2.dataset.nudge = p2.nudge || 0;
       d2.dataset.nudgex = p2.nudgeX || 0;
       const big = SEATS.length <= 6;
-      d2.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d2.style.setProperty("--av", "44px");
       d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
-      const tag = s2.c === 0 ? tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
+      const tag = s2.c === 0 ? s2.r >= 0 ? rankTag(s2.r) : tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
       const topSeat = i2 !== 0 && p2.y < 22;
       if (topSeat) d2.classList.add("seat--above");
-      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span>';
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(s2.av == null ? i2 : s2.av) + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s2.n || "") + "</span>";
       const fan = i2 === 0 ? "" : fanHTML(s2.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
-      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
-      box.appendChild(d2);
+      const html = topSeat ? fan + cnt + av + nm : av + nm + fan + cnt;
+      if (d2.__html !== html) {
+        d2.innerHTML = html;
+        d2.__html = html;
+      }
     });
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
   const outerTrick = () => trick;
+  let pileSig = null;
   function renderPile() {
     const p2 = el("pile");
-    p2.innerHTML = "";
     const shown = outerTrick().length ? outerTrick() : ghost;
     const trick2 = shown;
+    const r0 = el("ring").getBoundingClientRect();
+    const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" + Math.round(r0.height) + "|" + animated + "|" + /* **`flewKey` 를 부르면 안 된다.** 그 함수는 "이미 날아왔다"고 표시까지 해서,
+       표식을 만드는 것만으로 연출 상태를 먹어치운다.
+       그것 때문에 카드가 깜빡이고 앞사람 카드가 다시 날아왔다 */
+    trick2.map((t2) => t2.by + "-" + t2.num + "-" + t2.count).join(",");
+    if (sig === pileSig) return;
+    pileSig = sig;
+    p2.innerHTML = "";
     if (spread && trick2.length) {
       const t2 = T[lang];
       const maxC = Math.min(6, Math.max(...trick2.map((x2) => x2.count)));
@@ -18788,7 +19354,8 @@ function mount(root) {
       const k2 = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t2.by);
       const g2 = document2.createElement("div");
-      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
+      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (flewKey(trick2[k2]) ? "" : " play--new");
+      if (!flewKey(trick2[k2])) evShow("** \uB0A0\uC544\uC624\uB294 \uC5F0\uCD9C " + k2);
       const d2 = trick2.length - 1 - k2;
       g2.style.setProperty("--r", d2 === 0 ? "0deg" : k2 * 37 % 19 - 9 - d2 * 3 + "deg");
       g2.style.setProperty("--dy", -Math.min(d2, 3) * 6 + "px");
@@ -18802,27 +19369,47 @@ function mount(root) {
     });
     animated = trick2.length;
   }
+  let handNodes = [];
   function renderHand() {
     const h2 = el("hand");
-    h2.innerHTML = "";
     const w2 = 60, n2 = hand.length;
+    if (handNodes.length !== n2 || handNodes.some((x2) => x2.parentNode !== h2)) {
+      h2.innerHTML = "";
+      handNodes = hand.map((c2, i2) => {
+        const s2 = document2.createElement("div");
+        s2.__i = i2;
+        onTap(s2, () => {
+          handTouched();
+          if (turn !== 0 || busy) return;
+          const i3 = s2.__i;
+          const k2 = sel.indexOf(i3);
+          if (k2 >= 0) {
+            sel.splice(k2, 1);
+            draw();
+            return;
+          }
+          if (!canPick(i3)) return;
+          sel.push(i3);
+          draw();
+        });
+        h2.appendChild(s2);
+        return s2;
+      });
+    }
     const step = n2 > 1 ? Math.min(36, (h2.clientWidth - w2) / (n2 - 1)) : 0;
     const total = w2 + step * (n2 - 1);
     hand.forEach((c2, i2) => {
-      const s2 = document2.createElement("div");
-      s2.className = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (isDead(c2) ? " slot--dead" : "");
-      s2.style.left = (h2.clientWidth - total) / 2 + i2 * step + "px";
-      s2.style.zIndex = i2;
-      s2.innerHTML = cardHTML(c2, w2);
-      s2.onclick = () => {
-        handTouched();
-        if (turn !== 0 || busy) return;
-        const k2 = sel.indexOf(i2);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else sel.push(i2);
-        draw();
-      };
-      h2.appendChild(s2);
+      const s2 = handNodes[i2];
+      s2.__i = i2;
+      const cls = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (turn === 0 && !busy && !canPick(i2) ? " slot--dead" : "");
+      if (s2.className !== cls) s2.className = cls;
+      const left = (h2.clientWidth - total) / 2 + i2 * step + "px";
+      if (s2.style.left !== left) s2.style.left = left;
+      if (s2.style.zIndex !== String(i2)) s2.style.zIndex = i2;
+      if (s2.__card !== c2) {
+        s2.innerHTML = cardHTML(c2, w2);
+        s2.__card = c2;
+      }
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
   }
@@ -18842,14 +19429,12 @@ function mount(root) {
     };
     const rname = ri == null ? "" : lang === "ko" ? ri + 1 + "\uB4F1" : ord(ri + 1);
     el("round").textContent = t2.roundN(rn2) + (rname ? " \xB7 " + rname : "");
-    const eb = el("endRound");
-    if (eb) eb.textContent = t2.endR;
     el("pass").textContent = t2.pass;
     const list = sel.map((i2) => hand[i2]);
     const ok = legal(list) && turn === 0 && !busy;
     const b2 = el("play");
     b2.disabled = !ok;
-    b2.textContent = turn !== 0 ? t2.notTurn : !list.length ? t2.pick : ok ? t2.play(list.length) : effective(list) === null ? t2.mix : cur() && list.length !== cur().count ? t2.cnt(cur().count) : t2.lower;
+    b2.textContent = turn !== 0 ? t2.notTurn : ok ? t2.play(list.length) : cur() ? t2.play(cur().count) : t2.pick;
     el("pass").disabled = turn !== 0 || busy || !cur();
   }
   function draw() {
@@ -18858,6 +19443,8 @@ function mount(root) {
     renderPile();
     renderHand();
     renderBottom();
+    paintEmotes();
+    el("seats").querySelectorAll(".seat__tag").forEach(keepInView);
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -18867,17 +19454,26 @@ function mount(root) {
   const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
+  let showId = null;
   function resetTimer() {
+    if (showId) clearTimeout(showId);
+    showId = null;
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
+    stop("tick");
     tLeft = 0;
+    if (turn === 0 && !busy && !onScreen()) {
+      showId = setTimeout(resetTimer, 150);
+      return;
+    }
     if (turn === 0 && !busy) {
       tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
+        if (tLeft === 5) play("tick");
         if (tLeft <= 0) {
           clearInterval(tickId);
           tickId = null;
@@ -18902,32 +19498,225 @@ function mount(root) {
     if (numValue === 1) return true;
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
-  el("play").onclick = () => {
-    const list = sel.map((i2) => hand[i2]);
-    if (!legal(list) || turn !== 0 || busy) return;
-    const e = effective(list);
-    sel = [];
-    busy = true;
-    play(e, list.length);
-    iMoved();
-    unlockLater();
+  let touchAt = 0;
+  let tapX = 0, tapY = 0;
+  window.document.addEventListener("touchstart", (e) => {
+    const t2 = e.touches && e.touches[0];
+    if (t2) {
+      tapX = t2.clientX;
+      tapY = t2.clientY;
+    }
+  }, true);
+  let evBox = null;
+  const EVLOG = (() => {
+    try {
+      return String(location.search || "").indexOf("evlog") >= 0;
+    } catch (e) {
+      return false;
+    }
+  })();
+  function evShow(txt) {
+    try {
+      const L2 = window.__evLines = window.__evLines || [];
+      L2.push(txt);
+      if (L2.length > 40) L2.splice(0, L2.length - 40);
+    } catch (e) {
+    }
+    if (!EVLOG) return;
+    if (!evBox) {
+      evBox = window.document.createElement("div");
+      evBox.style.cssText = "position:fixed;left:4px;right:4px;top:4px;z-index:99999;background:rgba(0,0,0,.86);color:#7CFF9B;font:11px/1.35 monospace;padding:6px 8px;border-radius:4px;white-space:pre-wrap;max-height:36vh;overflow:auto";
+      window.document.body.appendChild(evBox);
+      evBox.onclick = () => {
+        evBox.textContent = "";
+      };
+    }
+    evBox.textContent = (txt + "\n" + evBox.textContent).slice(0, 1400);
+  }
+  function evWatch(node, tag) {
+    if (!EVLOG || !node) return;
+    ["touchstart", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click"].forEach((n2) => node.addEventListener(n2, (e) => {
+      evShow(tag + " " + n2 + (e.pointerType ? ":" + e.pointerType : "") + (e.cancelable ? "" : " (\uBABB\uB9C9\uC74C)") + " " + Date.now() % 1e5);
+    }, true));
+  }
+  const taps = [];
+  let tapDone = false;
+  function onTap(node, fn2) {
+    if (!node) return;
+    taps.push({ node, fn: fn2 });
+    evWatch(node, "");
+  }
+  const inNode = (node, x2, y2) => {
+    const r2 = node.getBoundingClientRect();
+    return x2 >= r2.left - 8 && x2 <= r2.right + 8 && y2 >= r2.top - 8 && y2 <= r2.bottom + 8;
   };
+  function hitTap(e, how) {
+    const x2 = e.clientX, y2 = e.clientY;
+    let aim = e.target;
+    let byPoint = false;
+    if (!aim || !taps.some((it) => it.node.isConnected && (it.node === aim || it.node.contains(aim)))) {
+      const top = x2 != null && window.document.elementFromPoint ? window.document.elementFromPoint(x2, y2) : null;
+      if (top) {
+        aim = top;
+        byPoint = true;
+      }
+    }
+    if (!aim) return;
+    for (let k2 = taps.length - 1; k2 >= 0; k2--) {
+      const it = taps[k2];
+      if (!it.node.isConnected) continue;
+      if (!(it.node === aim || it.node.contains(aim))) continue;
+      const r2 = it.node.getBoundingClientRect();
+      if (byPoint && r2.width > 0 && (!inNode(it.node, tapX, tapY) || !inNode(it.node, x2, y2))) return;
+      evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
+      tapDone = true;
+      it.fn(e);
+      return;
+    }
+  }
+  const tableSec = () => window.document.getElementById("table");
+  const rootOn = (name, fn2, opt) => {
+    const r2 = tableSec();
+    if (r2) r2.addEventListener(name, fn2, opt);
+  };
+  rootOn("pointerup", (e) => {
+    if (e.pointerType === "mouse") return;
+    tapDone = false;
+    hitTap(e, "\uC190\uAC00\uB77D");
+    if (tapDone) touchAt = Date.now();
+  }, true);
+  rootOn("touchend", (e) => {
+    if (tapDone && e.cancelable) e.preventDefault();
+  }, { passive: false, capture: true });
+  rootOn("click", (e) => {
+    if (Date.now() - touchAt < 900) {
+      evShow("  (click \uBC84\uB9BC)");
+      return;
+    }
+    if (e.button != null && e.button !== 0) return;
+    hitTap(e, "click");
+  }, true);
+  setInterval(() => {
+    for (let k2 = taps.length - 1; k2 >= 0; k2--)
+      if (!taps[k2].node.isConnected) taps.splice(k2, 1);
+  }, 5e3);
+  const WAIT_MAX = 2500;
+  let queued = null;
+  const seeQ = () => {
+    try {
+      window.__pressQ = queued ? { k: queued.kind, sent: queued.sentNo } : null;
+    } catch (e) {
+    }
+  };
+  let flushId = null;
+  function why(list) {
+    if (turn !== 0) return "\uB0B4 \uCC28\uB840\uAC00 \uC544\uB2D8";
+    if (busy) return "\uC544\uC9C1 \uCC98\uB9AC \uC911";
+    if (!legal(list)) return "\uBABB \uB0B4\uB294 \uC870\uD569";
+    return "";
+  }
+  function queueMove(kind) {
+    const list = kind === "play" ? sel.map((i2) => hand[i2]) : [];
+    queued = { kind, list, at: Date.now(), sentNo: -1 };
+    seeQ();
+    evShow("  (" + (kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + " \uB300\uAE30\uC5F4\uC5D0 \uB123\uC74C)");
+    flush2();
+  }
+  function flush2() {
+    if (flushId) {
+      clearTimeout(flushId);
+      flushId = null;
+    }
+    if (!queued) {
+      seeQ();
+      return;
+    }
+    const q2 = queued;
+    if (q2.sentNo >= 0) {
+      if (lastMoveNo > q2.sentNo) {
+        queued = null;
+        seeQ();
+        return;
+      }
+      if (Date.now() - q2.at > WAIT_MAX + 2e3) {
+        queued = null;
+        seeQ();
+        evShow("  (\uBCF4\uB0C8\uB294\uB370 \uD655\uC778\uC774 \uC548 \uB428)");
+        return;
+      }
+      flushId = setTimeout(flush2, 200);
+      return;
+    }
+    if (q2.kind === "pass" ? turn === 0 && !busy && cur() : turn === 0 && !busy && legal(q2.list)) {
+      q2.sentNo = lastMoveNo;
+      stop("tick");
+      pending = true;
+      pendingAt = Date.now();
+      pendingNo = lastMoveNo;
+      if (q2.kind === "play") {
+        pendingHand = hand.length;
+        sel = [];
+        play2(effective(q2.list), q2.list.length);
+      } else {
+        pendingHand = -1;
+        passHeld = lastTrick;
+        passPressAt = Date.now();
+        passTurn();
+      }
+      busy = true;
+      iMoved();
+      unlockLater();
+      evShow("  \u2192 \uBCF4\uB0C4(" + (q2.kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + ")");
+      flushId = setTimeout(flush2, 200);
+      return;
+    }
+    if (Date.now() - q2.at > WAIT_MAX) {
+      evShow("  (\uB300\uAE30\uC5F4 \uBC84\uB9BC: " + why(q2.list) + ")");
+      queued = null;
+      seeQ();
+      return;
+    }
+    flushId = setTimeout(flush2, 120);
+  }
+  onTap(el("play"), () => queueMove("play"));
   let unlockId = null;
+  function viewSig(v2) {
+    if (!v2) return "";
+    return v2.turn + "|" + (v2.table || []).length + "|" + (v2.seats || []).map((x2) => x2.c + (x2.s || "")).join(",");
+  }
   function unlockLater() {
     if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
+    const sent = viewSig(engine.view);
+    let tries = 0;
+    const look = () => {
       unlockId = null;
       const v2 = engine.view;
-      if (v2 && v2.myTurn && busy) {
+      if (!busy) return;
+      if (viewSig(v2) !== sent) {
+        return;
+      }
+      if (++tries < 5) {
+        unlockId = setTimeout(look, 1200);
+        return;
+      }
+      if (v2 && v2.myTurn) {
         busy = false;
         draw();
       }
-    }, 1200);
+    };
+    unlockId = setTimeout(look, 1200);
   }
   function iMoved() {
     if (window.__iMoved) window.__iMoved();
   }
   function doPass(auto) {
+    if (!auto) {
+      if (timerId) clearTimeout(timerId);
+      if (!cur()) return;
+      evShow("\uD328\uC2A4 \uB204\uB984");
+      queueMove("pass");
+      return;
+    }
     if (turn !== 0 || busy) return;
     if (timerId) clearTimeout(timerId);
     if (!cur()) {
@@ -18937,12 +19726,20 @@ function mount(root) {
       sel = [];
       busy = true;
       flash(T[lang].autoPass, true);
-      play(w2.num, w2.count);
+      play2(w2.num, w2.count);
       if (auto) toAuto();
       return;
     }
     sel = [];
     busy = true;
+    stop("tick");
+    pending = true;
+    pendingHand = -1;
+    pendingAt = Date.now();
+    pendingNo = lastMoveNo;
+    passHeld = lastTrick;
+    passPressAt = Date.now();
+    evShow("\uD328\uC2A4 \uB204\uB984");
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();
@@ -18962,11 +19759,13 @@ function mount(root) {
     if (best !== null) return { num: best, count: 1 };
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
-  el("pass").onclick = () => doPass(false);
+  onTap(el("pass"), () => doPass(false));
   function setAuto2(on3) {
     setAuto(on3);
     const b2 = el("auto");
-    b2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
+    b2.setAttribute("aria-pressed", String(Boolean(on3)));
+    const t2 = b2.querySelector("span");
+    if (t2) t2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
     b2.classList.toggle("on", on3);
     if (on3) {
       sel = [];
@@ -18975,9 +19774,118 @@ function mount(root) {
     }
   }
   el("auto").onclick = () => setAuto2(!engine.auto);
+  const EMO_SHOW = 1e3, EMO_COOL = 2500;
+  let emoUntil = 0;
+  const emoTimers = {};
+  function emoText(k2) {
+    const e = EMOTES.find((x2) => x2.k === k2);
+    return e ? lang === "ko" ? e.ko : e.en : "";
+  }
+  function emoImg(k2) {
+    const e = EMOTES.find((x2) => x2.k === k2);
+    return e ? e.img : "";
+  }
+  function esc(x2) {
+    return String(x2).replace(/[&<>"]/g, (c2) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c2]);
+  }
+  function emoPickOpen(on3) {
+    const p2 = el("emopick");
+    if (!on3) {
+      p2.hidden = true;
+      p2.innerHTML = "";
+      return;
+    }
+    p2.innerHTML = EMOTES.map((e) => '<button type="button" data-k="' + esc(e.k) + '"><span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span><span class="emoimg" style="background-image:url(' + e.img + ')"></span></button>').join("");
+    p2.hidden = false;
+    const h2 = el("hand");
+    if (h2 && p2.offsetParent) {
+      const ph = p2.offsetParent.getBoundingClientRect();
+      const hb = h2.getBoundingClientRect();
+      p2.style.bottom = Math.round(ph.bottom - hb.top + 4) + "px";
+      p2.style.top = "auto";
+    }
+    p2.querySelectorAll("button").forEach((b2) => {
+      b2.onclick = () => {
+        emoSend(b2.dataset.k);
+        emoPickOpen(false);
+      };
+    });
+  }
+  function emoSend(k2) {
+    const now2 = Date.now();
+    if (now2 < emoUntil) return;
+    emoUntil = now2 + EMO_COOL;
+    paintEmoBtn();
+    setTimeout(paintEmoBtn, EMO_COOL + 20);
+    sendEmote(k2);
+  }
+  function paintEmoBtn() {
+    const b2 = el("emo");
+    if (!b2) return;
+    b2.textContent = T[lang].emoBtn;
+    b2.disabled = Date.now() < emoUntil;
+  }
+  const emoNow = {};
+  function paintEmote(pos) {
+    const layer = el("emolayer");
+    const seats = el("seats");
+    const d2 = seats && seats.children[pos];
+    if (!layer || !d2) return;
+    const old = layer.querySelector('[data-pos="' + pos + '"]');
+    if (old) old.remove();
+    const cur2 = emoNow[pos];
+    const wrap = d2.querySelector(".seat__avwrap");
+    const tag = wrap && wrap.querySelector(".seat__tag");
+    if (!cur2 || Date.now() >= cur2.until) {
+      if (tag) tag.style.visibility = "";
+      return;
+    }
+    if (tag) tag.style.visibility = "hidden";
+    const av = d2.querySelector(".seat__av");
+    if (!av) return;
+    const box = document2.createElement("span");
+    box.className = "seat__emo";
+    box.dataset.pos = String(pos);
+    box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
+    if (cur2.shown) box.style.animation = "none";
+    else cur2.shown = true;
+    layer.appendChild(box);
+    const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
+    box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";
+    box.style.bottom = Math.round(lb.bottom - ab.bottom - 10) + "px";
+    keepInView(box);
+  }
+  function keepInView(box) {
+    if (!box) return;
+    const stage = window.document.getElementById("stage") || window.document.documentElement;
+    const W2 = stage.getBoundingClientRect();
+    const r2 = box.getBoundingClientRect();
+    if (!r2.width) return;
+    let dx = 0;
+    if (r2.left < W2.left + 2) dx = W2.left + 2 - r2.left;
+    else if (r2.right > W2.right - 2) dx = W2.right - 2 - r2.right;
+    box.style.marginLeft = dx ? Math.round(dx) + "px" : "";
+  }
+  function paintEmotes() {
+    Object.keys(emoNow).forEach((p2) => paintEmote(Number(p2)));
+  }
+  function showEmote(pos, k2) {
+    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW, shown: false };
+    paintEmote(pos);
+    if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
+    emoTimers[pos] = setTimeout(() => {
+      delete emoNow[pos];
+      emoTimers[pos] = null;
+      paintEmote(pos);
+    }, EMO_SHOW);
+  }
+  el("emo").onclick = () => {
+    if (Date.now() < emoUntil) return;
+    emoPickOpen(el("emopick").hidden);
+  };
   function flash(msg, msLong) {
     const f2 = el("flash");
-    f2.textContent = msg;
+    f2.innerHTML = String(msg).split("\n").map((x2) => x2.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch])).join("<br>");
     f2.style.opacity = 1;
     setTimeout(() => f2.style.opacity = 0, msLong ? 2200 : 1200);
   }
@@ -18987,14 +19895,6 @@ function mount(root) {
       spread = !spread;
       renderPile();
     }
-  });
-  document2.querySelectorAll("#lang button").forEach((b2) => {
-    b2.addEventListener("click", () => {
-      lang = b2.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
-      draw();
-    });
   });
   boot();
   window.addEventListener("resize", draw);
@@ -19006,20 +19906,15 @@ function mount(root) {
 
 // src/screens/_markup.js
 var MARKUP = {
-  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
-  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
+  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
   "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
   "table": `<main class="screen">
   <div class="bar">
     <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
     <div class="bar__r" id="round"></div>
-    <div style="display:flex;align-items:center;gap:9px">
-      <div class="lang" id="lang">
-        <button data-l="ko" aria-pressed="true">\uD55C</button>
-        <button data-l="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
+    <span class="bar__sp"></span>
   </div>
 
   <div class="ring" id="ring">
@@ -19030,18 +19925,24 @@ var MARKUP = {
     </div></div>
   </div>
 
-  <div class="need" id="need"></div>
+  <div class="needrow">
+    <button class="autotiny" id="auto" aria-pressed="false"><i></i><span></span></button>
+    <div class="need" id="need"></div>
+  </div>
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
+  <div class="emolayer" id="emolayer"></div>
+  <div class="emopick" id="emopick" hidden></div>
   <div class="acts">
-    <button class="bt-pass" id="auto">\uC790\uB3D9</button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
+    <button class="bt-pass bt-emo" id="emo" aria-label="\uAC10\uC815\uD45C\uD604"></button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
     <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
   </div>
 </main>
 
 <div id="flash" style="position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);
-  padding:12px 22px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
-  font-family:'Gowun Batang',serif;font-weight:700;font-size:16px;opacity:0;pointer-events:none;
+  padding:11px 20px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:15px;line-height:1.5;text-align:center;
+  max-width:74%;opacity:0;pointer-events:none;
   transition:opacity .2s ease;z-index:50"></div>`,
   "tax": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div style="display:flex;gap:6px">\n      <div class="lang" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="ring">\n    <div class="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="fx" id="fx"></div>\n      <div class="flash" id="flash"></div>\n      <div class="mid" id="mid"></div>\n    </div>\n  </div>\n\n  <div class="hint" id="hint"></div>\n  <div class="hand" id="hand"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="back"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>',
   "result": '<main class="screen">\n  <div class="lang" id="lang">\n    <button data-l="ko" aria-pressed="true">\uD55C</button>\n    <button data-l="en" aria-pressed="false">EN</button>\n  </div>\n  <div class="head">\n    <div class="head__k" id="kicker"></div>\n    <div class="head__t" id="title"></div>\n    <div class="head__s" id="sub"></div>\n  </div>\n  <div class="legend" id="legend"></div>\n  <div class="list" id="list"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="quit"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>'

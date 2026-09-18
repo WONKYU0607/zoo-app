@@ -780,20 +780,15 @@ var require_setImmediate = __commonJS({
 
 // src/screens/_markup.js
 var MARKUP = {
-  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="lang" id="lang">\n  <button data-l="ko" aria-pressed="true">\uD55C\uAD6D\uC5B4</button>\n  <button data-l="en" aria-pressed="false">EN</button>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">5</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
-  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n      <div class="view" id="view">\n        <button data-v="host" aria-pressed="true">\uBC29\uC7A5</button>\n        <button data-v="guest" aria-pressed="false">\uCC38\uAC00\uC790</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
+  "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
   "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
   "table": `<main class="screen">
   <div class="bar">
     <button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>
     <div class="bar__r" id="round"></div>
-    <div style="display:flex;align-items:center;gap:9px">
-      <div class="lang" id="lang">
-        <button data-l="ko" aria-pressed="true">\uD55C</button>
-        <button data-l="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
+    <span class="bar__sp"></span>
   </div>
 
   <div class="ring" id="ring">
@@ -804,22 +799,263 @@ var MARKUP = {
     </div></div>
   </div>
 
-  <div class="need" id="need"></div>
+  <div class="needrow">
+    <button class="autotiny" id="auto" aria-pressed="false"><i></i><span></span></button>
+    <div class="need" id="need"></div>
+  </div>
   <div class="timer" id="timer"><i></i></div>
   <div class="hand" id="hand"></div>
+  <div class="emolayer" id="emolayer"></div>
+  <div class="emopick" id="emopick" hidden></div>
   <div class="acts">
-    <button class="bt-pass" id="auto">\uC790\uB3D9</button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
+    <button class="bt-pass bt-emo" id="emo" aria-label="\uAC10\uC815\uD45C\uD604"></button><button class="bt-pass" id="pass">\uD328\uC2A4</button>
     <button class="bt-play" id="play" disabled>\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694</button>
   </div>
 </main>
 
 <div id="flash" style="position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);
-  padding:12px 22px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
-  font-family:'Gowun Batang',serif;font-weight:700;font-size:16px;opacity:0;pointer-events:none;
+  padding:11px 20px;border:1px solid var(--gold);border-radius:3px;background:rgba(10,18,13,.94);
+  font-family:'Gowun Batang',serif;font-weight:700;font-size:15px;line-height:1.5;text-align:center;
+  max-width:74%;opacity:0;pointer-events:none;
   transition:opacity .2s ease;z-index:50"></div>`,
   "tax": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div style="display:flex;gap:6px">\n      <div class="lang" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="ring">\n    <div class="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="fx" id="fx"></div>\n      <div class="flash" id="flash"></div>\n      <div class="mid" id="mid"></div>\n    </div>\n  </div>\n\n  <div class="hint" id="hint"></div>\n  <div class="hand" id="hand"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="back"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>',
   "result": '<main class="screen">\n  <div class="lang" id="lang">\n    <button data-l="ko" aria-pressed="true">\uD55C</button>\n    <button data-l="en" aria-pressed="false">EN</button>\n  </div>\n  <div class="head">\n    <div class="head__k" id="kicker"></div>\n    <div class="head__t" id="title"></div>\n    <div class="head__s" id="sub"></div>\n  </div>\n  <div class="legend" id="legend"></div>\n  <div class="list" id="list"></div>\n  <div class="acts">\n    <button class="bt-ghost" id="quit"></button>\n    <button class="bt-main" id="next"></button>\n  </div>\n</main>'
 };
+
+// src/lib/assets.js
+var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
+var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
+var LOBBY_ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp" };
+var HERO = { "02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp" };
+var AVATARS = [
+  { f: "assets/avt_01.webp", ko: "\uC0DD\uC950", en: "Mouse", need: 0 },
+  { f: "assets/avt_02.webp", ko: "\uC0C8", en: "Bird", need: 0 },
+  { f: "assets/avt_03.webp", ko: "\uD1A0\uB07C", en: "Rabbit", need: 0 },
+  { f: "assets/avt_04.webp", ko: "\uC6D0\uC22D\uC774", en: "Monkey", need: 0 },
+  { f: "assets/avt_05.webp", ko: "\uBA67\uB3FC\uC9C0", en: "Boar", need: 0 },
+  { f: "assets/avt_06.webp", ko: "\uAE30\uB9B0", en: "Giraffe", need: 5e3 },
+  { f: "assets/avt_07.webp", ko: "\uC5EC\uC6B0", en: "Fox", need: 1e4 },
+  { f: "assets/avt_08.webp", ko: "\uC545\uC5B4", en: "Croc", need: 15e3 },
+  { f: "assets/avt_09.webp", ko: "\uCF54\uB07C\uB9AC", en: "Elephant", need: 2e4 },
+  { f: "assets/avt_10.webp", ko: "\uBD88\uACF0", en: "Bear", need: 25e3 },
+  { f: "assets/avt_11.webp", ko: "\uD638\uB791\uC774", en: "Tiger", need: 3e4 },
+  { f: "assets/avt_12.webp", ko: "\uC0AC\uC790", en: "Lion", need: 35e3 },
+  { f: "assets/avt_13.webp", ko: "\uACE0\uC591\uC774", en: "Cat", need: 4e4 },
+  { f: "assets/avt_14.webp", ko: "\uC6A9", en: "Dragon", need: 45e3 },
+  { f: "assets/avt_15.webp", ko: "\uC720\uB2C8\uCF58", en: "Unicorn", need: 5e4 }
+];
+var AVT_FREE = 5;
+var avtFile = (i2) => (AVATARS[i2] || AVATARS[0]).f;
+var EMOTES = [
+  { k: "tiger", img: "assets/emote_tiger.webp", ko: "\uBE68\uB9AC\uBE68\uB9AC", en: "HURRY UP" },
+  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "\uAC10\uC0AC", en: "THANKS" },
+  { k: "bear", img: "assets/emote_bear.webp", ko: "\u3160\u3160", en: "SO SAD" },
+  { k: "monkey", img: "assets/emote_monkey.webp", ko: "\uD489\u314B\u314B", en: "LOL" },
+  { k: "lion", img: "assets/emote_lion.webp", ko: "\uC544\uC624..!", en: "ARGH...!" }
+];
+var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
+
+// src/lib/sound.js
+var KEY = { bgm: "zk_vol_bgm", sfx: "zk_vol_sfx", mute: "zk_mute" };
+function readNum(k2, dflt) {
+  try {
+    const v2 = localStorage.getItem(k2);
+    if (v2 == null) return dflt;
+    const n2 = Number(v2);
+    return Number.isFinite(n2) ? Math.max(0, Math.min(100, n2)) : dflt;
+  } catch (e) {
+    return dflt;
+  }
+}
+function readBool(k2) {
+  try {
+    return localStorage.getItem(k2) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+function write(k2, v2) {
+  try {
+    localStorage.setItem(k2, String(v2));
+  } catch (e) {
+  }
+}
+var sound = {
+  bgm: readNum(KEY.bgm, 50),
+  sfx: readNum(KEY.sfx, 50),
+  muted: readBool(KEY.mute)
+};
+var bgmGain = () => sound.muted ? 0 : sound.bgm / 100;
+var sfxGain = () => sound.muted ? 0 : sound.sfx / 100;
+var fns = [];
+function onSound(fn2) {
+  fns.push(fn2);
+  return () => {
+    const i2 = fns.indexOf(fn2);
+    if (i2 >= 0) fns.splice(i2, 1);
+  };
+}
+function tell() {
+  applyBgm();
+  fns.forEach((f2) => {
+    try {
+      f2(sound);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+function setBgm(v2) {
+  sound.bgm = Math.max(0, Math.min(100, Number(v2) || 0));
+  write(KEY.bgm, sound.bgm);
+  tell();
+}
+function setSfx(v2) {
+  sound.sfx = Math.max(0, Math.min(100, Number(v2) || 0));
+  write(KEY.sfx, sound.sfx);
+  tell();
+}
+function setMuted(on3) {
+  sound.muted = Boolean(on3);
+  write(KEY.mute, sound.muted ? 1 : 0);
+  tell();
+}
+function toggleMute() {
+  setMuted(!sound.muted);
+  return sound.muted;
+}
+var SFX = {
+  card_play: "assets/snd/card_play.webm",
+  /* 카드 낼 때 */
+  card_deal: "assets/snd/card_deal.webm",
+  /* 패 나눌 때 */
+  pass: "assets/snd/pass.webm",
+  my_turn: "assets/snd/my_turn.webm",
+  win: "assets/snd/win.webm",
+  /* 완주 */
+  lose: "assets/snd/lose.webm",
+  button: "assets/snd/button.webm",
+  revolution: "assets/snd/revolution.webm",
+  tick: "assets/snd/tick.webm",
+  /* 남은 시간 */
+  join: "assets/snd/join.webm"
+  /* 대기실에 들어올 때 */
+};
+var BGM = {
+  lobby: "assets/snd/bgm_lobby.webm"
+};
+var POOL = 4;
+var pool = {};
+function voices(src) {
+  if (!pool[src]) {
+    pool[src] = { i: 0, list: Array.from({ length: POOL }, () => {
+      const a2 = new Audio(src);
+      a2.preload = "auto";
+      try {
+        a2.load();
+      } catch (e) {
+      }
+      return a2;
+    }) };
+  }
+  return pool[src];
+}
+function warm() {
+  Object.keys(SFX).forEach((k2) => {
+    try {
+      voices(SFX[k2]);
+    } catch (e) {
+    }
+  });
+}
+function stop(name) {
+  const src = SFX[name];
+  if (!src || !pool[src]) return;
+  pool[src].list.forEach((a2) => {
+    try {
+      a2.pause();
+      a2.currentTime = 0;
+    } catch (e) {
+    }
+  });
+}
+function play(name) {
+  const src = SFX[name];
+  if (!src) return;
+  const g2 = sfxGain();
+  if (g2 <= 0) return;
+  try {
+    const v2 = voices(src);
+    const a2 = v2.list[v2.i];
+    v2.i = (v2.i + 1) % v2.list.length;
+    try {
+      a2.currentTime = 0;
+    } catch (e) {
+    }
+    a2.volume = g2;
+    const p2 = a2.play();
+    if (p2 && p2.catch) p2.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+var bgmEl = null;
+var bgmName = "";
+function playBgm(name) {
+  const src = BGM[name];
+  if (!src) {
+    stopBgm();
+    return;
+  }
+  if (bgmName === name && bgmEl) {
+    applyBgm();
+    return;
+  }
+  stopBgm();
+  try {
+    bgmEl = new Audio(src);
+    bgmEl.loop = true;
+    bgmEl.volume = bgmGain();
+    bgmName = name;
+    try {
+      window.__bgmOn = true;
+    } catch (e) {
+    }
+    const p2 = bgmEl.play();
+    if (p2 && p2.catch) p2.catch(() => {
+    });
+  } catch (e) {
+  }
+}
+function stopBgm() {
+  if (bgmEl) {
+    try {
+      bgmEl.pause();
+    } catch (e) {
+    }
+  }
+  bgmEl = null;
+  bgmName = "";
+  try {
+    window.__bgmOn = false;
+  } catch (e) {
+  }
+}
+function applyBgm() {
+  if (!bgmEl) return;
+  const g2 = bgmGain();
+  bgmEl.volume = g2;
+  if (g2 <= 0) {
+    try {
+      bgmEl.pause();
+    } catch (e) {
+    }
+  } else {
+    const p2 = bgmEl.play();
+    if (p2 && p2.catch) p2.catch(() => {
+    });
+  }
+}
 
 // src/state.js
 var opts = { cap: 4, rounds: 3, tax: true, clear2: false, seated: 0 };
@@ -845,8 +1081,8 @@ if (typeof window !== "undefined") {
 var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
 var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
 var PENCIL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>';
-var ACCT_HTML = '<div class="cfg" id="acctBox" role="dialog" aria-modal="true"><div class="cfg__v" data-acctclose></div><div class="cfg__p"><div class="cfg__h"><span id="acBoxT"></span><button class="cfg__x" data-acctclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="ac__name"><span id="acNick"></span><button id="acName" class="ac__edit" aria-label="rename"></button></div><p class="cfg__n" id="acLine"></p><div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div><div class="cfg__row"><button id="acOut"></button></div></div></div></div>';
-var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p></div></div></div>';
+var ACCT_HTML = '<div class="cfg" id="acctBox" role="dialog" aria-modal="true"><div class="cfg__v" data-acctclose></div><div class="cfg__p"><div class="cfg__h"><span id="acBoxT"></span><button class="cfg__x" data-acctclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="ac__name"><span id="acNick"></span><button id="acName" class="ac__edit" aria-label="rename"></button></div><p class="cfg__n" id="acLine"></p><div class="cfg__l" id="acAvtL"></div><div class="avt" id="acAvt"></div><div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div><div class="cfg__row"><button id="acOut"></button></div></div></div></div>';
+var CFG_HTML = '<div class="cfg" id="cfg" role="dialog" aria-modal="true"><div class="cfg__v" data-cfgclose></div><div class="cfg__p"><div class="cfg__h"><span id="cfgT"></span><button class="cfg__x" data-cfgclose aria-label="close">\xD7</button></div><div class="cfg__b"><div class="cfg__l" id="cfgLangL"></div><div class="cfg__row"><button data-l="ko">\uD55C\uAD6D\uC5B4</button><button data-l="en">English</button></div><p class="cfg__n" id="cfgNote"></p><div class="cfg__l" id="cfgVolL"></div><div class="vol"><span class="vol__n" id="volBgmN"></span><input class="vol__b" id="volBgm" type="range" min="0" max="100" step="5"><span class="vol__v" id="volBgmV"></span></div><div class="vol"><span class="vol__n" id="volSfxN"></span><input class="vol__b" id="volSfx" type="range" min="0" max="100" step="5"><span class="vol__v" id="volSfxV"></span></div></div></div></div>';
 function initNav() {
   window.__lang = function() {
     try {
@@ -886,6 +1122,7 @@ function initNav() {
       rnd: ["\uD50C\uB808\uC774 \uD310 \uC218 \uC124\uC815", "\uCD5C\uC18C 3\uD310\uBD80\uD130 \uC2DC\uC791"],
       tax: ["\uC138\uAE08\uACFC \uD601\uBA85", "\uB4F1\uC218\uC5D0 \uB530\uB77C \uCE74\uB4DC\uB97C \uAD50\uD658\uD558\uACE0, \uC870\uCEE4 \uB450 \uC7A5\uC73C\uB85C \uC21C\uC704\uB97C \uB4A4\uC9D1\uB294 \uADDC\uCE59\uC785\uB2C8\uB2E4."],
       cut: ["2\uBC88 \uCEF7", "2\uBC88 \uCE74\uB4DC\uB97C \uB0B4\uBA74 \uBC14\uB2E5\uC744 \uBE44\uC6B0\uACE0 \uB2E4\uC2DC \uC120\uC744 \uC7A1\uC2B5\uB2C8\uB2E4."],
+      friends: ["\uCE5C\uAD6C\uB4E4\uB07C\uB9AC \uD558\uAE30", ""],
       unit: "\uD310"
     },
     en: {
@@ -897,6 +1134,7 @@ function initNav() {
       rnd: ["Number of rounds", "Three at least"],
       tax: ["Tax and revolution", "Cards change hands by standing, and two jokers overturn it."],
       cut: ["Two-cut", "Playing a 2 clears the pile and you lead again."],
+      friends: ["Friends only", ""],
       unit: ""
     }
   };
@@ -914,7 +1152,7 @@ function initNav() {
     const mk = optMode === "create";
     document.getElementById("optT").textContent = mk ? t2.create : t2.edit;
     document.getElementById("optGo").textContent = mk ? t2.goCreate : t2.goEdit;
-    document.getElementById("optBody").innerHTML = optRow(t2.cap, optStep("cap", o2.cap, 4, 8)) + optRow(t2.rnd, optStep("rnd", o2.rounds, 3, 99, t2.unit)) + optRow(t2.tax, optSw("tax", o2.tax)) + optRow(t2.cut, optSw("cut", o2.clear2));
+    document.getElementById("optBody").innerHTML = optRow(t2.cap, optStep("cap", o2.cap, 4, 8)) + optRow(t2.rnd, optStep("rnd", o2.rounds, 3, 99, t2.unit)) + optRow(t2.tax, optSw("tax", o2.tax)) + optRow(t2.cut, optSw("cut", o2.clear2)) + optRow(t2.friends, optSw("friends", o2.friends));
   }
   function openOpts(mode) {
     optMode = mode;
@@ -931,6 +1169,7 @@ function initNav() {
       if (v2 === "rnd+") o2.rounds = o2.rounds + 1;
       if (v2 === "tax") o2.tax = !o2.tax;
       if (v2 === "cut") o2.clear2 = !o2.clear2;
+      if (v2 === "friends") o2.friends = !o2.friends;
       optRender();
     }
     if (e.target.closest("[data-optclose]")) document.getElementById("opts").classList.remove("on");
@@ -969,11 +1208,297 @@ function initNav() {
     document.getElementById("cfgT").textContent = t2.title;
     document.getElementById("cfgLangL").textContent = t2.lang;
     document.getElementById("cfgNote").textContent = "";
+    paintVol();
     document.getElementById("cfg").classList.add("on");
   }
+  function paintVol() {
+    const ko = (window.__lang || "ko") === "ko";
+    const set2 = (id, v2) => {
+      const e = document.getElementById(id);
+      if (e) e.textContent = v2;
+    };
+    set2("cfgVolL", ko ? "\uC74C\uB7C9" : "Volume");
+    set2("volBgmN", ko ? "\uBC30\uACBD\uC74C\uC545" : "Music");
+    set2("volSfxN", ko ? "\uD6A8\uACFC\uC74C" : "Effects");
+    set2("volBgmV", sound.bgm + "");
+    set2("volSfxV", sound.sfx + "");
+    const b2 = document.getElementById("volBgm"), f2 = document.getElementById("volSfx");
+    if (b2) b2.value = String(sound.bgm);
+    if (f2) f2.value = String(sound.sfx);
+  }
+  function paintMute() {
+    const b2 = document.getElementById("btMute");
+    if (!b2) return;
+    b2.setAttribute("aria-pressed", String(!sound.muted));
+    b2.classList.toggle("is-off", sound.muted);
+    b2.setAttribute("aria-label", sound.muted ? "\uC18C\uB9AC \uCF1C\uAE30" : "\uC18C\uB9AC \uB044\uAE30");
+  }
+  document.addEventListener("input", (e) => {
+    if (e.target.id === "volBgm") {
+      setBgm(e.target.value);
+      paintVol();
+    }
+    if (e.target.id === "volSfx") {
+      setSfx(e.target.value);
+      paintVol();
+    }
+  });
+  let lastBtnAt = 0;
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#btMute")) {
+      toggleMute();
+      paintMute();
+      paintVol();
+      return;
+    }
+    const b2 = e.target.closest("button");
+    const now2 = (document.querySelector(".page.is-on") || {}).id || "entry";
+    const quiet = e.target.closest(".emopick") || e.target.closest("#emo");
+    const t2 = Date.now();
+    if (t2 - lastBtnAt < 350) return;
+    if (b2 && !b2.disabled && now2 !== "entry" && !quiet) {
+      lastBtnAt = t2;
+      play("button");
+    }
+  });
+  let touched = false;
+  onSound(() => {
+    paintMute();
+  });
+  const esc = (t2) => String(t2 == null ? "" : t2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const FR_T = {
+    ko: {
+      title: "\uCE5C\uAD6C",
+      list: "\uBAA9\uB85D",
+      add: "\uCD94\uAC00",
+      rank: "\uC21C\uC704",
+      find: "\uBCC4\uBA85\uC73C\uB85C \uCC3E\uAE30",
+      search: "\uCC3E\uAE30",
+      none: "\uC544\uC9C1 \uCE5C\uAD6C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4",
+      noReq: "",
+      online: "\uC811\uC18D \uC911",
+      inGame: "\uAC8C\uC784 \uC911",
+      off: "\uC624\uD504\uB77C\uC778",
+      invite: "\uCD08\uB300",
+      del: "\uC0AD\uC81C",
+      accept: "\uC218\uB77D",
+      no: "\uAC70\uC808",
+      req: "\uBC1B\uC740 \uC2E0\uCCAD",
+      sent: "\uC2E0\uCCAD\uD588\uC2B5\uB2C8\uB2E4",
+      already: "\uC774\uBBF8 \uCE5C\uAD6C\uC785\uB2C8\uB2E4",
+      notFound: "\uADF8\uB7F0 \uBCC4\uBA85\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
+      self: "\uC790\uAE30 \uC790\uC2E0\uC740 \uC548 \uB429\uB2C8\uB2E4",
+      needRoom: "\uBC29\uC5D0 \uC788\uC744 \uB54C\uB9CC \uBD80\uB97C \uC218 \uC788\uC2B5\uB2C8\uB2E4",
+      invited: "\uBD88\uB800\uC2B5\uB2C8\uB2E4",
+      busy: "\uAC8C\uC784 \uC911\uC774\uB77C \uBABB \uBD80\uB985\uB2C8\uB2E4",
+      pts: "\uC810"
+    },
+    en: {
+      title: "Friends",
+      list: "List",
+      add: "Add",
+      rank: "Rank",
+      find: "Find by name",
+      search: "Find",
+      none: "No friends yet",
+      noReq: "",
+      online: "Online",
+      inGame: "In game",
+      off: "Offline",
+      invite: "Invite",
+      del: "Remove",
+      accept: "Accept",
+      no: "Decline",
+      req: "Requests",
+      sent: "Request sent",
+      already: "Already friends",
+      notFound: "No such name",
+      self: "That's you",
+      needRoom: "Open a room first",
+      invited: "Invited",
+      busy: "They're in a game",
+      pts: "pts"
+    }
+  };
+  let frTab = "list";
+  let frInviteMode = false;
+  const FR = () => window.__friends || {};
+  const frT = () => FR_T[window.__lang] || FR_T.ko;
+  function frNote(msg) {
+    const e = document.getElementById("frNote");
+    if (e) e.textContent = msg || "";
+  }
+  async function frPaint() {
+    const t2 = frT();
+    const box = document.getElementById("frBody");
+    if (!box) return;
+    document.getElementById("frT").textContent = frInviteMode ? (window.__lang || "ko") === "ko" ? "\uCE5C\uAD6C \uBD80\uB974\uAE30" : "Invite a friend" : t2.title;
+    document.querySelector('[data-frtab="list"]').textContent = t2.list;
+    document.querySelector('[data-frtab="add"]').textContent = t2.add;
+    document.querySelector('[data-frtab="rank"]').textContent = t2.rank;
+    document.querySelectorAll("[data-frtab]").forEach((b2) => b2.setAttribute("aria-pressed", String(b2.dataset.frtab === frTab)));
+    document.getElementById("frFind").hidden = frTab !== "add";
+    document.getElementById("frSearch").textContent = t2.search;
+    document.getElementById("frName").placeholder = t2.find;
+    const want = frTab;
+    let html = "";
+    if (frTab === "add") {
+      const reqs = await FR().incoming();
+      html = !reqs.length ? "" : '<div class="fr__h">' + t2.req + "</div>" + reqs.map((r2) => '<div class="fr__row"><span class="fr__n">' + esc(r2.name || "") + '</span><button class="fr__b" data-fraccept="' + r2.uid + '" data-frname="' + esc(r2.name || "") + '">' + t2.accept + '</button><button class="fr__b fr__b--off" data-frno="' + r2.uid + '">' + t2.no + "</button></div>").join("");
+    } else if (frTab === "rank") {
+      const rows = await FR().friendRank();
+      html = rows.map((r2, i2) => '<div class="fr__row' + (r2.mine ? " fr__row--me" : "") + '"><span class="fr__k">' + (i2 + 1) + '</span><span class="fr__n">' + esc(r2.name || "") + '</span><span class="fr__s">' + (r2.score || 0).toLocaleString() + t2.pts + "</span></div>").join("");
+    } else {
+      const rows = await FR().listFriends();
+      html = !rows.length ? '<p class="cfg__n">' + t2.none + "</p>" : rows.map((r2) => {
+        const where = !r2.online ? t2.off : r2.state === "game" ? t2.inGame : t2.online;
+        const dot = !r2.online ? "off" : r2.state === "game" ? "game" : "on";
+        if (frInviteMode) {
+          const busy = r2.online && r2.state === "game";
+          return '<div class="fr__row' + (busy || !r2.online ? " fr__row--off" : "") + '"' + (busy || !r2.online ? "" : ' data-frinv="' + r2.uid + '"') + '><i class="fr__dot fr__dot--' + dot + '"></i><span class="fr__n">' + esc(r2.name || "") + '</span><span class="fr__w">' + (busy ? t2.busy : where) + "</span></div>";
+        }
+        return '<div class="fr__row"><i class="fr__dot fr__dot--' + dot + '"></i><span class="fr__n">' + esc(r2.name || "") + '</span><span class="fr__w">' + where + '</span><button class="fr__b fr__b--off" data-frdel="' + r2.uid + '">' + t2.del + "</button></div>";
+      }).join("");
+    }
+    if (want !== frTab) return;
+    box.innerHTML = html;
+  }
+  window.__openFriends = (mode) => {
+    frInviteMode = mode === "invite";
+    frTab = "list";
+    frNote("");
+    document.getElementById("frBox").classList.add("on");
+    frPaint();
+  };
+  document.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-friendopen]")) {
+      window.__openFriends();
+      return;
+    }
+    if (e.target.closest("[data-frclose]")) {
+      document.getElementById("frBox").classList.remove("on");
+      return;
+    }
+    const tb = e.target.closest("[data-frtab]");
+    if (tb) {
+      frTab = tb.dataset.frtab;
+      frNote("");
+      frPaint();
+      return;
+    }
+    if (e.target.closest("#frSearch")) {
+      const t2 = frT();
+      const v2 = (document.getElementById("frName").value || "").trim();
+      const f2 = await FR().findByName(v2);
+      if (!f2) {
+        frNote(t2.notFound);
+        return;
+      }
+      if (f2.self) {
+        frNote(t2.self);
+        return;
+      }
+      const r2 = await FR().sendRequest(f2.uid, f2.name);
+      frNote(r2.ok ? t2.sent : r2.why === "already" ? t2.already : t2.notFound);
+      return;
+    }
+    const ac = e.target.closest("[data-fraccept]");
+    if (ac) {
+      await FR().accept(ac.dataset.fraccept, ac.dataset.frname);
+      frPaint();
+      return;
+    }
+    const no = e.target.closest("[data-frno]");
+    if (no) {
+      await FR().reject(no.dataset.frno);
+      frPaint();
+      return;
+    }
+    const del = e.target.closest("[data-frdel]");
+    if (del) {
+      await FR().removeFriend(del.dataset.frdel);
+      frPaint();
+      return;
+    }
+    const inv = e.target.closest("[data-frinv]");
+    if (inv) {
+      const t2 = frT();
+      const code = (window.__room || {}).code;
+      if (!code) {
+        frNote(t2.needRoom);
+        return;
+      }
+      await FR().invite(inv.dataset.frinv, code);
+      if (frInviteMode) {
+        document.getElementById("frBox").classList.remove("on");
+        return;
+      }
+      frNote(t2.invited);
+      return;
+    }
+  });
+  const PLAY = ["table", "draw", "tax", "result"];
+  let lastState = "";
+  function pushPresence() {
+    const now2 = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (now2 === "entry") return;
+    const st = PLAY.includes(now2) ? "game" : "lobby";
+    if (st === lastState) return;
+    lastState = st;
+    if (FR().setPresence) FR().setPresence(st);
+  }
+  setInterval(() => {
+    lastState = "";
+    pushPresence();
+  }, 6e4);
+  let invSeen = {};
+  async function checkInvites() {
+    const now2 = (document.querySelector(".page.is-on") || {}).id || "entry";
+    if (now2 === "entry" || PLAY.includes(now2)) return;
+    if (!FR().invites) return;
+    const rows = await FR().invites();
+    const t2 = frT();
+    for (const r2 of rows) {
+      if (invSeen[r2.uid] === r2.code) continue;
+      invSeen[r2.uid] = r2.code;
+      const ko = (window.__lang || "ko") === "ko";
+      ask(
+        ko ? "\uCD08\uB300" : "Invite",
+        (r2.name || "") + (ko ? " \uB2D8\uC774 \uBD88\uB800\uC2B5\uB2C8\uB2E4" : " invited you"),
+        ko ? "\uB4E4\uC5B4\uAC00\uAE30" : "Join",
+        async () => {
+          await FR().dropInvite(r2.uid);
+          if (window.__joinRoom) {
+            const seat = await window.__joinRoom(r2.code);
+            if (seat != null) go("room");
+          }
+        }
+      );
+      break;
+    }
+  }
+  setInterval(checkInvites, 1e4);
+  function paintAvatars() {
+    const wrap = document.getElementById("acAvt");
+    const lab = document.getElementById("acAvtL");
+    if (!wrap || !lab) return;
+    const ko = (window.__lang || "ko") === "ko";
+    const a2 = window.ACCOUNT || {};
+    const score = a2.score || 0;
+    const mine = Number(a2.avatar) || 0;
+    lab.textContent = ko ? "\uD504\uB85C\uD544 \uC124\uC815" : "Profile";
+    wrap.innerHTML = AVATARS.map((v2, i2) => {
+      const open = score >= (i2 < AVT_FREE ? 0 : (i2 - AVT_FREE + 1) * 5e3);
+      const need = i2 < AVT_FREE ? 0 : (i2 - AVT_FREE + 1) * 5e3;
+      const lock = open ? "" : '<i class="avt__lk"></i><span class="avt__need"><b>' + need.toLocaleString() + (ko ? "\uC810" : "") + "</b><i>" + (ko ? "\uB2EC\uC131 \uC2DC \uD574\uC81C" : "to unlock") + "</i></span>";
+      return '<button class="avt__i' + (open ? "" : " avt__i--lock") + (i2 === mine ? " avt__i--on" : "") + '" data-avt="' + i2 + '" style="background-image:url(' + v2.f + ')" aria-label="' + (ko ? v2.ko : v2.en) + '">' + lock + "</button>";
+    }).join("");
+  }
   function paintAcct() {
+    paintVol();
     const ko = (window.__lang || "ko") === "ko";
     const a2 = window.ACCOUNT;
+    paintAvatars();
     const lab = document.getElementById("acBoxT");
     const line = document.getElementById("acLine");
     const row = document.getElementById("acLinkRow");
@@ -987,16 +1512,19 @@ function initNav() {
     if (!btn) return;
     lab.textContent = ko ? "\uACC4\uC815" : "Account";
     if (!a2 || !a2.signedIn) {
+      line.hidden = false;
       line.textContent = ko ? "\uB85C\uADF8\uC778\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4" : "Not signed in";
       row.hidden = true;
       return;
     }
     if (a2.guest) {
+      line.hidden = false;
       line.textContent = ko ? "\uAC8C\uC2A4\uD2B8 \xB7 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4" : "Guest \xB7 not on the leaderboard";
       btn.textContent = ko ? "\uAD6C\uAE00 \uACC4\uC815 \uC787\uAE30" : "Link Google account";
       row.hidden = false;
     } else {
-      line.textContent = ko ? "\uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4" : "On the leaderboard";
+      line.textContent = "";
+      line.hidden = true;
       row.hidden = true;
     }
     const nick = document.getElementById("acNick");
@@ -1122,14 +1650,21 @@ function initNav() {
     }
     if (e.target.closest("#acOut")) {
       const ko2 = (window.__lang || "ko") === "ko";
-      conflictOn = false;
-      try {
-        if (window.signOutNow) await window.signOutNow();
-      } catch (err) {
-        window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
-      }
-      closeAcct();
-      go("entry");
+      ask(
+        ko2 ? "\uB85C\uADF8\uC544\uC6C3" : "Sign out",
+        ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC744 \uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?" : "Sign out of this account?",
+        ko2 ? "\uC608" : "Sign out",
+        async () => {
+          conflictOn = false;
+          try {
+            if (window.signOutNow) await window.signOutNow();
+          } catch (err) {
+            window.alert((ko2 ? "\uB85C\uADF8\uC544\uC6C3\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4\n" : "Sign out failed\n") + String(err && err.code || err));
+          }
+          closeAcct();
+          go("entry");
+        }
+      );
     }
   });
   document.addEventListener("click", async (e) => {
@@ -1163,6 +1698,17 @@ function initNav() {
     go("table");
   };
   function go(id) {
+    if (id === "tax" && window.__holdPlay) window.__holdPlay(true);
+    if (id === "lobby") {
+      touched = true;
+      warm();
+      askResume();
+    }
+    setTimeout(pushPresence, 0);
+    if (touched) {
+      if (id === "lobby" || id === "rank") playBgm("lobby");
+      else stopBgm();
+    }
     if (id === "draw" && window.__bootDraw) window.__bootDraw();
     if (id === "table" && window.__bootTable) {
       window.__bootTable(window.__fresh !== false);
@@ -1178,8 +1724,9 @@ function initNav() {
   }
   document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
-    if (window.__createRoom) {
-      const code = await window.__createRoom();
+    const f2 = window.__quickJoin || window.__createRoom;
+    if (f2) {
+      const code = await f2();
       if (!code) return;
     }
     go("room");
@@ -1210,9 +1757,6 @@ function initNav() {
     }
   });
   window.__onRoundEnd = () => go("result");
-  document.querySelector("#table #endRound").addEventListener("click", () => {
-    if (window.__forceEnd) window.__forceEnd();
-  });
   document.querySelector("#result #next").addEventListener("click", () => {
     const G2 = window.GAME || {};
     const rounds = window.__opts && window.__opts.rounds || 5;
@@ -1243,6 +1787,163 @@ function initNav() {
       setTimeout(() => go("table"), 140);
     }
   });
+  const ASK_T = {
+    ko: {
+      quit: "\uAC8C\uC784 \uC885\uB8CC",
+      quitM: "\uAC8C\uC784\uC744 \uC885\uB8CC\uD560\uAE4C\uC694?",
+      yes: "\uC885\uB8CC",
+      no: "\uCDE8\uC18C",
+      leave: "\uD310\uC5D0\uC11C \uB098\uAC00\uAE30",
+      leaveM: "\uB098\uAC00\uBA74 \uC644\uC8FC \uC2E4\uD328\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4",
+      leaveY: "\uB098\uAC00\uAE30",
+      room: "\uBC29 \uB098\uAC00\uAE30",
+      roomM: "\uBC29\uC5D0\uC11C \uB098\uAC08\uAE4C\uC694?"
+    },
+    en: {
+      quit: "Quit",
+      quitM: "Close the game?",
+      yes: "Quit",
+      no: "Cancel",
+      leave: "Leave the game",
+      leaveM: "Leaving counts as a forfeit",
+      leaveY: "Leave",
+      room: "Leave room",
+      roomM: "Leave this room?"
+    }
+  };
+  const BACK_T = {
+    ko: {
+      t: "\uD558\uB358 \uBC29\uC774 \uC788\uC2B5\uB2C8\uB2E4",
+      m: (code) => "\uBC29 " + code + " \uB85C \uB3CC\uC544\uAC08\uAE4C\uC694?",
+      y: "\uC774\uC5B4\uC11C \uD558\uAE30"
+    },
+    en: {
+      t: "You left a game",
+      m: (code) => "Go back to room " + code + "?",
+      y: "Resume"
+    }
+  };
+  let resumeAsked = false;
+  async function askResume() {
+    if (resumeAsked) return;
+    resumeAsked = true;
+    if (!window.__resumable) return;
+    let r2 = null;
+    try {
+      r2 = await window.__resumable();
+    } catch (e) {
+      r2 = null;
+    }
+    if (!r2) return;
+    const t2 = BACK_T[window.__lang] || BACK_T.ko;
+    ask(t2.t, t2.m(r2.code), t2.y, () => {
+      if (window.__resume) window.__resume();
+    });
+  }
+  let askYes = null;
+  function ask(title, msg, yesLabel, onYes) {
+    const t2 = ASK_T[window.__lang] || ASK_T.ko;
+    if (!document.getElementById("askT")) {
+      if (onYes) onYes();
+      return;
+    }
+    document.getElementById("askT").textContent = title;
+    document.getElementById("askM").textContent = msg;
+    document.getElementById("askYes").textContent = yesLabel;
+    document.getElementById("askNo").textContent = t2.no;
+    askYes = onYes;
+    document.getElementById("ask").classList.add("on");
+  }
+  document.addEventListener("click", async (e) => {
+    const b2 = e.target.closest("[data-avt]");
+    if (!b2) return;
+    const i2 = Number(b2.dataset.avt);
+    const ko = (window.__lang || "ko") === "ko";
+    const need = i2 < AVT_FREE ? 0 : (i2 - AVT_FREE + 1) * 5e3;
+    const score = (window.ACCOUNT || {}).score || 0;
+    if (score < need) return;
+    if (window.__setAvatar) await window.__setAvatar(i2);
+    paintAvatars();
+  });
+  function askClose() {
+    document.getElementById("ask").classList.remove("on");
+    askYes = null;
+  }
+  function askOpen() {
+    return document.getElementById("ask").classList.contains("on");
+  }
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-askno]")) {
+      askClose();
+      return;
+    }
+    if (e.target.closest("#askYes")) {
+      const f2 = askYes;
+      askClose();
+      if (f2) f2();
+    }
+  });
+  function onBack() {
+    if (askOpen()) {
+      askClose();
+      return;
+    }
+    const box = document.querySelector(".cfg.on");
+    if (box) {
+      box.classList.remove("on");
+      return;
+    }
+    const now2 = (document.querySelector(".page.is-on") || {}).id || "entry";
+    const t2 = ASK_T[window.__lang] || ASK_T.ko;
+    if (now2 === "lobby" || now2 === "entry") {
+      ask(t2.quit, t2.quitM, t2.yes, quitApp);
+      return;
+    }
+    if (now2 === "rank") {
+      go("lobby");
+      return;
+    }
+    if (now2 === "room") {
+      ask(t2.room, t2.roomM, t2.roomY || t2.leaveY, () => {
+        if (window.__quitGame) window.__quitGame();
+        go("lobby");
+      });
+      return;
+    }
+    if (now2 === "table" || now2 === "tax") {
+      ask(t2.leave, t2.leaveM, t2.leaveY, () => {
+        if (window.__quitGame) window.__quitGame();
+        go("lobby");
+      });
+      return;
+    }
+  }
+  window.__back = onBack;
+  function quitApp() {
+    const cap = window.Capacitor;
+    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.exitApp) {
+      cap.Plugins.App.exitApp();
+      return;
+    }
+    try {
+      window.close();
+    } catch (e) {
+    }
+  }
+  try {
+    history.pushState({ zoo: 1 }, "");
+    window.addEventListener("popstate", () => {
+      history.pushState({ zoo: 1 }, "");
+      onBack();
+    });
+  } catch (e) {
+  }
+  try {
+    const cap = window.Capacitor;
+    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
+      cap.Plugins.App.addListener("backButton", () => onBack());
+  } catch (e) {
+  }
   document.addEventListener("click", (e) => {
     const b2 = e.target.closest("[data-back]");
     if (!b2) return;
@@ -1275,7 +1976,7 @@ var BAR_SWAP = {
   ],
   "table": [
     '<button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>',
-    '<div style="display:flex;align-items:center;gap:9px"><button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button><button id="endRound" style="font-size:10.5px;letter-spacing:.04em;color:#8FA898;border:1px solid #2E4436;border-radius:2px;padding:4px 8px;background:none;cursor:pointer"></button></div>'
+    '<button class="bar__x" data-back="lobby" aria-label="\uB098\uAC00\uAE30">\u2715</button>'
   ]
 };
 
@@ -1302,22 +2003,22 @@ function scoped(root) {
   };
 }
 
-// src/lib/assets.js
-var ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp" };
-var ART_DECK = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "jokerA": "assets/joker_a.webp", "jokerB": "assets/joker_b.webp", "back": "assets/back.webp" };
-var LOBBY_ART = { "01": "assets/card_01.webp", "02": "assets/card_02.webp", "03": "assets/card_03.webp", "04": "assets/card_04.webp", "05": "assets/card_05.webp", "06": "assets/card_06.webp", "07": "assets/card_07.webp", "08": "assets/card_08.webp", "09": "assets/card_09.webp", "10": "assets/card_10.webp", "11": "assets/card_11.webp", "12": "assets/card_12.webp", "joker": "assets/joker_a.webp" };
-var HEADS = ["assets/head_01.webp", "assets/head_02.webp", "assets/head_04.webp", "assets/head_10.webp", "assets/head_06.webp", "assets/head_09.webp", "assets/head_07.webp", "assets/head_12.webp"];
-var HERO = { "02": "assets/hero_02.webp", "04": "assets/hero_04.webp", "05": "assets/hero_05.webp", "10": "assets/hero_10.webp", "joker_a": "assets/hero_joker_a.webp" };
-var RINGS = { "avatar": "assets/ring.webp", "empty": "assets/ring_empty.webp" };
-
 // src/screens/room.js
 function mount(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
+  function avtSeat(p2, seat) {
+    if (p2 && p2.avatar != null) return avtFile(Number(p2.avatar) || 0);
+    return avtOf(seat);
+  }
   const faceOf = (i2) => {
     const f2 = window.GAME && window.GAME.faces;
     return f2 && f2[i2] != null ? f2[i2] : i2;
   };
   const document2 = scoped(root);
-  const HEADS2 = HEADS;
   const PLAYERS_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
   const PLAYERS_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
   const L2 = {
@@ -1333,6 +2034,7 @@ function mount(root) {
       full: "\uC790\uB9AC\uAC00 \uB2E4 \uCC3C\uC2B5\uB2C8\uB2E4",
       empty: "\uBE48 \uC790\uB9AC",
       hostTag: "\uBC29\uC7A5",
+      inviteHere: "\uCD08\uB300\uD558\uAE30",
       capT: "\uBC29 \uC778\uC6D0",
       capD: "4\uBA85 \u2013 8\uBA85",
       capDG: "\uBC29\uC7A5\uC774 \uC815\uD569\uB2C8\uB2E4.",
@@ -1372,6 +2074,7 @@ function mount(root) {
       full: "The table is full",
       empty: "Open seat",
       hostTag: "HOST",
+      inviteHere: "Invite",
       capT: "Table size",
       capD: "4 \u2013 8 players",
       capDG: "The host decides.",
@@ -1472,6 +2175,8 @@ function mount(root) {
     if (R2 && R2.seats) {
       return asArray(R2.seats, R2.cap || cap).map((s2, i2) => s2 ? {
         name: s2.name || "",
+        avatar: Number(s2.avatar) || 0,
+        /* 이걸 안 실어서 대기실이 전부 생쥐였다 */
         me: i2 === R2.me,
         host: s2.uid && s2.uid === R2.host,
         off: Boolean(s2.off),
@@ -1487,11 +2192,47 @@ function mount(root) {
       left: false
     }));
   }
+  let sndSeated = 0;
+  function seatSound(n2) {
+    const sec = window.document.getElementById("room");
+    const on3 = sec && sec.classList.contains("is-on");
+    if (on3 && n2 > sndSeated && sndSeated > 0) play("join");
+    sndSeated = n2;
+  }
+  let touchAt = 0;
+  function onTap(node, fn2) {
+    if (!node) return;
+    let inside = false;
+    node.addEventListener("touchstart", () => {
+      inside = true;
+    }, { passive: true });
+    node.addEventListener("touchend", (e) => {
+      if (e.cancelable) e.preventDefault();
+      touchAt = Date.now();
+      if (!inside) return;
+      inside = false;
+      const t2 = e.changedTouches && e.changedTouches[0];
+      if (t2) {
+        const r2 = node.getBoundingClientRect();
+        if (t2.clientX < r2.left - 8 || t2.clientX > r2.right + 8 || t2.clientY < r2.top - 8 || t2.clientY > r2.bottom + 8) return;
+      }
+      fn2(e);
+    }, { passive: false });
+    node.addEventListener("touchcancel", () => {
+      inside = false;
+    }, { passive: true });
+    node.onclick = (e) => {
+      if (Date.now() - touchAt < 900) return;
+      if (e && e.button != null && e.button !== 0) return;
+      fn2(e);
+    };
+  }
   function renderSeats() {
     RB = ringBox();
     const box = document2.getElementById("seats");
     box.innerHTML = "";
     const list = seatList();
+    seatSound(list.filter((x2) => x2 && x2.name).length);
     const R2 = window.__room;
     if (R2) cap = R2.cap || cap;
     for (let i2 = 0; i2 < cap; i2++) {
@@ -1507,9 +2248,12 @@ function mount(root) {
       el.style.left = left.toFixed(2) + "%";
       el.style.top = top.toFixed(2) + "%";
       const big = cap <= 6;
-      el.style.setProperty("--av", (big ? 46 : 36) + "px");
+      el.style.setProperty("--av", "46px");
       el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i2) % HEADS2.length] + ')"></span>' + (p2.off || p2.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p2.name + "</span>" + (p2.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span>';
+      el.innerHTML = filled ? '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtSeat(p2, faceOf(i2)) + ')"></span>' + (p2.off || p2.left ? '<span class="seat__off"></span>' : "") + '<span class="seat__n">' + p2.name + "</span>" + (p2.host ? '<span class="seat__b">' + L2[lang].hostTag + "</span>" : "") : '<span class="seat__av seat__av--empty" style="background-image:url(' + RINGS.empty + ')"></span><span class="seat__n seat__inv">' + L2[lang].inviteHere + "</span>";
+      if (!filled) onTap(el, () => {
+        if (window.__openFriends) window.__openFriends("invite");
+      });
       box.appendChild(el);
     }
     const sm = document2.getElementById("sum");
@@ -1518,8 +2262,6 @@ function mount(root) {
     document2.getElementById("bt").textContent = t2.title;
     document2.getElementById("rl").textContent = t2.roomL;
     document2.getElementById("rc").textContent = t2.copy;
-    document2.querySelector('#view [data-v="host"]').textContent = t2.host;
-    document2.querySelector('#view [data-v="guest"]').textContent = t2.guest;
     const fc = document2.querySelector(".felt__c");
     if (fc) fc.style.top = RB.cy.toFixed(1) + "%";
     const R22 = window.__room;
@@ -1546,7 +2288,9 @@ function mount(root) {
     sm.disabled = !iamHost;
     const a2 = document2.getElementById("action");
     if (iamHost) {
-      a2.innerHTML = '<button class="btn-primary" ' + (now2 < 4 ? "disabled" : "") + ">" + (now2 < 4 ? t2.needFour : t2.start) + "</button>";
+      const lf = window.__roomLeft;
+      const lbl = now2 < 4 ? t2.needFour : t2.start + (lf != null && lf > 0 ? " " + lf : "");
+      a2.innerHTML = '<button class="btn-primary" ' + (now2 < 4 ? "disabled" : "") + ">" + lbl + "</button>";
     } else {
       a2.innerHTML = '<div class="waiting">' + t2.wait + '<span class="dots"></span></div>';
     }
@@ -1619,13 +2363,6 @@ function mount(root) {
       draw();
     });
   });
-  document2.querySelectorAll("#view button").forEach((b2) => {
-    b2.addEventListener("click", () => {
-      role = b2.dataset.v;
-      document2.querySelectorAll("#view button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
-      draw();
-    });
-  });
   setInterval(() => {
     if (window.__room) return;
     joined = joined < cap ? joined + 1 : 2;
@@ -1642,413 +2379,26 @@ var draw_exports = {};
 __export(draw_exports, {
   mount: () => mount2
 });
-function mount2(root) {
-  const faceOf = (i2) => {
-    const f2 = window.GAME && window.GAME.faces;
-    return f2 && f2[i2] != null ? f2[i2] : i2;
-  };
-  const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
-  const el = (id) => document2.getElementById(id);
-  const isJ = (c2) => c2 >= 13;
-  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
-  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
-  const NAMES_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
-  const NAMES_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
-  const T = {
-    ko: {
-      step: "\uCCAB \uC21C\uC11C \uC815\uD558\uAE30",
-      h: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC73C\uC138\uC694",
-      s: "\uC22B\uC790\uAC00 \uAC00\uC7A5 \uB0AE\uC740 \uBD84\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uAC70\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC73C\uB85C \uB3D5\uB2C8\uB2E4. \uCE74\uBA5C\uB808\uC628\uC740 13\uC73C\uB85C \uCE69\uB2C8\uB2E4.",
-      waitH: "\uBF51\uB294 \uC911",
-      waitS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uACE0\uB974\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
-      settling: "\uBF51\uC740 \uCE74\uB4DC\uB97C \uB9DE\uCDB0 \uBCF4\uB294 \uC911\uC785\uB2C8\uB2E4.",
-      doneH: "\uC21C\uC11C\uAC00 \uC815\uD574\uC84C\uC2B5\uB2C8\uB2E4",
-      first: "\uC120",
-      doneS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uC5EC\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC785\uB2C8\uB2E4.",
-      note: "\uCCAB \uD310\uC740 \uACC4\uAE09\uB3C4 \uC138\uAE08\uB3C4 \uC5C6\uC2B5\uB2C8\uB2E4.",
-      goIn: (n2) => n2 + "\uCD08 \uB4A4 \uC2DC\uC791\uD569\uB2C8\uB2E4",
-      picking: "\uACE0\uB974\uB294 \uC911"
-    },
-    en: {
-      step: "Opening draw",
-      h: "Draw one card",
-      s: "The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
-      waitH: "Drawing",
-      waitS: (n2) => "<b>" + n2 + "</b> is choosing.",
-      settling: "Comparing the draws.",
-      doneH: "Turn order is set",
-      first: "LEAD",
-      doneS: (n2) => "<b>" + n2 + "</b> leads. Turns run clockwise from there.",
-      note: "The first round has no ranks and no tax.",
-      goIn: (n2) => "Starting in " + n2,
-      picking: "Choosing"
-    }
-  };
-  let lang = window.__lang || "ko";
-  let online2 = false;
-  let N2 = 6;
-  const nameOf = (i2) => (lang === "ko" ? NAMES_KO : NAMES_EN)[i2];
-  const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
-  const val = (c2) => isJ(c2) ? 13 : c2;
-  let drawn = Array(N2).fill(null);
-  let pool = [];
-  let takenK = [];
-  let plan = null;
-  let waiting = [];
-  let phase = "pick";
-  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
-  function placeTable(sec, cyPct) {
-    const b2 = sec.getBoundingClientRect();
-    const W3 = b2.width, H2 = b2.height;
-    const scale = Math.max(W3 / OV.iw, H2 / OV.ih);
-    const dw = OV.iw * scale, dh = OV.ih * scale;
-    const cy = cyPct == null ? (H2 - dh) / 2 + OV.cy * dh : cyPct / 100 * H2;
-    const ox = W3 / 2 - OV.cx * dw;
-    const oy = cy - OV.cy * dh;
-    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
-    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
-    return {
-      cx: (ox + OV.cx * dw) / W3 * 100,
-      cy: cy / H2 * 100,
-      rx: OV.rx * dw / W3 * 100,
-      ry: OV.ry * dh / H2 * 100
-    };
-  }
-  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
-  function syncRing() {
-    const sec = window.document.getElementById("draw");
-    if (!sec) return;
-    RING = placeTable(sec, null);
-    const d2 = el("deck");
-    if (d2) {
-      d2.style.left = RING.cx + "%";
-      d2.style.top = RING.cy + "%";
-    }
-  }
-  function seatPos(i2) {
-    const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
-    const s2 = Math.sin(a2);
-    const bias = s2 > 0.25 ? 3.4 * s2 : 0;
-    return { x: RING.cx + Math.cos(a2) * -RING.rx, y: RING.cy + s2 * RING.ry + bias };
-  }
-  function cardFace(c2) {
-    const n2 = isJ(c2) ? 13 : c2;
-    return '<div class="card"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(c2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
-  }
-  function makeDeck2() {
-    const d2 = [];
-    for (let n2 = 1; n2 <= 12; n2++) for (let i2 = 0; i2 < n2; i2++) d2.push(n2);
-    d2.push(13, 14);
-    for (let i2 = d2.length - 1; i2 > 0; i2--) {
-      const k2 = Math.floor(Math.random() * (i2 + 1));
-      [d2[i2], d2[k2]] = [d2[k2], d2[i2]];
-    }
-    return d2;
-  }
-  let pickOrder = [];
-  function winner() {
-    let best = null;
-    pickOrder.forEach((i2) => {
-      if (drawn[i2] == null) return;
-      if (best === null || val(drawn[i2]) < val(drawn[best])) best = i2;
-    });
-    return best === null ? 0 : best;
-  }
-  function ranking() {
-    const w2 = winner();
-    return Array.from({ length: N2 }, (_2, k2) => ({ i: (w2 + k2) % N2 }));
-  }
-  function layout(players) {
-    const d2 = makeDeck2();
-    pool = d2.slice(0, players.length);
-    plan = null;
-    if (online2 && typeof window.__leadSeat === "number") {
-      const cand = [];
-      for (let v2 = 1; v2 <= 12; v2++) cand.push(v2);
-      for (let i2 = cand.length - 1; i2 > 0; i2--) {
-        const k2 = Math.floor(Math.random() * (i2 + 1));
-        const t2 = cand[i2];
-        cand[i2] = cand[k2];
-        cand[k2] = t2;
-      }
-      const use = cand.slice(0, N2).sort((a2, b2) => a2 - b2);
-      const lead = window.__leadSeat;
-      plan = new Array(N2).fill(0);
-      plan[lead] = use[0];
-      let j2 = 1;
-      for (let i2 = 0; i2 < N2; i2++) if (i2 !== lead) plan[i2] = use[j2++];
-      pool = plan.slice();
-    }
-    waiting = players.slice();
-    const deck = el("deck");
-    deck.innerHTML = "";
-    const n2 = pool.length;
-    const cols = n2 <= 4 ? n2 : Math.min(4, Math.ceil(n2 / 2));
-    const avail = (el("ring").clientWidth || 360) - 48;
-    const pw = Math.max(26, Math.min(34, Math.floor((avail - (cols - 1) * 9) / cols)));
-    deck.style.setProperty("--cols", cols);
-    deck.style.setProperty("--pw", pw + "px");
-    pool.forEach((c2, k2) => {
-      const w2 = document2.createElement("div");
-      w2.className = "pk";
-      w2.dataset.k = k2;
-      w2.innerHTML = '<div class="pk__in"><div class="pk__f pk__f--b"><img src="' + ART2.back + '" alt=""></div><div class="pk__f pk__f--a">' + cardFace(c2) + "</div></div>";
-      w2.onclick = () => {
-        if (waiting[0] === 0) pick2(0, k2);
-      };
-      deck.appendChild(w2);
-    });
-  }
-  const PICK_SEC = 5;
-  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null;
-  function armPickTimer() {
-    stopPickTimer();
-    if (phase !== "pick") return;
-    startBotLoop();
-    if (waiting.indexOf(0) < 0) return;
-    pickLeft = PICK_SEC;
-    draw();
-    pickTickId = setInterval(() => {
-      pickLeft--;
-      if (pickLeft < 0) pickLeft = 0;
-      draw();
-    }, 1e3);
-    pickTimer = setTimeout(() => {
-      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
-      const free = el("deck").querySelectorAll(".pk:not(.taken)");
-      if (free.length) free[Math.floor(Math.random() * free.length)].click();
-    }, PICK_SEC * 1e3);
-  }
-  function stopPickTimer() {
-    if (pickTimer) {
-      clearTimeout(pickTimer);
-      pickTimer = null;
-    }
-    if (pickTickId) {
-      clearInterval(pickTickId);
-      pickTickId = null;
-    }
-    pickLeft = 0;
-  }
-  function startBotLoop() {
-    if (botLoopId) return;
-    botLoopId = setInterval(() => {
-      if (phase !== "pick") {
-        stopBotLoop();
-        return;
-      }
-      const others = waiting.filter((x2) => x2 !== 0);
-      if (!others.length) {
-        stopBotLoop();
-        return;
-      }
-      botPick2();
-    }, 900);
-  }
-  function stopBotLoop() {
-    if (botLoopId) {
-      clearInterval(botLoopId);
-      botLoopId = null;
-    }
-  }
-  function pick2(seat, k2) {
-    const w2 = el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)');
-    if (!w2) return;
-    takenK.push(k2);
-    if (online2 && plan) {
-      pool[k2] = plan[seat];
-      const face = w2.querySelector(".pk__f--a");
-      if (face) face.innerHTML = cardFace(pool[k2]);
-    }
-    drawn[seat] = pool[k2];
-    pickOrder.push(seat);
-    waiting = waiting.filter((x2) => x2 !== seat);
-    w2.classList.add("flip", "taken");
-    w2.dataset.seat = seat;
-    draw();
-    if (seat === 0) stopPickTimer();
-    if (!waiting.length) {
-      stopBotLoop();
-      setTimeout(settle, 1e3);
-    }
-  }
-  function botPick2() {
-    const seat = waiting.find((x2) => x2 !== 0);
-    if (seat === void 0) return;
-    const free = pool.map((_2, k2) => k2).filter((k2) => el("deck").querySelector('.pk[data-k="' + k2 + '"]:not(.taken)'));
-    pick2(seat, free[Math.floor(Math.random() * free.length)]);
-  }
-  let cd = 5, cdId = null;
-  function startCountdown() {
-    cd = 5;
-    draw();
-    if (cdId) clearInterval(cdId);
-    cdId = setInterval(() => {
-      const sec = window.document.getElementById("draw");
-      if (sec && !sec.classList.contains("is-on")) {
-        clearInterval(cdId);
-        cdId = null;
-        return;
-      }
-      cd--;
-      draw();
-      if (cd <= 0) {
-        clearInterval(cdId);
-        cdId = null;
-        const g2 = el("go");
-        if (g2 && !g2.disabled) g2.click();
-      }
-    }, 1e3);
-  }
-  function settle() {
-    phase = "done";
-    const w2 = online2 && typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
-    window.GAME = window.GAME || {};
-    window.GAME.N = N2;
-    window.GAME.roundNo = 1;
-    window.GAME.score = Array(N2).fill(0);
-    window.GAME.order = Array.from({ length: N2 }, (_2, k2) => (w2 + k2) % N2);
-    if (!online2) {
-      window.GAME.finish = null;
-      window.GAME.hold = null;
-    }
-    draw();
-    startCountdown();
-  }
-  function anchorSeats(box, limitBottom) {
-    const root2 = window.document.documentElement;
-    const W3 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
-    box.querySelectorAll(".seat").forEach((s2) => {
-      const av = s2.querySelector(".seat__av");
-      if (!av) return;
-      const dy = av.offsetTop + av.offsetHeight / 2;
-      s2.style.transform = "translate(-50%," + -dy + "px)";
-      const r2 = s2.getBoundingClientRect();
-      let ox = 0, oy = 0;
-      if (r2.left < W3.left + 3) ox = W3.left + 3 - r2.left;
-      else if (r2.right > W3.right - 3) ox = W3.right - 3 - r2.right;
-      if (limitBottom && r2.bottom > limitBottom) oy = limitBottom - r2.bottom;
-      if (ox || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
-    });
-  }
-  function renderSeats() {
-    syncRing();
-    const box = el("seats");
-    box.innerHTML = "";
-    const order = phase === "done" ? ranking().map((x2) => x2.i) : [];
-    for (let i2 = 0; i2 < N2; i2++) {
-      const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
-      const p2 = seatPos(i2);
-      const d2 = document2.createElement("div");
-      const r2 = order.indexOf(i2);
-      d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (waiting[0] === i2 && phase === "pick" ? " seat--turn" : "");
-      d2.style.left = p2.x.toFixed(1) + "%";
-      d2.style.top = p2.y.toFixed(1) + "%";
-      const big = N2 <= 6;
-      d2.style.setProperty("--av", (big ? 42 : 33) + "px");
-      d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      const first = phase === "done" && i2 === winner();
-      const dv = drawn[i2] == null ? "" : val(drawn[i2]);
-      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
-      const upper = Math.sin(Math.PI / 2 + i2 * 2 * Math.PI / N2) < 0;
-      d2.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[faceOf(i2) % HEADS2.length] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>" + (upper ? "" : chip);
-      box.appendChild(d2);
-    }
-    const md = el("mid");
-    anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
-  }
-  function draw() {
-    const t2 = T[lang];
-    el("step").textContent = t2.step;
-    renderSeats();
-    const m = el("mid");
-    if (phase === "done") {
-      m.innerHTML = '<div class="mid__h">' + t2.doneH + '</div><div class="mid__s">' + t2.doneS(nameOf(winner())) + "<br>" + t2.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
-    } else if (!waiting.length) {
-      m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.settling + "</div>";
-    } else if (waiting.indexOf(0) >= 0) {
-      m.innerHTML = '<div class="mid__h">' + t2.h + (pickLeft > 0 ? " <b>(" + pickLeft + ")</b>" : "") + '</div><div class="mid__s">' + t2.s + "</div>";
-    } else {
-      m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.waitS(nameOf(waiting[0])) + "</div>";
-    }
-    const g2 = el("go");
-    g2.textContent = phase === "done" ? t2.goIn(cd) : t2.picking;
-    g2.disabled = phase !== "done";
-    const md = el("mid");
-    anchorSeats(el("seats"), md ? md.getBoundingClientRect().top - 4 : 0);
-  }
-  function boot() {
-    const sbox0 = el("seats");
-    if (sbox0) sbox0.innerHTML = "";
-    const dbox0 = el("deck");
-    if (dbox0) dbox0.innerHTML = "";
-    online2 = Boolean(window.__net);
-    N2 = online2 ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6;
-    if (cdId) {
-      clearInterval(cdId);
-      cdId = null;
-    }
-    cd = 5;
-    drawn = Array(N2).fill(null);
-    pickOrder = [];
-    takenK = [];
-    window.__roundNo = 1;
-    window.__myRankIdx = null;
-    if (!online2) {
-      window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
-    }
-    phase = "pick";
-    layout(Array.from({ length: N2 }, (_2, i2) => i2));
-    draw();
-  }
-  window.__bootDraw = () => {
-    boot();
-    armPickTimer();
-  };
-  boot();
-  document2.querySelectorAll("#lang button").forEach((b2) => {
-    b2.addEventListener("click", () => {
-      lang = b2.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
-      draw();
-    });
-  });
-  el("go").addEventListener("click", () => {
-    if (cdId) {
-      clearInterval(cdId);
-      cdId = null;
-    }
-  });
-  window.addEventListener("resize", draw);
-  window.addEventListener("langchange", () => {
-    lang = window.__lang;
-    draw();
-  });
-}
-
-// src/screens/table.js
-var table_exports = {};
-__export(table_exports, {
-  mount: () => mount3
-});
 
 // src/lib/engine.js
 var engine_exports = {};
 __export(engine_exports, {
+  autoDraw: () => autoDraw,
   declareRev: () => declareRev,
   engine: () => engine,
   give: () => give,
+  onEmote: () => onEmote,
   onView: () => onView,
   passRev: () => passRev,
   passTurn: () => passTurn,
-  play: () => play,
+  play: () => play2,
+  sendEmote: () => sendEmote,
   setAuto: () => setAuto,
   setPaused: () => setPaused,
   startLocal: () => startLocal,
   startOnline: () => startOnline,
-  stop: () => stop
+  stop: () => stop2,
+  takeCard: () => takeCard
 });
 
 // node_modules/nanoid/non-secure/index.js
@@ -4694,8 +5044,8 @@ function run(fn2) {
 function blank_object() {
   return /* @__PURE__ */ Object.create(null);
 }
-function run_all(fns) {
-  fns.forEach(run);
+function run_all(fns2) {
+  fns2.forEach(run);
 }
 function is_function(thing) {
   return typeof thing === "function";
@@ -5480,12 +5830,12 @@ var SvelteComponent = class {
 };
 var subscriber_queue = [];
 function writable(value2, start = noop2) {
-  let stop2;
+  let stop3;
   const subscribers = /* @__PURE__ */ new Set();
   function set2(new_value) {
     if (safe_not_equal(value2, new_value)) {
       value2 = new_value;
-      if (stop2) {
+      if (stop3) {
         const run_queue = !subscriber_queue.length;
         for (const subscriber of subscribers) {
           subscriber[1]();
@@ -5507,14 +5857,14 @@ function writable(value2, start = noop2) {
     const subscriber = [run2, invalidate];
     subscribers.add(subscriber);
     if (subscribers.size === 1) {
-      stop2 = start(set2) || noop2;
+      stop3 = start(set2) || noop2;
     }
     run2(value2);
     return () => {
       subscribers.delete(subscriber);
       if (subscribers.size === 0) {
-        stop2();
-        stop2 = null;
+        stop3();
+        stop3 = null;
       }
     };
   }
@@ -18986,10 +19336,21 @@ var nextActive = (G2, from) => nextBy(G2, from, (i2) => G2.counts[i2] > 0 && !G2
 var nextAlive = (G2, from) => nextBy(G2, from, (i2) => G2.counts[i2] > 0);
 function clearPile(G2, leader) {
   G2.pile = null;
-  if ((G2.table || []).length) G2.shown = G2.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count }));
+  if ((G2.table || []).length) G2.shown = G2.table.map((t2) => ({
+    by: t2.by,
+    num: t2.num,
+    count: t2.count,
+    cards: (t2.cards || []).slice()
+  }));
   G2.table = [];
   G2.passed = G2.passed.map(() => false);
   G2.next = leader;
+  G2.trickNo = (G2.trickNo || 0) + 1;
+}
+function noteMove(G2, kind, seat) {
+  G2.moveNo = (G2.moveNo || 0) + 1;
+  G2.lastMove = { k: kind, by: seat };
+  G2.recent = (G2.recent || []).concat([{ no: G2.moveNo, k: kind, by: seat }]).slice(-8);
 }
 function noteFinish(G2, seat) {
   if (G2.counts[seat] === 0 && !G2.finished.includes(seat)) G2.finished.push(seat);
@@ -19057,7 +19418,10 @@ function openNextRound(G2, random) {
   const n2 = G2.counts.length;
   G2.lastRound = {
     order: order.slice(),
-    table: ((G2.table || []).length ? G2.table : G2.shown || []).map((t2) => ({ by: t2.by, num: t2.num, count: t2.count })),
+    /* 판이 끝난 순간의 손패 장수. 바로 다음 판을 나누므로 이걸 안 남기면
+       마지막까지 남은 꼴등의 손패가 갑자기 새 판 장수로 바뀐다 */
+    counts: G2.counts.slice(),
+    table: ((G2.table || []).length ? G2.table : G2.shown || []).map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: (t2.cards || []).slice() })),
     points: order.map((seat, rank) => roundPoints(rank, n2)),
     roundNo: G2.roundNo
   };
@@ -19084,6 +19448,19 @@ function openNextRound(G2, random) {
   G2.next = order[0];
   G2.given = {};
 }
+function pickDistinct(random, n2) {
+  const all = [];
+  for (let v2 = 1; v2 <= 12; v2++) all.push(v2);
+  return random.Shuffle(all).slice(0, n2);
+}
+function drawOrder(d2, n2) {
+  const seats = Array.from({ length: n2 }, (_2, i2) => i2);
+  return seats.sort((a2, b2) => {
+    const va = d2.pool[d2.took[a2]], vb = d2.pool[d2.took[b2]];
+    if (va !== vb) return va - vb;
+    return d2.seq.indexOf(a2) - d2.seq.indexOf(b2);
+  });
+}
 var ZooPresident = {
   name: "zoo-president",
   setup: ({ ctx, random }, setupData) => {
@@ -19097,6 +19474,10 @@ var ZooPresident = {
       table: [],
       finished: [],
       next: 0,
+      trickNo: 0,
+      moveNo: 0,
+      lastMove: null,
+      recent: [],
       score: new Array(n2).fill(0),
       roundNo: 1,
       totalRounds: Math.max(3, opts2.rounds),
@@ -19116,19 +19497,65 @@ var ZooPresident = {
       gameOver: false
     };
     dealRound(G2, random);
-    G2.seatOrder = random.Shuffle(Array.from({ length: n2 }, (_2, i2) => i2));
-    G2.next = G2.seatOrder[0];
+    G2.seatOrder = null;
+    G2.next = 0;
+    G2.draw = {
+      pool: pickDistinct(random, n2),
+      /* 자리마다 한 장씩, 서로 다른 숫자 */
+      by: new Array(n2).fill(null),
+      /* 카드 자리 → 가져간 사람 */
+      took: new Array(n2).fill(null),
+      /* 사람 → 가져간 카드 자리 */
+      seq: []
+      /* 고른 차례. 같은 숫자면 먼저 고른 쪽이 위 */
+    };
     return G2;
   },
   /* 남의 손패는 장수만 보인다 */
   playerView: ({ G: G2, playerID }) => {
     const out = Object.assign({}, G2);
     out.hands = G2.hands.map((h2, i2) => String(i2) === String(playerID) ? h2.slice() : null);
+    if (G2.draw) {
+      out.draw = Object.assign({}, G2.draw, {
+        pool: G2.draw.pool.map((v2, i2) => G2.draw.by[i2] == null ? null : v2)
+      });
+    }
     return out;
   },
   phases: {
-    play: {
+    /* 첫 순서 정하기. 모두가 동시에 참여하므로 activePlayers 로 열어 둔다.
+       한 장씩만 가져갈 수 있고, 남이 가져간 자리는 못 가져간다 */
+    draw: {
       start: true,
+      turn: {
+        activePlayers: { all: "picking" },
+        stages: {
+          picking: {
+            moves: {
+              takeCard: ({ G: G2, playerID }, idx) => {
+                const seat = Number(playerID);
+                const d2 = G2.draw;
+                if (!d2) return INVALID_MOVE;
+                if (d2.took[seat] != null) return INVALID_MOVE;
+                if (!(idx >= 0 && idx < d2.pool.length)) return INVALID_MOVE;
+                if (d2.by[idx] != null) return INVALID_MOVE;
+                d2.by[idx] = seat;
+                d2.took[seat] = idx;
+                d2.seq.push(seat);
+              }
+            }
+          }
+        }
+      },
+      endIf: ({ G: G2, ctx }) => G2.draw && G2.draw.took.every((x2, i2) => x2 != null || i2 >= ctx.numPlayers),
+      onEnd: ({ G: G2, ctx }) => {
+        const order = drawOrder(G2.draw, ctx.numPlayers);
+        G2.seatOrder = order.slice();
+        G2.next = order[0];
+      },
+      next: "play"
+    },
+    play: {
       turn: {
         /* 한 사람이 한 번 두면 차례가 넘어간다. 다음 사람은 G.next 가 정한다 */
         minMoves: 1,
@@ -19153,7 +19580,8 @@ var ZooPresident = {
           G2.hands[seat] = t2.hand;
           G2.counts[seat] = t2.hand.length;
           G2.pile = { by: seat, num, count };
-          G2.table.push({ by: seat, num, count });
+          G2.table.push({ by: seat, num, count, cards: t2.used.slice().sort((a2, b2) => a2 - b2) });
+          noteMove(G2, "play", seat);
           noteFinish(G2, seat);
           const cleared = num === 1 || G2.opts.clear2 && num === 2;
           const out = G2.counts[seat] === 0;
@@ -19178,6 +19606,7 @@ var ZooPresident = {
           const seat = Number(playerID);
           if (!G2.pile) return INVALID_MOVE;
           G2.passed[seat] = true;
+          noteMove(G2, "pass", seat);
           const still = active2(G2);
           if (still.length <= 1) {
             const last = G2.pile.by;
@@ -19323,16 +19752,31 @@ function screenView(G2, ctx, myID, names) {
       c: G2.counts[seat],
       s: G2.passed[seat] ? "pass" : "",
       out: G2.counts[seat] === 0,
+      /* 몇 번째로 끝냈는가. 0부터, 아직이면 -1 */
+      rank: (G2.finished || []).indexOf(seat),
       hold: seat === me ? (G2.hands[seat] || []).slice() : null
     };
   }
+  const realCards = (t2) => t2.cards && t2.cards.length === t2.count ? t2.cards.slice() : new Array(t2.count).fill(t2.num);
   const table = (G2.table || []).map((t2) => ({
     by: toScreen(t2.by, me, n2),
     num: t2.num,
     count: t2.count,
-    cards: new Array(t2.count).fill(t2.num)
-    /* 남의 카드는 숫자만 안다 */
+    cards: realCards(t2)
   }));
+  const draw = G2.draw ? {
+    /* 아직 아무도 안 집은 카드의 숫자는 화면에 주지 않는다.
+       이 기기 방은 판 상태를 그대로 읽으므로 여기서 가려야 한다 —
+       안 가리면 낮은 카드가 어디 있는지 다 보인다 */
+    pool: G2.draw.pool.map((v2, i2) => G2.draw.by[i2] == null ? null : v2),
+    /* 뽑기 화면 자리는 **방에 앉은 순서** 그대로다(나를 아래로 돌려놓기만 한다).
+       등수 자리로 바꾸는 것은 뽑기가 끝난 뒤 판에서 한다 —
+       여기서 ord 를 쓰면 마지막 사람이 고르는 순간 자리가 통째로 흔들린다 */
+    by: G2.draw.by.map((s2) => s2 == null ? null : (s2 - me + n2) % n2),
+    mine: G2.draw.took[Number(myID)],
+    /* 내가 가져간 카드 자리 */
+    left: G2.draw.took.filter((x2) => x2 == null).length
+  } : null;
   return {
     N: n2,
     me: 0,
@@ -19350,13 +19794,21 @@ function screenView(G2, ctx, myID, names) {
       by: toScreen(t2.by, me, n2),
       num: t2.num,
       count: t2.count,
-      cards: new Array(t2.count).fill(t2.num)
+      cards: realCards(t2)
     })),
     finish: (G2.finished || []).map((s2) => toScreen(s2, me, n2)),
     score: G2.counts.map((_2, seat) => G2.score[toSeat(seat, me, n2)]),
     roundNo: G2.roundNo,
+    trickNo: G2.trickNo || 0,
+    /* 몇 번째 바퀴인가 */
+    /* 몇 번째 수인가 + 그 수가 무엇이었나 — 소리 겹침·빠짐을 가리는 데 쓴다 */
+    moveNo: G2.moveNo || 0,
+    lastMove: G2.lastMove ? { k: G2.lastMove.k, by: toScreen(G2.lastMove.by, me, n2) } : null,
+    /* 최근 몇 수. 신호가 뭉쳐 와도 화면이 빠짐없이 집어 갈 수 있게 한다 */
+    recent: (G2.recent || []).map((m) => ({ no: m.no, k: m.k, by: toScreen(m.by, me, n2) })),
     totalRounds: G2.totalRounds,
     phase: ctx.phase,
+    draw,
     revolution: G2.revolution ? {
       seat: toScreen(G2.revolution.seat, me, n2),
       great: G2.revolution.great,
@@ -19390,12 +19842,20 @@ function screenView(G2, ctx, myID, names) {
     lastRound: G2.lastRound ? {
       roundNo: G2.lastRound.roundNo,
       order: G2.lastRound.order.map((s2) => toScreen(s2, me, n2)),
+      /* 화면 자리 순서로 옮긴 '그때의 장수' */
+      counts: (() => {
+        const c2 = new Array(n2).fill(0);
+        (G2.lastRound.counts || []).forEach((v2, seat) => {
+          c2[toScreen(seat, me, n2)] = v2;
+        });
+        return c2;
+      })(),
       points: G2.lastRound.points.slice(),
       table: G2.lastRound.table.map((t2) => ({
         by: toScreen(t2.by, me, n2),
         num: t2.num,
         count: t2.count,
-        cards: new Array(t2.count).fill(t2.num)
+        cards: realCards(t2)
       }))
     } : null,
     over: ctx.gameover ? {
@@ -19419,8 +19879,15 @@ var engine = {
   /* 결과를 보는 동안 다음 판을 멈춘다 */
   auto: false,
   /* 자동치기 — 내 자리도 봇과 같은 판단으로 둔다 */
-  botMs: 3e3
+  botMs: 3e3,
   /* 봇이 생각하는 척하는 시간 */
+  /* 자동치기가 **내 자리**를 둘 때 기다리는 시간.
+     봇은 남이라 생각하는 척해야 하지만, 내 자리는 그럴 이유가 없다.
+     3초로 두었더니 서버 왕복까지 붙어 4~5초씩 걸렸다 */
+  autoMs: 1e3,
+  moveLog: [],
+  /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
+  lastLogged: 0
 };
 var listeners = [];
 var unsub = null;
@@ -19441,6 +19908,15 @@ function push() {
   const st = raw();
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  const v2 = engine.view;
+  const ms = v2 && v2.recent && v2.recent.length ? v2.recent : v2 && v2.moveNo && v2.lastMove ? [{ no: v2.moveNo, k: v2.lastMove.k, by: v2.lastMove.by }] : [];
+  ms.forEach((m) => {
+    if (!m || m.no <= engine.lastLogged) return;
+    engine.lastLogged = m.no;
+    engine.moveLog.push({ no: m.no, k: m.k, by: m.by });
+  });
+  if (engine.moveLog.length > 400) engine.moveLog.splice(0, 200);
+  drainEmotes();
   listeners.forEach((f2) => {
     try {
       f2(engine.view);
@@ -19448,7 +19924,53 @@ function push() {
       console.error(e);
     }
   });
-  if (engine.mode === "local") scheduleBot();
+  if (engine.mode === "local" || engine.auto) scheduleBot();
+}
+var emoteSeen = 0;
+var emoteFns = [];
+function onEmote(fn2) {
+  emoteFns.push(fn2);
+  return () => {
+    const i2 = emoteFns.indexOf(fn2);
+    if (i2 >= 0) emoteFns.splice(i2, 1);
+  };
+}
+function fireEmote(seat, k2) {
+  const n2 = engine.view && engine.view.N || 0;
+  if (!n2) return;
+  const pos = toScreenSeat(seat);
+  emoteFns.forEach((f2) => {
+    try {
+      f2({ pos, seat, k: k2 });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+function toScreenSeat(seat) {
+  const v2 = engine.view;
+  if (!v2 || !v2.seats) return 0;
+  const i2 = v2.seats.findIndex((x2) => x2.seat === Number(seat));
+  return i2 < 0 ? 0 : i2;
+}
+function drainEmotes() {
+  const c2 = engine.client;
+  const list = c2 && c2.chatMessages || [];
+  for (; emoteSeen < list.length; emoteSeen++) {
+    const m = list[emoteSeen];
+    const p2 = m && m.payload;
+    if (!p2 || p2.t !== "emote") continue;
+    fireEmote(m.sender, p2.k);
+  }
+}
+function sendEmote(k2) {
+  const c2 = engine.client;
+  if (!c2) return;
+  if (engine.mode === "local") {
+    fireEmote(Number(engine.myID), k2);
+    return;
+  }
+  c2.sendChatMessage({ t: "emote", k: k2 });
 }
 function botPick(hand, pile) {
   const cnt = {};
@@ -19486,6 +20008,35 @@ function scheduleBot() {
   const st = raw();
   if (!st || st.ctx.gameover) return;
   const G2 = st.G, ctx = st.ctx;
+  if (ctx.phase === "draw") {
+    const d2 = G2.draw;
+    if (!d2) return;
+    const todo = d2.took.map((x2, seat2) => x2 == null && actsFor(seat2) ? seat2 : -1).filter((x2) => x2 >= 0);
+    if (!todo.length) return;
+    const g3 = ++gen;
+    botTimer = setTimeout(() => {
+      botTimer = null;
+      if (g3 !== gen) return;
+      const s2 = raw();
+      if (!s2 || s2.ctx.phase !== "draw") {
+        push();
+        return;
+      }
+      const d22 = s2.G.draw;
+      const seat2 = todo[0];
+      if (d22.took[seat2] != null) {
+        push();
+        return;
+      }
+      const free = d22.by.map((v2, i2) => v2 == null ? i2 : -1).filter((i2) => i2 >= 0);
+      if (!free.length) return;
+      engine.client.updatePlayerID(String(seat2));
+      engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+      engine.client.updatePlayerID(engine.myID);
+      push();
+    }, Math.min(engine.botMs, 800));
+    return;
+  }
   if (ctx.phase === "tax") {
     const revSeat = G2.revolution && !G2.revDecided ? G2.revolution.seat : -1;
     const revTodo = revSeat >= 0 && actsFor(revSeat);
@@ -19522,7 +20073,7 @@ function scheduleBot() {
     }, 700);
     return;
   }
-  if (engine.paused) return;
+  if (engine.paused && ctx.phase !== "tax") return;
   const seat = Number(ctx.currentPlayer);
   if (!actsFor(seat)) return;
   const g2 = ++gen;
@@ -19545,7 +20096,7 @@ function scheduleBot() {
     else engine.client.moves.pass();
     engine.client.updatePlayerID(engine.myID);
     push();
-  }, engine.botMs);
+  }, seat === Number(engine.myID) ? Math.min(engine.autoMs, engine.botMs) : engine.botMs);
 }
 function setAuto(on3) {
   engine.auto = Boolean(on3);
@@ -19556,6 +20107,7 @@ function setAuto(on3) {
   }
   scheduleBot();
 }
+if (typeof window !== "undefined") window.__eng = engine;
 function attach(client) {
   engine.client = client;
   client.start();
@@ -19564,7 +20116,7 @@ function attach(client) {
   push();
 }
 function startLocal({ numPlayers = 6, opts: opts2 = {}, names = [], myID = "0", bots = null } = {}) {
-  stop();
+  stop2();
   engine.mode = "local";
   engine.myID = String(myID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
@@ -19575,7 +20127,7 @@ function startLocal({ numPlayers = 6, opts: opts2 = {}, names = [], myID = "0", 
   attach(Client({ game: game2, numPlayers, playerID: engine.myID }));
 }
 function startOnline({ server, matchID, playerID, credentials, numPlayers, names = [] }) {
-  stop();
+  stop2();
   engine.mode = "online";
   engine.myID = String(playerID);
   engine.names = names.length ? names : new Array(numPlayers).fill("");
@@ -19603,7 +20155,7 @@ function setPaused(on3) {
   }
   scheduleBot();
 }
-function stop() {
+function stop2() {
   gen++;
   if (botTimer) {
     clearTimeout(botTimer);
@@ -19621,8 +20173,33 @@ function stop() {
   }
   engine.client = null;
   engine.view = null;
+  emoteSeen = 0;
 }
-function play(num, count) {
+function takeCard(idx) {
+  const c2 = engine.client;
+  if (!c2) return;
+  c2.updatePlayerID(engine.myID);
+  c2.moves.takeCard(idx);
+}
+function autoDraw() {
+  const c2 = engine.client;
+  const st = raw();
+  if (!c2 || !st || st.ctx.phase !== "draw") return;
+  const d2 = st.G.draw;
+  if (!d2) return;
+  for (let seat = 0; seat < d2.took.length; seat++) {
+    const s2 = raw();
+    if (!s2 || s2.ctx.phase !== "draw") break;
+    if (s2.G.draw.took[seat] != null) continue;
+    const free = s2.G.draw.by.map((v2, i2) => v2 == null ? i2 : -1).filter((i2) => i2 >= 0);
+    if (!free.length) break;
+    c2.updatePlayerID(String(seat));
+    c2.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
+  }
+  c2.updatePlayerID(engine.myID);
+  push();
+}
+function play2(num, count) {
   if (!engine.client) return false;
   engine.client.updatePlayerID(engine.myID);
   engine.client.moves.play(num, count);
@@ -19653,10 +20230,475 @@ function give(cards) {
   return true;
 }
 
+// src/screens/draw.js
+function mount2(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
+  const faceOf = (i2) => {
+    const g2 = window.GAME || {};
+    const f2 = g2.seatFaces || g2.faces;
+    return f2 && f2[i2] != null ? f2[i2] : i2;
+  };
+  const document2 = scoped(root);
+  const ART2 = ART_DECK;
+  const el = (id) => document2.getElementById(id);
+  const isJ = (c2) => c2 >= 13;
+  const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
+  const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
+  const NAMES_KO = ["\uB098", "\uBBFC\uC9C0", "\uC900\uD638", "\uC11C\uC5F0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
+  const NAMES_EN = ["You", "Minji", "Junho", "Seoyeon", "Taeyun", "Haeun", "Jihoon", "Yerin"];
+  const T = {
+    ko: {
+      step: "\uCCAB \uC21C\uC11C \uC815\uD558\uAE30",
+      h: "\uCE74\uB4DC\uB97C \uD55C \uC7A5 \uBF51\uC73C\uC138\uC694",
+      s: "\uC22B\uC790\uAC00 \uAC00\uC7A5 \uB0AE\uC740 \uBD84\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uAC70\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC73C\uB85C \uB3D5\uB2C8\uB2E4. \uCE74\uBA5C\uB808\uC628\uC740 13\uC73C\uB85C \uCE69\uB2C8\uB2E4.",
+      waitH: "\uBF51\uB294 \uC911",
+      waitS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uACE0\uB974\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
+      settling: "\uBF51\uC740 \uCE74\uB4DC\uB97C \uB9DE\uCDB0 \uBCF4\uB294 \uC911\uC785\uB2C8\uB2E4.",
+      doneH: "\uC21C\uC11C\uAC00 \uC815\uD574\uC84C\uC2B5\uB2C8\uB2E4",
+      first: "\uC120",
+      doneS: (n2) => "<b>" + n2 + "</b>\uB2D8\uC774 \uBA3C\uC800 \uC2DC\uC791\uD569\uB2C8\uB2E4. \uCC28\uB840\uB294 \uC5EC\uAE30\uC11C \uC2DC\uACC4 \uBC29\uD5A5\uC785\uB2C8\uB2E4.",
+      note: "\uCCAB \uD310\uC740 \uACC4\uAE09\uB3C4 \uC138\uAE08\uB3C4 \uC5C6\uC2B5\uB2C8\uB2E4.",
+      goIn: (n2) => n2 + "\uCD08 \uB4A4 \uC2DC\uC791\uD569\uB2C8\uB2E4",
+      picking: "\uACE0\uB974\uB294 \uC911"
+    },
+    en: {
+      step: "Opening draw",
+      h: "Draw one card",
+      s: "The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
+      waitH: "Drawing",
+      waitS: (n2) => "<b>" + n2 + "</b> is choosing.",
+      settling: "Comparing the draws.",
+      doneH: "Turn order is set",
+      first: "LEAD",
+      doneS: (n2) => "<b>" + n2 + "</b> leads. Turns run clockwise from there.",
+      note: "The first round has no ranks and no tax.",
+      goIn: (n2) => "Starting in " + n2,
+      picking: "Choosing"
+    }
+  };
+  let lang = window.__lang || "ko";
+  let online2 = false;
+  let N2 = 6;
+  const nameOf = (i2) => {
+    const g2 = window.GAME || {};
+    const list = lang === "ko" ? g2.names : g2.namesEn || g2.names;
+    const v2 = list && list[i2];
+    return v2 == null || v2 === "" ? (lang === "ko" ? NAMES_KO : NAMES_EN)[i2] : v2;
+  };
+  const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
+  const val = (c2) => isJ(c2) ? 13 : c2;
+  let drawn = Array(N2).fill(null);
+  let pool2 = [];
+  let takenK = [];
+  let plan = null;
+  let waiting = [];
+  let phase = "pick";
+  const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
+  function placeTable(sec, cyPct) {
+    const b2 = sec.getBoundingClientRect();
+    const W3 = b2.width, H2 = b2.height;
+    const scale = Math.max(W3 / OV.iw, H2 / OV.ih);
+    const dw = OV.iw * scale, dh = OV.ih * scale;
+    const cy = cyPct == null ? (H2 - dh) / 2 + OV.cy * dh : cyPct / 100 * H2;
+    const ox = W3 / 2 - OV.cx * dw;
+    const oy = cy - OV.cy * dh;
+    sec.style.backgroundSize = Math.round(dw) + "px " + Math.round(dh) + "px";
+    sec.style.backgroundPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+    return {
+      cx: (ox + OV.cx * dw) / W3 * 100,
+      cy: cy / H2 * 100,
+      rx: OV.rx * dw / W3 * 100,
+      ry: OV.ry * dh / H2 * 100
+    };
+  }
+  let RING = { cx: 49, cy: 43, rx: 42.5, ry: 14.5 };
+  function syncRing() {
+    const sec = window.document.getElementById("draw");
+    if (!sec) return;
+    RING = placeTable(sec, null);
+    const d2 = el("deck");
+    if (d2) {
+      d2.style.left = RING.cx + "%";
+      d2.style.top = RING.cy + "%";
+    }
+  }
+  function seatPos(i2) {
+    const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
+    const s2 = Math.sin(a2);
+    const bias = s2 > 0.25 ? 3.4 * s2 : 0;
+    return { x: RING.cx + Math.cos(a2) * -RING.rx, y: RING.cy + s2 * RING.ry + bias };
+  }
+  function cardFace(c2) {
+    if (c2 == null) return '<div class="card"></div>';
+    const n2 = isJ(c2) ? 13 : c2;
+    const nm = isJ(c2) ? lang === "ko" ? "\uCE74\uBA5C\uB808\uC628" : "CHAMELEON" : (lang === "ko" ? KO_N : EN_N)[c2 - 1];
+    return '<div class="card"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__name">' + nm + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(c2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
+  }
+  let pickOrder = [];
+  function winner() {
+    let best = null;
+    pickOrder.forEach((i2) => {
+      if (drawn[i2] == null) return;
+      if (best === null || val(drawn[i2]) < val(drawn[best])) best = i2;
+    });
+    return best === null ? 0 : best;
+  }
+  function ranking() {
+    const w2 = winner();
+    return Array.from({ length: N2 }, (_2, k2) => ({ i: (w2 + k2) % N2 }));
+  }
+  function layout(players) {
+    const v2 = engine.view;
+    pool2 = v2 && v2.draw ? v2.draw.pool.slice() : new Array(players.length).fill(null);
+    plan = null;
+    waiting = players.slice();
+    const deck = el("deck");
+    deck.innerHTML = "";
+    const n2 = pool2.length;
+    const cols = n2 <= 4 ? n2 : Math.min(4, Math.ceil(n2 / 2));
+    const rows = Math.ceil(n2 / cols);
+    const ringEl = el("ring");
+    const avail = (ringEl.clientWidth || 360) - 48;
+    const availH = (ringEl.clientHeight || 300) * 0.88 - 16;
+    const byW = Math.floor((avail - (cols - 1) * 9) / cols);
+    const byH = Math.floor((availH - (rows - 1) * 9) / rows / (390 / 200));
+    const pw = Math.round(Math.max(26, Math.min(46, byW, byH)) * 0.8);
+    deck.style.setProperty("--cols", cols);
+    deck.style.setProperty("--pw", pw + "px");
+    pool2.forEach((c2, k2) => {
+      const w2 = document2.createElement("div");
+      w2.className = "pk";
+      w2.dataset.k = k2;
+      w2.innerHTML = '<div class="pk__in"><div class="pk__f pk__f--b"><img src="' + ART2.back + '" alt=""></div><div class="pk__f pk__f--a">' + cardFace(c2) + "</div></div>";
+      w2.onclick = () => {
+        if (waiting[0] === 0) pick2(0, k2);
+      };
+      deck.appendChild(w2);
+    });
+  }
+  const PICK_SEC = 5;
+  let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null, offView2 = null;
+  function armPickTimer() {
+    stopPickTimer();
+    if (phase !== "pick") return;
+    startBotLoop();
+    if (waiting.indexOf(0) < 0) return;
+    pickLeft = PICK_SEC;
+    draw();
+    pickTickId = setInterval(() => {
+      pickLeft--;
+      if (pickLeft < 0) pickLeft = 0;
+      draw();
+    }, 1e3);
+    pickTimer = setTimeout(() => {
+      if (phase !== "pick" || waiting.indexOf(0) < 0) return;
+      const free = el("deck").querySelectorAll(".pk:not(.taken)");
+      if (free.length) free[Math.floor(Math.random() * free.length)].click();
+    }, PICK_SEC * 1e3);
+  }
+  function stopPickTimer() {
+    if (pickTimer) {
+      clearTimeout(pickTimer);
+      pickTimer = null;
+    }
+    if (pickTickId) {
+      clearInterval(pickTickId);
+      pickTickId = null;
+    }
+    pickLeft = 0;
+  }
+  function startBotLoop() {
+  }
+  function stopBotLoop() {
+    if (botLoopId) {
+      clearInterval(botLoopId);
+      botLoopId = null;
+    }
+  }
+  function pick2(seat, k2) {
+    if (seat !== 0) return;
+    if (el("deck").querySelector('.pk[data-k="' + k2 + '"].taken')) return;
+    takeCard(k2);
+  }
+  function syncDeck(d2) {
+    if (!d2) return;
+    const deck = el("deck");
+    d2.by.forEach((seat, k2) => {
+      if (seat == null) return;
+      const w2 = deck.querySelector('.pk[data-k="' + k2 + '"]');
+      if (!w2) return;
+      const val2 = d2.pool[k2];
+      if (val2 == null) return;
+      const face = w2.querySelector(".pk__f--a");
+      if (face && w2.dataset.val !== String(val2)) {
+        face.innerHTML = cardFace(val2);
+        w2.dataset.val = String(val2);
+      }
+      if (w2.classList.contains("taken")) return;
+      play("card_play");
+      w2.classList.add("flip", "taken");
+      w2.dataset.seat = seat;
+      takenK.push(k2);
+      drawn[seat] = d2.pool[k2];
+      if (pickOrder.indexOf(seat) < 0) pickOrder.push(seat);
+      waiting = waiting.filter((x2) => x2 !== seat);
+      if (seat === 0) stopPickTimer();
+    });
+  }
+  let cd = 5, cdId = null;
+  function startCountdown() {
+    cd = 5;
+    draw();
+    if (cdId) clearInterval(cdId);
+    cdId = setInterval(() => {
+      const sec = window.document.getElementById("draw");
+      if (sec && !sec.classList.contains("is-on")) {
+        clearInterval(cdId);
+        cdId = null;
+        return;
+      }
+      cd--;
+      draw();
+      if (cd <= 0) {
+        clearInterval(cdId);
+        cdId = null;
+        const g2 = el("go");
+        if (g2 && !g2.disabled) g2.click();
+      }
+    }, 1e3);
+  }
+  function settle() {
+    phase = "done";
+    const vv = engine.view;
+    if (vv && vv.turn >= 0) window.__leadSeat = vv.turn;
+    const w2 = typeof window.__leadSeat === "number" ? window.__leadSeat : winner();
+    window.GAME = window.GAME || {};
+    window.GAME.N = N2;
+    window.GAME.roundNo = 1;
+    window.GAME.score = Array(N2).fill(0);
+    window.GAME.order = Array.from({ length: N2 }, (_2, k2) => (w2 + k2) % N2);
+    if (!online2) {
+      window.GAME.finish = null;
+      window.GAME.hold = null;
+    }
+    draw();
+    startCountdown();
+  }
+  function anchorSeats(box, limitBottom) {
+    const root2 = window.document.documentElement;
+    const W3 = (window.document.getElementById("stage") || root2).getBoundingClientRect();
+    box.querySelectorAll(".seat").forEach((s2) => {
+      const av = s2.querySelector(".seat__av");
+      if (!av) return;
+      const dy = av.offsetTop + av.offsetHeight / 2;
+      s2.style.transform = "translate(-50%," + -dy + "px)";
+      const r2 = s2.getBoundingClientRect();
+      let ox = 0, oy = 0;
+      if (r2.left < W3.left + 3) ox = W3.left + 3 - r2.left;
+      else if (r2.right > W3.right - 3) ox = W3.right - 3 - r2.right;
+      if (limitBottom && r2.bottom > limitBottom) oy = limitBottom - r2.bottom;
+      if (ox || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
+    });
+  }
+  function renderSeats() {
+    syncRing();
+    const box = el("seats");
+    box.innerHTML = "";
+    const order = phase === "done" ? ranking().map((x2) => x2.i) : [];
+    for (let i2 = 0; i2 < N2; i2++) {
+      const a2 = Math.PI / 2 + i2 * 2 * Math.PI / N2;
+      const p2 = seatPos(i2);
+      const d2 = document2.createElement("div");
+      const r2 = order.indexOf(i2);
+      d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (waiting[0] === i2 && phase === "pick" ? " seat--turn" : "");
+      d2.style.left = p2.x.toFixed(1) + "%";
+      d2.style.top = p2.y.toFixed(1) + "%";
+      const big = N2 <= 6;
+      d2.style.setProperty("--av", "42px");
+      d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
+      const first = phase === "done" && i2 === winner();
+      const dv = drawn[i2] == null ? "" : val(drawn[i2]);
+      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + "</span>";
+      const upper = Math.sin(Math.PI / 2 + i2 * 2 * Math.PI / N2) < 0;
+      d2.innerHTML = '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + "</span>" + (upper ? chip : "") + '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(faceOf(i2)) + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>" + (upper ? "" : chip);
+      box.appendChild(d2);
+    }
+    const md = el("mid");
+    anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
+  }
+  function draw() {
+    const t2 = T[lang];
+    el("step").textContent = t2.step;
+    renderSeats();
+    const m = el("mid");
+    if (phase === "done") {
+      m.innerHTML = '<div class="mid__h">' + t2.doneH + '</div><div class="mid__s">' + t2.doneS(nameOf(winner())) + "<br>" + t2.note + '</div><div class="cd">' + Math.max(cd, 0) + "</div>";
+    } else if (!waiting.length) {
+      m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.settling + "</div>";
+    } else if (waiting.indexOf(0) >= 0) {
+      m.innerHTML = '<div class="mid__h">' + t2.h + (pickLeft > 0 ? " <b>(" + pickLeft + ")</b>" : "") + '</div><div class="mid__s">' + t2.s + "</div>";
+    } else {
+      m.innerHTML = '<div class="mid__h">' + t2.waitH + '</div><div class="mid__s">' + t2.waitS(nameOf(waiting[0])) + "</div>";
+    }
+    const g2 = el("go");
+    g2.textContent = phase === "done" ? t2.goIn(cd) : t2.picking;
+    g2.disabled = phase !== "done";
+    const md = el("mid");
+    anchorSeats(el("seats"), md ? md.getBoundingClientRect().top - 4 : 0);
+  }
+  function boot() {
+    const sbox0 = el("seats");
+    if (sbox0) sbox0.innerHTML = "";
+    const dbox0 = el("deck");
+    if (dbox0) dbox0.innerHTML = "";
+    online2 = Boolean(window.__net);
+    const dv = engine.view;
+    N2 = dv && dv.draw && dv.draw.pool.length || (online2 ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6);
+    if (cdId) {
+      clearInterval(cdId);
+      cdId = null;
+    }
+    cd = 5;
+    drawn = Array(N2).fill(null);
+    pickOrder = [];
+    takenK = [];
+    window.__roundNo = 1;
+    window.__myRankIdx = null;
+    if (!online2) {
+      window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
+    }
+    phase = "pick";
+    {
+      const sb = el("seats"), db = el("deck");
+      if (sb) sb.innerHTML = "";
+      if (db) db.innerHTML = "";
+    }
+    layout(Array.from({ length: N2 }, (_2, i2) => i2));
+    if (offView2) offView2();
+    offView2 = onView((v2) => {
+      if (phase === "done") return;
+      syncDeck(v2.draw);
+      if (v2.phase !== "draw") {
+        stopBotLoop();
+        stopPickTimer();
+        setTimeout(settle, 700);
+      }
+      draw();
+    });
+    if (engine.view) {
+      syncDeck(engine.view.draw);
+    }
+    draw();
+  }
+  window.__bootDraw = () => {
+    boot();
+    armPickTimer();
+  };
+  boot();
+  document2.querySelectorAll("#lang button").forEach((b2) => {
+    b2.addEventListener("click", () => {
+      lang = b2.dataset.l;
+      document2.documentElement.lang = lang;
+      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
+      draw();
+    });
+  });
+  el("go").addEventListener("click", () => {
+    if (cdId) {
+      clearInterval(cdId);
+      cdId = null;
+    }
+    const vv = engine.view;
+    if (vv && vv.seats) {
+      window.GAME = window.GAME || {};
+      window.GAME.faces = vv.seats.map((x2) => x2.seat);
+      window.GAME.seatFaces = vv.seats.map((x2) => x2.seat);
+      window.GAME.names = vv.names.slice();
+      window.GAME.namesEn = vv.names.slice();
+      if (vv.turn >= 0) window.__leadSeat = vv.turn;
+    }
+  });
+  window.addEventListener("resize", draw);
+  window.addEventListener("langchange", () => {
+    lang = window.__lang;
+    draw();
+  });
+}
+
+// src/screens/table.js
+var table_exports = {};
+__export(table_exports, {
+  mount: () => mount3
+});
+
+// src/lib/sndkey.js
+function trickId(v2) {
+  if (v2 && v2.trickNo != null) return "t" + v2.trickNo;
+  return "c" + (v2 && v2.seats || []).reduce((a2, s2) => a2 + (s2.c || 0), 0);
+}
+function moveEvents(v2) {
+  if (!v2) return [];
+  if (v2.recent && v2.recent.length)
+    return v2.recent.map((m) => ({ key: "m" + m.no, kind: m.k, by: m.by }));
+  if (v2.moveNo != null && v2.lastMove) {
+    if (!v2.moveNo) return [];
+    return [{ key: "m" + v2.moveNo, kind: v2.lastMove.k, by: v2.lastMove.by }];
+  }
+  const id = trickId(v2);
+  const out = [];
+  const tb = v2.table || [];
+  if (tb.length) {
+    const t2 = tb[tb.length - 1];
+    out.push({
+      key: id + "#" + tb.length + ":" + t2.by + "-" + t2.num + "-" + t2.count,
+      kind: "play",
+      by: t2.by
+    });
+  }
+  (v2.seats || []).forEach((s2, i2) => {
+    if (s2 && s2.s === "pass") out.push({ key: id + "#p" + i2, kind: "pass", by: i2 });
+  });
+  return out;
+}
+function makeSeen(limit = 240) {
+  const set2 = /* @__PURE__ */ new Set();
+  return {
+    /* 처음 보는 번호면 true (그리고 기억한다) */
+    add(key) {
+      if (!key) return false;
+      if (set2.has(key)) return false;
+      set2.add(key);
+      if (set2.size > limit) {
+        const it = set2.values();
+        for (let i2 = set2.size - limit; i2 > 0; i2--) set2.delete(it.next().value);
+      }
+      return true;
+    },
+    has(key) {
+      return set2.has(key);
+    },
+    clear() {
+      set2.clear();
+    },
+    get size() {
+      return set2.size;
+    }
+  };
+}
+
 // src/screens/table.js
 function mount3(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const HEADS2 = HEADS, ART2 = ART;
+  const ART2 = ART;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
   const T = {
@@ -19674,19 +20716,19 @@ function mount3(root) {
       need: (c2, n2) => "<b>" + c2 + "\uC7A5</b>\uC744 <b>" + n2 + "\uBC88 \uC774\uD558</b>\uB85C \uBC1B\uC73C\uC138\uC694",
       emptyPile: "\uBC14\uB2E5\uC774 \uBE44\uC5C8\uC2B5\uB2C8\uB2E4<br>\uC6D0\uD558\uB294 \uCE74\uB4DC\uB97C \uB0B4\uC138\uC694",
       pass: "\uD328\uC2A4",
-      pick: "\uCE74\uB4DC\uB97C \uACE0\uB974\uC138\uC694",
+      pick: "\uB300\uAE30\uC911",
       play: (n2) => n2 + "\uC7A5 \uB0B4\uAE30",
-      notTurn: "\uC0C1\uB300 \uCC28\uB840\uC785\uB2C8\uB2E4",
+      notTurn: "\uB300\uAE30\uC911",
       mix: "\uAC19\uC740 \uC22B\uC790\uB9CC \uD568\uAED8 \uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4",
       cnt: (n2) => n2 + "\uC7A5\uC744 \uB9DE\uCDB0 \uC8FC\uC138\uC694",
       lower: "\uB354 \uB0AE\uC740 \uC22B\uC790\uB97C \uB0B4\uC138\uC694",
-      autoOff: "\uC790\uB3D9",
-      autoOn: "\uC790\uB3D9 \uB044\uAE30",
-      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4 \xB7 \uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
+      autoOff: "\uC790\uB3D9 OFF",
+      autoOn: "\uC790\uB3D9 ON",
+      emoBtn: "\uC774\uBAA8\uD2F0\uCF58",
+      autoOnMsg: "\uC790\uB3D9\uCE58\uAE30\uB85C \uB118\uC5B4\uAC11\uB2C8\uB2E4\n\uCE74\uB4DC\uB97C \uB9CC\uC9C0\uBA74 \uD480\uB9BD\uB2C8\uB2E4",
       autoPass: "\uC2DC\uAC04\uC774 \uB2E4 \uB418\uC5B4 \uC790\uB3D9\uC73C\uB85C \uB118\uACBC\uC2B5\uB2C8\uB2E4",
       left2: (n2) => n2 + "\uCD08",
       cleared: "\uD310\uC744 \uBE44\uC6E0\uC2B5\uB2C8\uB2E4 \xB7 \uB2E4\uC2DC \uC120",
-      endR: "\uD310 \uC885\uB8CC",
       close: "\uB2E4\uC2DC \uB204\uB974\uBA74 \uC811\uD799\uB2C8\uB2E4"
     },
     en: {
@@ -19703,19 +20745,19 @@ function mount3(root) {
       need: (c2, n2) => "Beat with <b>" + c2 + (c2 === 1 ? " card" : " cards") + "</b> of <b>" + n2 + " or lower</b>",
       emptyPile: "The pile is empty<br>Play anything you like",
       pass: "Pass",
-      pick: "Select cards",
+      pick: "Waiting",
       play: (n2) => "Play " + n2,
-      notTurn: "Opponent's turn",
+      notTurn: "Waiting",
       mix: "Cards must share one number",
       cnt: (n2) => "Play exactly " + n2,
       lower: "Play a lower number",
-      autoOff: "Auto",
-      autoOn: "Auto off",
-      autoOnMsg: "Auto play on \xB7 tap a card to take over",
+      autoOff: "AUTO OFF",
+      autoOn: "AUTO ON",
+      emoBtn: "EMOJI",
+      autoOnMsg: "Auto play on\nTap a card to take over",
       autoPass: "Time up \u2014 passed for you",
       left2: (n2) => n2 + "s",
       cleared: "Pile cleared \xB7 you lead again",
-      endR: "End round",
       close: "Tap again to close"
     }
   };
@@ -19728,24 +20770,109 @@ function mount3(root) {
   let SEATS = [];
   let hand = [];
   let finish = [];
-  let offView2 = null;
+  let offView2 = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
+  let sndTurn = false, sndFin = 0, sndRev = 0;
+  let bellAfter = 0, bellTimer = null;
+  const seen = makeSeen();
+  let primed = false;
+  let passHeld = null, lastTrick = null, lastMoveNo = -1;
+  let lastPass = null;
+  let passPressAt = 0;
+  let pending = null, pendingAt = 0, pendingHand = -1;
+  let pendingNo = -1;
+  const onScreen = () => {
+    const sec = window.document.getElementById("table");
+    return Boolean(sec && sec.classList.contains("is-on"));
+  };
+  function sounds(v2, quiet) {
+    const mute = Boolean(quiet) || !onScreen();
+    const evs = moveEvents(v2).filter((e) => seen.add(e.key));
+    if (evs.length && primed && !mute) {
+      const kinds = new Set(evs.map((e) => e.kind));
+      evShow("** \uC18C\uB9AC " + evs.map((e) => e.kind + "@" + e.by).join(" "));
+      try {
+        const d2 = window.__sndDetail = window.__sndDetail || [];
+        evs.forEach((e) => d2.push(e.kind + ":" + e.by));
+      } catch (e) {
+      }
+      if (kinds.has("play")) play("card_play");
+      if (kinds.has("pass")) play("pass");
+    }
+    primed = true;
+    if (v2.myTurn && !sndTurn && !mute) {
+      const wait2 = bellAfter - Date.now();
+      if (wait2 > 0) {
+        if (bellTimer) clearTimeout(bellTimer);
+        bellTimer = setTimeout(() => {
+          bellTimer = null;
+          const cv = engine.view;
+          if (cv && cv.myTurn && onScreen()) play("my_turn");
+        }, wait2);
+      } else play("my_turn");
+    }
+    sndTurn = Boolean(v2.myTurn);
+    const fin = (v2.finish || []).length;
+    if (fin > sndFin && !mute) {
+      const who = v2.finish[fin - 1];
+      if (who === 0) play("win");
+      if (v2.seats && fin === v2.seats.length - 1 && !v2.finish.includes(0)) play("lose");
+    }
+    sndFin = fin;
+    sndRev = v2.revolution && v2.revolution.declared ? 1 : 0;
+  }
   function apply(v2) {
     if (!v2) return;
-    if (holdingEnd && !v2.over) return;
-    SEATS = v2.seats.map((x2) => ({ n: x2.name, c: x2.c, s: x2.s, hold: x2.hold || [], av: x2.seat }));
+    if (holdingEnd && !v2.over) {
+      sounds(v2, true);
+      return;
+    }
+    sounds(v2);
+    if (passHeld != null && v2.trickNo !== passHeld) passHeld = null;
+    if (v2.trickNo !== lastTrick && lastTrick != null) {
+      const ps = (v2.recent || []).filter((m) => m.k === "pass");
+      lastPass = ps.length ? { by: ps[ps.length - 1].by, at: Date.now() } : null;
+    }
+    if (lastPass && Date.now() - lastPass.at > 1200) lastPass = null;
+    lastTrick = v2.trickNo;
+    lastMoveNo = v2.moveNo;
+    SEATS = v2.seats.map((x2, i2) => ({
+      n: x2.name,
+      c: x2.c,
+      s: i2 === 0 && passHeld != null ? "pass" : x2.s ? x2.s : lastPass && lastPass.by === i2 && x2.c > 0 ? "pass" : "",
+      hold: x2.hold || [],
+      av: x2.seat,
+      r: x2.rank
+    }));
     hand = v2.hand.slice();
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v2.finish.slice();
     turn = v2.turn;
     busy = !v2.myTurn;
+    if (pending) {
+      const myC = (v2.seats || [])[0] ? v2.seats[0].c : -1;
+      const done = pendingNo >= 0 && v2.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
+      if (done) {
+        pending = null;
+        pendingHand = -1;
+        pendingNo = -1;
+      } else busy = true;
+    }
+    if (queued) flush2();
     if (v2.roundNo !== lastRound) {
       const first = lastRound < 0;
       lastRound = v2.roundNo;
       sel = [];
       animated = 0;
       spread = false;
+      sndFin = 0;
+      sndTurn = false;
+      sndRev = 0;
+      flew = /* @__PURE__ */ new Set();
+      pending = null;
+      pendingHand = -1;
+      pendingNo = -1;
       window.__roundNo = v2.roundNo;
       if (!first && !v2.over && v2.lastRound && window.__onRoundEnd) {
         showLastRound(v2);
@@ -19779,7 +20906,7 @@ function mount3(root) {
       ghostSig = "";
     }
     if (v2.table.length < trick.length) {
-      animated = 0;
+      if (!ghost.length) animated = 0;
       spread = false;
     }
     trick = v2.table.map((t2) => ({ by: t2.by, num: t2.num, count: t2.count, cards: t2.cards.slice() }));
@@ -19802,12 +20929,14 @@ function mount3(root) {
   function showLastRound(v2) {
     holdingEnd = true;
     const lr = v2.lastRound;
+    const lc = lr.counts || [];
     SEATS = v2.seats.map((x2, i2) => ({
       n: x2.name,
-      c: i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
+      c: lc[i2] != null ? lc[i2] : i2 === lr.order[lr.order.length - 1] ? x2.c : 0,
       s: "",
       hold: [],
-      av: x2.seat
+      av: x2.seat,
+      r: lr.order.indexOf(i2)
     }));
     hand = [];
     finish = lr.order.slice();
@@ -19828,10 +20957,8 @@ function mount3(root) {
   }
   function boot() {
     if (offView2) offView2();
-    if (el("auto")) {
-      el("auto").textContent = T[lang].autoOff;
-      el("auto").classList.remove("on");
-    }
+    if (offEmote) offEmote();
+    if (el("auto")) setAuto2(false);
     setAuto(false);
     if (holdPile) {
       clearTimeout(holdPile);
@@ -19840,6 +20967,22 @@ function mount3(root) {
     ghost = [];
     ghostSig = "";
     holdingEnd = false;
+    seen.clear();
+    primed = false;
+    sndFin = 0;
+    sndTurn = false;
+    sndRev = 0;
+    bellAfter = Date.now() + 700;
+    if (bellTimer) {
+      clearTimeout(bellTimer);
+      bellTimer = null;
+    }
+    handNodes = [];
+    seatNodes = [];
+    pileSig = null;
+    passHeld = null;
+    lastTrick = null;
+    lastPass = null;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -19847,6 +20990,12 @@ function mount3(root) {
     busy = false;
     animated = 0;
     spread = false;
+    emoUntil = 0;
+    emoPickOpen(false);
+    paintEmoBtn();
+    Object.keys(emoNow).forEach((p2) => delete emoNow[p2]);
+    if (el("emolayer")) el("emolayer").innerHTML = "";
+    offEmote = onEmote((e) => showEmote(e.pos, e.k));
     offView2 = onView(apply);
     if (engine.view) apply(engine.view);
   }
@@ -19863,12 +21012,24 @@ function mount3(root) {
   let lastPlayer = null;
   let busy = false;
   let animated = 0;
+  let flew = /* @__PURE__ */ new Set();
+  const keyOf = (t2) => t2 ? t2.by + "-" + t2.num + "-" + t2.count : "";
+  function flewKey(t2) {
+    const k2 = keyOf(t2);
+    if (!k2) return true;
+    if (flew.has(k2)) return true;
+    flew.add(k2);
+    return false;
+  }
   let spread = false;
   const cur = () => trick.length ? trick[trick.length - 1] : null;
   const label = (n2) => isJ(n2) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n2 - 1];
   const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
-  function cardHTML(n2, w2) {
-    if (isJ(n2)) return '<div class="card is-joker" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__name">\uCE74\uBA5C\uB808\uC628</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"></div></div>';
+  function cardHTML(n2, w2, as) {
+    if (isJ(n2)) {
+      const num = as == null || as >= 13 ? '<span class="card__num as"></span>' : '<span class="card__num as">' + as + "</span>";
+      return '<div class="card is-joker" style="--w:' + w2 + 'px"><div class="card__band">' + num + '<span class="card__name">' + T[lang].joker + "</span>" + num + '</div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band">' + num + num + "</div></div>";
+    }
     return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__name">' + label(n2) + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
   }
   const OV = { iw: 860, ih: 1859, cx: 0.4994, cy: 0.4415, rx: 0.425, ry: 0.142 };
@@ -19910,7 +21071,8 @@ function mount3(root) {
     const s2 = Math.sin(a2);
     const bias = 0;
     const side = Math.abs(s2) < 0.05;
-    const nudge = s2 > 0.9 ? 9 : side ? 4 : s2 > 0.25 ? 2 : 0;
+    const top = s2 < -0.85;
+    const nudge = top ? 22 : s2 > 0.9 ? 9 : side ? 4 : s2 > 0.25 ? 2 : 0;
     const nudgeX = side ? Math.cos(a2) < 0 ? 2 : -2 : 0;
     return {
       x: RING.cx + Math.cos(a2) * -RING.rx,
@@ -19928,6 +21090,17 @@ function mount3(root) {
     if (!c2) return false;
     if (isJ(n2)) return !KO_N.some((_2, i2) => i2 + 1 < c2.num && maxCount(i2 + 1) >= c2.count);
     return !(n2 < c2.num && maxCount(n2) >= c2.count);
+  }
+  function canPick(i2) {
+    if (sel.includes(i2)) return true;
+    const card = hand[i2];
+    if (isDead(card)) return false;
+    const c2 = cur();
+    if (c2 && sel.length >= c2.count) return false;
+    const next = sel.map((k2) => hand[k2]).concat([card]);
+    if (effective(next) === null) return false;
+    if (c2 && next.every(isJ) && next.length >= c2.count) return false;
+    return true;
   }
   function effective(l2) {
     const r2 = l2.filter((x2) => !isJ(x2));
@@ -19968,43 +21141,73 @@ function mount3(root) {
       if (ox !== nx || oy) s2.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  function rankTag(r2) {
+    const k2 = r2 + 1;
+    if (lang === "ko") return k2 + "\uB4F1";
+    const t2 = k2 % 10, h2 = k2 % 100;
+    const sfx = t2 === 1 && h2 !== 11 ? "st" : t2 === 2 && h2 !== 12 ? "nd" : t2 === 3 && h2 !== 13 ? "rd" : "th";
+    return k2 + sfx;
+  }
+  let seatNodes = [];
   function renderSeats() {
     syncRing();
     const box = el("seats");
-    box.innerHTML = "";
+    if (seatNodes.length !== SEATS.length || seatNodes.some((n2) => n2.parentNode !== box)) {
+      box.innerHTML = "";
+      seatNodes = SEATS.map(() => {
+        const n2 = document2.createElement("div");
+        box.appendChild(n2);
+        return n2;
+      });
+    }
     SEATS.forEach((s2, i2) => {
       const p2 = seatPos(i2);
-      const d2 = document2.createElement("div");
+      const d2 = seatNodes[i2];
       d2.className = "seat" + (i2 === 0 ? " seat--me" : "") + (turn === i2 && SEATS[i2].c > 0 ? " seat--turn" : "") + /* 봇 차례에도 표시 */
       (s2.s === "pass" ? " seat--pass" : "") + (s2.c === 0 ? " seat--out" : "");
+      if (i2 === 0 && s2.s === "pass" && passPressAt) {
+        evShow("  \u2192 \uD328\uC2A4 \uD45C\uC2DC\uAE4C\uC9C0 " + (Date.now() - passPressAt) + "ms");
+        passPressAt = 0;
+      }
       d2.style.left = p2.x.toFixed(1) + "%";
       d2.style.top = p2.y.toFixed(1) + "%";
       d2.dataset.nudge = p2.nudge || 0;
       d2.dataset.nudgex = p2.nudgeX || 0;
       const big = SEATS.length <= 6;
-      d2.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d2.style.setProperty("--av", "44px");
       d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
       d2.style.zIndex = 6 + Math.round(p2.y);
       const tg = T[lang];
-      const tag = s2.c === 0 ? tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
+      const tag = s2.c === 0 ? s2.r >= 0 ? rankTag(s2.r) : tg.tagOut : s2.s === "pass" ? tg.tagPass : "";
       const topSeat = i2 !== 0 && p2.y < 22;
       if (topSeat) d2.classList.add("seat--above");
-      const av = '<span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[(s2.av == null ? i2 : s2.av) % HEADS2.length] + ')"></span>';
+      const av = '<span class="seat__avwrap"><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(s2.av == null ? i2 : s2.av) + ')"></span>' + (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + "</span>";
       const nm = '<span class="seat__n">' + (s2.n || "") + "</span>";
       const fan = i2 === 0 ? "" : fanHTML(s2.c);
       const cnt = '<span class="seat__c">' + T[lang].left(s2.c) + "</span>";
-      d2.innerHTML = (tag ? '<span class="seat__tag">' + tag + "</span>" : "") + (topSeat ? fan + cnt + av + nm : av + nm + fan + cnt);
-      box.appendChild(d2);
+      const html = topSeat ? fan + cnt + av + nm : av + nm + fan + cnt;
+      if (d2.__html !== html) {
+        d2.innerHTML = html;
+        d2.__html = html;
+      }
     });
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
   const outerTrick = () => trick;
+  let pileSig = null;
   function renderPile() {
     const p2 = el("pile");
-    p2.innerHTML = "";
     const shown = outerTrick().length ? outerTrick() : ghost;
     const trick2 = shown;
+    const r0 = el("ring").getBoundingClientRect();
+    const sig = lang + "|" + (spread ? "S" : "") + "|" + Math.round(r0.width) + "x" + Math.round(r0.height) + "|" + animated + "|" + /* **`flewKey` 를 부르면 안 된다.** 그 함수는 "이미 날아왔다"고 표시까지 해서,
+       표식을 만드는 것만으로 연출 상태를 먹어치운다.
+       그것 때문에 카드가 깜빡이고 앞사람 카드가 다시 날아왔다 */
+    trick2.map((t2) => t2.by + "-" + t2.num + "-" + t2.count).join(",");
+    if (sig === pileSig) return;
+    pileSig = sig;
+    p2.innerHTML = "";
     if (spread && trick2.length) {
       const t2 = T[lang];
       const maxC = Math.min(6, Math.max(...trick2.map((x2) => x2.count)));
@@ -20022,7 +21225,8 @@ function mount3(root) {
       const k2 = trick2.length - Math.min(trick2.length, 4) + kk;
       const from = seatPos(t2.by);
       const g2 = document2.createElement("div");
-      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (k2 >= animated ? " play--new" : "");
+      g2.className = "play" + (k2 < trick2.length - 1 ? " play--old" : "") + (flewKey(trick2[k2]) ? "" : " play--new");
+      if (!flewKey(trick2[k2])) evShow("** \uB0A0\uC544\uC624\uB294 \uC5F0\uCD9C " + k2);
       const d2 = trick2.length - 1 - k2;
       g2.style.setProperty("--r", d2 === 0 ? "0deg" : k2 * 37 % 19 - 9 - d2 * 3 + "deg");
       g2.style.setProperty("--dy", -Math.min(d2, 3) * 6 + "px");
@@ -20036,27 +21240,47 @@ function mount3(root) {
     });
     animated = trick2.length;
   }
+  let handNodes = [];
   function renderHand() {
     const h2 = el("hand");
-    h2.innerHTML = "";
     const w2 = 60, n2 = hand.length;
+    if (handNodes.length !== n2 || handNodes.some((x2) => x2.parentNode !== h2)) {
+      h2.innerHTML = "";
+      handNodes = hand.map((c2, i2) => {
+        const s2 = document2.createElement("div");
+        s2.__i = i2;
+        onTap(s2, () => {
+          handTouched();
+          if (turn !== 0 || busy) return;
+          const i3 = s2.__i;
+          const k2 = sel.indexOf(i3);
+          if (k2 >= 0) {
+            sel.splice(k2, 1);
+            draw();
+            return;
+          }
+          if (!canPick(i3)) return;
+          sel.push(i3);
+          draw();
+        });
+        h2.appendChild(s2);
+        return s2;
+      });
+    }
     const step = n2 > 1 ? Math.min(36, (h2.clientWidth - w2) / (n2 - 1)) : 0;
     const total = w2 + step * (n2 - 1);
     hand.forEach((c2, i2) => {
-      const s2 = document2.createElement("div");
-      s2.className = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (isDead(c2) ? " slot--dead" : "");
-      s2.style.left = (h2.clientWidth - total) / 2 + i2 * step + "px";
-      s2.style.zIndex = i2;
-      s2.innerHTML = cardHTML(c2, w2);
-      s2.onclick = () => {
-        handTouched();
-        if (turn !== 0 || busy) return;
-        const k2 = sel.indexOf(i2);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else sel.push(i2);
-        draw();
-      };
-      h2.appendChild(s2);
+      const s2 = handNodes[i2];
+      s2.__i = i2;
+      const cls = "slot" + (sel.includes(i2) ? " slot--sel" : "") + (turn === 0 && !busy && !canPick(i2) ? " slot--dead" : "");
+      if (s2.className !== cls) s2.className = cls;
+      const left = (h2.clientWidth - total) / 2 + i2 * step + "px";
+      if (s2.style.left !== left) s2.style.left = left;
+      if (s2.style.zIndex !== String(i2)) s2.style.zIndex = i2;
+      if (s2.__card !== c2) {
+        s2.innerHTML = cardHTML(c2, w2);
+        s2.__card = c2;
+      }
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
   }
@@ -20076,14 +21300,12 @@ function mount3(root) {
     };
     const rname = ri == null ? "" : lang === "ko" ? ri + 1 + "\uB4F1" : ord(ri + 1);
     el("round").textContent = t2.roundN(rn2) + (rname ? " \xB7 " + rname : "");
-    const eb = el("endRound");
-    if (eb) eb.textContent = t2.endR;
     el("pass").textContent = t2.pass;
     const list = sel.map((i2) => hand[i2]);
     const ok = legal(list) && turn === 0 && !busy;
     const b2 = el("play");
     b2.disabled = !ok;
-    b2.textContent = turn !== 0 ? t2.notTurn : !list.length ? t2.pick : ok ? t2.play(list.length) : effective(list) === null ? t2.mix : cur() && list.length !== cur().count ? t2.cnt(cur().count) : t2.lower;
+    b2.textContent = turn !== 0 ? t2.notTurn : ok ? t2.play(list.length) : cur() ? t2.play(cur().count) : t2.pick;
     el("pass").disabled = turn !== 0 || busy || !cur();
   }
   function draw() {
@@ -20092,6 +21314,8 @@ function mount3(root) {
     renderPile();
     renderHand();
     renderBottom();
+    paintEmotes();
+    el("seats").querySelectorAll(".seat__tag").forEach(keepInView);
     const nd = el("need");
     anchorSeats(el("seats"), nd ? nd.getBoundingClientRect().top - 4 : 0);
   }
@@ -20101,17 +21325,26 @@ function mount3(root) {
   const turnSec = () => Number(window.__turnSec) || TURN_SEC;
   function watchDeadline() {
   }
+  let showId = null;
   function resetTimer() {
+    if (showId) clearTimeout(showId);
+    showId = null;
     el("timer").innerHTML = "<i></i>";
     el("timer").classList.toggle("mine", turn === 0 && !busy);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
+    stop("tick");
     tLeft = 0;
+    if (turn === 0 && !busy && !onScreen()) {
+      showId = setTimeout(resetTimer, 150);
+      return;
+    }
     if (turn === 0 && !busy) {
       tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {
         tLeft--;
+        if (tLeft === 5) play("tick");
         if (tLeft <= 0) {
           clearInterval(tickId);
           tickId = null;
@@ -20136,32 +21369,225 @@ function mount3(root) {
     if (numValue === 1) return true;
     return numValue === 2 && window.__opts && window.__opts.clear2;
   }
-  el("play").onclick = () => {
-    const list = sel.map((i2) => hand[i2]);
-    if (!legal(list) || turn !== 0 || busy) return;
-    const e = effective(list);
-    sel = [];
-    busy = true;
-    play(e, list.length);
-    iMoved();
-    unlockLater();
+  let touchAt = 0;
+  let tapX = 0, tapY = 0;
+  window.document.addEventListener("touchstart", (e) => {
+    const t2 = e.touches && e.touches[0];
+    if (t2) {
+      tapX = t2.clientX;
+      tapY = t2.clientY;
+    }
+  }, true);
+  let evBox = null;
+  const EVLOG = (() => {
+    try {
+      return String(location.search || "").indexOf("evlog") >= 0;
+    } catch (e) {
+      return false;
+    }
+  })();
+  function evShow(txt) {
+    try {
+      const L2 = window.__evLines = window.__evLines || [];
+      L2.push(txt);
+      if (L2.length > 40) L2.splice(0, L2.length - 40);
+    } catch (e) {
+    }
+    if (!EVLOG) return;
+    if (!evBox) {
+      evBox = window.document.createElement("div");
+      evBox.style.cssText = "position:fixed;left:4px;right:4px;top:4px;z-index:99999;background:rgba(0,0,0,.86);color:#7CFF9B;font:11px/1.35 monospace;padding:6px 8px;border-radius:4px;white-space:pre-wrap;max-height:36vh;overflow:auto";
+      window.document.body.appendChild(evBox);
+      evBox.onclick = () => {
+        evBox.textContent = "";
+      };
+    }
+    evBox.textContent = (txt + "\n" + evBox.textContent).slice(0, 1400);
+  }
+  function evWatch(node, tag) {
+    if (!EVLOG || !node) return;
+    ["touchstart", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click"].forEach((n2) => node.addEventListener(n2, (e) => {
+      evShow(tag + " " + n2 + (e.pointerType ? ":" + e.pointerType : "") + (e.cancelable ? "" : " (\uBABB\uB9C9\uC74C)") + " " + Date.now() % 1e5);
+    }, true));
+  }
+  const taps = [];
+  let tapDone = false;
+  function onTap(node, fn2) {
+    if (!node) return;
+    taps.push({ node, fn: fn2 });
+    evWatch(node, "");
+  }
+  const inNode = (node, x2, y2) => {
+    const r2 = node.getBoundingClientRect();
+    return x2 >= r2.left - 8 && x2 <= r2.right + 8 && y2 >= r2.top - 8 && y2 <= r2.bottom + 8;
   };
+  function hitTap(e, how) {
+    const x2 = e.clientX, y2 = e.clientY;
+    let aim = e.target;
+    let byPoint = false;
+    if (!aim || !taps.some((it) => it.node.isConnected && (it.node === aim || it.node.contains(aim)))) {
+      const top = x2 != null && window.document.elementFromPoint ? window.document.elementFromPoint(x2, y2) : null;
+      if (top) {
+        aim = top;
+        byPoint = true;
+      }
+    }
+    if (!aim) return;
+    for (let k2 = taps.length - 1; k2 >= 0; k2--) {
+      const it = taps[k2];
+      if (!it.node.isConnected) continue;
+      if (!(it.node === aim || it.node.contains(aim))) continue;
+      const r2 = it.node.getBoundingClientRect();
+      if (byPoint && r2.width > 0 && (!inNode(it.node, tapX, tapY) || !inNode(it.node, x2, y2))) return;
+      evShow("  \u2192 \uCC98\uB9AC(" + how + ")");
+      tapDone = true;
+      it.fn(e);
+      return;
+    }
+  }
+  const tableSec = () => window.document.getElementById("table");
+  const rootOn = (name, fn2, opt2) => {
+    const r2 = tableSec();
+    if (r2) r2.addEventListener(name, fn2, opt2);
+  };
+  rootOn("pointerup", (e) => {
+    if (e.pointerType === "mouse") return;
+    tapDone = false;
+    hitTap(e, "\uC190\uAC00\uB77D");
+    if (tapDone) touchAt = Date.now();
+  }, true);
+  rootOn("touchend", (e) => {
+    if (tapDone && e.cancelable) e.preventDefault();
+  }, { passive: false, capture: true });
+  rootOn("click", (e) => {
+    if (Date.now() - touchAt < 900) {
+      evShow("  (click \uBC84\uB9BC)");
+      return;
+    }
+    if (e.button != null && e.button !== 0) return;
+    hitTap(e, "click");
+  }, true);
+  setInterval(() => {
+    for (let k2 = taps.length - 1; k2 >= 0; k2--)
+      if (!taps[k2].node.isConnected) taps.splice(k2, 1);
+  }, 5e3);
+  const WAIT_MAX = 2500;
+  let queued = null;
+  const seeQ = () => {
+    try {
+      window.__pressQ = queued ? { k: queued.kind, sent: queued.sentNo } : null;
+    } catch (e) {
+    }
+  };
+  let flushId = null;
+  function why(list) {
+    if (turn !== 0) return "\uB0B4 \uCC28\uB840\uAC00 \uC544\uB2D8";
+    if (busy) return "\uC544\uC9C1 \uCC98\uB9AC \uC911";
+    if (!legal(list)) return "\uBABB \uB0B4\uB294 \uC870\uD569";
+    return "";
+  }
+  function queueMove(kind) {
+    const list = kind === "play" ? sel.map((i2) => hand[i2]) : [];
+    queued = { kind, list, at: Date.now(), sentNo: -1 };
+    seeQ();
+    evShow("  (" + (kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + " \uB300\uAE30\uC5F4\uC5D0 \uB123\uC74C)");
+    flush2();
+  }
+  function flush2() {
+    if (flushId) {
+      clearTimeout(flushId);
+      flushId = null;
+    }
+    if (!queued) {
+      seeQ();
+      return;
+    }
+    const q2 = queued;
+    if (q2.sentNo >= 0) {
+      if (lastMoveNo > q2.sentNo) {
+        queued = null;
+        seeQ();
+        return;
+      }
+      if (Date.now() - q2.at > WAIT_MAX + 2e3) {
+        queued = null;
+        seeQ();
+        evShow("  (\uBCF4\uB0C8\uB294\uB370 \uD655\uC778\uC774 \uC548 \uB428)");
+        return;
+      }
+      flushId = setTimeout(flush2, 200);
+      return;
+    }
+    if (q2.kind === "pass" ? turn === 0 && !busy && cur() : turn === 0 && !busy && legal(q2.list)) {
+      q2.sentNo = lastMoveNo;
+      stop("tick");
+      pending = true;
+      pendingAt = Date.now();
+      pendingNo = lastMoveNo;
+      if (q2.kind === "play") {
+        pendingHand = hand.length;
+        sel = [];
+        play2(effective(q2.list), q2.list.length);
+      } else {
+        pendingHand = -1;
+        passHeld = lastTrick;
+        passPressAt = Date.now();
+        passTurn();
+      }
+      busy = true;
+      iMoved();
+      unlockLater();
+      evShow("  \u2192 \uBCF4\uB0C4(" + (q2.kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + ")");
+      flushId = setTimeout(flush2, 200);
+      return;
+    }
+    if (Date.now() - q2.at > WAIT_MAX) {
+      evShow("  (\uB300\uAE30\uC5F4 \uBC84\uB9BC: " + why(q2.list) + ")");
+      queued = null;
+      seeQ();
+      return;
+    }
+    flushId = setTimeout(flush2, 120);
+  }
+  onTap(el("play"), () => queueMove("play"));
   let unlockId = null;
+  function viewSig(v2) {
+    if (!v2) return "";
+    return v2.turn + "|" + (v2.table || []).length + "|" + (v2.seats || []).map((x2) => x2.c + (x2.s || "")).join(",");
+  }
   function unlockLater() {
     if (unlockId) clearTimeout(unlockId);
-    unlockId = setTimeout(() => {
+    const sent = viewSig(engine.view);
+    let tries = 0;
+    const look = () => {
       unlockId = null;
       const v2 = engine.view;
-      if (v2 && v2.myTurn && busy) {
+      if (!busy) return;
+      if (viewSig(v2) !== sent) {
+        return;
+      }
+      if (++tries < 5) {
+        unlockId = setTimeout(look, 1200);
+        return;
+      }
+      if (v2 && v2.myTurn) {
         busy = false;
         draw();
       }
-    }, 1200);
+    };
+    unlockId = setTimeout(look, 1200);
   }
   function iMoved() {
     if (window.__iMoved) window.__iMoved();
   }
   function doPass(auto) {
+    if (!auto) {
+      if (timerId) clearTimeout(timerId);
+      if (!cur()) return;
+      evShow("\uD328\uC2A4 \uB204\uB984");
+      queueMove("pass");
+      return;
+    }
     if (turn !== 0 || busy) return;
     if (timerId) clearTimeout(timerId);
     if (!cur()) {
@@ -20171,12 +21597,20 @@ function mount3(root) {
       sel = [];
       busy = true;
       flash(T[lang].autoPass, true);
-      play(w2.num, w2.count);
+      play2(w2.num, w2.count);
       if (auto) toAuto();
       return;
     }
     sel = [];
     busy = true;
+    stop("tick");
+    pending = true;
+    pendingHand = -1;
+    pendingAt = Date.now();
+    pendingNo = lastMoveNo;
+    passHeld = lastTrick;
+    passPressAt = Date.now();
+    evShow("\uD328\uC2A4 \uB204\uB984");
     if (auto) flash(T[lang].autoPass, true);
     if (!auto) iMoved();
     passTurn();
@@ -20196,11 +21630,13 @@ function mount3(root) {
     if (best !== null) return { num: best, count: 1 };
     return hand.some(isJ) ? { num: 13, count: 1 } : null;
   }
-  el("pass").onclick = () => doPass(false);
+  onTap(el("pass"), () => doPass(false));
   function setAuto2(on3) {
     setAuto(on3);
     const b2 = el("auto");
-    b2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
+    b2.setAttribute("aria-pressed", String(Boolean(on3)));
+    const t2 = b2.querySelector("span");
+    if (t2) t2.textContent = on3 ? T[lang].autoOn : T[lang].autoOff;
     b2.classList.toggle("on", on3);
     if (on3) {
       sel = [];
@@ -20209,9 +21645,118 @@ function mount3(root) {
     }
   }
   el("auto").onclick = () => setAuto2(!engine.auto);
+  const EMO_SHOW = 1e3, EMO_COOL = 2500;
+  let emoUntil = 0;
+  const emoTimers = {};
+  function emoText(k2) {
+    const e = EMOTES.find((x2) => x2.k === k2);
+    return e ? lang === "ko" ? e.ko : e.en : "";
+  }
+  function emoImg(k2) {
+    const e = EMOTES.find((x2) => x2.k === k2);
+    return e ? e.img : "";
+  }
+  function esc(x2) {
+    return String(x2).replace(/[&<>"]/g, (c2) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c2]);
+  }
+  function emoPickOpen(on3) {
+    const p2 = el("emopick");
+    if (!on3) {
+      p2.hidden = true;
+      p2.innerHTML = "";
+      return;
+    }
+    p2.innerHTML = EMOTES.map((e) => '<button type="button" data-k="' + esc(e.k) + '"><span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span><span class="emoimg" style="background-image:url(' + e.img + ')"></span></button>').join("");
+    p2.hidden = false;
+    const h2 = el("hand");
+    if (h2 && p2.offsetParent) {
+      const ph = p2.offsetParent.getBoundingClientRect();
+      const hb = h2.getBoundingClientRect();
+      p2.style.bottom = Math.round(ph.bottom - hb.top + 4) + "px";
+      p2.style.top = "auto";
+    }
+    p2.querySelectorAll("button").forEach((b2) => {
+      b2.onclick = () => {
+        emoSend(b2.dataset.k);
+        emoPickOpen(false);
+      };
+    });
+  }
+  function emoSend(k2) {
+    const now2 = Date.now();
+    if (now2 < emoUntil) return;
+    emoUntil = now2 + EMO_COOL;
+    paintEmoBtn();
+    setTimeout(paintEmoBtn, EMO_COOL + 20);
+    sendEmote(k2);
+  }
+  function paintEmoBtn() {
+    const b2 = el("emo");
+    if (!b2) return;
+    b2.textContent = T[lang].emoBtn;
+    b2.disabled = Date.now() < emoUntil;
+  }
+  const emoNow = {};
+  function paintEmote(pos) {
+    const layer = el("emolayer");
+    const seats = el("seats");
+    const d2 = seats && seats.children[pos];
+    if (!layer || !d2) return;
+    const old = layer.querySelector('[data-pos="' + pos + '"]');
+    if (old) old.remove();
+    const cur2 = emoNow[pos];
+    const wrap = d2.querySelector(".seat__avwrap");
+    const tag = wrap && wrap.querySelector(".seat__tag");
+    if (!cur2 || Date.now() >= cur2.until) {
+      if (tag) tag.style.visibility = "";
+      return;
+    }
+    if (tag) tag.style.visibility = "hidden";
+    const av = d2.querySelector(".seat__av");
+    if (!av) return;
+    const box = document2.createElement("span");
+    box.className = "seat__emo";
+    box.dataset.pos = String(pos);
+    box.innerHTML = '<span class="emobub">' + esc(emoText(cur2.k)) + '</span><span class="emoimg" style="background-image:url(' + emoImg(cur2.k) + ')"></span>';
+    if (cur2.shown) box.style.animation = "none";
+    else cur2.shown = true;
+    layer.appendChild(box);
+    const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
+    box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";
+    box.style.bottom = Math.round(lb.bottom - ab.bottom - 10) + "px";
+    keepInView(box);
+  }
+  function keepInView(box) {
+    if (!box) return;
+    const stage = window.document.getElementById("stage") || window.document.documentElement;
+    const W3 = stage.getBoundingClientRect();
+    const r2 = box.getBoundingClientRect();
+    if (!r2.width) return;
+    let dx = 0;
+    if (r2.left < W3.left + 2) dx = W3.left + 2 - r2.left;
+    else if (r2.right > W3.right - 2) dx = W3.right - 2 - r2.right;
+    box.style.marginLeft = dx ? Math.round(dx) + "px" : "";
+  }
+  function paintEmotes() {
+    Object.keys(emoNow).forEach((p2) => paintEmote(Number(p2)));
+  }
+  function showEmote(pos, k2) {
+    emoNow[pos] = { k: k2, until: Date.now() + EMO_SHOW, shown: false };
+    paintEmote(pos);
+    if (emoTimers[pos]) clearTimeout(emoTimers[pos]);
+    emoTimers[pos] = setTimeout(() => {
+      delete emoNow[pos];
+      emoTimers[pos] = null;
+      paintEmote(pos);
+    }, EMO_SHOW);
+  }
+  el("emo").onclick = () => {
+    if (Date.now() < emoUntil) return;
+    emoPickOpen(el("emopick").hidden);
+  };
   function flash(msg, msLong) {
     const f2 = el("flash");
-    f2.textContent = msg;
+    f2.innerHTML = String(msg).split("\n").map((x2) => x2.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch])).join("<br>");
     f2.style.opacity = 1;
     setTimeout(() => f2.style.opacity = 0, msLong ? 2200 : 1200);
   }
@@ -20221,14 +21766,6 @@ function mount3(root) {
       spread = !spread;
       renderPile();
     }
-  });
-  document2.querySelectorAll("#lang button").forEach((b2) => {
-    b2.addEventListener("click", () => {
-      lang = b2.dataset.l;
-      document2.documentElement.lang = lang;
-      document2.querySelectorAll("#lang button").forEach((x2) => x2.setAttribute("aria-pressed", String(x2 === b2)));
-      draw();
-    });
   });
   boot();
   window.addEventListener("resize", draw);
@@ -20244,8 +21781,13 @@ __export(tax_exports, {
   mount: () => mount4
 });
 function mount4(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const ART2 = ART_DECK, HEADS2 = HEADS;
+  const ART2 = ART_DECK;
   const el = (id) => document2.getElementById(id);
   const isJ = (c2) => c2 >= 13;
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
@@ -20324,7 +21866,7 @@ function mount4(root) {
       joker: "CHAMELEON"
     }
   };
-  let lang = "ko", step = 0, sel = [], declared = false, reversed = false, revSeat = null;
+  let lang = "ko", step = 0, sel = [], selVal = [], declared = false, reversed = false, revSeat = null;
   let N2 = 6;
   let online2 = false;
   let ranks = [];
@@ -20338,9 +21880,10 @@ function mount4(root) {
   const myHand = () => holdOf(0);
   const nameOf = (i2) => ((lang === "ko" ? G2().names : G2().namesEn) || G2().names || [])[i2] || "";
   const art = (n2) => n2 === 13 ? ART2.jokerA : n2 === 14 ? ART2.jokerB : ART2[String(n2).padStart(2, "0")];
+  const cardName = (n2) => isJ(n2) ? lang === "ko" ? "\uCE74\uBA5C\uB808\uC628" : "CHAMELEON" : (lang === "ko" ? KO_N : EN_N)[n2 - 1];
   function cardHTML(n2, w2) {
-    if (isJ(n2)) return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"></div></div>';
-    return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
+    if (isJ(n2)) return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__num"></span><span class="card__name">' + cardName(n2) + '</span><span class="card__num"></span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"></div></div>';
+    return '<div class="card" style="--w:' + w2 + 'px"><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__name">' + cardName(n2) + '</span><span class="card__num">' + n2 + '</span></div><div class="card__art"><img src="' + art(n2) + '" alt=""></div><div class="card__band"><span class="card__num">' + n2 + '</span><span class="card__num">' + n2 + "</span></div></div>";
   }
   function order() {
     return reversed ? ranks.slice().reverse() : ranks;
@@ -20440,7 +21983,9 @@ function mount4(root) {
   }
   function applyTax2(myGive) {
     if (online2) {
-      if (window.__setTaxGive) window.__setTaxGive(myGive || null);
+      if (window.__setTaxGive && Array.isArray(myGive) && myGive.length && !(window.__taxGive && window.__taxGive.length)) {
+        window.__setTaxGive(myGive);
+      }
       return;
     }
     const hh = holds(), o2 = order();
@@ -20457,6 +22002,7 @@ function mount4(root) {
   }
   function runDeal() {
     clearFx();
+    play("card_deal");
     for (let round = 0; round < 3; round++)
       for (let i2 = 0; i2 < N2; i2++)
         flyCard(-1, i2, 0, (round * 6 + i2) * 55, true);
@@ -20507,9 +22053,9 @@ function mount4(root) {
       d2.style.left = p2.x.toFixed(1) + "%";
       d2.style.top = p2.y.toFixed(1) + "%";
       const big = N2 <= 6;
-      d2.style.setProperty("--av", (big ? 44 : 34) + "px");
+      d2.style.setProperty("--av", "44px");
       d2.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
-      d2.innerHTML = '<span class="seat__r on">' + rankLabel(r2) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + HEADS2[i2] + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>";
+      d2.innerHTML = '<span class="seat__r on">' + rankLabel(r2) + '</span><span class="seat__av" style="background-image:url(' + RINGS.avatar + "),url(" + avtOf(i2) + ')"></span><span class="seat__n">' + nameOf(i2) + "</span>";
       box.appendChild(d2);
     }
     const hn = el("hint");
@@ -20532,8 +22078,16 @@ function mount4(root) {
       s2.onclick = () => {
         if (!giveCount()) return;
         const k2 = sel.indexOf(i2);
-        if (k2 >= 0) sel.splice(k2, 1);
-        else if (sel.length < giveCount()) sel.push(i2);
+        if (k2 >= 0) {
+          sel.splice(k2, 1);
+          selVal.splice(k2, 1);
+        } else if (sel.length < giveCount()) {
+          sel.push(i2);
+          selVal.push(c2);
+          if (sel.length === giveCount() && online2 && window.__setTaxGive) {
+            window.__setTaxGive(selVal.slice(0, giveCount()));
+          }
+        }
         draw();
       };
       h2.appendChild(s2);
@@ -20623,11 +22177,12 @@ function mount4(root) {
     ranks = g2.finish && g2.finish.length === N2 ? g2.finish.slice() : Array.from({ length: N2 }, (_2, i2) => i2);
     step = 0;
     sel = [];
+    selVal = [];
     declared = false;
     reversed = false;
     revSeat = null;
     wasGreat = false;
-    hideHand = false;
+    hideHand = true;
     waitOn = 0;
     clearFx();
     draw();
@@ -20636,6 +22191,62 @@ function mount4(root) {
     boot();
     autoNext();
   };
+  window.__taxProbe = {
+    step: () => step,
+    rank: () => rankOf(0),
+    giveCount: () => giveCount(),
+    hand: () => myHand().slice(),
+    sel: () => sel.slice(),
+    selVal: () => selVal.slice(),
+    /* 혁명 선언 단계(2)로 바로 세운다. 검사에서 소리 시점을 보려고 쓴다 */
+    toRev: (seat) => {
+      revSeat = Number.isInteger(seat) ? seat : 0;
+      declared = false;
+      wasGreat = false;
+      reversed = false;
+      hideHand = false;
+      step = 2;
+      sel = [];
+      selVal = [];
+      clearFx();
+      draw();
+      return { step, revSeat };
+    },
+    /* 고르는 단계(3)로 바로 세운다. ranks 를 주면 등수도 바꾼다 */
+    toGive: (order2) => {
+      if (Array.isArray(order2) && order2.length === N2) ranks = order2.slice();
+      declared = true;
+      reversed = false;
+      revSeat = null;
+      hideHand = false;
+      step = 3;
+      sel = [];
+      selVal = [];
+      clearFx();
+      draw();
+      return { step, rank: rankOf(0), give: giveCount() };
+    },
+    /* 카드 값으로 고른다 */
+    pick: (vals) => {
+      const hand = myHand();
+      const out = [];
+      (vals || []).forEach((v2) => {
+        const i2 = hand.indexOf(v2);
+        if (i2 < 0 || sel.includes(i2) || sel.length >= giveCount()) return;
+        sel.push(i2);
+        selVal.push(hand[i2]);
+        out.push(hand[i2]);
+      });
+      draw();
+      return out;
+    },
+    /* 고른 것을 실제로 넘긴다 */
+    submit: () => {
+      window.__myGive = selVal.slice(0, giveCount());
+      if (online2 && window.__setTaxGive) window.__setTaxGive(window.__myGive.slice());
+      return window.__myGive.slice();
+    }
+  };
   boot();
   autoNext();
   function needStep(k2) {
@@ -20643,6 +22254,7 @@ function mount4(root) {
     return true;
   }
   var autoId = null;
+  var taxShown = false;
   var hideHand = false;
   var tickId = null, tickLeft = 0, tickBase = "";
   function stopTick() {
@@ -20698,7 +22310,7 @@ function mount4(root) {
     let wait2 = 0;
     if (step === 0) wait2 = 3e3;
     else if (step === 1) wait2 = 3e3;
-    else if (step === 2) wait2 = 1e4;
+    else if (step === 2) wait2 = revSeat === null ? 5e3 : 1e4;
     else if (step === 3) wait2 = 1e4;
     if (!wait2) return;
     startTick(wait2);
@@ -20738,6 +22350,7 @@ function mount4(root) {
     if (step === 2 && revSeat !== null && !declared) {
       declared = true;
       wasGreat = great;
+      play("revolution");
       if (online2 && revSeat === 0 && window.__declareRev) window.__declareRev();
       if (great) {
         reversed = true;
@@ -20755,17 +22368,19 @@ function mount4(root) {
       return;
     }
     if (step === 3 && !taxSkipped()) {
-      window.__myGive = sel.map((i2) => myHand()[i2]);
+      window.__myGive = selVal.slice(0, giveCount());
+      taxShown = true;
       runTax();
       applyTax2(window.__myGive);
       sel = [];
+      selVal = [];
     }
     if (step < 4) step++;
     while (step < 4 && !needStep(step)) step++;
     if (step === 1) {
       dealAll();
       hideHand = true;
-    }
+    } else if (step >= 1) hideHand = false;
     draw();
     if (step === 1) {
       runDeal();
@@ -20782,7 +22397,7 @@ function mount4(root) {
       }
       setTimeout(() => {
         if (window.__toTable) window.__toTable();
-      }, 400);
+      }, taxShown ? 2100 : 400);
       return;
     }
     autoNext();
@@ -20811,8 +22426,12 @@ __export(result_exports, {
   mount: () => mount5
 });
 function mount5(root) {
+  function avtOf(seat) {
+    const g2 = window.GAME || {};
+    const a2 = g2.avatars || [];
+    return avtFile(Number(a2[seat]) || 0);
+  }
   const document2 = scoped(root);
-  const HEADS2 = HEADS;
   const el = (id) => document2.getElementById(id);
   const KO_N = ["\uC0AC\uC790", "\uD638\uB791\uC774", "\uBD88\uACF0", "\uCF54\uB07C\uB9AC", "\uC545\uC5B4", "\uC5EC\uC6B0", "\uAE30\uB9B0", "\uBA67\uB3FC\uC9C0", "\uC6D0\uC22D\uC774", "\uD1A0\uB07C", "\uC0C8", "\uC0DD\uC950"];
   const EN_N = ["LION", "TIGER", "BEAR", "ELEPHANT", "CROCODILE", "FOX", "GIRAFFE", "BOAR", "MONKEY", "RABBIT", "BIRD", "MOUSE"];
@@ -20883,7 +22502,7 @@ function mount5(root) {
     el("list").innerHTML = rows.map((seat, idx) => {
       const place = last ? idx : finish.indexOf(seat);
       const gained = place < cut ? 100 - place * 10 : 0;
-      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + (!last && idx === cut - 1 ? " row--cut" : "") + (gained === 0 ? " row--none" : "") + '"><span class="row__p">' + (idx + 1) + '</span><img class="row__av" src="' + HEADS2[seat % HEADS2.length] + '" alt=""><span class="row__n">' + (names[seat] || "") + '</span><span class="row__r">' + rankLabel(place) + '</span><span class="row__g">+' + gained + '</span><span class="row__t">' + (score[seat] || 0) + "</span></div>";
+      return '<div class="row' + (seat === 0 ? " row--me" : "") + (idx === 0 ? " row--top" : "") + (!last && idx === cut - 1 ? " row--cut" : "") + (gained === 0 ? " row--none" : "") + '"><span class="row__p">' + (idx + 1) + '</span><img class="row__av" src="' + avtOf(seat) + '" alt=""><span class="row__n">' + (names[seat] || "") + '</span><span class="row__r">' + rankLabel(place) + '</span><span class="row__g">+' + gained + '</span><span class="row__t">' + (score[seat] || 0) + "</span></div>";
     }).join("");
     el("next").textContent = last ? t2.nextF : t2.next;
     el("quit").textContent = t2.quit;
@@ -21216,12 +22835,13 @@ __export(flow_exports, {
 var BOT_NAMES = ["\uC11C\uC5F0", "\uC900\uD638", "\uBBFC\uC9C0", "\uD0DC\uC724", "\uD558\uC740", "\uC9C0\uD6C8", "\uC608\uB9B0"];
 var ME = "me";
 var newCode = () => String(Math.floor(1e3 + Math.random() * 9e3));
-function createRoom({ cap = 4, name = "\uB098" } = {}) {
+var botAvatar = () => Math.floor(Math.random() * 5);
+function createRoom({ cap = 4, name = "\uB098", avatar = 0 } = {}) {
   return {
     code: newCode(),
     cap: Math.min(8, Math.max(4, cap)),
     phase: "waiting",
-    seats: [{ uid: ME, name: String(name || "\uB098"), bot: false }]
+    seats: [{ uid: ME, name: String(name || "\uB098"), bot: false, avatar: Number(avatar) || 0 }]
   };
 }
 function addBot(room) {
@@ -21229,7 +22849,7 @@ function addBot(room) {
   if (room.seats.length >= room.cap) return false;
   const used = room.seats.map((s2) => s2 && s2.name);
   const name = BOT_NAMES.find((n2) => !used.includes(n2)) || "\uBD07" + room.seats.length;
-  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true });
+  room.seats.push({ uid: "bot" + room.seats.length, name, bot: true, avatar: botAvatar() });
   return true;
 }
 function setCap(room, cap) {
@@ -21252,7 +22872,11 @@ function toRoomView(room) {
 var seatCount = (room) => room ? room.seats.length : 0;
 
 // src/lib/lobby.js
-var serverUrl = () => typeof globalThis !== "undefined" && globalThis.__ZOO_SERVER || (import.meta && import.meta.env && import.meta.env.VITE_GAME_SERVER || "");
+var serverUrl = () => {
+  if (typeof globalThis !== "undefined" && globalThis.__ZOO_SERVER != null)
+    return globalThis.__ZOO_SERVER;
+  return import.meta && import.meta.env && import.meta.env.VITE_GAME_SERVER || "";
+};
 var online = () => Boolean(serverUrl());
 async function api(path, body) {
   const res = await fetch(serverUrl() + path, {
@@ -21270,11 +22894,52 @@ async function api(path, body) {
   if (!res.ok) throw new Error(data && data.error || "\uC11C\uBC84 \uC624\uB958 " + res.status);
   return data;
 }
-var createRoom2 = ({ numPlayers, name, rounds, tax, clear2 }) => api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2 });
-var joinRoom = (code, name) => api(`/zoo/rooms/${code}/join`, { name });
-var peekRoom = (code) => api(`/zoo/rooms/${code}`);
+var createRoom2 = ({ numPlayers, name, rounds, tax, clear2, avatar, friends }) => api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar, friends });
+var joinRoom = (code, name, avatar) => api(`/zoo/rooms/${code}/join`, { name, avatar });
+var peekRoom = (code, seat) => api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}`));
+var leaveRoom = (code, playerID) => api(`/zoo/rooms/${code}/leave`, { playerID: String(playerID) }).catch(() => null);
+var quickJoin = ({ name, avatar, numPlayers, rounds, tax, clear2 }) => api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2 });
+var setRoomCap = (code, numPlayers, playerID) => api(`/zoo/rooms/${code}/cap`, { numPlayers, playerID: String(playerID) });
 var startRoom = (code) => api(`/zoo/rooms/${code}/start`, {});
 var keepAlive = (code, seat) => api(`/zoo/rooms/${code}/alive`, { seat }).catch(() => null);
+var SEAT_KEY = "zk_seat";
+function saveSeat(net2) {
+  try {
+    if (!net2 || net2.code == null) return;
+    localStorage.setItem(SEAT_KEY, JSON.stringify({
+      code: net2.code,
+      matchID: net2.matchID,
+      playerID: net2.playerID,
+      credentials: net2.credentials,
+      numPlayers: net2.numPlayers,
+      opts: net2.opts || null,
+      at: Date.now()
+    }));
+  } catch (e) {
+  }
+}
+function loadSeat() {
+  try {
+    const raw2 = localStorage.getItem(SEAT_KEY);
+    if (!raw2) return null;
+    const s2 = JSON.parse(raw2);
+    if (!s2 || s2.code == null) return null;
+    if (Date.now() - (s2.at || 0) > 6 * 60 * 60 * 1e3) {
+      clearSeat();
+      return null;
+    }
+    return s2;
+  } catch (e) {
+    return null;
+  }
+}
+function clearSeat() {
+  try {
+    localStorage.removeItem(SEAT_KEY);
+  } catch (e) {
+  }
+}
+var sayReady = (code, seat) => api(`/zoo/rooms/${code}/ready`, { seat }).catch(() => null);
 
 // src/lib/flow.js
 var opt = null;
@@ -21287,6 +22952,7 @@ var W2 = () => window;
 var D2 = () => window.document;
 function emitRoom() {
   W2().__room = net ? netRoomView() : toRoomView(myRoom);
+  syncGameAvatars();
   W2().dispatchEvent(new Event("roomchange"));
 }
 function netRoomView() {
@@ -21299,6 +22965,7 @@ function netRoomView() {
       uid: "s" + i2,
       name: p2.name,
       bot: Boolean(p2.bot),
+      avatar: Number(p2.avatar) || 0,
       off: Boolean(p2.away),
       left: Boolean(p2.left)
     };
@@ -21313,6 +22980,47 @@ function netRoomView() {
     seats
   };
 }
+async function refreshNet() {
+  if (!net) return null;
+  const r2 = await peekRoom(net.code, net.playerID);
+  net.players = r2.players;
+  net.started = r2.started;
+  if (r2.numPlayers) net.numPlayers = r2.numPlayers;
+  if (r2.matchID) net.matchID = r2.matchID;
+  if (r2.you && r2.you.playerID != null) {
+    net.playerID = String(r2.you.playerID);
+    if (r2.you.credentials) net.credentials = r2.you.credentials;
+  }
+  W2().__opts.seated = (r2.players || []).filter((p2) => p2.name).length;
+  syncGameAvatars();
+  if (!r2.started && String(net.playerID) === "0" && W2().__opts.seated >= (r2.numPlayers || net.numPlayers)) startRoomCount(15);
+  emitRoom();
+  return r2;
+}
+function myAvatar() {
+  const a2 = W2().ACCOUNT || {};
+  return Number(a2.avatar) || 0;
+}
+function seatAvatars(n2) {
+  const out = new Array(n2).fill(0);
+  if (net) {
+    (net.players || []).forEach((p2) => {
+      const i2 = Number(p2.id);
+      if (i2 >= 0 && i2 < n2) out[i2] = Number(p2.avatar) || 0;
+    });
+    return out;
+  }
+  if (myRoom) myRoom.seats.forEach((s2, i2) => {
+    if (i2 < n2) out[i2] = s2 && Number(s2.avatar) || 0;
+  });
+  return out;
+}
+function syncGameAvatars() {
+  const g2 = W2().GAME;
+  if (!g2 || !g2.N) return;
+  const a2 = seatAvatars(g2.N);
+  if (a2.some((v2) => v2)) g2.avatars = a2;
+}
 function pollStart() {
   if (pollId || !net) return;
   pollId = setInterval(async () => {
@@ -21321,12 +23029,8 @@ function pollStart() {
       return;
     }
     try {
-      const r2 = await peekRoom(net.code);
-      net.players = r2.players;
-      net.started = r2.started;
-      W2().__opts.seated = (r2.players || []).filter((p2) => p2.name).length;
-      emitRoom();
-      if (r2.started && !net.inGame) enterOnlineGame();
+      const r2 = await refreshNet();
+      if (r2 && r2.started && !net.inGame) enterOnlineGame();
     } catch (e) {
     }
   }, 1500);
@@ -21338,6 +23042,7 @@ function pollStop() {
   }
 }
 function botFillStart() {
+  if (myRoom && myRoom.friends) return;
   if (botTimer2) return;
   botTimer2 = setInterval(() => {
     if (!myRoom || myRoom.phase !== "waiting") return;
@@ -21365,29 +23070,31 @@ function stopRoomCount() {
     roomCountId = null;
   }
   const b2 = D2().querySelector("#room #action button");
-  if (b2) b2.textContent = (b2.textContent || "").replace(/\s*\(\d+\)$/, "");
+  W2().__roomLeft = null;
+  if (b2) b2.textContent = (b2.textContent || "").replace(/\s+\d+$/, "");
 }
 function startRoomCount(sec) {
   if (roomCountId) return;
+  if (!myRoom && !net) return;
   const page = D2().getElementById("room");
   if (!page) return;
   let left = sec;
   const tick = () => {
     const b2 = D2().querySelector("#room #action button");
-    if (!myRoom || myRoom.phase !== "waiting" || !page.classList.contains("is-on")) {
-      if (!myRoom || myRoom.phase !== "waiting") {
-        stopRoomCount();
-      }
+    const alive2 = net ? net && !net.started : myRoom && myRoom.phase === "waiting";
+    if (!alive2 || !page.classList.contains("is-on")) {
+      if (!alive2) stopRoomCount();
       return;
     }
     if (!b2 || b2.disabled) return;
-    const base = (b2.textContent || "").replace(/\s*\(\d+\)$/, "");
     if (left <= 0) {
       stopRoomCount();
       b2.click();
       return;
     }
-    b2.textContent = base + " (" + left + ")";
+    W2().__roomLeft = left;
+    const base = (b2.textContent || "").replace(/\s+\d+$/, "");
+    b2.textContent = base + " " + left;
     left--;
   };
   tick();
@@ -21397,7 +23104,9 @@ function startGame() {
   if (net) return startOnlineGame();
   botFillStop();
   stopRoomCount();
-  while (seatCount(myRoom) < 4) if (!addOneBot()) break;
+  if (!(myRoom && myRoom.friends)) {
+    while (seatCount(myRoom) < 4) if (!addOneBot()) break;
+  }
   const n2 = seatCount(myRoom);
   if (n2 < 4) throw new Error("4\uBA85\uC774 \uBAA8\uC5EC\uC57C \uC2DC\uC791\uD569\uB2C8\uB2E4 (\uC9C0\uAE08 " + n2 + "\uBA85)");
   myRoom.phase = "playing";
@@ -21458,10 +23167,13 @@ function openTable(v2, n2, names) {
     N: n2,
     /* 화면 자리 → 그 자리에 앉은 사람(엔진 자리).
        얼굴 그림을 고를 때 쓴다. 화면 위치로 고르면 판이 바뀔 때 얼굴만 남는다.
-       뽑기 동안에는 방에 앉았던 순서 그대로 두고(6번),
-       자리 교체는 판에 들어설 때 한다 — 미리 바뀌면 누가 뭘 뽑았는지 짐작된다 */
-    faces: Array.from({ length: n2 }, (_2, k2) => k2),
+       예전에는 뽑기 동안 이것을 자리 번호 그대로(0,1,2…) 두었는데,
+       그러면 뽑기 화면에서 이름과 얼굴이 서로 다른 사람을 가리킨다.
+       뽑기와 판이 같은 사람을 그리도록 처음부터 진짜 자리를 넣는다 */
+    faces: v2.seats.map((s2) => s2.seat),
     seatFaces: v2.seats.map((s2) => s2.seat),
+    /* 엔진 자리 → 그 사람이 고른 얼굴 번호. 방에 앉은 순서가 곧 엔진 자리다 */
+    avatars: seatAvatars(n2),
     roundNo: v2.roundNo,
     names: v2.names.slice(),
     namesEn: v2.names.slice(),
@@ -21478,7 +23190,11 @@ function openTable(v2, n2, names) {
   W2().__myRankIdx = null;
   W2().__scored = null;
   W2().__gameOver = null;
-  opt.goto("draw");
+  if (v2.phase === "draw") opt.goto("draw");
+  else {
+    opt.goto("table");
+    if (W2().__bootTable) W2().__bootTable(true);
+  }
 }
 function onRoundEnd(v2) {
   const lr = v2.lastRound;
@@ -21554,7 +23270,7 @@ function ensureTaxGiven() {
   if (hand.length < v2.taxGive) return;
   give(hand.slice(0, v2.taxGive));
 }
-function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
+function install({ goto, myName = () => "\uB098", botJoinMs = 3e3 } = {}) {
   opt = { goto, myName, botJoinMs };
   if (offView) offView();
   offView = onView((v2) => {
@@ -21565,49 +23281,100 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
     W2().__canDeclare = v2.canDeclare;
   });
   W2().__createRoom = async () => {
+    leaveIfSeated();
     const o2 = W2().__opts || {};
     if (online()) {
       const r2 = await createRoom2({
         numPlayers: o2.cap || 4,
         name: opt.myName(),
+        avatar: myAvatar(),
         rounds: o2.rounds || 3,
         tax: o2.tax !== false,
-        clear2: Boolean(o2.clear2)
+        clear2: Boolean(o2.clear2),
+        friends: Boolean(o2.friends)
       });
       net = Object.assign(
         { started: false, inGame: false },
         r2,
-        { players: [{ id: 0, name: opt.myName() }] }
+        { players: [{ id: 0, name: opt.myName(), avatar: myAvatar() }] }
       );
+      saveSeat(net);
       W2().__opts = Object.assign(W2().__opts || {}, { cap: r2.numPlayers, seated: 1 });
       emitRoom();
       pollStart();
       return r2.code;
     }
-    myRoom = createRoom({ cap: o2.cap || 4, name: opt.myName() });
+    myRoom = createRoom({ cap: o2.cap || 4, name: opt.myName(), avatar: myAvatar() });
+    myRoom.friends = Boolean(o2.friends);
     W2().__opts = Object.assign(W2().__opts || {}, { cap: myRoom.cap, seated: 1 });
     emitRoom();
     botFillStart();
     return myRoom.code;
   };
+  function leaveIfSeated() {
+    if (net && net.code != null && net.playerID != null) {
+      leaveRoom(net.code, net.playerID);
+    }
+    botFillStop();
+    stopRoomCount();
+    pollStop();
+    net = null;
+    clearSeat();
+  }
+  W2().__quickJoin = async () => {
+    leaveIfSeated();
+    const o2 = W2().__opts || {};
+    if (!online()) return W2().__createRoom();
+    const r2 = await quickJoin({
+      name: opt.myName(),
+      avatar: myAvatar(),
+      numPlayers: o2.cap || 4,
+      rounds: o2.rounds || 3,
+      tax: o2.tax !== false,
+      clear2: Boolean(o2.clear2)
+    });
+    net = Object.assign(
+      { started: false, inGame: false },
+      r2,
+      { players: [{ id: Number(r2.playerID), name: opt.myName(), avatar: myAvatar() }] }
+    );
+    saveSeat(net);
+    W2().__opts = Object.assign(
+      W2().__opts || {},
+      { cap: r2.numPlayers, rounds: r2.opts && r2.opts.rounds || o2.rounds || 3 }
+    );
+    try {
+      await refreshNet();
+    } catch (e) {
+      emitRoom();
+    }
+    pollStart();
+    return r2.code;
+  };
   W2().__joinRoom = async (code) => {
+    leaveIfSeated();
     if (!online()) {
       alert("\uC11C\uBC84 \uB300\uC804\uC744 \uC4F0\uB824\uBA74 \uAC8C\uC784 \uC11C\uBC84 \uC8FC\uC18C\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.");
       return null;
     }
-    const r2 = await joinRoom(String(code).trim(), opt.myName());
+    const r2 = await joinRoom(String(code).trim(), opt.myName(), myAvatar());
     net = Object.assign(
       { started: false, inGame: false },
       r2,
-      { players: [{ id: Number(r2.playerID), name: opt.myName() }] }
+      { players: [{ id: Number(r2.playerID), name: opt.myName(), avatar: myAvatar() }] }
     );
+    saveSeat(net);
     W2().__opts = Object.assign(W2().__opts || {}, {
       cap: r2.numPlayers,
       rounds: r2.opts && r2.opts.rounds || 3,
       tax: !(r2.opts && r2.opts.tax === false),
       clear2: Boolean(r2.opts && r2.opts.clear2)
     });
-    emitRoom();
+    try {
+      await refreshNet();
+    } catch (e) {
+      emitRoom();
+    }
     pollStart();
     return r2.code;
   };
@@ -21621,18 +23388,42 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   };
   W2().__roomCode = () => net ? net.code : myRoom ? myRoom.code : null;
   W2().__leaveRoom = () => {
+    if (net && net.code != null && net.playerID != null) {
+      leaveRoom(net.code, net.playerID);
+    }
     botFillStop();
     stopRoomCount();
     pollStop();
-    stop();
+    stop2();
     myRoom = null;
     net = null;
+    clearSeat();
     emitRoom();
   };
   W2().__saveOpts = async () => {
+    if (net) {
+      const want = (W2().__opts || {}).cap;
+      if (!want || want === net.numPlayers) return;
+      try {
+        const r2 = await setRoomCap(net.code, want, net.playerID);
+        net.numPlayers = r2.numPlayers;
+        if (r2.matchID) net.matchID = r2.matchID;
+        if (r2.seatMap && r2.seatMap[Number(net.playerID)] != null)
+          net.playerID = String(r2.seatMap[Number(net.playerID)]);
+        W2().__opts.cap = r2.numPlayers;
+        stopRoomCount();
+        await refreshNet();
+      } catch (e) {
+        W2().__opts.cap = net.numPlayers;
+        emitRoom();
+        alert((e && e.message || "").replace(/^\S+ \d+ /, "") || "\uC778\uC6D0\uC744 \uBC14\uAFB8\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4");
+      }
+      return;
+    }
     if (!myRoom) return;
     setCap(myRoom, (W2().__opts || {}).cap);
     W2().__opts.cap = myRoom.cap;
+    stopRoomCount();
     W2().__opts.seated = seatCount(myRoom);
     emitRoom();
     if (seatCount(myRoom) < myRoom.cap) {
@@ -21640,6 +23431,7 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
       botFillStart();
     } else startRoomCount(15);
   };
+  W2().__holdPlay = (on3) => setPaused(Boolean(on3));
   W2().__botFill = (on3) => on3 ? botFillStart() : botFillStop();
   W2().__addBot = addOneBot;
   W2().__startRound = async () => startGame();
@@ -21654,11 +23446,72 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   W2().__iMoved = () => {
     if (net) keepAlive(net.code, Number(net.playerID));
   };
+  W2().__resumable = async () => {
+    const s2 = loadSeat();
+    if (!s2 || !online()) return null;
+    let r2 = null;
+    try {
+      r2 = await peekRoom(s2.code, s2.playerID);
+    } catch (e) {
+      r2 = null;
+    }
+    if (!r2 || !r2.code) {
+      clearSeat();
+      return null;
+    }
+    const me = (r2.players || []).find((p2) => p2 && Number(p2.id) === Number(s2.playerID));
+    if (!me || me.left) {
+      clearSeat();
+      return null;
+    }
+    return { code: s2.code, started: Boolean(r2.started), players: r2.players || [] };
+  };
+  W2().__resume = async () => {
+    const s2 = loadSeat();
+    if (!s2) return false;
+    let r2 = null;
+    try {
+      r2 = await peekRoom(s2.code, s2.playerID);
+    } catch (e) {
+      r2 = null;
+    }
+    if (!r2 || !r2.code) {
+      clearSeat();
+      return false;
+    }
+    net = Object.assign({ started: Boolean(r2.started), inGame: false }, {
+      code: s2.code,
+      matchID: s2.matchID,
+      playerID: s2.playerID,
+      credentials: s2.credentials,
+      numPlayers: s2.numPlayers || r2.numPlayers,
+      opts: r2.opts || s2.opts || null,
+      players: r2.players || []
+    });
+    myRoom = s2.code;
+    W2().__opts = Object.assign(W2().__opts || {}, {
+      cap: net.numPlayers,
+      rounds: net.opts && net.opts.rounds || 3,
+      tax: !(net.opts && net.opts.tax === false),
+      clear2: Boolean(net.opts && net.opts.clear2),
+      seated: (r2.players || []).filter(Boolean).length
+    });
+    emitRoom();
+    if (net.started) {
+      enterOnlineGame();
+    } else {
+      W2().__goto("room");
+      pollStart();
+    }
+    return true;
+  };
   W2().__declareRev = () => declareRev();
   W2().__passRev = () => passRev();
   W2().__setTaxGive = (cards) => {
+    if (!Array.isArray(cards) || !cards.length) return;
+    if (W2().__taxGive && W2().__taxGive.length) return;
     W2().__taxGive = cards;
-    if (Array.isArray(cards) && cards.length) give(cards);
+    give(cards);
   };
   W2().__endRoundOnline = async () => {
   };
@@ -21669,16 +23522,18 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
     if (G0 && G0.seatFaces) G0.faces = G0.seatFaces.slice();
     ensureTaxGiven();
     setPaused(false);
+    if (net) sayReady(net.code, Number(net.playerID));
     if (typeof prevBootTable === "function") prevBootTable(fresh);
   };
   const prevToTable = W2().__toTable;
   W2().__toTable = () => {
     setPaused(false);
+    if (net) sayReady(net.code, Number(net.playerID));
     if (typeof prevToTable === "function") prevToTable();
     else opt.goto("table");
   };
   W2().__onRestart = () => {
-    stop();
+    stop2();
     if (!myRoom) return opt.goto("lobby");
     myRoom.phase = "waiting";
     emitRoom();
@@ -21686,14 +23541,15 @@ function install({ goto, myName = () => "\uB098", botJoinMs = 2500 } = {}) {
   };
   W2().__quitGame = () => {
     stopCount();
+    stopRoomCount();
     botFillStop();
-    stop();
+    stop2();
     setPaused(false);
   };
   const quit = D2().querySelector("#result #quit");
   if (quit) quit.addEventListener("click", () => {
     stopCount();
-    stop();
+    stop2();
     myRoom = null;
   });
 }
@@ -21707,7 +23563,7 @@ function teardown() {
     offView = null;
   }
   net = null;
-  stop();
+  stop2();
   myRoom = null;
 }
 export {
