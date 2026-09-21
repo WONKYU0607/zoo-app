@@ -995,6 +995,12 @@ const TURN_SEC = 15;
   }
 
   function queueMove(kind){
+    /* **눈에 잠겨 보이는 단추를 누른 것은 큐에 넣지 않는다.**
+       큐는 "열려 보여서 눌렀는데 속으로는 아직 처리 중이던" 찰나를 받아 주는 것이다.
+       차례가 오기 전에 미리 눌러 둔 것까지 담아 두면, 몇 초 뒤 차례가 왔을 때
+       뒤늦게 나가서 **한참 기다렸다 패스되는 것처럼** 보인다(신고받음) */
+    const b = el(kind === "play" ? "play" : "pass");
+    if (b && b.disabled){ evShow("  (잠긴 단추 — 무시)"); return; }
     const list = kind === "play" ? sel.map(i => hand[i]) : [];
     queued = { kind, list, at: Date.now(), sentNo: -1 }; seeQ();
     evShow("  (" + (kind === "play" ? "내기" : "패스") + " 대기열에 넣음)");
@@ -1031,6 +1037,7 @@ const TURN_SEC = 15;
         eng.play(effective(q.list), q.list.length);
       } else {
         pendingHand = -1;
+        sel = [];                 /* 골라 둔 카드를 내려놓는다 — 큐로 옮기며 빠뜨렸었다 */
         passHeld = lastTrick;
         passPressAt = Date.now();
         eng.passTurn();

@@ -149,6 +149,12 @@ async function press(p){
    `touch-action: none` 으로 제스처를 안 뺏기게 했다 */
 {
   const slip = async (dx, dy, ms) => {
+    /* 내 차례가 아니면 카드가 안 골린다 — 그건 이 검사가 볼 것이 아니다 */
+    const mine = await page.evaluate(() => {
+      const v = window.__eng && window.__eng.view;
+      return Boolean(v && v.myTurn);
+    });
+    if (!mine) return null;
     const p = await spot();
     if (!p) return null;
     const was = await chosen();

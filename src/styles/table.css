@@ -270,6 +270,9 @@ html[lang="en"] #table .seat__emo .emobub{font-size:7.5px}
 
    판 화면은 스크롤할 것이 없으므로 제스처를 넘기지 않는다 */
 #table{ touch-action: none; }
+/* 다만 **굴려야 하는 것은 예외**로 둔다 — 바닥 펼치기와 신호 기록은
+   세로로 굴러야 한다. 여기까지 막으면 손가락으로 못 넘긴다 */
+#table .spread{ touch-action: pan-y; }
 #table .slot,
 #table .acts button,
 #table #auto,

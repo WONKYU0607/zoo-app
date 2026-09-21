@@ -139,8 +139,11 @@ for (let round = 0; round < 6; round++){
       log: (window.__evLines || []).slice(-6).join(" | "),
     }), mark);
     if (st.sent > base){ done = true; went++; break; }
-    /* 화면 안내는 뺐다(사용자 요청). 기록으로 확인한다 */
-    if (/대기열 버림|확인이 안 됨/.test(st.log)){ done = true; told++; msg = st.log; break; }
+    /* 화면 안내는 뺐다(사용자 요청). 기록으로 확인한다.
+       **눈에 잠겨 보이는 단추를 누른 것은 무시하는 것이 맞다** —
+       큐는 "열려 보여서 눌렀는데 속으로는 처리 중이던" 찰나를 받는 것이지,
+       차례 오기 전에 미리 눌러 둔 것까지 담아 두면 한참 뒤에 뒤늦게 나간다 */
+    if (/대기열 버림|확인이 안 됨|잠긴 단추/.test(st.log)){ done = true; told++; msg = st.log; break; }
   }
   if (!done) console.log("   [사라짐] " + JSON.stringify(await page.evaluate(() => ({
     기록: (window.__evLines||[]).slice(-8),
