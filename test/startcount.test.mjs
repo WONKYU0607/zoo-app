@@ -47,9 +47,17 @@ const room = code || (await page.evaluate(() => {
 check("8인 방을 팠다", Boolean(room), "방 " + room);
 if (!room){ shut(srv, browser); process.exit(1); }
 
-/* 사람 셋을 더 들인다 → 모두 4명 */
-for (const n of ["둘", "셋", "넷"]) await api(`/zoo/rooms/${room}/join`, { name: n, avatar: 0 }).catch(() => null);
-await nap(1800);
+/* **봇이 채우게 둔다** — 실제로는 혼자 방을 파고 봇이 들어오는 경우가 대부분이다.
+   사람만 넣어 보는 검사는 이 경로를 안 지나서 "고쳤다" 고 잘못 말한 적이 있다.
+   4명이 될 때까지 기다렸다 시작한다 */
+let seated = 0;
+for (let i = 0; i < 60; i++){
+  const r = await api(`/zoo/rooms/${room}`);
+  seated = (r.players || []).filter(p => p && p.name).length;
+  if (seated >= 4) break;
+  await nap(500);
+}
+console.log("  시작 직전 앉은 수: " + seated);
 
 /* 방장이 시작 */
 await page.evaluate(async () => { await window.__startRound(); });
@@ -80,6 +88,22 @@ const srvRoom = await api(`/zoo/rooms/${room}`);
 check("서버는 4인 판이다", srvRoom.numPlayers === 4, "서버 " + srvRoom.numPlayers + "인");
 check("방장 화면도 4인 판에 붙었다", seen.length > 0 && seen.every(n => n === 4),
       "화면 자리 수 " + JSON.stringify(counts));
+
+/* **판이 실제로 굴러가는가.** 봇 자리가 빈 채로 남으면 아무도 안 둬서 멈추거나,
+   봇 대리인이 빈 자리를 두려다 서버가 통째로 죽었다 */
+{
+  const n0 = await page.evaluate(() => (window.__eng.view || {}).moveNo || 0);
+  let n1 = n0;
+  for (let i = 0; i < 30; i++){
+    await nap(500);
+    n1 = await page.evaluate(() => (window.__eng.view || {}).moveNo || 0);
+    if (n1 > n0 + 2) break;
+  }
+  let alive = false;
+  try { alive = Boolean((await api("/zoo/health")).ok); } catch(e){}
+  check("판이 굴러간다 (봇이 둔다)", n1 > n0, "수 번호 " + n0 + " → " + n1);
+  check("서버가 안 죽었다", alive);
+}
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);
