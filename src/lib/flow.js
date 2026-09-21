@@ -225,8 +225,13 @@ function startGame(){
 async function startOnlineGame(){
   stopRoomCount();
   await lobby.startRoom(net.code);
-  const r = await lobby.peekRoom(net.code);
-  net.players = r.players; net.started = true;
+  /* **판 번호·자리·자리표를 다시 받아 온다.**
+     8인 방에 4명일 때 시작하면 서버는 4인 판을 **새로 만들고 자리표도 새로 준다.**
+     예전에는 여기서 사람 목록만 받아서, 방장은 옛 8인 판 번호와 옛 자리표를
+     그대로 들고 붙었다 — 그래서 4인으로 뽑기에 들어갔다가 곧바로 8인이 됐다.
+     다른 사람들은 `refreshNet()` 으로 들어가서 멀쩡했고 방장만 이랬다 */
+  await refreshNet();
+  net.started = true;
   emitRoom();
   enterOnlineGame();
 }
