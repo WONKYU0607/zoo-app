@@ -46,7 +46,7 @@ await cdp.send("Network.emulateNetworkConditions", {
 await page.reload({ waitUntil: "networkidle0" });
 
 await page.evaluate(() => { window.__opts = { cap: 4, seated: 1, rounds: 3, tax: true, clear2: false }; });
-await page.evaluate(async () => { await window.__quickJoin(); });
+await page.evaluate(async () => { await window.__createRoom();   /* 빠른참가는 이제 남의 방에만 들어간다 */ });
 await page.evaluate(() => window.__goto("room"));
 const now = () => page.evaluate(() => (document.querySelector(".page.is-on")||{}).id);
 /* 자리가 다 찰 때까지 기다렸다가 시작한다 */

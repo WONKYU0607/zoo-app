@@ -7,7 +7,7 @@ var __export = (target, all) => {
 // src/screens/_markup.js
 var MARKUP = {
   "entry": '<div class="bg">\n  <div class="bg__img"></div>\n  <div class="bg__top"></div>\n  <div class="bg__bot"></div>\n</div>\n\n<div class="fan"><div class="fan__in" id="fan"></div></div>\n\n<main class="screen">\n  <div class="plate">\n    <div class="eyebrow" id="eyebrow"></div>\n    <h1 class="wordmark" id="wordmark"></h1>\n    <p class="sub" id="sub"></p>\n    <div class="hr"></div>\n  </div>\n  <div class="spacer"></div>\n  <button class="btn" id="start"></button>\n  <p class="hint" id="hint"></p>\n  <button class="testin" id="testin" hidden>\uC2DC\uD5D8\uC6A9 \uB85C\uADF8\uC778</button>\n</main>',
-  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
+  "lobby": '<div class="veil"></div>\n<main class="screen">\n  <div class="bar">\n    <div class="top" id="acct">\n      <button class="top__me" id="acctProfile" aria-label="profile"></button>\n      <span class="top__tier" id="acctTier">0</span>\n      <span class="top__n" id="acctName"></span>\n      <i class="top__d"></i>\n      <span class="top__s" id="acctScore">0</span>\n      <i class="top__d"></i>\n      <span class="top__k" id="acctTick">3</span>\n      <span class="top__t" id="acctTimer"></span>\n      <button class="top__cfg" data-cfgopen aria-label="settings"></button>\n    </div>\n  </div>\n\n  <div class="body">\n    <div>\n      <div class="block__label" id="lbQuick"></div>\n      <button class="btn-primary" id="btQuick"><span id="btQuickT"></span><span class="q-open" id="qOpen" hidden></span></button>\n      <p class="hint" id="hQuick"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbNew"></div>\n      <button class="btn-second" id="btNew"></button>\n      <p class="hint" id="hNew"></p>\n    </div>\n\n    <div>\n      <div class="block__label" id="lbJoin"></div>\n      <div class="join">\n        <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="\uBC29 \uBC88\uD638">\n        <button id="btJoin"></button>\n      </div>\n    </div>\n  </div>\n\n  <button class="btn-rules" id="btRules"></button>\n</main>\n\n<div class="sheet" id="sheet" role="dialog" aria-modal="true">\n  <div class="sheet__veil" data-close></div>\n  <div class="sheet__panel">\n    <div class="sheet__head">\n      <div class="sheet__title" id="shTitle"></div>\n      <button class="sheet__close" data-close aria-label="\uB2EB\uAE30">\xD7</button>\n    </div>\n    <div class="sheet__body">\n      <p class="lead" id="shLead"></p>\n      <div class="grid" id="grid"></div>\n      <div id="rules"></div>\n    </div>\n  </div>\n</div>',
   "room": '<div class="veil"></div>\n<main class="screen">\n  <div class="lowfade"></div>\n  <div class="bar">\n    <button class="back" aria-label="\uB098\uAC00\uAE30">\u2039</button>\n    <div class="bar__t" id="bt"></div>\n    <div style="display:flex;gap:7px">\n      <div class="view" id="lang">\n        <button data-l="ko" aria-pressed="true">\uD55C</button>\n        <button data-l="en" aria-pressed="false">EN</button>\n      </div>\n    </div>\n  </div>\n\n  <div class="roomno">\n    <span class="roomno__l" id="rl"></span>\n    <span class="roomno__n" id="roomNo">----</span>\n    <button id="rc"></button>\n  </div>\n\n  <div class="tablewrap">\n    <div class="felt">\n      <div class="felt__c">\n        <div class="felt__n" id="feltN"></div>\n        <div class="felt__s" id="feltS"></div>\n      </div>\n    </div>\n    <div id="seats"></div>\n  </div>\n\n  <button class="sum" id="sum" data-optopen></button>\n  <div id="action"></div>\n</main>',
   "draw": '<main class="screen">\n  <div class="bar">\n    <div class="bar__t" id="step"></div>\n    <div class="lang" id="lang">\n      <button data-l="ko" aria-pressed="true">\uD55C</button>\n      <button data-l="en" aria-pressed="false">EN</button>\n    </div>\n  </div>\n\n  <div class="ring" id="ring">\n    <div class="plane" id="plane">\n      <div class="felt"></div>\n      <div id="seats"></div>\n      <div class="deck" id="deck"></div>\n    </div>\n  </div>\n\n  <div class="mid" id="mid"></div>\n  <div class="pad"></div>\n  <div class="acts">\n    <button class="bt-main" id="go" disabled></button>\n  </div>\n</main>',
   "table": `<main class="screen">
@@ -950,13 +950,31 @@ function initNav() {
     requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
   }
   document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
+  let noneTimer = null;
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
-    const f = window.__quickJoin || window.__createRoom;
-    if (f) {
-      const code = await f();
-      if (!code) return;
+    const f = window.__quickJoin;
+    if (!f) return;
+    window.__quickNone = false;
+    const code = await f();
+    if (code) {
+      go("room");
+      return;
     }
-    go("room");
+    if (window.__quickNone) {
+      const h = document.querySelector("#lobby #hQuick");
+      const L2 = window.__lobbyT ? window.__lobbyT() : null;
+      if (h) {
+        if (!h.dataset.orig) h.dataset.orig = h.textContent;
+        h.textContent = L2 && L2.none || "\uC9C0\uAE08 \uB4E4\uC5B4\uAC08 \uBC29\uC774 \uC5C6\uC2B5\uB2C8\uB2E4";
+        h.classList.add("hint--warn");
+        if (noneTimer) clearTimeout(noneTimer);
+        noneTimer = setTimeout(() => {
+          h.textContent = h.dataset.orig || "";
+          h.classList.remove("hint--warn");
+        }, 2500);
+      }
+      if (window.__refreshOpen) window.__refreshOpen();
+    }
   });
   document.querySelector("#lobby #btJoin").addEventListener("click", async () => {
     const inp = document.querySelector("#lobby #code");
@@ -1392,6 +1410,33 @@ var lobby_exports = {};
 __export(lobby_exports, {
   mount: () => mount2
 });
+
+// src/lib/lobby.js
+var serverUrl = () => {
+  if (typeof globalThis !== "undefined" && globalThis.__ZOO_SERVER != null)
+    return globalThis.__ZOO_SERVER;
+  return import.meta && globalThis.__ENV__ && globalThis.__ENV__.VITE_GAME_SERVER || "";
+};
+var online = () => Boolean(serverUrl());
+async function api(path, body) {
+  const res = await fetch(serverUrl() + path, {
+    method: body ? "POST" : "GET",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : void 0
+  });
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    data = {};
+  }
+  if (!res.ok) throw new Error(data && data.error || "\uC11C\uBC84 \uC624\uB958 " + res.status);
+  return data;
+}
+var openRooms = () => api("/zoo/open").then((r) => Number(r && r.count) || 0);
+
+// src/screens/lobby.js
 function mount2(root) {
   const document2 = scoped(root);
   const IMG = LOBBY_ART;
@@ -1400,7 +1445,10 @@ function mount2(root) {
       mark: "\uB3D9\uBB3C\uC758 \uC655\uAD6D",
       lbQuick: "\uBC14\uB85C \uC2DC\uC791\uD558\uAE30",
       btQuick: "\uBE60\uB978 \uCC38\uAC00",
-      hQuick: "\uAE30\uB2E4\uB9AC\uB294 \uBD84\uB4E4\uACFC \uC790\uB3D9\uC73C\uB85C \uC774\uC5B4 \uB4DC\uB9BD\uB2C8\uB2E4. \uC778\uC6D0\uC774 \uBAA8\uC774\uBA74 \uBC14\uB85C \uC2DC\uC791\uD569\uB2C8\uB2E4.",
+      open: (n) => "(\uBE48\uBC29 " + n + "\uAC1C)",
+      none: "\uC9C0\uAE08 \uB4E4\uC5B4\uAC08 \uBC29\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
+      hQuick: "",
+      /* 설명 글은 뺐다. 이 줄은 "들어갈 방이 없습니다" 안내에만 쓴다 */
       lbNew: "\uCE5C\uAD6C\uC640 \uD558\uAE30",
       btNew: "\uBC29 \uB9CC\uB4E4\uAE30",
       hNew: "\uBC29\uC744 \uB9CC\uB4E4\uBA74 4\uC790\uB9AC \uBC88\uD638\uAC00 \uB098\uC635\uB2C8\uB2E4. \uCE5C\uAD6C\uC5D0\uAC8C \uBC88\uD638\uB97C \uC54C\uB824 \uC8FC\uC138\uC694. 4\uBA85\uBD80\uD130 8\uBA85\uAE4C\uC9C0 \uD568\uAED8\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
@@ -1432,7 +1480,9 @@ function mount2(root) {
       mark: "Zoo President",
       lbQuick: "PLAY NOW",
       btQuick: "Quick match",
-      hQuick: "We'll pair you with players already waiting. The game starts as soon as the table fills.",
+      open: (n) => "(" + n + " open)",
+      none: "No open room right now",
+      hQuick: "",
       lbNew: "PLAY WITH FRIENDS",
       btNew: "Create room",
       hNew: "You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
@@ -1471,7 +1521,7 @@ function mount2(root) {
     document2.documentElement.lang = lang;
     const set = (id, v) => document2.getElementById(id).textContent = v;
     set("lbQuick", t.lbQuick);
-    set("btQuick", t.btQuick);
+    set("btQuickT", t.btQuick);
     set("hQuick", t.hQuick);
     set("lbNew", t.lbNew);
     set("btNew", t.btNew);
@@ -1540,6 +1590,39 @@ function mount2(root) {
   window.addEventListener("accountready", paintAcct);
   window.addEventListener("accountchange", paintAcct);
   paintAcct();
+  window.__lobbyT = () => T2[lang];
+  const openEl = () => document2.getElementById("qOpen");
+  async function refreshOpen() {
+    const el = openEl();
+    if (!el) return;
+    if (!online()) {
+      el.hidden = true;
+      return;
+    }
+    try {
+      const n = await openRooms();
+      el.textContent = T2[lang].open(n);
+      el.dataset.n = String(n);
+      el.classList.toggle("q-open--zero", n === 0);
+      el.hidden = false;
+    } catch (e) {
+      el.hidden = true;
+    }
+  }
+  window.__refreshOpen = refreshOpen;
+  const sec = root && root.closest && root.closest(".page") || root;
+  const lobbyOn = () => Boolean(sec && sec.classList && sec.classList.contains("is-on"));
+  refreshOpen();
+  setInterval(() => {
+    if (lobbyOn() && !document2.hidden) refreshOpen();
+  }, 5e3);
+  try {
+    if (sec && sec.nodeType === 1)
+      new MutationObserver(() => {
+        if (lobbyOn()) refreshOpen();
+      }).observe(sec, { attributes: true, attributeFilter: ["class"] });
+  } catch (e) {
+  }
 }
 
 // src/screens/room.js
@@ -2379,7 +2462,7 @@ function mount4(root) {
     }
   };
   let lang = window.__lang || "ko";
-  let online = false;
+  let online2 = false;
   let N2 = 6;
   const nameOf = (i) => {
     const g = window.GAME || {};
@@ -2579,7 +2662,7 @@ function mount4(root) {
     window.GAME.roundNo = 1;
     window.GAME.score = Array(N2).fill(0);
     window.GAME.order = Array.from({ length: N2 }, (_, k2) => (w + k2) % N2);
-    if (!online) {
+    if (!online2) {
       window.GAME.finish = null;
       window.GAME.hold = null;
     }
@@ -2653,9 +2736,9 @@ function mount4(root) {
     if (sbox0) sbox0.innerHTML = "";
     const dbox0 = el("deck");
     if (dbox0) dbox0.innerHTML = "";
-    online = Boolean(window.__net);
+    online2 = Boolean(window.__net);
     const dv = engine.view;
-    N2 = dv && dv.draw && dv.draw.pool.length || (online ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6);
+    N2 = dv && dv.draw && dv.draw.pool.length || (online2 ? window.GAME && window.GAME.N || 6 : window.__opts && (window.__opts.seated || window.__opts.cap) || 6);
     if (cdId) {
       clearInterval(cdId);
       cdId = null;
@@ -2666,7 +2749,7 @@ function mount4(root) {
     takenK = [];
     window.__roundNo = 1;
     window.__myRankIdx = null;
-    if (!online) {
+    if (!online2) {
       window.GAME = { N: N2, roundNo: 1, score: Array(N2).fill(0), order: null, finish: null, hold: null };
     }
     phase = "pick";
@@ -4008,7 +4091,7 @@ function mount6(root) {
   };
   let lang = "ko", step = 0, sel = [], selVal = [], declared = false, reversed = false, revSeat = null;
   let N2 = 6;
-  let online = false;
+  let online2 = false;
   let ranks = [];
   let wasGreat = false;
   const G2 = () => window.GAME = window.GAME || {};
@@ -4102,7 +4185,7 @@ function mount6(root) {
     el("fx").innerHTML = "";
   }
   function dealAll() {
-    if (online) {
+    if (online2) {
       const rv = window.__revolution;
       revSeat = rv ? rv.seat : null;
       return;
@@ -4122,7 +4205,7 @@ function mount6(root) {
     revSeat = w < 0 ? null : w;
   }
   function applyTax(myGive) {
-    if (online) {
+    if (online2) {
       if (window.__setTaxGive && Array.isArray(myGive) && myGive.length && !(window.__taxGive && window.__taxGive.length)) {
         window.__setTaxGive(myGive);
       }
@@ -4224,7 +4307,7 @@ function mount6(root) {
         } else if (sel.length < giveCount()) {
           sel.push(i);
           selVal.push(c);
-          if (sel.length === giveCount() && online && window.__setTaxGive) {
+          if (sel.length === giveCount() && online2 && window.__setTaxGive) {
             window.__setTaxGive(selVal.slice(0, giveCount()));
           }
         }
@@ -4245,7 +4328,7 @@ function mount6(root) {
     return myHand().map((c, i) => i).sort((a, b) => myHand()[a] - myHand()[b]).slice(0, k2);
   }
   function taxSkipped() {
-    if (online && window.__taxCancelled !== void 0) return Boolean(window.__taxCancelled);
+    if (online2 && window.__taxCancelled !== void 0) return Boolean(window.__taxCancelled);
     return revSeat !== null && declared;
   }
   function renderMid() {
@@ -4310,7 +4393,7 @@ function mount6(root) {
   }
   function boot() {
     if (window.__net) {
-      online = true;
+      online2 = true;
     }
     const g = G2();
     N2 = g.N || 6;
@@ -4383,7 +4466,7 @@ function mount6(root) {
     /* 고른 것을 실제로 넘긴다 */
     submit: () => {
       window.__myGive = selVal.slice(0, giveCount());
-      if (online && window.__setTaxGive) window.__setTaxGive(window.__myGive.slice());
+      if (online2 && window.__setTaxGive) window.__setTaxGive(window.__myGive.slice());
       return window.__myGive.slice();
     }
   };
@@ -4460,7 +4543,7 @@ function mount6(root) {
         autoNext();
         return;
       }
-      if (step === 2 && online && revSeat === 0 && !declared && window.__passRev) {
+      if (step === 2 && online2 && revSeat === 0 && !declared && window.__passRev) {
         window.__passRev();
       }
       if (step === 3 && taxSkipped()) {
@@ -4491,7 +4574,7 @@ function mount6(root) {
       declared = true;
       wasGreat = great;
       play("revolution");
-      if (online && revSeat === 0 && window.__declareRev) window.__declareRev();
+      if (online2 && revSeat === 0 && window.__declareRev) window.__declareRev();
       if (great) {
         reversed = true;
         el("flash").classList.remove("go");

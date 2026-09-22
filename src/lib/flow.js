@@ -445,12 +445,16 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   W().__quickJoin = async () => {
     leaveIfSeated();
     const o = W().__opts || {};
-    if (!lobby.online()) return W().__createRoom();
+    /* 서버가 없으면 들어갈 남의 방도 없다 */
+    if (!lobby.online()){ W().__quickNone = true; return null; }
     const r = await lobby.quickJoin({
       name: opt.myName(), avatar: myAvatar(),
       numPlayers: o.cap || 4, rounds: o.rounds || 3,
       tax: o.tax !== false, clear2: Boolean(o.clear2),
     });
+    /* 들어갈 방이 없다 — 새로 만들지 않는다. 화면이 "방이 없습니다" 를 띄운다 */
+    W().__quickNone = Boolean(r && r.none);
+    if (!r || r.none || !r.code) return null;
     net = Object.assign({ started: false, inGame: false }, r,
       { players: [{ id: Number(r.playerID), name: opt.myName(), avatar: myAvatar() }] });
     lobby.saveSeat(net);

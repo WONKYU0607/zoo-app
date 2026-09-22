@@ -51,8 +51,12 @@ export const leaveRoom = (code, playerID) =>
   api(`/zoo/rooms/${code}/leave`, { playerID: String(playerID) }).catch(() => null);
 
 /* 빠른 참가 — 자리가 남은 방에 넣어 주고, 없으면 새로 만든다 */
+/* 이미 있는 방에만 들어간다. 들어갈 방이 없으면 { none: true } 가 온다 */
 export const quickJoin = ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>
   api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2 });
+
+/* 빈방 개수 — 빠른참가 단추에 띄운다 */
+export const openRooms = () => api("/zoo/open").then(r => Number(r && r.count) || 0);
 
 /* 방 인원 바꾸기 — 대기 중, 방장만 */
 export const setRoomCap = (code, numPlayers, playerID) =>

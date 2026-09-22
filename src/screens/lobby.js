@@ -1,6 +1,7 @@
 import { scoped } from "../lib/scoped.js";
 import { LOBBY_ART as A_LOBBY } from "../lib/assets.js";
 import "../styles/lobby.css";
+import { online as serverOnline, openRooms } from "../lib/lobby.js";
 
 export function mount(root){
   const document = scoped(root);
@@ -10,8 +11,8 @@ export function mount(root){
   const T = {
     ko:{
       mark:"동물의 왕국",
-      lbQuick:"바로 시작하기", btQuick:"빠른 참가",
-      hQuick:"기다리는 분들과 자동으로 이어 드립니다. 인원이 모이면 바로 시작합니다.",
+      lbQuick:"바로 시작하기", btQuick:"빠른 참가", open:n=>"(빈방 "+n+"개)", none:"지금 들어갈 방이 없습니다",
+      hQuick:"",   /* 설명 글은 뺐다. 이 줄은 "들어갈 방이 없습니다" 안내에만 쓴다 */
       lbNew:"친구와 하기", btNew:"방 만들기",
       hNew:"방을 만들면 4자리 번호가 나옵니다. 친구에게 번호를 알려 주세요. 4명부터 8명까지 함께할 수 있습니다.",
       lbJoin:"번호로 들어가기", btJoin:"참가",
@@ -35,8 +36,8 @@ export function mount(root){
     },
     en:{
       mark:"Zoo President",
-      lbQuick:"PLAY NOW", btQuick:"Quick match",
-      hQuick:"We'll pair you with players already waiting. The game starts as soon as the table fills.",
+      lbQuick:"PLAY NOW", btQuick:"Quick match", open:n=>"("+n+" open)", none:"No open room right now",
+      hQuick:"",
       lbNew:"PLAY WITH FRIENDS", btNew:"Create room",
       hNew:"You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
       lbJoin:"JOIN BY NUMBER", btJoin:"Join",
@@ -78,7 +79,8 @@ export function mount(root){
     document.body.dataset.lang = lang;
     document.documentElement.lang = lang;
     const set = (id, v) => document.getElementById(id).textContent = v;
-    set("lbQuick", t.lbQuick); set("btQuick", t.btQuick); set("hQuick", t.hQuick);
+    set("lbQuick", t.lbQuick); set("btQuickT", t.btQuick); set("hQuick", t.hQuick);
+    /* 단추 전체를 바꾸면 안에 든 빈방 칸이 지워진다 — 글자 칸만 바꾼다 */
     set("lbNew", t.lbNew); set("btNew", t.btNew); set("hNew", t.hNew);
     set("lbJoin", t.lbJoin); set("btJoin", t.btJoin);
     set("btRules", t.rules); set("shTitle", t.shTitle);
@@ -158,5 +160,36 @@ export function mount(root){
   window.addEventListener("accountready", paintAcct);
   window.addEventListener("accountchange", paintAcct);
   paintAcct();
-  
+
+  /* ---------- 빠른참가 옆 빈방 수 ----------
+     "들어갈 방이 있구나" 를 보고 누르게. 로비가 보일 때만 몇 초마다 새로 묻는다.
+     서버가 없거나 못 물어보면 칸을 숨긴다(0 으로 거짓말하지 않는다) */
+  window.__lobbyT = () => T[lang];
+  const openEl = () => document.getElementById("qOpen");
+  async function refreshOpen(){
+    const el = openEl();
+    if (!el) return;
+    if (!serverOnline()){ el.hidden = true; return; }
+    try {
+      const n = await openRooms();
+      el.textContent = T[lang].open(n);
+      el.dataset.n = String(n);
+      el.classList.toggle("q-open--zero", n === 0);
+      el.hidden = false;
+    } catch (e){ el.hidden = true; }
+  }
+  window.__refreshOpen = refreshOpen;
+  /* 이 화면(root)을 기준으로 본다. `document.getElementById("lobby")` 로 찾으면
+     화면을 붙이기 **전**에 불려서 null 이 되고, 지켜보기(MutationObserver)가 터져
+     **앱 시작이 통째로 멈췄다** — 로비가 안 뜨고 __goto 도 안 생겼다 */
+  const sec = (root && root.closest && root.closest(".page")) || root;
+  const lobbyOn = () => Boolean(sec && sec.classList && sec.classList.contains("is-on"));
+  refreshOpen();
+  setInterval(() => { if (lobbyOn() && !document.hidden) refreshOpen(); }, 5000);
+  /* 로비로 돌아오는 순간 바로 한 번 */
+  try {
+    if (sec && sec.nodeType === 1)
+      new MutationObserver(() => { if (lobbyOn()) refreshOpen(); })
+        .observe(sec, { attributes: true, attributeFilter: ["class"] });
+  } catch (e){ /* 지켜보기를 못 해도 5초마다 새로 묻는다 */ }
 }

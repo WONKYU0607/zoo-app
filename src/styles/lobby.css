@@ -285,3 +285,13 @@
 #lobby .bt-ad{margin-right:auto}
 /* 보유 3장이거나 광고를 보는 중이면 잠겨 흐리게 */
 #lobby .bt-ad:disabled{opacity:.45;cursor:default}
+
+/* ---------- 빠른참가 옆 빈방 수 ----------
+   단추 오른쪽 끝에 작게. 글자는 가운데 그대로 두고 방해하지 않는다 */
+#lobby #btQuick{position:relative}
+#lobby .q-open{position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  font-size:12px;font-weight:600;letter-spacing:.02em;opacity:.9;
+  padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.22);white-space:nowrap}
+#lobby .q-open--zero{opacity:.55}
+/* 방이 없을 때 단추 밑 안내 줄 */
+#lobby .hint--warn{color:#E8B25A}

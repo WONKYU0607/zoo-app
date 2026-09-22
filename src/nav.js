@@ -689,15 +689,30 @@ export function initNav(){
   /* 로비 → 대기실 */
   /* 빠른 참가와 번호 참가는 남의 방에 들어가는 것이라 조건을 묻지 않는다.
      방 조건은 들어간 방을 따라간다 */
-  /* 빠른 참가 — 지금은 방을 하나 만들고 봇으로 채운다 */
+  /* 빠른 참가 — **이미 있는 방에만** 들어간다.
+     예전에는 들어갈 방이 없으면 새 방을 만들어 방장으로 앉혔는데, 그러면 방 만들기와
+     똑같아졌다(방장·인원 변경·시작). 없으면 단추 밑 안내 줄에 잠깐 알린다 */
+  let noneTimer = null;
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
-    /* 빠른 참가는 **자리 남은 방부터** 찾는다. 없으면 새로 만든다 */
-    const f = window.__quickJoin || window.__createRoom;
-    if (f){
-      const code = await f();
-      if (!code) return;
+    const f = window.__quickJoin;
+    if (!f) return;
+    window.__quickNone = false;
+    const code = await f();
+    if (code){ go("room"); return; }
+    if (window.__quickNone){
+      const h = document.querySelector("#lobby #hQuick");
+      const L = window.__lobbyT ? window.__lobbyT() : null;
+      if (h){
+        if (!h.dataset.orig) h.dataset.orig = h.textContent;
+        h.textContent = (L && L.none) || "지금 들어갈 방이 없습니다";
+        h.classList.add("hint--warn");
+        if (noneTimer) clearTimeout(noneTimer);
+        noneTimer = setTimeout(() => {
+          h.textContent = h.dataset.orig || ""; h.classList.remove("hint--warn");
+        }, 2500);
+      }
+      if (window.__refreshOpen) window.__refreshOpen();
     }
-    go("room");
   });
   
   /* 번호로 들어가기 */
