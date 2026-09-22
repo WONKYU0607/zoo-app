@@ -1021,7 +1021,7 @@ function initNav() {
       yes: "\uC885\uB8CC",
       no: "\uCDE8\uC18C",
       leave: "\uD310\uC5D0\uC11C \uB098\uAC00\uAE30",
-      leaveM: "\uB098\uAC00\uBA74 \uC644\uC8FC \uC2E4\uD328\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4",
+      leaveM: "\uB098\uAC00\uBA74 \uB2E4\uC2DC \uB4E4\uC5B4\uC62C \uC218 \uC5C6\uC2B5\uB2C8\uB2E4\n\uC644\uC8FC \uC2E4\uD328\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4",
       leaveY: "\uB098\uAC00\uAE30",
       room: "\uBC29 \uB098\uAC00\uAE30",
       roomM: "\uBC29\uC5D0\uC11C \uB098\uAC08\uAE4C\uC694?"
@@ -1032,7 +1032,7 @@ function initNav() {
       yes: "Quit",
       no: "Cancel",
       leave: "Leave the game",
-      leaveM: "Leaving counts as a forfeit",
+      leaveM: "You can't come back to this game\nLeaving counts as a forfeit",
       leaveY: "Leave",
       room: "Leave room",
       roomM: "Leave this room?"
@@ -1174,7 +1174,10 @@ function initNav() {
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-back]");
     if (!b) return;
-    if (b.closest("#table") && window.__quitGame) window.__quitGame();
+    if (b.closest("#table")) {
+      if (window.__back) window.__back();
+      return;
+    }
     go(b.dataset.back);
   });
 }
@@ -2870,6 +2873,7 @@ function mount5(root) {
   let primed = false;
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
   let justSent = null;
+  let shownNo = -1;
   let lastPass = null;
   let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
@@ -2916,12 +2920,14 @@ function mount5(root) {
   }
   function apply(v) {
     if (!v) return;
+    if (v.moveNo != null && shownNo >= 0 && v.moveNo < shownNo && v.roundNo === lastRound && !v.over) return;
+    if (v.moveNo != null) shownNo = Math.max(shownNo, v.moveNo);
     if (holdingEnd && !v.over) {
       sounds(v, true);
       return;
     }
     sounds(v);
-    if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
+    if (passHeld != null && v.trickNo > passHeld) passHeld = null;
     if (v.trickNo !== lastTrick && lastTrick != null) {
       const ps = (v.recent || []).filter((m) => m.k === "pass");
       lastPass = ps.length ? { by: ps[ps.length - 1].by, at: Date.now() } : null;
@@ -2938,7 +2944,8 @@ function mount5(root) {
       r: x2.rank
     }));
     hand = v.hand.slice();
-    if (justSent && v.moveNo <= justSent.no && Date.now() - justSent.at < 2e3) {
+    const sentIn = justSent && (v.recent ? v.recent.some((m) => m.no > justSent.no && m.by === 0) : v.moveNo > justSent.no);
+    if (justSent && !sentIn && Date.now() - justSent.at < 2e3) {
       justSent.cards.forEach((c) => {
         const i = hand.indexOf(c);
         if (i >= 0) hand.splice(i, 1);
@@ -2950,7 +2957,9 @@ function mount5(root) {
     busy = !v.myTurn;
     if (pending) {
       const myC = (v.seats || [])[0] ? v.seats[0].c : -1;
-      const done = pendingNo >= 0 && v.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v.myTurn || Date.now() - pendingAt > 2e3;
+      const recent = v.recent || null;
+      const mineIn = recent ? recent.some((m) => m.no > pendingNo && m.by === 0) : pendingNo >= 0 && v.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v.myTurn;
+      const done = pendingNo >= 0 && mineIn || Date.now() - pendingAt > 2e3;
       if (done) {
         pending = null;
         pendingHand = -1;
@@ -3082,6 +3091,7 @@ function mount5(root) {
     lastTrick = null;
     lastPass = null;
     justSent = null;
+    shownNo = -1;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -3606,6 +3616,11 @@ function mount5(root) {
     return "";
   }
   function queueMove(kind) {
+    const b = el(kind === "play" ? "play" : "pass");
+    if (b && b.disabled) {
+      evShow("  (\uC7A0\uAE34 \uB2E8\uCD94 \u2014 \uBB34\uC2DC)");
+      return;
+    }
     const list = kind === "play" ? sel.map((i) => hand[i]) : [];
     queued = { kind, list, at: Date.now(), sentNo: -1 };
     seeQ();
@@ -3640,6 +3655,7 @@ function mount5(root) {
     if (q2.kind === "pass" ? turn === 0 && !busy && cur() : turn === 0 && !busy && legal(q2.list)) {
       q2.sentNo = lastMoveNo;
       stop("tick");
+      busy = true;
       pending = true;
       pendingAt = Date.now();
       pendingNo = lastMoveNo;
@@ -3650,11 +3666,11 @@ function mount5(root) {
         play2(effective(q2.list), q2.list.length);
       } else {
         pendingHand = -1;
+        sel = [];
         passHeld = lastTrick;
         passPressAt = Date.now();
         passTurn();
       }
-      busy = true;
       iMoved();
       unlockLater();
       evShow("  \u2192 \uBCF4\uB0C4(" + (q2.kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + ")");

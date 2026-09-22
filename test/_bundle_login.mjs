@@ -1114,7 +1114,7 @@ function initNav() {
       yes: "\uC885\uB8CC",
       no: "\uCDE8\uC18C",
       leave: "\uD310\uC5D0\uC11C \uB098\uAC00\uAE30",
-      leaveM: "\uB098\uAC00\uBA74 \uC644\uC8FC \uC2E4\uD328\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4",
+      leaveM: "\uB098\uAC00\uBA74 \uB2E4\uC2DC \uB4E4\uC5B4\uC62C \uC218 \uC5C6\uC2B5\uB2C8\uB2E4\n\uC644\uC8FC \uC2E4\uD328\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4",
       leaveY: "\uB098\uAC00\uAE30",
       room: "\uBC29 \uB098\uAC00\uAE30",
       roomM: "\uBC29\uC5D0\uC11C \uB098\uAC08\uAE4C\uC694?"
@@ -1125,7 +1125,7 @@ function initNav() {
       yes: "Quit",
       no: "Cancel",
       leave: "Leave the game",
-      leaveM: "Leaving counts as a forfeit",
+      leaveM: "You can't come back to this game\nLeaving counts as a forfeit",
       leaveY: "Leave",
       room: "Leave room",
       roomM: "Leave this room?"
@@ -1267,7 +1267,10 @@ function initNav() {
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-back]");
     if (!b) return;
-    if (b.closest("#table") && window.__quitGame) window.__quitGame();
+    if (b.closest("#table")) {
+      if (window.__back) window.__back();
+      return;
+    }
     go(b.dataset.back);
   });
 }

@@ -18909,6 +18909,7 @@ function mount(root) {
   let primed = false;
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
   let justSent = null;
+  let shownNo = -1;
   let lastPass = null;
   let passPressAt = 0;
   let pending = null, pendingAt = 0, pendingHand = -1;
@@ -18955,12 +18956,14 @@ function mount(root) {
   }
   function apply(v2) {
     if (!v2) return;
+    if (v2.moveNo != null && shownNo >= 0 && v2.moveNo < shownNo && v2.roundNo === lastRound && !v2.over) return;
+    if (v2.moveNo != null) shownNo = Math.max(shownNo, v2.moveNo);
     if (holdingEnd && !v2.over) {
       sounds(v2, true);
       return;
     }
     sounds(v2);
-    if (passHeld != null && v2.trickNo !== passHeld) passHeld = null;
+    if (passHeld != null && v2.trickNo > passHeld) passHeld = null;
     if (v2.trickNo !== lastTrick && lastTrick != null) {
       const ps = (v2.recent || []).filter((m) => m.k === "pass");
       lastPass = ps.length ? { by: ps[ps.length - 1].by, at: Date.now() } : null;
@@ -18977,7 +18980,8 @@ function mount(root) {
       r: x2.rank
     }));
     hand = v2.hand.slice();
-    if (justSent && v2.moveNo <= justSent.no && Date.now() - justSent.at < 2e3) {
+    const sentIn = justSent && (v2.recent ? v2.recent.some((m) => m.no > justSent.no && m.by === 0) : v2.moveNo > justSent.no);
+    if (justSent && !sentIn && Date.now() - justSent.at < 2e3) {
       justSent.cards.forEach((c2) => {
         const i2 = hand.indexOf(c2);
         if (i2 >= 0) hand.splice(i2, 1);
@@ -18989,7 +18993,9 @@ function mount(root) {
     busy = !v2.myTurn;
     if (pending) {
       const myC = (v2.seats || [])[0] ? v2.seats[0].c : -1;
-      const done = pendingNo >= 0 && v2.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn || Date.now() - pendingAt > 2e3;
+      const recent = v2.recent || null;
+      const mineIn = recent ? recent.some((m) => m.no > pendingNo && m.by === 0) : pendingNo >= 0 && v2.moveNo > pendingNo || pendingHand >= 0 && myC >= 0 && myC < pendingHand || pendingHand < 0 && !v2.myTurn;
+      const done = pendingNo >= 0 && mineIn || Date.now() - pendingAt > 2e3;
       if (done) {
         pending = null;
         pendingHand = -1;
@@ -19121,6 +19127,7 @@ function mount(root) {
     lastTrick = null;
     lastPass = null;
     justSent = null;
+    shownNo = -1;
     lastRound = -1;
     overSent = false;
     trick = [];
@@ -19645,6 +19652,11 @@ function mount(root) {
     return "";
   }
   function queueMove(kind) {
+    const b2 = el(kind === "play" ? "play" : "pass");
+    if (b2 && b2.disabled) {
+      evShow("  (\uC7A0\uAE34 \uB2E8\uCD94 \u2014 \uBB34\uC2DC)");
+      return;
+    }
     const list = kind === "play" ? sel.map((i2) => hand[i2]) : [];
     queued = { kind, list, at: Date.now(), sentNo: -1 };
     seeQ();
@@ -19679,6 +19691,7 @@ function mount(root) {
     if (q2.kind === "pass" ? turn === 0 && !busy && cur() : turn === 0 && !busy && legal(q2.list)) {
       q2.sentNo = lastMoveNo;
       stop("tick");
+      busy = true;
       pending = true;
       pendingAt = Date.now();
       pendingNo = lastMoveNo;
@@ -19689,11 +19702,11 @@ function mount(root) {
         play2(effective(q2.list), q2.list.length);
       } else {
         pendingHand = -1;
+        sel = [];
         passHeld = lastTrick;
         passPressAt = Date.now();
         passTurn();
       }
-      busy = true;
       iMoved();
       unlockLater();
       evShow("  \u2192 \uBCF4\uB0C4(" + (q2.kind === "play" ? "\uB0B4\uAE30" : "\uD328\uC2A4") + ")");

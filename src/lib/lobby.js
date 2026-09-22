@@ -40,8 +40,10 @@ export const joinRoom = (code, name, avatar) =>
 /* 방 들여다보기 — 참가자·자리비움·이탈 */
 /* seat 을 주면 내 새 자리·자격증명도 같이 내려온다.
    방장이 인원을 바꾸면 서버가 판을 새로 만들기 때문에 그때 필요하다 */
-export const peekRoom = (code, seat) =>
-  api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}`));
+/* gen = 내가 알고 있는 판 세대. 서버는 **옛 세대일 때만** 자리를 새 판으로 옮겨 준다 */
+export const peekRoom = (code, seat, gen) =>
+  api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}` +
+      (Number.isInteger(gen) ? `&gen=${gen}` : "")));
 
 /* 방에서 나가기 — 자리를 비운다.
    안 부르면 서버는 아직 앉아 있는 줄 알고, 다시 들어올 때 자리를 하나 더 준다 */
@@ -57,7 +59,10 @@ export const setRoomCap = (code, numPlayers, playerID) =>
   api(`/zoo/rooms/${code}/cap`, { numPlayers, playerID: String(playerID) });
 
 /* 시작 — 빈자리를 봇으로 채우고 서버가 대리인을 붙인다 */
-export const startRoom = code => api(`/zoo/rooms/${code}/start`, {});
+/* seen = 방장 화면에 보이던 인원. 서버는 그보다 많이 앉아 있으면
+   늦게 들어온 봇을 내보내고 시작한다 (누르는 찰나에 봇이 들어와도 보인 대로) */
+export const startRoom = (code, seen) =>
+  api(`/zoo/rooms/${code}/start`, Number.isInteger(seen) ? { seen } : {});
 
 /* 내가 직접 뒀다고 알린다 — 자리비움 판정을 되돌린다 */
 export const keepAlive = (code, seat) =>
@@ -77,6 +82,7 @@ export function saveSeat(net){
     localStorage.setItem(SEAT_KEY, JSON.stringify({
       code: net.code, matchID: net.matchID, playerID: net.playerID,
       credentials: net.credentials, numPlayers: net.numPlayers,
+      gen: Number.isInteger(net.gen) ? net.gen : null,
       opts: net.opts || null, at: Date.now(),
     }));
   } catch(e){}

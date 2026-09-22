@@ -9,6 +9,7 @@
    전체 벌: 다 돌린다. 파일을 보내기 전에 쓴다. */
 
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { cpus } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -71,11 +72,27 @@ function run(name, args){
 const t0 = Date.now();
 const queue = jobs.slice();
 const done = [];
+/* **브라우저를 띄우는 검사는 동시에 몇 개까지만.**
+   8개를 한꺼번에 띄우면 컴퓨터가 굶어서, 검사가 보내는 가짜 손가락이 통째로
+   안 들어간다. 그러면 앱은 멀쩡한데 "안 눌렸다" 로 실패한다 —
+   패스깜빡·터치씹힘·누름보존이 동시 실행 때만 흔들렸던 이유가 이것이다.
+   계산만 하는 검사는 그대로 여러 개 돌린다 */
+const BROWSER_MAX = Math.max(2, Math.min(3, Math.floor(cpus().length / 2)));
+const usesBrowser = j => j[1].some(f => {
+  try { return /shot\.mjs/.test(readFileSync(join(ROOT, f), "utf8")); } catch(e){ return false; }
+});
+queue.forEach(j => { j.browser = usesBrowser(j); });
+let browsers = 0;
+
 async function worker(){
   for (;;){
-    const j = queue.shift();
-    if (!j) return;
+    if (!queue.length) return;
+    const idx = queue.findIndex(x => !x.browser || browsers < BROWSER_MAX);
+    if (idx < 0){ await new Promise(r => setTimeout(r, 200)); continue; }
+    const j = queue.splice(idx, 1)[0];
+    if (j.browser) browsers++;
     const r = await run(j[0], j[1]);
+    if (j.browser) browsers--;
     /* 각 검사가 마지막에 찍는 합계 줄을 뽑아 온다 */
     const sum = (r.out.match(/(통과 \d+ \/ 실패 \d+)/g) || []).pop() || "";
     const ok = r.code === 0;
@@ -89,7 +106,7 @@ async function worker(){
 }
 
 console.log("\n=== " + (all ? "전체" : "빠른") + " 검사 · " + jobs.length +
-            "개 파일 · 동시 " + LIMIT + "개 ===\n");
+            "개 파일 · 동시 " + LIMIT + "개 (브라우저는 " + BROWSER_MAX + "개까지) ===\n");
 /* **검사를 뿌리기 전에 dist 를 한 번 만들어 둔다.**
    안 그러면 브라우저 검사 여러 개가 동시에 vite 를 돌려 서로 밟는다 */
 try {

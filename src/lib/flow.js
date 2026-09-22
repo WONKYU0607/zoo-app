@@ -61,7 +61,7 @@ function netRoomView(){
    안 그러면 옛 판에 붙은 채로 남아 게임이 시작돼도 아무것도 안 보인다 */
 async function refreshNet(){
   if (!net) return null;
-  const r = await lobby.peekRoom(net.code, net.playerID);
+  const r = await lobby.peekRoom(net.code, net.playerID, net.gen);
   net.players = r.players;
   net.started = r.started;
   if (r.numPlayers) net.numPlayers = r.numPlayers;
@@ -70,6 +70,12 @@ async function refreshNet(){
     net.playerID = String(r.you.playerID);
     if (r.you.credentials) net.credentials = r.you.credentials;
   }
+  /* 새 판 세대를 기억하고, **하던 방 기록도 새 값으로 다시 적는다.**
+     예전에는 방에 처음 들어갈 때만 적어서, 인원이 줄어 판이 새로 만들어지면
+     기록에는 옛 판 번호·옛 자리표가 남았다. 새로고침으로 돌아오면
+     **옛 6인 판(뽑기에서 멈춘 채 남은 것)에 붙었다** */
+  if (Number.isInteger(r.gen)) net.gen = r.gen;
+  lobby.saveSeat(net);
   W().__opts.seated = (r.players || []).filter(p => p.name).length;
   syncGameAvatars();
   /* 서버 방도 꽉 차면 방장이 안 눌러도 15초 뒤에 시작한다.
@@ -224,7 +230,9 @@ function startGame(){
 /* 서버 대전 시작 — 빈자리는 서버가 봇으로 채운다 */
 async function startOnlineGame(){
   stopRoomCount();
-  await lobby.startRoom(net.code);
+  /* 방장 화면에 보이던 인원을 같이 보낸다 — 누르는 찰나 봇이 들어와도 보인 대로 시작 */
+  const seen = (W().__opts && W().__opts.seated) || null;
+  await lobby.startRoom(net.code, Number.isInteger(seen) ? seen : undefined);
   /* **판 번호·자리·자리표를 다시 받아 온다.**
      8인 방에 4명일 때 시작하면 서버는 4인 판을 **새로 만들고 자리표도 새로 준다.**
      예전에는 여기서 사람 목록만 받아서, 방장은 옛 8인 판 번호와 옛 자리표를
@@ -547,10 +555,14 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     const s = lobby.loadSeat();
     if (!s || !lobby.online()) return null;
     let r = null;
-    try { r = await lobby.peekRoom(s.code, s.playerID); } catch(e){ r = null; }
-    /* 방이 없어졌거나 내가 그 자리에 없으면 돌아갈 곳이 아니다 */
+    try { r = await lobby.peekRoom(s.code, s.playerID, Number.isInteger(s.gen) ? s.gen : undefined); }
+    catch(e){ r = null; }
+    /* 방이 없어졌거나 내가 그 자리에 없으면 돌아갈 곳이 아니다.
+       내 자리는 서버가 새 판 기준으로 알려 준 번호(you)로 본다 —
+       판이 새로 만들어졌으면 적어 둔 번호는 옛 것이다 */
     if (!r || !r.code){ lobby.clearSeat(); return null; }
-    const me = (r.players || []).find(p => p && Number(p.id) === Number(s.playerID));
+    const myId = r.you && r.you.playerID != null ? Number(r.you.playerID) : Number(s.playerID);
+    const me = (r.players || []).find(p => p && Number(p.id) === myId);
     if (!me || me.left){ lobby.clearSeat(); return null; }
     return { code: s.code, started: Boolean(r.started), players: r.players || [] };
   };
@@ -559,14 +571,24 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     const s = lobby.loadSeat();
     if (!s) return false;
     let r = null;
-    try { r = await lobby.peekRoom(s.code, s.playerID); } catch(e){ r = null; }
+    try { r = await lobby.peekRoom(s.code, s.playerID, Number.isInteger(s.gen) ? s.gen : undefined); }
+    catch(e){ r = null; }
     if (!r || !r.code){ lobby.clearSeat(); return false; }
 
+    /* **적어 둔 것보다 서버가 지금 알려 주는 것을 믿는다.**
+       인원이 줄어 판이 새로 만들어졌으면 판 번호·자리·자리표가 다 바뀌었다.
+       적어 둔 옛 값으로 붙으면 옛 판(뽑기에서 멈춘 것)에 들어간다 */
+    const you = r.you || {};
     net = Object.assign({ started: Boolean(r.started), inGame: false }, {
-      code: s.code, matchID: s.matchID, playerID: s.playerID,
-      credentials: s.credentials, numPlayers: s.numPlayers || r.numPlayers,
+      code: s.code,
+      matchID: r.matchID || s.matchID,
+      playerID: you.playerID != null ? String(you.playerID) : s.playerID,
+      credentials: you.credentials || s.credentials,
+      numPlayers: r.numPlayers || s.numPlayers,
+      gen: Number.isInteger(r.gen) ? r.gen : s.gen,
       opts: r.opts || s.opts || null, players: r.players || [],
     });
+    lobby.saveSeat(net);
     myRoom = s.code;
     W().__opts = Object.assign(W().__opts || {}, {
       cap: net.numPlayers,
