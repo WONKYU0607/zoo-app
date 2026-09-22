@@ -759,10 +759,10 @@ export function initNav(){
   /* ---------- 확인창 ---------- */
   const ASK_T = {
     ko: { quit: "게임 종료", quitM: "게임을 종료할까요?", yes: "종료", no: "취소",
-          leave: "판에서 나가기", leaveM: "나가면 완주 실패로 기록됩니다",
+          leave: "판에서 나가기", leaveM: "나가면 다시 들어올 수 없습니다\n완주 실패로 기록됩니다",
           leaveY: "나가기", room: "방 나가기", roomM: "방에서 나갈까요?" },
     en: { quit: "Quit", quitM: "Close the game?", yes: "Quit", no: "Cancel",
-          leave: "Leave the game", leaveM: "Leaving counts as a forfeit",
+          leave: "Leave the game", leaveM: "You can't come back to this game\nLeaving counts as a forfeit",
           leaveY: "Leave", room: "Leave room", roomM: "Leave this room?" },
   };
   /* 하던 방으로 돌아가기 — 로비에 들어올 때 한 번 묻는다 */
@@ -896,7 +896,10 @@ export function initNav(){
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-back]");
     if (!b) return;
-    if (b.closest("#table") && window.__quitGame) window.__quitGame();
+    /* **판 화면의 ✕ 는 확인창을 거친다.** 예전에는 바로 나갔는데,
+       이제 나가면 서버에도 "나갔다" 고 알리고 기록도 지워서 **다시 못 들어온다.**
+       실수로 누른 한 번에 게임을 잃으면 안 된다 */
+    if (b.closest("#table")){ if (window.__back) window.__back(); return; }
     go(b.dataset.back);
   });
   

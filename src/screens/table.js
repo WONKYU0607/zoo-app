@@ -87,6 +87,8 @@ export function mount(root){
   let passHeld = null, lastTrick = null, lastMoveNo = -1;
   /* 방금 보낸 카드 {cards,no,at} — 확인 전 되돌림에서 도로 안 보이게 붙잡는다 */
   let justSent = null;
+  /* 지금까지 그린 가장 큰 수 번호 — 이보다 낮은(옛) 화면은 안 그린다 */
+  let shownNo = -1;
   /* 바퀴를 끝낸 마지막 패스 {by, at} — 상태에 안 남아서 따로 붙잡는다 */
   let lastPass = null;
   /* 패스를 누른 시각. **누른 순간을 찍기 어려우니 로그가 스스로 잰다** —
@@ -155,13 +157,24 @@ export function mount(root){
 
   function apply(v){
     if (!v) return;
+    /* ---------- 화면은 뒤로 가지 않는다 ----------
+       내가 수를 두면 내 화면이 **먼저** 반영한다. 그런데 서버는 그 뒤에도 한동안
+       **내 수를 처리하기 전 상태**를 보내온다(그 사이 들어온 봇 수 등). 그걸 그대로
+       그리면 **먹었다 → 깜빡하며 돌아옴 → 다시 먹음** 이 된다(지연을 끼워 재현함).
+       수 번호는 늘기만 하므로, 이미 그린 것보다 **번호가 낮은 화면은 그리지 않는다.**
+       판이 넘어가는 순간은 건너뛰지 않는다 — 새 판 상태를 놓치면 안 된다 */
+    if (v.moveNo != null && shownNo >= 0 && v.moveNo < shownNo &&
+        v.roundNo === lastRound && !v.over) return;
+    if (v.moveNo != null) shownNo = Math.max(shownNo, v.moveNo);
     /* 방금 끝난 판을 세워 두는 동안에는 새 판 상태를 그리지 않는다.
        안 그러면 다음 판이 잠깐 비쳤다가 결과 화면으로 넘어간다 */
     if (holdingEnd && !v.over){ sounds(v, true); return; }
     sounds(v);
     /* 내 패스 표시 붙잡기 (위 passHeld 설명 참고).
        바퀴가 바뀌면 놓아 준다 — 새 바퀴에서는 다시 낼 수 있어야 한다 */
-    if (passHeld != null && v.trickNo !== passHeld) passHeld = null;
+    /* 바퀴가 **앞으로** 넘어갔을 때만 놓는다. 옛 상태가 오면 바퀴 번호가
+       뒤로 갈 수 있는데, 그때 놓으면 패스 표시가 깜빡인다 */
+    if (passHeld != null && v.trickNo > passHeld) passHeld = null;
     /* **바퀴를 끝낸 마지막 패스는 표시가 안 남는다.**
        그 패스로 바닥이 치워지면서 모두의 패스 표시가 같이 지워지기 때문이다.
        그래서 마지막에 패스한 사람만 아무 표시 없이 넘어갔다.
@@ -184,7 +197,13 @@ export function mount(root){
        서버가 보내 준 옛 상태에는 그 카드가 아직 손에 있다.
        그대로 그리면 **카드가 나갔다 → 돌아왔다 → 다시 나간다**
        (짧게 누를수록 눈에 띈다는 신고). 확인될 때까지 빼 둔다 */
-    if (justSent && v.moveNo <= justSent.no && Date.now() - justSent.at < 2000){
+    /* 풀어 주는 조건도 **내 수가 들어왔는지**로 본다. "수 번호가 올라갔다" 로 보면
+       봇이 둔 것에도 풀려서, 서버가 내 수를 처리하기 전 상태가 오면
+       카드가 손으로 도로 돌아왔다 (잠금과 똑같은 실수였다) */
+    const sentIn = justSent && (v.recent
+      ? v.recent.some(m => m.no > justSent.no && m.by === 0)
+      : v.moveNo > justSent.no);
+    if (justSent && !sentIn && Date.now() - justSent.at < 2000){
       justSent.cards.forEach(c => {
         const i = hand.indexOf(c);
         if (i >= 0) hand.splice(i, 1);
@@ -218,10 +237,19 @@ export function mount(root){
          수 번호는 내 수가 반영되면 반드시 올라간다. 그거면 충분하다.
          예전에 이것만으로 했다가 단추가 반짝 열려 되돌린 적이 있는데,
          그때는 큐가 없어서 그 틈에 누른 것이 사라졌다. 지금은 큐가 받아 준다 */
-      const done = (pendingNo >= 0 && v.moveNo > pendingNo)
-                || (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
-                || (pendingHand < 0 && !v.myTurn)
-                || Date.now() - pendingAt > 2000;
+      /* **"수 번호가 올라갔다" 로는 모자란다 — 봇이 둬도 올라간다.**
+         서버가 내 수를 처리하기 전 상태(봇 수만 들어간 것)를 보내면
+         내 수가 확인된 줄 알고 풀어 버렸다. 그 순간 옛 상태가 그려지고,
+         곧 진짜 확인이 오면서 다시 바뀌어 **깜빡였다**(지연을 끼워 재현함).
+         서버가 최근 수를 누가 뒀는지까지 보내 주므로, **내 수가 들어왔는지**만 본다.
+         (옛 서버는 그걸 안 보내므로 예전 방식으로 되돌아간다) */
+      const recent = v.recent || null;
+      const mineIn = recent
+        ? recent.some(m => m.no > pendingNo && m.by === 0)
+        : ((pendingNo >= 0 && v.moveNo > pendingNo)
+           || (pendingHand >= 0 && myC >= 0 && myC < pendingHand)
+           || (pendingHand < 0 && !v.myTurn));
+      const done = (pendingNo >= 0 && mineIn) || Date.now() - pendingAt > 2000;
       if (done){ pending = null; pendingHand = -1; pendingNo = -1; }
       else busy = true;
     }
@@ -337,7 +365,7 @@ export function mount(root){
     bellAfter = Date.now() + 700;
     if (bellTimer){ clearTimeout(bellTimer); bellTimer = null; }
     handNodes = []; seatNodes = []; pileSig = null;
-    passHeld = null; lastTrick = null; lastPass = null; justSent = null;
+    passHeld = null; lastTrick = null; lastPass = null; justSent = null; shownNo = -1;
     lastRound = -1; overSent = false;
     trick = []; sel = []; busy = false; animated = 0; spread = false;
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
@@ -1029,6 +1057,12 @@ const TURN_SEC = 15;
                           : (turn === 0 && !busy && legal(q.list))){
       q.sentNo = lastMoveNo;
       sndStop("tick");
+      /* **`busy` 는 보내기 전에 세운다.** 엔진은 보내는 그 자리에서 화면을 갱신하고,
+         그 갱신이 "내 수가 들어왔다" 며 잠금을 푼다. 예전에는 보낸 **뒤에**
+         `busy = true` 를 해서 그 풀린 것을 도로 덮었다.
+         내 카드로 바퀴를 끝내고 다시 내 선이 되면 다음 갱신이 안 와서
+         **단추가 잠긴 채로 남았다** — 두 번 눌러야 하던 또 하나의 자리 */
+      busy = true;
       pending = true; pendingAt = Date.now(); pendingNo = lastMoveNo;
       if (q.kind === "play"){
         pendingHand = hand.length;
@@ -1042,7 +1076,6 @@ const TURN_SEC = 15;
         passPressAt = Date.now();
         eng.passTurn();
       }
-      busy = true;
       iMoved();
       unlockLater();
       evShow("  → 보냄(" + (q.kind === "play" ? "내기" : "패스") + ")");

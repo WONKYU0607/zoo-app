@@ -304,3 +304,6 @@ button:disabled{opacity:.42}
 /* 부르기 모드 — 줄 전체가 단추다 */
 #frBox .fr__row[data-frinv]{cursor:pointer}
 #frBox .fr__row--off{opacity:.45}
+
+/* 확인창 본문의 줄바꿈을 그대로 보인다 (나가기 경고가 두 줄이다) */
+#ask #askM{ white-space: pre-line; }

@@ -329,6 +329,7 @@ function onRoundEnd(v){
 
 function onGameOver(over){
   stopCount();                             /* 최종 결과는 저절로 넘어가지 않는다 */
+  lobby.clearSeat();                       /* 끝난 게임은 이어서 할 것이 없다 */
   eng.setPaused(true);
   const G = (W().GAME = W().GAME || {});
   G.roundNo = (W().__opts && W().__opts.rounds) || G.roundNo || 3;
@@ -627,11 +628,22 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
      (startRoomCount 가 "이미 세는 중"으로 보고 그냥 돌아간다) */
   W().__quitGame = () => {
     stopCount(); stopRoomCount(); botFillStop(); eng.stop(); eng.setPaused(false);
+    /* **나간 게임은 내 손에서 뗀다.**
+       예전에는 "하던 방" 기록을 안 지워서, 다른 게임을 하고 로비로 돌아오면
+       나간 게임으로 돌아가라고 물었다. 서버에도 나갔다고 알린다 —
+       안 알리면 그 자리가 서버에서 계속 내 것으로 잡혀 있다 */
+    if (net){ try { lobby.leaveRoom(net.code, net.playerID); } catch(e){} }
+    net = null; myRoom = null; pollStop();
+    lobby.clearSeat();
   };
 
   /* 결과 화면의 "나가기" — 세던 것을 멈추고 판도 접는다 */
   const quit = D().querySelector("#result #quit");
-  if (quit) quit.addEventListener("click", () => { stopCount(); eng.stop(); myRoom = null; });
+  if (quit) quit.addEventListener("click", () => {
+    stopCount(); eng.stop(); myRoom = null;
+    net = null; pollStop();
+    lobby.clearSeat();                    /* 끝난 게임도 돌아갈 곳이 아니다 */
+  });
 }
 
 export function teardown(){

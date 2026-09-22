@@ -143,6 +143,18 @@ if (askOn){
   check("판 화면으로 바로 간다", (await now()) === "table", "화면 " + (await now()));
 }
 
+/* ---- 게임 도중 나가면 **그 게임은 내 손에서 떠나야** 한다 ----
+   예전에는 "하던 방" 기록을 안 지워서, 다른 게임을 하고 로비에 오면
+   나간 게임으로 돌아가라고 물었다 */
+await page.evaluate(() => { if (window.__quitGame) window.__quitGame(); });
+await nap(600);
+const leftSeat = await page.evaluate(() => { try { return localStorage.getItem("zk_seat"); } catch(e){ return "?"; } });
+check("나간 게임은 기록에서 지워진다", !leftSeat, leftSeat ? "남아 있음" : "");
+const again = await page.evaluate(async () => {
+  try { return await window.__resumable(); } catch(e){ return "err"; }
+});
+check("나간 게임으로 돌아가라고 묻지 않는다", !again, again ? JSON.stringify(again).slice(0, 60) : "");
+
 kill();
 shut(srv, browser);
 try { rmSync(DIR, { recursive: true, force: true }); } catch(e){}
