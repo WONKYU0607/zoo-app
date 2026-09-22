@@ -95,6 +95,47 @@ check("남이 판 그 방에 들어갔다", Boolean(seat && seat.code === other.
 check("빠른참가로 들어가면 방장이 아니다", Boolean(seat && seat.playerID !== "0"),
       "자리 " + (seat && seat.playerID));
 
+/* ---- 나갔다 다시 들어가면 **내가 둘이 되면 안 된다** ----
+   대기실에서 나갈 때 서버에 "나갔다" 고 안 알리면 자리가 남는다. 그 상태로
+   빠른참가를 다시 누르면 새 자리를 받아 **같은 사람이 두 자리를 차지했다**(신고받음).
+   화면 위 `‹` 와 폰 뒤로가기 **둘 다** 확인한다 — 예전에는 `‹` 만 새고 있었다 */
+/* **이름이 아니라 "봇이 아닌 사람 수" 로 센다.** 이름은 화면에서 못 읽는 경우가 있고,
+   방장 하나 + 나 하나 = 사람 둘이 정답이다. 내가 둘이 되면 셋이 된다 */
+const humans = async () => {
+  const r = await api(`/zoo/rooms/${other.code}`);
+  return (r.players || []).filter(p => p && p.name && !p.bot).length;
+};
+const mine = async () => Math.max(0, (await humans()) - 1);   /* 방장 빼고 = 내 자리 수 */
+check("들어간 직후 내 자리는 하나", (await mine()) === 1, "사람 " + (await humans()) + "명(방장 포함)");
+
+for (const [how, act] of [
+  ["화면 위 ‹", async () => {
+    await page.evaluate(() => { const b = document.querySelector("#room [data-back]"); if (b) b.click(); });
+    await nap(300);
+    await page.evaluate(() => { const y = document.getElementById("askYes"); if (y) y.click(); });
+  }],
+  ["폰 뒤로가기", async () => {
+    await page.evaluate(() => window.__back && window.__back());
+    await nap(300);
+    await page.evaluate(() => { const y = document.getElementById("askYes"); if (y) y.click(); });
+  }],
+]){
+  await nap(600);
+  if ((await now()) !== "lobby"){ await toLobby(); }
+  check(how + " 로 나가면 로비로 간다", (await now()) === "lobby", "화면 " + (await now()));
+  await nap(500);
+  check(how + " 로 나가면 서버에서도 자리가 빠진다", (await mine()) === 0,
+        "사람 " + (await humans()) + "명(방장뿐이어야 함)");
+
+  /* 다시 들어간다 */
+  await page.evaluate(() => document.querySelector("#lobby #btQuick").click());
+  for (let i = 0; i < 20; i++){ if ((await now()) === "room") break; await nap(250); }
+  check(how + " 뒤 다시 들어가도 내 자리는 하나", (await mine()) === 1,
+        "사람 " + (await humans()) + "명(방장 포함) → 내 자리 " + (await mine()));
+
+  await act();
+}
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);
 process.exit(fail ? 1 : 0);

@@ -2,6 +2,7 @@ import "./styles/base.css";
 import { AVATARS, AVT_FREE } from "./lib/assets.js";
 import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm, warm } from "./lib/sound.js";
 import "./state.js";
+import { showInterstitial } from "./lib/ads.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
 export const OPT_HTML = "<div class=\"opts\" id=\"opts\" role=\"dialog\" aria-modal=\"true\"><div class=\"opts__v\" data-optclose></div><div class=\"opts__p\"><div class=\"opts__h\"><span id=\"optT\"></span><button class=\"opts__x\" data-optclose aria-label=\"close\">×</button></div><div class=\"opts__b\" id=\"optBody\"></div><div class=\"opts__f\"><button class=\"opts__go\" id=\"optGo\"></button></div></div></div>";
@@ -653,7 +654,22 @@ export function initNav(){
   
   window.__goto = id => go(id);
   window.__toTable = () => { window.__fresh = false; go("table"); };
+  /* 전면 광고를 이 게임에서 이미 띄웠는가.
+     **`go()` 보다 먼저 선언해 둔다** — 아래에 두면 앱이 시작하며 `go()` 를 부를 때
+     아직 없는 값이라 터진다(같은 실수로 앱이 안 뜬 적이 있다) */
+  let interDone = false;
+
   function go(id){
+    /* 새 게임이 시작되면(뽑기 화면) 전면 광고를 다시 한 번 띄울 수 있게 푼다.
+       뽑기는 게임 시작에 한 번만 지나간다 — 판(라운드)마다가 아니다 */
+    if (id === "draw") interDone = false;
+    /* **대기실 → 로비는 어떤 길로 가든 자리를 비운다.**
+       나가는 길이 하나 더 생겨도 빠지지 않게 화면 전환 자체에 걸어 둔다.
+       (대기실 → 뽑기/판 은 게임 시작이므로 해당 없음) */
+    if (id === "lobby"){
+      const cur = (document.querySelector(".page.is-on") || {}).id;
+      if (cur === "room" && window.__leaveRoom) window.__leaveRoom();
+    }
     /* 세금·혁명 화면을 보는 동안에는 다음 판이 굴러가면 안 된다.
        "판 시작"을 눌러 판 화면에 들어설 때 비로소 풀린다 */
     if (id === "tax" && window.__holdPlay) window.__holdPlay(true);
@@ -760,7 +776,20 @@ export function initNav(){
       go("tax");
     }
   });
-  document.querySelector("#result #quit").addEventListener("click", () => go("lobby"));
+  /* 결과 화면에서 로비로 나갈 때 — **게임 한 판이 끝났을 때만** 전면 광고를 한 번.
+     판(라운드)마다가 아니라 게임 전체가 끝났을 때다.
+     **광고 때문에 화면 이동이 막히면 안 된다** — 못 불러오거나 실패하면 그냥 로비로 간다.
+     한 게임에 한 번만 띄운다(나가기를 여러 번 눌러도) */
+  let leaving = false;
+  document.querySelector("#result #quit").addEventListener("click", async () => {
+    if (leaving) return;
+    const show = Boolean(window.__resultFinal) && !interDone;
+    if (!show){ go("lobby"); return; }
+    leaving = true; interDone = true;
+    try { await showInterstitial(); } catch (e){ /* 광고가 안 돼도 나간다 */ }
+    leaving = false;
+    go("lobby");
+  });
   window.__toResult = () => go("result");
   
   /* 세금까지 마치면 그 손패 그대로 다음 판을 시작한다 */
@@ -872,7 +901,9 @@ export function initNav(){
     if (now === "rank"){ go("lobby"); return; }
     if (now === "room"){
       ask(t.room, t.roomM, t.roomY || t.leaveY, () => {
-        if (window.__quitGame) window.__quitGame();
+        /* 대기실은 아직 게임 전이다. `__quitGame`(완주 실패로 기록) 이 아니라
+           **자리를 비우는** `__leaveRoom` 이 맞다 */
+        if (window.__leaveRoom) window.__leaveRoom();
         go("lobby");
       });
       return;
@@ -925,6 +956,10 @@ export function initNav(){
        이제 나가면 서버에도 "나갔다" 고 알리고 기록도 지워서 **다시 못 들어온다.**
        실수로 누른 한 번에 게임을 잃으면 안 된다 */
     if (b.closest("#table")){ if (window.__back) window.__back(); return; }
+    /* **대기실 ‹ 도 같은 길로.** 예전에는 그냥 로비로 갔는데, 그러면 서버에
+       "나갔다" 고 안 알려서 **자리가 남았다.** 빠른참가로 다시 들어가면
+       새 자리를 받아 **내가 둘이 됐다**(신고받음) */
+    if (b.closest("#room")){ if (window.__back) window.__back(); return; }
     go(b.dataset.back);
   });
   

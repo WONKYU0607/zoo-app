@@ -22,7 +22,17 @@ export function adsAvailable(){
   return Boolean(C && typeof C.isNativePlatform === "function" && C.isNativePlatform());
 }
 
+/* 전면 광고 — 게임 한 판이 끝나고 **로비로 나갈 때** 한 번.
+   보상형과 다른 광고 단위가 필요하다(진짜 번호는 AdMob 에서 따로 만들어 받는다) */
+const TEST_INTER_ID = "ca-app-pub-3940256099942544/1033173712";   /* 구글 공식 시험용(안드로이드 전면) */
+export const AD_INTER_ID =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_AD_INTER_ID) ||
+  TEST_INTER_ID;
+
 let inited = false;
+/* 광고가 하나 떠 있는 동안 다른 광고를 띄우지 않는다 */
+let showing = false;
+export const adBusy = () => showing;
 
 /* 광고를 보여 주고 **끝까지 봤는지**를 알려 준다.
    { ok: true }  — 보상을 받을 자격이 생겼다
@@ -31,6 +41,12 @@ export async function showRewardAd(){
   /* 검사용 — 진짜 광고 대신 결과를 흉내낸다 */
   if (typeof window !== "undefined" && typeof window.__adTest === "function") return window.__adTest();
   if (!adsAvailable()) return { ok: false, why: "web" };
+  if (showing) return { ok: false, why: "busy" };
+  showing = true;
+  try { return await rewardInner(); } finally { showing = false; }
+}
+
+async function rewardInner(){
 
   const { AdMob, RewardAdPluginEvents } = await import("@capacitor-community/admob");
   try {
@@ -61,4 +77,37 @@ export async function showRewardAd(){
     /* 닫힘 신호가 끝내 안 오는 경우를 대비 — 단추가 영영 잠기면 안 된다 */
     setTimeout(() => finish({ ok: rewarded, why: rewarded ? "" : "timeout" }), 120000);
   });
+}
+
+/* 게임 한 판이 끝나고 로비로 나갈 때 한 번.
+   **광고 때문에 화면 이동이 막히면 안 된다** — 못 불러오거나 실패하면 그냥 넘어간다.
+   그래서 결과를 기다리지 않는 쪽이 아니라, 끝나면 바로 알려 주는 쪽으로 만든다 */
+export async function showInterstitial(){
+  if (typeof window !== "undefined" && typeof window.__adInterTest === "function")
+    return window.__adInterTest();
+  if (!adsAvailable()) return { ok: false, why: "web" };
+  if (showing) return { ok: false, why: "busy" };
+  showing = true;
+  try {
+    const { AdMob, InterstitialAdPluginEvents } = await import("@capacitor-community/admob");
+    if (!inited){ await AdMob.initialize({}); inited = true; }
+    await AdMob.prepareInterstitial({ adId: AD_INTER_ID, isTesting: AD_INTER_ID === TEST_INTER_ID });
+    return await new Promise(resolve => {
+      let done = false;
+      const subs = [];
+      const finish = v => {
+        if (done) return;
+        done = true;
+        subs.forEach(h => { try { h.remove(); } catch(e){} });
+        resolve(v);
+      };
+      const on = (ev, fn) => AdMob.addListener(ev, fn).then(h => subs.push(h)).catch(() => {});
+      on(InterstitialAdPluginEvents.Dismissed,    () => finish({ ok: true }));
+      on(InterstitialAdPluginEvents.FailedToShow, () => finish({ ok: false, why: "show" }));
+      AdMob.showInterstitial().catch(() => finish({ ok: false, why: "show" }));
+      setTimeout(() => finish({ ok: false, why: "timeout" }), 60000);
+    });
+  } catch (e){
+    return { ok: false, why: "load" };          /* 못 불러왔다 — 그냥 넘어간다 */
+  } finally { showing = false; }
 }

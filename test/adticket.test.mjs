@@ -100,6 +100,70 @@ await nap(300);
 check("2장에서 받으면 3장이 되고 잠긴다",
       (await page.evaluate(() => window.ACCOUNT.tickets)) === 3 && await disabled());
 
+/* ---- 전면 광고: **게임 한 판이 끝나고 로비로 나갈 때만** 한 번 ----
+   판(라운드)이 끝날 때마다가 아니다. 그리고 **광고가 안 돼도 로비로 나가야** 한다 —
+   광고 때문에 화면이 막히면 안 된다 */
+{
+  /* **화면을 먼저 세우고 그 다음에 깃발을 세운다.**
+     결과 화면은 그려질 때 스스로 `__resultFinal` 을 다시 정한다 —
+     먼저 세우면 덮어써진다 */
+  const toResult = async (final) => {
+    await page.evaluate(() => { if (window.__goto) window.__goto("result"); });
+    await nap(300);
+    await page.evaluate(f => { window.__resultFinal = f; }, final);
+  };
+  const scr = () => page.evaluate(() => (document.querySelector(".page.is-on")||{}).id);
+  await page.evaluate(() => {
+    window.__interShown = 0;
+    window.__adInterTest = async () => { window.__interShown++; return { ok: true }; };
+  });
+
+  /* 라운드 결과에서 나가기 → 광고 없음 */
+  await toResult(false);
+  await page.evaluate(() => document.querySelector("#result #quit").click());
+  await nap(500);
+  check("라운드 결과에서 나갈 때는 전면 광고가 없다",
+        (await page.evaluate(() => window.__interShown)) === 0,
+        "뜬 횟수 " + (await page.evaluate(() => window.__interShown)));
+
+  /* 게임이 끝난 결과에서 나가기 → 광고 한 번 */
+  await toResult(true);
+  await page.evaluate(() => document.querySelector("#result #quit").click());
+  for (let i = 0; i < 20; i++){ if ((await scr()) === "lobby") break; await nap(200); }
+  check("게임이 끝나고 나갈 때 전면 광고가 한 번 뜬다",
+        (await page.evaluate(() => window.__interShown)) === 1,
+        "뜬 횟수 " + (await page.evaluate(() => window.__interShown)));
+  check("광고 뒤 로비로 간다", (await scr()) === "lobby", "화면 " + (await scr()));
+
+  /* 같은 게임에서 또 나가도 두 번은 안 뜬다 */
+  await toResult(true);
+  await page.evaluate(() => document.querySelector("#result #quit").click());
+  await nap(600);
+  check("같은 게임에서 두 번은 안 뜬다",
+        (await page.evaluate(() => window.__interShown)) === 1,
+        "뜬 횟수 " + (await page.evaluate(() => window.__interShown)));
+
+  /* 새 게임(뽑기 화면을 지나면) 다시 한 번 뜬다 */
+  await page.evaluate(() => window.__goto && window.__goto("draw"));
+  await nap(200);
+  await toResult(true);
+  await page.evaluate(() => document.querySelector("#result #quit").click());
+  for (let i = 0; i < 20; i++){ if ((await scr()) === "lobby") break; await nap(200); }
+  check("새 게임에서는 다시 한 번 뜬다",
+        (await page.evaluate(() => window.__interShown)) === 2,
+        "뜬 횟수 " + (await page.evaluate(() => window.__interShown)));
+
+  /* 광고가 실패해도 로비로 나간다 */
+  await page.evaluate(() => { window.__adInterTest = async () => { throw new Error("실패"); }; });
+  await page.evaluate(() => window.__goto && window.__goto("draw"));
+  await nap(200);
+  await toResult(true);
+  await page.evaluate(() => document.querySelector("#result #quit").click());
+  let ok = false;
+  for (let i = 0; i < 25; i++){ if ((await scr()) === "lobby"){ ok = true; break; } await nap(200); }
+  check("광고가 실패해도 로비로 나간다", ok, "화면 " + (await scr()));
+}
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);
 process.exit(fail ? 1 : 0);

@@ -50,6 +50,9 @@ export function mount(root){
     const rounds = (window.__opts && window.__opts.rounds) || 5;
     const played = G.roundNo || 1;
     const last = played >= rounds;
+    /* 이 결과가 **게임 전체의 끝**인지 화면 밖에서도 알 수 있게 남긴다
+       (로비로 나갈 때 전면 광고를 한 번 띄우는 데 쓴다) */
+    window.__resultFinal = last;
     const t = T[lang];
   
     /* 최종은 총점순, 중간은 이번 판 등수순 */
