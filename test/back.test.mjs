@@ -86,6 +86,36 @@ await page.evaluate(() => document.querySelector("#askYes").click());
 await new Promise(r=>setTimeout(r,500));
 check("나가기를 누르면 로비로", await now() === "lobby", await now());
 
+/* ---- 로비에서 **창을 열어 놓고** 뒤로가기 → 그 창만 닫혀야 한다 ----
+   예전에는 설정·계정 창(.cfg.on) 만 알아봐서, 방 만들기·규칙보기를 열어 놓고
+   뒤로가기를 누르면 창은 그대로이고 "게임을 나가시겠습니까" 가 떴다 */
+{
+  await page.evaluate(() => { if (window.__goto) window.__goto("lobby"); });
+  await new Promise(r=>setTimeout(r,300));
+  const panels = [
+    ["규칙보기", "#lobby #btRules", "#sheet", "is-open"],
+    ["방 만들기", "#lobby #btNew", "#opts", "on"],
+  ];
+  for (const [name, openSel, boxSel, cls] of panels){
+    const opened = await page.evaluate((o, b, c) => {
+      const btn = document.querySelector(o);
+      if (btn) btn.click();
+      const box = document.querySelector(b);
+      return Boolean(box && box.classList.contains(c));
+    }, openSel, boxSel, cls);
+    if (!opened){ console.log("  (" + name + " 창을 못 열어 건너뜀)"); continue; }
+    await back();
+    const still = await page.evaluate((b, c) => {
+      const box = document.querySelector(b); return Boolean(box && box.classList.contains(c));
+    }, boxSel, cls);
+    const asked = await askOn();
+    check(name + " 창을 열고 뒤로 → 창만 닫힌다", !still && !asked,
+          (still ? "창이 그대로 · " : "") + (asked ? "종료 확인이 뜸: " + (await askTxt()) : ""));
+    if (asked) await page.evaluate(() => { const n = document.getElementById("askNo"); if (n) n.click(); });
+    check(name + " 창을 닫은 뒤에도 로비에 있다", (await now()) === "lobby", await now());
+  }
+}
+
 check("화면에서 터진 것이 없다", logs.filter(l=>/^ERROR/.test(l)).length === 0,
   JSON.stringify(logs.filter(l=>/^ERROR/.test(l)).slice(0,2)));
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");

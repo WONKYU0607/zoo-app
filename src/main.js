@@ -4,7 +4,8 @@ import { MARKUP } from "./screens/_markup.js";
 import { db } from "./lib/firebase.js";
 import * as FR from "./lib/friends.js";
 import { initFriends } from "./lib/friends.js";
-import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft, setAvatar } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft, setAvatar, rewardTicket, TICKET_MAX } from "./lib/account.js";
+import { showRewardAd } from "./lib/ads.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -61,8 +62,10 @@ function build(){
       if (bar && !sec.querySelector("[data-rankopen]")){
         const wrap = document.createElement("div");
         wrap.className = "rankbar";
-        /* 왼쪽부터 랭킹 · 친구 · 소리 */
+        /* 왼쪽 끝(프로필 밑)에 광고 시청 티켓, 오른쪽에 랭킹 · 친구 · 소리 */
         wrap.innerHTML =
+          '<button class="bt-rank bt-ad" id="btAd">' +
+          '<span id="adLabel">광고 시청 티켓</span></button>' +
           '<button class="bt-rank" data-rankopen>' +
           '<span id="rankLabel">랭킹</span></button>' +
           '<button class="bt-rank bt-friend" data-friendopen>' +
@@ -89,6 +92,34 @@ initFriends(db, account);
 window.__friends = FR;
 /* 얼굴 고르기 — 화면(nav)이 부른다 */
 window.__setAvatar = i => setAvatar(i);
+
+/* ---------- 광고 시청 티켓 ----------
+   누르면 보상형 광고를 띄우고, **끝까지 보면** 티켓 1장. 횟수 제한 없음.
+   보유 3장이면 단추를 잠근다(더 받을 수 없으니). 광고 보는 동안에도 잠근다 —
+   두 번 눌러 광고가 겹치면 안 된다 */
+let adBusy = false;
+function paintAd(){
+  const b = document.getElementById("btAd");
+  if (!b) return;
+  const full = (Number(account.tickets) || 0) >= TICKET_MAX;
+  b.disabled = adBusy || full;
+}
+async function watchAd(){
+  if (adBusy || (Number(account.tickets) || 0) >= TICKET_MAX) return;
+  adBusy = true; paintAd();
+  try {
+    const r = await showRewardAd();
+    if (r && r.ok) await (window.__rewardTicket || rewardTicket)();
+  } catch (e){
+    console.warn("[광고] " + (e && e.message || e));
+  } finally {
+    adBusy = false; paintAd();
+  }
+}
+document.addEventListener("click", e => { if (e.target.closest("#btAd")) watchAd(); });
+window.addEventListener("accountchange", paintAd);
+paintAd();
+window.__watchAd = watchAd;           /* 검사용 */
 window.signInGoogle = signInGoogle;
 window.signInTest = signInTest;
 window.signInGuest = signInGuest;

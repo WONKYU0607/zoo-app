@@ -10,7 +10,7 @@ export const BAR_SWAP = {
   ],
   "draw": [
     "<div class=\"bar__t\" id=\"step\"></div>",
-    "<div style=\"display:flex;align-items:center;gap:6px\"><button class=\"navback\" data-back=\"room\" aria-label=\"뒤로\">‹</button><div class=\"bar__t\" id=\"step\"></div></div>"
+    "<div style=\"display:flex;align-items:center;gap:6px\"><div class=\"bar__t\" id=\"step\"></div></div>"
   ],
   "result": [
     "<div class=\"head__k\" id=\"kicker\"></div>",
@@ -18,7 +18,7 @@ export const BAR_SWAP = {
   ],
   "tax": [
     "<div class=\"bar__t\" id=\"step\"></div>",
-    "<div style=\"display:flex;align-items:center;gap:6px\"><button class=\"navback\" data-back=\"room\" aria-label=\"뒤로\">‹</button><div class=\"bar__t\" id=\"step\"></div></div>"
+    "<div style=\"display:flex;align-items:center;gap:6px\"><div class=\"bar__t\" id=\"step\"></div></div>"
   ],
   "table": [
     "<button class=\"bar__x\" aria-label=\"나가기\">✕</button>",

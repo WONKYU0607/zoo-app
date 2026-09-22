@@ -14,7 +14,7 @@
     "test:room": "node test/room.test.mjs",
     "test:round": "node test/roundend.test.mjs",
     "test:seq": "node test/sequence.test.mjs 3",
-    "test:auto": "node test/auto.test.mjs",
+    "test:auto": "node test/autoplay.test.mjs",
     "test:net": "node test/net.test.mjs",
     "test:login": "node test/login.test.mjs",
     "test:rank": "node test/rank.test.mjs",
@@ -26,7 +26,6 @@
     "test:layout": "node test/layout.test.mjs",
     "test:snd": "node test/passsound.test.mjs",
     "test:tap": "node test/taplost.test.mjs",
-    "test:auto": "node test/autoplay.test.mjs",
     "test:fr": "node test/friendtab.test.mjs",
     "test:screens": "node test/tapscreens.test.mjs",
     "test:resume": "node test/reconnect.test.mjs",
@@ -35,9 +34,12 @@
   "devDependencies": {
     "firebase-tools": "^15.27.0",
     "jsdom": "^30.0.0",
+    "puppeteer-core": "^25.11.0",
     "vite": "^5.4.0"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.1.0",
+    "@capacitor/core": "^8.5.2",
     "boardgame.io": "^0.50.2",
     "firebase": "^11.0.0"
   }

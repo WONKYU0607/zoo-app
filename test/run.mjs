@@ -39,6 +39,7 @@ const FAST = [
   ["이어서하기",   ["test/reconnect.test.mjs"]],
   ["누름보존",    ["test/presskeep.test.mjs"]],
   ["시작인원",    ["test/startcount.test.mjs"]],
+  ["광고티켓",    ["test/adticket.test.mjs"]],
   ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs", "test/tap.test.mjs"]],
   ["서버대전",    ["test/netplay.test.mjs"]],
 

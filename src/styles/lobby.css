@@ -278,3 +278,10 @@
 #lobby .bt-mute.is-off i.bt-mute__off{display:block}
 #lobby .bt-mute.is-off i.bt-mute__on{display:none}
 #lobby .bt-mute.is-off{opacity:.62}
+
+/* ---------- 광고 시청 티켓 ----------
+   프로필 밑(줄의 왼쪽 끝)에 둔다. 랭킹 단추와 같은 양피지 틀.
+   오른쪽 단추들을 밀어내지 않도록 이 단추 오른쪽을 비운다 */
+#lobby .bt-ad{margin-right:auto}
+/* 보유 3장이거나 광고를 보는 중이면 잠겨 흐리게 */
+#lobby .bt-ad:disabled{opacity:.45;cursor:default}

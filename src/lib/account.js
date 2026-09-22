@@ -488,6 +488,24 @@ export async function useTicket(){
   return true;
 }
 
+/* 광고를 끝까지 봤을 때 티켓 1장.
+   **시간이 지나 차 있어야 할 몫을 먼저 계산한 뒤** 더한다 — 안 그러면
+   차 있어야 할 티켓이 덜 잡혀서 광고를 보고도 손해를 본다.
+   보유 3장을 넘지 않는다. 이미 3장이면 false (화면은 그때 단추를 잠가 둔다) */
+export async function rewardTicket(){
+  if (!account.signedIn) return false;
+  const r = refill(account.tickets, account.ticketAt);
+  account.tickets = r.tickets; account.ticketAt = r.at;
+  if (account.tickets >= TICKET_MAX) return false;
+  account.tickets += 1;
+  /* 가득 차면 시간 재기를 멈춘다(다음에 한 장 쓸 때부터 다시 잰다) */
+  if (account.tickets >= TICKET_MAX) account.ticketAt = Date.now();
+  await updateDoc(doc(db, "users", account.uid),
+    { tickets: account.tickets, ticketAt: account.ticketAt });
+  window.dispatchEvent(new Event("accountchange"));
+  return true;
+}
+
 export async function addTicket(n = 1){
   if (!account.signedIn) return account.tickets;
   account.tickets = Math.min(TICKET_MAX, account.tickets + n);

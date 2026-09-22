@@ -833,9 +833,19 @@ export function initNav(){
      열려 있는 창이 있으면 그것부터 닫고, 그다음이 화면별 규칙이다 */
   function onBack(){
     if (askOpen()){ askClose(); return; }
-    /* 설정·계정·별명 창이 열려 있으면 그것만 닫는다 */
-    const box = document.querySelector(".cfg.on");
-    if (box){ box.classList.remove("on"); return; }
+    /* **열린 창이 있으면 그것만 닫는다.**
+       예전에는 `.cfg.on`(설정·계정·별명) 만 찾아서, 방 만들기(`#opts.on`)와
+       규칙보기(`#sheet.is-open`)가 열려 있어도 못 알아보고 "게임을 나가시겠습니까" 로 넘어갔다.
+       이름이 아니라 **종류(대화창)로** 찾는다 — 창이 늘어도 빠지지 않게 */
+    const open = [...document.querySelectorAll(
+      '.cfg.on, [role="dialog"].on, [role="dialog"].is-open')]
+      .filter(d => d.id !== "ask");
+    if (open.length){
+      const d = open[open.length - 1];           /* 가장 위에 뜬 것 하나만 */
+      d.classList.remove("on");
+      d.classList.remove("is-open");
+      return;
+    }
 
     const now = (document.querySelector(".page.is-on") || {}).id || "entry";
     const t = ASK_T[window.__lang] || ASK_T.ko;

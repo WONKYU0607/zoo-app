@@ -1115,9 +1115,13 @@ function initNav() {
       askClose();
       return;
     }
-    const box = document.querySelector(".cfg.on");
-    if (box) {
-      box.classList.remove("on");
+    const open = [...document.querySelectorAll(
+      '.cfg.on, [role="dialog"].on, [role="dialog"].is-open'
+    )].filter((d) => d.id !== "ask");
+    if (open.length) {
+      const d = open[open.length - 1];
+      d.classList.remove("on");
+      d.classList.remove("is-open");
       return;
     }
     const now = (document.querySelector(".page.is-on") || {}).id || "entry";
@@ -1194,7 +1198,7 @@ var BAR_SWAP = {
   ],
   "draw": [
     '<div class="bar__t" id="step"></div>',
-    '<div style="display:flex;align-items:center;gap:6px"><button class="navback" data-back="room" aria-label="\uB4A4\uB85C">\u2039</button><div class="bar__t" id="step"></div></div>'
+    '<div style="display:flex;align-items:center;gap:6px"><div class="bar__t" id="step"></div></div>'
   ],
   "result": [
     '<div class="head__k" id="kicker"></div>',
@@ -1202,7 +1206,7 @@ var BAR_SWAP = {
   ],
   "tax": [
     '<div class="bar__t" id="step"></div>',
-    '<div style="display:flex;align-items:center;gap:6px"><button class="navback" data-back="room" aria-label="\uB4A4\uB85C">\u2039</button><div class="bar__t" id="step"></div></div>'
+    '<div style="display:flex;align-items:center;gap:6px"><div class="bar__t" id="step"></div></div>'
   ],
   "table": [
     '<button class="bar__x" aria-label="\uB098\uAC00\uAE30">\u2715</button>',

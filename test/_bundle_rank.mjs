@@ -24,6 +24,7 @@ __export(account_exports, {
   nameCost: () => nameCost,
   pending: () => pending,
   periodKeys: () => periodKeys,
+  rewardTicket: () => rewardTicket,
   scoreFor: () => scoreFor,
   setAvatar: () => setAvatar,
   setNickname: () => setNickname,
@@ -21746,6 +21747,21 @@ async function useTicket() {
   const wasFull = account.tickets >= TICKET_MAX;
   account.tickets -= 1;
   if (wasFull) account.ticketAt = Date.now();
+  await updateDoc(
+    doc(db, "users", account.uid),
+    { tickets: account.tickets, ticketAt: account.ticketAt }
+  );
+  window.dispatchEvent(new Event("accountchange"));
+  return true;
+}
+async function rewardTicket() {
+  if (!account.signedIn) return false;
+  const r = refill(account.tickets, account.ticketAt);
+  account.tickets = r.tickets;
+  account.ticketAt = r.at;
+  if (account.tickets >= TICKET_MAX) return false;
+  account.tickets += 1;
+  if (account.tickets >= TICKET_MAX) account.ticketAt = Date.now();
   await updateDoc(
     doc(db, "users", account.uid),
     { tickets: account.tickets, ticketAt: account.ticketAt }
