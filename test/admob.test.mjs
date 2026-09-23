@@ -84,5 +84,41 @@ const base = `<?xml version="1.0" encoding="utf-8"?>
   check("깨진 파일도 잡는다", checkServices("{짜부", APP).length > 0);
 }
 
+/* ---- 출시 서명이 빌드 설정에 들어가는가 ----
+   스토어에 올리려면 내 키로 서명돼 있어야 한다. `cap add android` 를 다시 하면
+   설정이 새로 만들어지므로 손으로 고치면 안 된다 */
+{
+  const { patchGradle } = await import("../scripts/android-signing.mjs");
+  const base = `apply plugin: 'com.android.application'
+
+android {
+    namespace = "com.wonkyu.zoopresident"
+    defaultConfig {
+        applicationId "com.wonkyu.zoopresident"
+        versionCode 1
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+`;
+  const r = patchGradle(base);
+  check("서명 설정을 넣는다", r.changed && /signingConfigs/.test(r.text), r.how);
+  check("비밀번호 파일을 읽는다", /keystore\.properties/.test(r.text));
+  check("release 빌드가 그 키를 쓴다", /signingConfig signingConfigs\.release/.test(r.text));
+  /* 비밀번호는 설정 파일에 **값으로** 적히면 안 되고, 바깥 파일에서 읽어야 한다 */
+  check("비밀번호를 설정 파일에 적지 않는다",
+        /storePassword keystoreProperties/.test(r.text) &&
+        /keyPassword keystoreProperties/.test(r.text),
+        "keystore.properties 에서 읽음");
+  check("원래 있던 것은 그대로", /com\.android\.application/.test(r.text) && /versionCode 1/.test(r.text));
+
+  const again = patchGradle(r.text);
+  check("두 번 돌려도 한 번만 들어간다",
+        again.changed === false && (r.text.match(/signingConfigs \{/g) || []).length === 1, again.how);
+}
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);

@@ -12,6 +12,8 @@ android/.idea/
 android/app/release/
 android/app/*.keystore
 android/app/*.jks
+# 서명 비밀번호가 든 파일. 올라가면 남이 내 앱인 척 만들 수 있다
+android/keystore.properties
 functions/node_modules
 .DS_Store
 

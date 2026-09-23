@@ -52,6 +52,14 @@
           }
         },
         {
+          "client_id": "998080317001-sf88nme023m04ichgerihlq9hq1869qk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wonkyu.zoopresident",
+            "certificate_hash": "d8186f6361a5d39689993318d115fec9c99c8b43"
+          }
+        },
+        {
           "client_id": "998080317001-5o0isa3kel70lh69r2pdeqnvpk19f082.apps.googleusercontent.com",
           "client_type": 3
         }
