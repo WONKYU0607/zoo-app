@@ -1,7 +1,17 @@
 node_modules
 dist
-android
 .env
+# 안드로이드 프로젝트(android/)는 **깃에 올린다.**
+# AdMob 앱 번호·아이콘·서명 설정이 거기 들어가서, 안 올리면 컴퓨터가 바뀔 때 다 잃는다.
+# 대신 빌드 찌꺼기만 뺀다
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/.idea/
+android/app/release/
+android/app/*.keystore
+android/app/*.jks
 functions/node_modules
 .DS_Store
 

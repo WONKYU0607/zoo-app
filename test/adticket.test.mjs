@@ -164,6 +164,68 @@ check("2장에서 받으면 3장이 되고 잠긴다",
   check("광고가 실패해도 로비로 나간다", ok, "화면 " + (await scr()));
 }
 
+/* ---- 상단바 아래 단추 글자가 언어를 따라가는가 ----
+   예전에는 한국어로 박혀 있어서 영어로 바꿔도 그대로였다 */
+{
+  const labels = () => page.evaluate(() => ({
+    ad: (document.getElementById("adLabel")||{}).textContent || "",
+    rank: (document.getElementById("rankLabel")||{}).textContent || "",
+    friend: (document.getElementById("friendLabel")||{}).textContent || "",
+  }));
+  await page.evaluate(() => window.__goto && window.__goto("lobby"));
+  await nap(400);
+  const ko = await labels();
+  check("한국어일 때 한국어로 뜬다", ko.ad === "광고 시청 티켓" && ko.rank === "랭킹",
+        JSON.stringify(ko));
+  await page.evaluate(() => {
+    window.__lang = "en";
+    try { localStorage.setItem("zk_lang", "en"); } catch(e){}
+    window.dispatchEvent(new Event("langchange"));
+  });
+  await nap(400);
+  const en = await labels();
+  check("영어로 바꾸면 영어로 바뀐다",
+        /[A-Za-z]/.test(en.ad) && /[A-Za-z]/.test(en.rank) && /[A-Za-z]/.test(en.friend),
+        JSON.stringify(en));
+}
+
+/* ---- 게임이 끝나면 **"다시 하기" 가 없어야** 한다 ----
+   예전에는 있었는데, 누르면 원래 방 대기실로 돌아갔다. 온라인에서는 같이 하던
+   사람들이 따라올 리가 없어 말이 안 되는 흐름이었다. 게다가 그 길로는
+   **티켓 없이 계속 게임**할 수 있었고, 전면 광고도 한 번도 안 뜰 수 있었다 */
+{
+  const setResult = async (roundNo, rounds) => {
+    await page.evaluate((r, n) => {
+      window.GAME = { roundNo: r, finish: [], score: [] };
+      window.__opts = Object.assign(window.__opts || {}, { rounds: n });
+      if (window.__goto) window.__goto("result");
+      if (window.__bootResult) window.__bootResult();
+    }, roundNo, rounds);
+    await nap(350);
+  };
+  const nextBtn = () => page.evaluate(() => {
+    const b = document.querySelector("#result #next");
+    return b ? { hidden: b.hidden, text: b.textContent } : null;
+  });
+
+  await setResult(1, 3);            /* 판이 남았을 때 */
+  let b = await nextBtn();
+  check("판이 남았으면 '다음 판' 이 있다", b && !b.hidden && /다음 판|Next/.test(b.text),
+        JSON.stringify(b));
+
+  await setResult(3, 3);            /* 게임이 다 끝났을 때 */
+  b = await nextBtn();
+  check("게임이 끝나면 단추가 안 보인다", b && b.hidden === true, JSON.stringify(b));
+  check("'다시 하기' 글자가 아예 없다", !/다시 하기|Play again/.test((b && b.text) || ""),
+        (b && b.text) || "");
+
+  /* 눌러도 아무 데도 안 간다 */
+  await page.evaluate(() => { const x = document.querySelector("#result #next"); if (x) x.click(); });
+  await nap(400);
+  check("눌러도 화면이 안 바뀐다",
+        (await page.evaluate(() => (document.querySelector(".page.is-on")||{}).id)) === "result");
+}
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);
 process.exit(fail ? 1 : 0);

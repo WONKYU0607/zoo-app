@@ -22,7 +22,7 @@ export function mount(root){
          subLast:"마지막 판입니다.",
          subF:n=>'<b>'+n+'</b>님이 가장 높은 점수로 이겼습니다.',
          colP:"등수", colG:"이번 판", colT:"총점",
-         next:"다음 판", nextF:"다시 하기", quit:"나가기",
+         next:"다음 판", quit:"나가기",
          tie:"동점입니다. 사자를 더 많이 한 분이 앞섭니다." },
     en:{ kickR:n=>"Round "+n, kickF:"Final",
          titleR:"This round", titleF:"Winner",
@@ -30,7 +30,7 @@ export function mount(root){
          subLast:"Last round.",
          subF:n=>'<b>'+n+'</b> finishes with the highest score.',
          colP:"Place", colG:"Round", colT:"Total",
-         next:"Next round", nextF:"Play again", quit:"Leave",
+         next:"Next round", quit:"Leave",
          tie:"Tied on points. More Lion finishes ranks higher." }
   };
   let lang = window.__lang || "ko";
@@ -93,7 +93,11 @@ export function mount(root){
         '<span class="row__t">' + (score[seat] || 0) + '</span></div>';
     }).join("");
   
-    el("next").textContent = last ? t.nextF : t.next;
+    /* 게임이 다 끝나면 **나가기만** 남긴다.
+       예전에는 "다시 하기" 가 있었지만, 온라인에서 누르면 원래 방 대기실로 돌아가
+       같이 하던 사람들이 따라오는 것처럼 보였다 — 그럴 리가 없다 */
+    el("next").textContent = t.next;
+    el("next").hidden = last;
     el("quit").textContent = t.quit;
   }
   window.__bootResult = render;

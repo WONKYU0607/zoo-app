@@ -95,3 +95,11 @@
   border:none !important;box-shadow:none !important;border-radius:50%;
   display:block;flex:none;overflow:visible}
 #draw .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}
+/* ---------- 내가 집은 카드 ----------
+   누가 집었는지는 자리 번호(data-seat)로 들어온다. 0 번이 나다.
+   여러 장이 뒤집혀 있으면 내 것이 어느 것인지 잘 안 보인다는 신고를 받아
+   **카드 테두리에 딱 맞게** 금색 테두리를 두른다 */
+#draw .pk[data-seat="0"] .pk__f{
+  box-shadow: 0 0 0 2px var(--gold, #C69A3C), 0 0 10px rgba(198,154,60,.55);
+}
+#draw .pk[data-seat="0"]{ z-index: 3 }

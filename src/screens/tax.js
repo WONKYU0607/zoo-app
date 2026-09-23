@@ -459,7 +459,7 @@ export function mount(root){
      세금 화면은 밖에서 상태를 밀어 넣을 길이 없어서 확인이 어려웠다.
      내가 몇 등인지·몇 장 주는지 읽고, 원하는 단계로 바로 세울 수 있게 열어 둔다.
      게임 동작에는 아무 영향이 없다 */
-  window.__taxProbe = {
+  if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST) window.__taxProbe = {
     step: () => step,
     rank: () => rankOf(0),
     giveCount: () => giveCount(),

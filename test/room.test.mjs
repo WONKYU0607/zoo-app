@@ -26,7 +26,10 @@ const OUT   = join(HERE, "_bundle_room.mjs");
 execFileSync(process.execPath, [
   join(ROOT, "node_modules/esbuild/bin/esbuild"),
   ENTRY, "--bundle", "--format=esm", "--platform=browser",
-  "--loader:.css=empty", "--outfile=" + OUT, "--log-level=warning",
+  "--loader:.css=empty",
+  /* 이 검사는 브라우저 없이 묶어 돌린다. `import.meta.env` 가 없어서
+     그대로 두면 빌드 깃발을 읽다가 터진다 — 검사용 값으로 채워 준다 */
+  "--define:import.meta.env.VITE_TEST_HOOKS=\"1\"", "--outfile=" + OUT, "--log-level=warning",
 ], { cwd: ROOT, stdio: "inherit" });
 
 const dom = new JSDOM(

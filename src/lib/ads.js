@@ -39,7 +39,7 @@ export const adBusy = () => showing;
    { ok: false, why } — 웹이라 못 띄움 / 못 불러옴 / 중간에 닫음 / 보여 주기 실패 */
 export async function showRewardAd(){
   /* 검사용 — 진짜 광고 대신 결과를 흉내낸다 */
-  if (typeof window !== "undefined" && typeof window.__adTest === "function") return window.__adTest();
+  if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && typeof window.__adTest === "function") return window.__adTest();
   if (!adsAvailable()) return { ok: false, why: "web" };
   if (showing) return { ok: false, why: "busy" };
   showing = true;
@@ -83,8 +83,7 @@ async function rewardInner(){
    **광고 때문에 화면 이동이 막히면 안 된다** — 못 불러오거나 실패하면 그냥 넘어간다.
    그래서 결과를 기다리지 않는 쪽이 아니라, 끝나면 바로 알려 주는 쪽으로 만든다 */
 export async function showInterstitial(){
-  if (typeof window !== "undefined" && typeof window.__adInterTest === "function")
-    return window.__adInterTest();
+  if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && typeof window.__adInterTest === "function") return window.__adInterTest();
   if (!adsAvailable()) return { ok: false, why: "web" };
   if (showing) return { ok: false, why: "busy" };
   showing = true;

@@ -166,7 +166,9 @@ export function initNav(){
     document.getElementById("opts").classList.remove("on");
     if (optMode === "create"){
       if (window.__createRoom){
-        window.__createRoom().then(code => { if (code) go("room"); });
+        window.__createRoom()
+          .then(code => { if (code) go("room"); })
+          .catch(() => { go("lobby"); netNote(); });   /* 서버에 못 붙었다 */
       } else setTimeout(() => go("room"), 80);
     } else {
       window.dispatchEvent(new Event("optschange"));
@@ -709,24 +711,38 @@ export function initNav(){
      예전에는 들어갈 방이 없으면 새 방을 만들어 방장으로 앉혔는데, 그러면 방 만들기와
      똑같아졌다(방장·인원 변경·시작). 없으면 단추 밑 안내 줄에 잠깐 알린다 */
   let noneTimer = null;
+  /* 로비 안내 줄에 잠깐 띄운다. 평소에는 비어 있는 줄이다 */
+  function lobbyNote(msg){
+    const h = document.querySelector("#lobby #hQuick");
+    if (!h) return;
+    if (!h.dataset.orig) h.dataset.orig = h.textContent || "";
+    h.textContent = msg;
+    h.classList.add("hint--warn");
+    if (noneTimer) clearTimeout(noneTimer);
+    noneTimer = setTimeout(() => {
+      h.textContent = h.dataset.orig || ""; h.classList.remove("hint--warn");
+    }, 2500);
+  }
+  const T_NET = { ko: "서버에 연결할 수 없습니다", en: "Can't reach the server" };
+  const netNote = () => lobbyNote(T_NET[window.__lang] || T_NET.ko);
+
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
     const f = window.__quickJoin;
     if (!f) return;
     window.__quickNone = false;
-    const code = await f();
+    let code = null;
+    try { code = await f(); }
+    catch (e){
+      /* **서버에 못 붙으면 조용히 넘어가면 안 된다.**
+         예전에는 실패를 받는 곳이 없어서, 인터넷이 끊기거나 서버가 내려가면
+         눌러도 아무 일이 안 일어났다 — 사용자는 앱이 먹통이라고 느낀다 */
+      netNote();
+      return;
+    }
     if (code){ go("room"); return; }
     if (window.__quickNone){
-      const h = document.querySelector("#lobby #hQuick");
       const L = window.__lobbyT ? window.__lobbyT() : null;
-      if (h){
-        if (!h.dataset.orig) h.dataset.orig = h.textContent;
-        h.textContent = (L && L.none) || "지금 들어갈 방이 없습니다";
-        h.classList.add("hint--warn");
-        if (noneTimer) clearTimeout(noneTimer);
-        noneTimer = setTimeout(() => {
-          h.textContent = h.dataset.orig || ""; h.classList.remove("hint--warn");
-        }, 2500);
-      }
+      lobbyNote((L && L.none) || "지금 들어갈 방이 없습니다");
       if (window.__refreshOpen) window.__refreshOpen();
     }
   });
@@ -761,12 +777,11 @@ export function initNav(){
   document.querySelector("#result #next").addEventListener("click", () => {
     const G = window.GAME || {};
     const rounds = (window.__opts && window.__opts.rounds) || 5;
-    if ((G.roundNo || 1) >= rounds){          // 마지막 판이었으면
-      if (window.__onRestart){ window.__onRestart(); return; }
-      window.__fresh = true;
-      go("draw");
-      return;
-    }
+    /* **게임이 다 끝나면 이 단추는 없다.** (아래 result.js 에서 숨긴다)
+       예전에는 "다시 하기" 가 있었는데, 누르면 원래 방 대기실로 돌아갔다.
+       온라인에서는 **같이 하던 사람들이 따라올 리가 없어** 말이 안 되는 흐름이었다.
+       게임이 끝나면 나가기 하나만 남는다 */
+    if ((G.roundNo || 1) >= rounds) return;
     G.roundNo = (G.roundNo || 1) + 1;
     window.__roundNo = G.roundNo;
     if (window.__opts && window.__opts.tax === false){
@@ -940,12 +955,26 @@ export function initNav(){
     });
   } catch(e){}
 
-  /* 안드로이드 껍데기 */
-  try {
-    const cap = window.Capacitor;
-    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
-      cap.Plugins.App.addListener("backButton", () => onBack());
-  } catch(e){}
+  /* ---------- 안드로이드 껍데기의 뒤로가기 ----------
+     웹의 `popstate` 는 앱에서 오지 않는다. 캐패시터의 `App` 플러그인이 알려 준다.
+     **예전에는 플러그인을 안 깔아 놓고 `Capacitor.Plugins.App` 을 찾기만 했다.**
+     그래서 그 자리가 비어 있었고, 뒤로가기 한 번에 **앱이 통째로 꺼졌다**(신고받음).
+     이제 제대로 가져와서 건다 */
+  (async () => {
+    try {
+      if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()))
+        return;                                  /* 웹에서는 popstate 가 맡는다 */
+      const { App } = await import("@capacitor/app");
+      App.addListener("backButton", () => onBack());
+    } catch (e){
+      /* 못 걸었으면 옛 방식이라도 시도한다 */
+      try {
+        const cap = window.Capacitor;
+        if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
+          cap.Plugins.App.addListener("backButton", () => onBack());
+      } catch(e2){}
+    }
+  })();
 
   /* 뒤로가기. 게임 도중에 나가면 완주 실패로 기록한다 */
   /* 나중에 그려지는 화면(랭킹 등)도 걸리도록 문서 전체에서 받는다 */

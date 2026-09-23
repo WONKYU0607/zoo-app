@@ -1,0 +1,104 @@
+/* ---------- 글꼴을 앱 안에 넣는다 ----------
+
+   예전에는 구글 서버(fonts.googleapis.com)에서 받아 왔다. 인터넷이 느리거나
+   끊기면 글꼴이 늦게 뜨거나 다른 글꼴로 보인다. 앱은 지하철·비행기 모드에서도
+   돌아야 하므로 안에 넣는다.
+
+   **쓰는 것만 넣는다.**
+   - 문자 묶음: 한글(korean)과 영문(latin)만. 통째로 넣으면 키릴·그리스까지 와서 38MB
+   - 굵기: 화면에서 실제로 쓰는 것만 (CSS 를 훑어 확인)
+   - 파일 형식: `woff2` 만. 곁들여 오는 구형 `woff` 는 요즘 브라우저가 안 쓰는데
+     같이 넣으면 11MB 를 그냥 버린다. 그래서 묶음 파일을 그대로 부르지 않고
+     여기에 직접 적는다 */
+
+@font-face {
+  font-family: 'Noto Serif KR';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/noto-serif-kr/files/noto-serif-kr-korean-600-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif KR';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("@fontsource/noto-serif-kr/files/noto-serif-kr-korean-700-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif KR';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url("@fontsource/noto-serif-kr/files/noto-serif-kr-korean-900-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif KR';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("@fontsource/noto-serif-kr/files/noto-serif-kr-latin-600-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif KR';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("@fontsource/noto-serif-kr/files/noto-serif-kr-latin-700-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif KR';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url("@fontsource/noto-serif-kr/files/noto-serif-kr-latin-900-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Gowun Batang';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/gowun-batang/files/gowun-batang-korean-400-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Gowun Batang';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("@fontsource/gowun-batang/files/gowun-batang-korean-700-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Gowun Batang';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/gowun-batang/files/gowun-batang-latin-400-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Gowun Batang';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("@fontsource/gowun-batang/files/gowun-batang-latin-700-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Gowun Dodum';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/gowun-dodum/files/gowun-dodum-korean-400-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Gowun Dodum';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/gowun-dodum/files/gowun-dodum-latin-400-normal.woff2") format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("@fontsource/playfair-display/files/playfair-display-latin-700-normal.woff2") format('woff2');
+}

@@ -18,7 +18,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 execFileSync(process.execPath, [
   join(ROOT, "node_modules/esbuild/bin/esbuild"),
   join(HERE, "_entry_login.js"), "--bundle", "--format=esm", "--platform=browser",
-  "--loader:.css=empty", "--outfile=" + join(HERE, "_bundle_login.mjs"), "--log-level=warning",
+  "--loader:.css=empty",
+  /* 이 검사는 브라우저 없이 묶어 돌린다. `import.meta.env` 가 없어서
+     그대로 두면 빌드 깃발을 읽다가 터진다 — 검사용 값으로 채워 준다 */
+  "--define:import.meta.env.VITE_TEST_HOOKS=\"1\"", "--outfile=" + join(HERE, "_bundle_login.mjs"), "--log-level=warning",
 ], { cwd: ROOT, stdio: "inherit" });
 
 /* nav 는 다른 화면 요소도 찾으므로 껍데기만 같이 세워 둔다 */

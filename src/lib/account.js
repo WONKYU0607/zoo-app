@@ -7,7 +7,7 @@
    - 티어는 1000점 단위 숫자 */
 import { ready, auth, db } from "./firebase.js";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInAnonymously, signOut,
-         linkWithPopup, linkWithRedirect, getRedirectResult,
+         linkWithPopup, linkWithRedirect, getRedirectResult, signInWithCredential, linkWithCredential,
          updateProfile, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, runTransaction,
          collection, query, where, orderBy, limit, getDocs, getCountFromServer,
@@ -261,6 +261,18 @@ export async function linkGoogle(){
   if (!user) throw new Error("로그인 상태가 아닙니다");
   if (!user.isAnonymous) return { already: true };
 
+  if (isApp()){
+    /* 게스트로 놀던 것을 구글 계정에 잇는다 */
+    try {
+      const cred = await linkWithCredential(user, await googleCredential());
+      await markLinked(cred.user);
+      return { linked: true };
+    } catch(err){
+      const code = String(err && err.code || "");
+      if (CONFLICT.has(code)) return { conflict: true };
+      throw err;
+    }
+  }
   const provider = new GoogleAuthProvider();
   try {
     const cred = await linkWithPopup(user, provider);
@@ -289,8 +301,33 @@ export async function switchToGoogle(){
 
 /* 구글로 로그인. 팝업이 막히면(크롬이 자주 막는다) 주소 이동으로 넘어간다.
    잇기와 같은 대비를 여기에도 해야 한다 — 한 군데만 고쳐서 겪은 문제다 */
+/* ---------- 앱(안드로이드)에서의 구글 로그인 ----------
+
+   앱 안의 화면은 크롬이 아니라 **껍데기 브라우저**다. 그래서 웹에서 쓰는
+   "로그인 창 띄우기"가 통하지 않는다. 실제로 **크롬이 따로 열리고 돌아오지 못했다**(신고받음).
+
+   앱에서는 안드로이드가 직접 구글 로그인을 띄우고, 거기서 받은 표(idToken)로
+   파이어베이스에 들어간다. 웹에서는 예전 방식 그대로다 */
+const isApp = () => Boolean(
+  typeof window !== "undefined" && window.Capacitor &&
+  typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform()
+);
+
+/* 안드로이드 로그인 창을 띄우고 표를 받아 온다 */
+async function googleCredential(){
+  const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+  const r = await FirebaseAuthentication.signInWithGoogle();
+  const idToken = r && r.credential && r.credential.idToken;
+  if (!idToken) throw new Error("구글 로그인에서 표를 못 받았습니다");
+  return GoogleAuthProvider.credential(idToken, r.credential.accessToken || undefined);
+}
+
 export async function signInGoogle(){
   if (!ready) throw new Error("Firebase 설정이 없습니다");
+  if (isApp()){
+    const cred = await signInWithCredential(auth, await googleCredential());
+    return loadProfile(cred.user);
+  }
   const provider = new GoogleAuthProvider();
   try {
     const cred = await signInWithPopup(auth, provider);
@@ -358,6 +395,14 @@ async function loadProfile(user){
 }
 
 export async function signOutNow(){
+  /* 앱에서는 안드로이드 쪽 로그인도 같이 끊는다.
+     안 끊으면 다음에 로그인할 때 **계정을 고르지 않고 바로 옛 계정으로** 들어간다 */
+  if (isApp()){
+    try {
+      const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+      await FirebaseAuthentication.signOut();
+    } catch(e){}
+  }
   await signOut(auth);
   Object.assign(account, { uid: null, name: "", photo: "", score: 0,
                            tier: 0, tickets: TICKET_MAX, games: 0, signedIn: false });

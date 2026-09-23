@@ -17,6 +17,25 @@ import * as tax    from "./screens/tax.js";
 import * as result from "./screens/result.js";
 import * as rank   from "./screens/rank.js";
 
+/* ---------- 상단바 아래 단추 글자 ----------
+   예전에는 한국어로 박혀 있어서 **영어로 바꿔도 그대로였다**(랭킹·친구).
+   광고 단추도 같은 모양으로 넣었다가 같이 고친다 */
+const BAR_T = {
+  ko: { ad: "광고 시청 티켓", rank: "랭킹", friend: "친구", mute: "소리 끄기" },
+  en: { ad: "Watch ad for ticket", rank: "Ranking", friend: "Friends", mute: "Mute" },
+};
+function paintBarLabels(){
+  const t = BAR_T[window.__lang] || BAR_T.ko;
+  const put = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  put("adLabel", t.ad);
+  put("rankLabel", t.rank);
+  put("friendLabel", t.friend);
+  const m = document.getElementById("btMute");
+  if (m) m.setAttribute("aria-label", t.mute);
+}
+window.addEventListener("langchange", paintBarLabels);
+
+
 const SCREENS = { entry, lobby, room, draw, table, tax, result, rank };
 
 /* 화면마다 상단에 붙일 것 (뒤로 가기 / 설정 버튼) */
@@ -73,6 +92,7 @@ function build(){
           '<button class="bt-mute" id="btMute" aria-pressed="true" aria-label="소리 끄기">' +
           '<i class="bt-mute__on"></i><i class="bt-mute__off"></i></button>';
         bar.parentNode.insertBefore(wrap, bar.nextSibling);
+        paintBarLabels();
       }
     }
   });
@@ -93,6 +113,7 @@ window.__friends = FR;
 /* 얼굴 고르기 — 화면(nav)이 부른다 */
 window.__setAvatar = i => setAvatar(i);
 
+
 /* ---------- 광고 시청 티켓 ----------
    누르면 보상형 광고를 띄우고, **끝까지 보면** 티켓 1장. 횟수 제한 없음.
    보유 3장이면 단추를 잠근다(더 받을 수 없으니). 광고 보는 동안에도 잠근다 —
@@ -109,7 +130,7 @@ async function watchAd(){
   adBusy = true; paintAd();
   try {
     const r = await showRewardAd();
-    if (r && r.ok) await (window.__rewardTicket || rewardTicket)();
+    if (r && r.ok) await ((import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && window.__rewardTicket) || rewardTicket)();
   } catch (e){
     console.warn("[광고] " + (e && e.message || e));
   } finally {
@@ -119,9 +140,10 @@ async function watchAd(){
 document.addEventListener("click", e => { if (e.target.closest("#btAd")) watchAd(); });
 window.addEventListener("accountchange", paintAd);
 paintAd();
-window.__watchAd = watchAd;           /* 검사용 */
+if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST) window.__watchAd = watchAd;   /* 검사용 */
 window.signInGoogle = signInGoogle;
-window.signInTest = signInTest;
+/* 검사용 로그인 — 배포판에서는 닫는다 */
+if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST) window.signInTest = signInTest;
 window.signInGuest = signInGuest;
 window.linkGoogle = linkGoogle;
 window.switchToGoogle = switchToGoogle;

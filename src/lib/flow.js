@@ -642,14 +642,6 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   };
 
   /* 마지막 판 결과에서 "다음"을 누르면 새 게임을 세운다 */
-  W().__onRestart = () => {
-    eng.stop();
-    if (!myRoom) return opt.goto("lobby");
-    myRoom.phase = "waiting";
-    emitRoom();
-    opt.goto("room");
-  };
-
   /* 방 초읽기도 같이 멈춘다. 안 끄면 다음 방에서 초읽기가 아예 안 시작한다
      (startRoomCount 가 "이미 세는 중"으로 보고 그냥 돌아간다) */
   W().__quitGame = () => {

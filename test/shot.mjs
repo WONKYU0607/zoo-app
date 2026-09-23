@@ -44,6 +44,18 @@ export function ensureBuild(){
                          statSync(join(ROOT, "index.html")).mtimeMs);
     need = src > built;
   }
+  /* **배포판 빌드가 들어 있으면 다시 만든다.**
+     `npm run build` 로 만든 `dist` 에는 검사용 통로가 아예 없다. 그걸 그대로 쓰면
+     광고·세금 검사가 통로를 못 찾아 우수수 실패한다(실제로 그랬다).
+     날짜만 보면 구분이 안 되므로 **안을 들여다본다** */
+  if (!need){
+    try {
+      const dir = join(DIST, "assets");
+      const js = readdirSync(dir).filter(f => f.endsWith(".js"))
+        .map(f => readFileSync(join(dir, f), "utf8")).join("");
+      if (!js.includes("__ZOO_TEST")) need = true;
+    } catch(e){ need = true; }
+  }
   if (!need) return;
 
   /* **여러 검사가 동시에 돌면 빌드가 겹친다.**
@@ -65,8 +77,11 @@ export function ensureBuild(){
   }
   try {
     console.log("  (dist 를 새로 빌드합니다)");
+    /* **검사용 통로는 이 빌드에만 넣는다.**
+       `npm run build`(배포·앱 빌드) 에는 이 값이 없어서 코드 자체가 안 들어간다 */
     execFileSync(process.execPath, [join(ROOT, "node_modules/vite/bin/vite.js"), "build"],
-                 { cwd: ROOT, stdio: "ignore" });
+                 { cwd: ROOT, stdio: "ignore",
+                   env: { ...process.env, VITE_TEST_HOOKS: "1" } });
   } finally {
     try { rmSync(lock, { recursive: true, force: true }); } catch(e){}
   }
@@ -191,6 +206,9 @@ export async function open({ width = 412, height = 745, port = 5599, srv = null 
      `.env` 에 fly 주소가 박혀 있으면 브라우저 검사가 거기로 방을 만들러 가는데,
      배포 서버는 `NODE_ENV=production` 이라 localhost 를 안 받아 준다(당연하다).
      그래서 이 기기 방으로 돌린다. 서버 대전 검사는 이 뒤에 자기 주소를 직접 넣는다 */
+  /* **검사라고 알린다.** 검사용 통로(`__adTest`, `__taxProbe` 등)는
+     배포판에서 닫혀 있고 이 깃발이 있을 때만 열린다 */
+  await page.evaluateOnNewDocument(() => { globalThis.__ZOO_TEST = true; });
   await page.evaluateOnNewDocument(() => { globalThis.__ZOO_SERVER = ""; });
   /* **`127.0.0.1` 이 아니라 `localhost` 로 연다.**
      게임 서버(`server.js`)는 붙어도 되는 곳을 boardgame.io 의

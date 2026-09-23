@@ -41,6 +41,10 @@ const FAST = [
   ["시작인원",    ["test/startcount.test.mjs"]],
   ["광고티켓",    ["test/adticket.test.mjs"]],
   ["빠른참가",    ["test/quickjoin.test.mjs"]],
+  ["서버끊김",    ["test/offline.test.mjs"]],
+  ["글꼴",       ["test/fonts.test.mjs"]],
+  ["광고설정",    ["test/admob.test.mjs"]],
+  ["빌드점검",    ["test/prebuild.test.mjs"]],
   ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs", "test/tap.test.mjs"]],
   ["서버대전",    ["test/netplay.test.mjs"]],
 

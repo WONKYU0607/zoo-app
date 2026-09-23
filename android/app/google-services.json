@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "998080317001",
+    "firebase_url": "https://zoo-app-d6cb4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "zoo-app-d6cb4",
+    "storage_bucket": "zoo-app-d6cb4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:998080317001:android:977298fa8de290a6fca198",
+        "android_client_info": {
+          "package_name": "com.wonkyu.zooapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "998080317001-5o0isa3kel70lh69r2pdeqnvpk19f082.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBXgk6wC7NX9Q9UYtXYd47GGFoGovcEAg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "998080317001-5o0isa3kel70lh69r2pdeqnvpk19f082.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:998080317001:android:c0f800e3e829b653fca198",
+        "android_client_info": {
+          "package_name": "com.wonkyu.zoopresident"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "998080317001-hdr9o0aqq82t3i9a9aat0u79ram00ts5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wonkyu.zoopresident",
+            "certificate_hash": "9a4c4916727c2f686467fb63b032d6c7e377669e"
+          }
+        },
+        {
+          "client_id": "998080317001-5o0isa3kel70lh69r2pdeqnvpk19f082.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBXgk6wC7NX9Q9UYtXYd47GGFoGovcEAg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "998080317001-5o0isa3kel70lh69r2pdeqnvpk19f082.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

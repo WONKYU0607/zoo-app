@@ -277,3 +277,12 @@ html[lang="en"] #table .seat__emo .emobub{font-size:7.5px}
 #table .acts button,
 #table #auto,
 #table #emo{ touch-action: none; }
+
+/* ---------- 바닥에 올라온 카드의 동물 이름 ----------
+   손패는 카드가 커서 지금 크기가 맞는데, 바닥에 쌓이는 카드는 훨씬 작아
+   같은 비율이면 글씨만 커 보인다(신고받음). 바닥과 펼쳐 보기에서만 줄인다.
+   손패(.hand)는 건드리지 않는다 */
+#table .pile .card__name,
+#table .spread .card__name{ font-size: calc(var(--w) * .068) }
+#table .pile .card.is-joker .card__name,
+#table .spread .card.is-joker .card__name{ font-size: calc(var(--w) * .058) }

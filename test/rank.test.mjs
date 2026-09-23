@@ -17,7 +17,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 execFileSync(process.execPath, [
   join(ROOT, "node_modules/esbuild/bin/esbuild"),
   join(HERE, "_entry_rank.js"), "--bundle", "--format=esm", "--platform=browser",
-  "--loader:.css=empty", "--outfile=" + join(HERE, "_bundle_rank.mjs"), "--log-level=warning",
+  "--loader:.css=empty",
+  /* 이 검사는 브라우저 없이 묶어 돌린다. `import.meta.env` 가 없어서
+     그대로 두면 빌드 깃발을 읽다가 터진다 — 검사용 값으로 채워 준다 */
+  "--define:import.meta.env.VITE_TEST_HOOKS=\"1\"", "--outfile=" + join(HERE, "_bundle_rank.mjs"), "--log-level=warning",
   /* firebase 설정값은 빌드 때 꽂히는 것이라 검사에서는 빈 값으로 채운다 */
   "--define:import.meta.env=globalThis.__ENV__",
 ], { cwd: ROOT, stdio: "inherit" });

@@ -107,3 +107,6 @@
   border:none !important;box-shadow:none !important;border-radius:50%;
   display:block;flex:none;overflow:visible}
 #tax .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}
+/* 세금 화면에 올라오는 카드도 바닥 카드와 같은 크기다 — 이름을 같이 줄인다 */
+#tax .card__name{ font-size: calc(var(--w) * .068) }
+#tax .card.is-joker .card__name{ font-size: calc(var(--w) * .058) }

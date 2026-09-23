@@ -1027,6 +1027,80 @@ var init_esm = __esm({
   }
 });
 
+// node_modules/@capacitor/app/dist/esm/definitions.js
+var init_definitions2 = __esm({
+  "node_modules/@capacitor/app/dist/esm/definitions.js"() {
+  }
+});
+
+// node_modules/@capacitor/app/dist/esm/web.js
+var web_exports2 = {};
+__export(web_exports2, {
+  AppWeb: () => AppWeb
+});
+var AppWeb;
+var init_web2 = __esm({
+  "node_modules/@capacitor/app/dist/esm/web.js"() {
+    init_dist();
+    AppWeb = class extends WebPlugin {
+      constructor() {
+        super();
+        this.handleVisibilityChange = () => {
+          const data = {
+            isActive: document.hidden !== true
+          };
+          this.notifyListeners("appStateChange", data);
+          if (document.hidden) {
+            this.notifyListeners("pause", null);
+          } else {
+            this.notifyListeners("resume", null);
+          }
+        };
+        document.addEventListener("visibilitychange", this.handleVisibilityChange, false);
+      }
+      exitApp() {
+        throw this.unimplemented("Not implemented on web.");
+      }
+      async getInfo() {
+        throw this.unimplemented("Not implemented on web.");
+      }
+      async getLaunchUrl() {
+        return { url: "" };
+      }
+      async getState() {
+        return { isActive: document.hidden !== true };
+      }
+      async minimizeApp() {
+        throw this.unimplemented("Not implemented on web.");
+      }
+      async toggleBackButtonHandler() {
+        throw this.unimplemented("Not implemented on web.");
+      }
+      async getAppLanguage() {
+        return {
+          value: navigator.language.split("-")[0].toLowerCase()
+        };
+      }
+    };
+  }
+});
+
+// node_modules/@capacitor/app/dist/esm/index.js
+var esm_exports2 = {};
+__export(esm_exports2, {
+  App: () => App
+});
+var App;
+var init_esm2 = __esm({
+  "node_modules/@capacitor/app/dist/esm/index.js"() {
+    init_dist();
+    init_definitions2();
+    App = registerPlugin("App", {
+      web: () => Promise.resolve().then(() => (init_web2(), web_exports2)).then((m) => new m.AppWeb())
+    });
+  }
+});
+
 // src/lib/scoped.js
 function scoped(root) {
   return {
@@ -1438,8 +1512,7 @@ var AD_INTER_ID = typeof import.meta !== "undefined" && import.meta.env && impor
 var inited = false;
 var showing = false;
 async function showInterstitial() {
-  if (typeof window !== "undefined" && typeof window.__adInterTest === "function")
-    return window.__adInterTest();
+  if (globalThis.__ZOO_TEST && typeof window.__adInterTest === "function") return window.__adInterTest();
   if (!adsAvailable()) return { ok: false, why: "web" };
   if (showing) return { ok: false, why: "busy" };
   showing = true;
@@ -1582,6 +1655,9 @@ function initNav() {
       if (window.__createRoom) {
         window.__createRoom().then((code) => {
           if (code) go("room");
+        }).catch(() => {
+          go("lobby");
+          netNote();
         });
       } else setTimeout(() => go("room"), 80);
     } else {
@@ -2131,28 +2207,38 @@ function initNav() {
   }
   document.querySelector("#entry #start").addEventListener("click", () => go("lobby"));
   let noneTimer = null;
+  function lobbyNote(msg) {
+    const h = document.querySelector("#lobby #hQuick");
+    if (!h) return;
+    if (!h.dataset.orig) h.dataset.orig = h.textContent || "";
+    h.textContent = msg;
+    h.classList.add("hint--warn");
+    if (noneTimer) clearTimeout(noneTimer);
+    noneTimer = setTimeout(() => {
+      h.textContent = h.dataset.orig || "";
+      h.classList.remove("hint--warn");
+    }, 2500);
+  }
+  const T_NET = { ko: "\uC11C\uBC84\uC5D0 \uC5F0\uACB0\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4", en: "Can't reach the server" };
+  const netNote = () => lobbyNote(T_NET[window.__lang] || T_NET.ko);
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
     const f = window.__quickJoin;
     if (!f) return;
     window.__quickNone = false;
-    const code = await f();
+    let code = null;
+    try {
+      code = await f();
+    } catch (e) {
+      netNote();
+      return;
+    }
     if (code) {
       go("room");
       return;
     }
     if (window.__quickNone) {
-      const h = document.querySelector("#lobby #hQuick");
       const L = window.__lobbyT ? window.__lobbyT() : null;
-      if (h) {
-        if (!h.dataset.orig) h.dataset.orig = h.textContent;
-        h.textContent = L && L.none || "\uC9C0\uAE08 \uB4E4\uC5B4\uAC08 \uBC29\uC774 \uC5C6\uC2B5\uB2C8\uB2E4";
-        h.classList.add("hint--warn");
-        if (noneTimer) clearTimeout(noneTimer);
-        noneTimer = setTimeout(() => {
-          h.textContent = h.dataset.orig || "";
-          h.classList.remove("hint--warn");
-        }, 2500);
-      }
+      lobbyNote(L && L.none || "\uC9C0\uAE08 \uB4E4\uC5B4\uAC08 \uBC29\uC774 \uC5C6\uC2B5\uB2C8\uB2E4");
       if (window.__refreshOpen) window.__refreshOpen();
     }
   });
@@ -2185,15 +2271,7 @@ function initNav() {
   document.querySelector("#result #next").addEventListener("click", () => {
     const G = window.GAME || {};
     const rounds = window.__opts && window.__opts.rounds || 5;
-    if ((G.roundNo || 1) >= rounds) {
-      if (window.__onRestart) {
-        window.__onRestart();
-        return;
-      }
-      window.__fresh = true;
-      go("draw");
-      return;
-    }
+    if ((G.roundNo || 1) >= rounds) return;
     G.roundNo = (G.roundNo || 1) + 1;
     window.__roundNo = G.roundNo;
     if (window.__opts && window.__opts.tax === false) {
@@ -2383,12 +2461,21 @@ function initNav() {
     });
   } catch (e) {
   }
-  try {
-    const cap = window.Capacitor;
-    if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
-      cap.Plugins.App.addListener("backButton", () => onBack());
-  } catch (e) {
-  }
+  (async () => {
+    try {
+      if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()))
+        return;
+      const { App: App2 } = await Promise.resolve().then(() => (init_esm2(), esm_exports2));
+      App2.addListener("backButton", () => onBack());
+    } catch (e) {
+      try {
+        const cap = window.Capacitor;
+        if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.addListener)
+          cap.Plugins.App.addListener("backButton", () => onBack());
+      } catch (e2) {
+      }
+    }
+  })();
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-back]");
     if (!b) return;
