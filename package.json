@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/legal-pages.mjs && vite build",
     "preview": "vite preview",
     "sync": "npm run build && node scripts/prebuild-check.mjs && npx cap sync android && node scripts/android-admob.mjs && node scripts/android-signing.mjs && node scripts/android-check.mjs",
     "test": "node test/run.mjs",
@@ -32,7 +32,8 @@
     "shot": "node test/shot.mjs",
     "admob": "node scripts/android-admob.mjs",
     "test:admob": "node test/admob.test.mjs",
-    "check": "node scripts/prebuild-check.mjs"
+    "check": "node scripts/prebuild-check.mjs",
+    "legal": "node scripts/legal-pages.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",

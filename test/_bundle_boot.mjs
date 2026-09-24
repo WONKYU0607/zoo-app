@@ -1027,6 +1027,138 @@ var init_esm = __esm({
   }
 });
 
+// src/lib/ads.js
+var ads_exports = {};
+__export(ads_exports, {
+  AD_INTER_ID: () => AD_INTER_ID,
+  AD_IS_TEST: () => AD_IS_TEST,
+  AD_REWARD_ID: () => AD_REWARD_ID,
+  adBusy: () => adBusy,
+  adsAvailable: () => adsAvailable,
+  askAdConsent: () => askAdConsent,
+  showInterstitial: () => showInterstitial,
+  showRewardAd: () => showRewardAd
+});
+function adsAvailable() {
+  const C = typeof window !== "undefined" ? window.Capacitor : null;
+  return Boolean(C && typeof C.isNativePlatform === "function" && C.isNativePlatform());
+}
+async function showRewardAd() {
+  if (globalThis.__ZOO_TEST && typeof window.__adTest === "function") return window.__adTest();
+  if (!adsAvailable()) return { ok: false, why: "web" };
+  if (showing) return { ok: false, why: "busy" };
+  showing = true;
+  try {
+    return await rewardInner();
+  } finally {
+    showing = false;
+  }
+}
+async function rewardInner() {
+  const { AdMob: AdMob2, RewardAdPluginEvents: RewardAdPluginEvents2 } = await Promise.resolve().then(() => (init_esm(), esm_exports));
+  try {
+    if (!inited) {
+      await AdMob2.initialize({});
+      inited = true;
+    }
+    await AdMob2.prepareRewardVideoAd({ adId: AD_REWARD_ID, isTesting: AD_IS_TEST });
+  } catch (e2) {
+    return { ok: false, why: "load" };
+  }
+  return await new Promise((resolve) => {
+    let done = false, rewarded = false;
+    const subs = [];
+    const finish = (v2) => {
+      if (done) return;
+      done = true;
+      subs.forEach((h) => {
+        try {
+          h.remove();
+        } catch (e2) {
+        }
+      });
+      resolve(v2);
+    };
+    const on = (ev, fn) => AdMob2.addListener(ev, fn).then((h) => subs.push(h)).catch(() => {
+    });
+    on(RewardAdPluginEvents2.Rewarded, () => {
+      rewarded = true;
+    });
+    on(RewardAdPluginEvents2.Dismissed, () => finish({ ok: rewarded, why: rewarded ? "" : "dismissed" }));
+    on(RewardAdPluginEvents2.FailedToShow, () => finish({ ok: false, why: "show" }));
+    AdMob2.showRewardVideoAd().then(() => {
+      rewarded = true;
+    }).catch(() => finish({ ok: false, why: "show" }));
+    setTimeout(() => finish({ ok: rewarded, why: rewarded ? "" : "timeout" }), 12e4);
+  });
+}
+async function showInterstitial() {
+  if (globalThis.__ZOO_TEST && typeof window.__adInterTest === "function") return window.__adInterTest();
+  if (!adsAvailable()) return { ok: false, why: "web" };
+  if (showing) return { ok: false, why: "busy" };
+  showing = true;
+  try {
+    const { AdMob: AdMob2, InterstitialAdPluginEvents: InterstitialAdPluginEvents2 } = await Promise.resolve().then(() => (init_esm(), esm_exports));
+    if (!inited) {
+      await AdMob2.initialize({});
+      inited = true;
+    }
+    await AdMob2.prepareInterstitial({ adId: AD_INTER_ID, isTesting: AD_INTER_ID === TEST_INTER_ID });
+    return await new Promise((resolve) => {
+      let done = false;
+      const subs = [];
+      const finish = (v2) => {
+        if (done) return;
+        done = true;
+        subs.forEach((h) => {
+          try {
+            h.remove();
+          } catch (e2) {
+          }
+        });
+        resolve(v2);
+      };
+      const on = (ev, fn) => AdMob2.addListener(ev, fn).then((h) => subs.push(h)).catch(() => {
+      });
+      on(InterstitialAdPluginEvents2.Dismissed, () => finish({ ok: true }));
+      on(InterstitialAdPluginEvents2.FailedToShow, () => finish({ ok: false, why: "show" }));
+      AdMob2.showInterstitial().catch(() => finish({ ok: false, why: "show" }));
+      setTimeout(() => finish({ ok: false, why: "timeout" }), 6e4);
+    });
+  } catch (e2) {
+    return { ok: false, why: "load" };
+  } finally {
+    showing = false;
+  }
+}
+async function askAdConsent() {
+  if (!adsAvailable()) return { ok: false, why: "web" };
+  try {
+    const { AdMob: AdMob2 } = await Promise.resolve().then(() => (init_esm(), esm_exports));
+    const info = await AdMob2.requestConsentInfo();
+    if (info && info.isConsentFormAvailable && info.status === "REQUIRED") {
+      const after = await AdMob2.showConsentForm();
+      return { ok: true, status: after && after.status };
+    }
+    return { ok: true, status: info && info.status };
+  } catch (e2) {
+    return { ok: false, why: String(e2 && e2.message || e2) };
+  }
+}
+var TEST_REWARD_ID, AD_REWARD_ID, AD_IS_TEST, TEST_INTER_ID, AD_INTER_ID, inited, showing, adBusy;
+var init_ads = __esm({
+  "src/lib/ads.js"() {
+    TEST_REWARD_ID = "ca-app-pub-3940256099942544/5224354917";
+    AD_REWARD_ID = typeof import.meta !== "undefined" && globalThis.__ENV__ && globalThis.__ENV__.VITE_AD_REWARD_ID || TEST_REWARD_ID;
+    AD_IS_TEST = AD_REWARD_ID === TEST_REWARD_ID;
+    TEST_INTER_ID = "ca-app-pub-3940256099942544/1033173712";
+    AD_INTER_ID = typeof import.meta !== "undefined" && globalThis.__ENV__ && globalThis.__ENV__.VITE_AD_INTER_ID || TEST_INTER_ID;
+    inited = false;
+    showing = false;
+    adBusy = () => showing;
+  }
+});
+
 // node_modules/@capacitor/app/dist/esm/definitions.js
 var init_definitions2 = __esm({
   "node_modules/@capacitor/app/dist/esm/definitions.js"() {
@@ -9507,58 +9639,8 @@ if (typeof window !== "undefined") {
   window.GAME = game;
 }
 
-// src/lib/ads.js
-var TEST_REWARD_ID = "ca-app-pub-3940256099942544/5224354917";
-var AD_REWARD_ID = typeof import.meta !== "undefined" && globalThis.__ENV__ && globalThis.__ENV__.VITE_AD_REWARD_ID || TEST_REWARD_ID;
-function adsAvailable() {
-  const C = typeof window !== "undefined" ? window.Capacitor : null;
-  return Boolean(C && typeof C.isNativePlatform === "function" && C.isNativePlatform());
-}
-var TEST_INTER_ID = "ca-app-pub-3940256099942544/1033173712";
-var AD_INTER_ID = typeof import.meta !== "undefined" && globalThis.__ENV__ && globalThis.__ENV__.VITE_AD_INTER_ID || TEST_INTER_ID;
-var inited = false;
-var showing = false;
-async function showInterstitial() {
-  if (globalThis.__ZOO_TEST && typeof window.__adInterTest === "function") return window.__adInterTest();
-  if (!adsAvailable()) return { ok: false, why: "web" };
-  if (showing) return { ok: false, why: "busy" };
-  showing = true;
-  try {
-    const { AdMob: AdMob2, InterstitialAdPluginEvents: InterstitialAdPluginEvents2 } = await Promise.resolve().then(() => (init_esm(), esm_exports));
-    if (!inited) {
-      await AdMob2.initialize({});
-      inited = true;
-    }
-    await AdMob2.prepareInterstitial({ adId: AD_INTER_ID, isTesting: AD_INTER_ID === TEST_INTER_ID });
-    return await new Promise((resolve) => {
-      let done = false;
-      const subs = [];
-      const finish = (v2) => {
-        if (done) return;
-        done = true;
-        subs.forEach((h) => {
-          try {
-            h.remove();
-          } catch (e2) {
-          }
-        });
-        resolve(v2);
-      };
-      const on = (ev, fn) => AdMob2.addListener(ev, fn).then((h) => subs.push(h)).catch(() => {
-      });
-      on(InterstitialAdPluginEvents2.Dismissed, () => finish({ ok: true }));
-      on(InterstitialAdPluginEvents2.FailedToShow, () => finish({ ok: false, why: "show" }));
-      AdMob2.showInterstitial().catch(() => finish({ ok: false, why: "show" }));
-      setTimeout(() => finish({ ok: false, why: "timeout" }), 6e4);
-    });
-  } catch (e2) {
-    return { ok: false, why: "load" };
-  } finally {
-    showing = false;
-  }
-}
-
 // src/nav.js
+init_ads();
 var GEAR = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5"/><circle cx="14.6" cy="7" r="2.1"/><circle cx="9.6" cy="12" r="2.1"/><circle cx="13.2" cy="17" r="2.1"/></svg>';
 var OPT_HTML = '<div class="opts" id="opts" role="dialog" aria-modal="true"><div class="opts__v" data-optclose></div><div class="opts__p"><div class="opts__h"><span id="optT"></span><button class="opts__x" data-optclose aria-label="close">\xD7</button></div><div class="opts__b" id="optBody"></div><div class="opts__f"><button class="opts__go" id="optGo"></button></div></div></div>';
 var PENCIL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>';
@@ -10550,6 +10632,162 @@ function scoped(root) {
   };
 }
 
+// src/lib/legal.js
+var CONTACT = "dnjsrb980607@gmail.com";
+var UPDATED = "2026-09-24";
+var TERMS = {
+  ko: {
+    title: "\uC774\uC6A9\uC57D\uAD00",
+    body: `\uC81C1\uC870 (\uBAA9\uC801)
+\uC774 \uC57D\uAD00\uC740 "\uB3D9\uBB3C\uC758 \uC655\uAD6D"(\uC774\uD558 "\uAC8C\uC784")\uC744 \uC774\uC6A9\uD558\uB294 \uB370 \uD544\uC694\uD55C \uC0AC\uD56D\uC744 \uC815\uD569\uB2C8\uB2E4.
+
+\uC81C2\uC870 (\uACC4\uC815)
+1. \uAD6C\uAE00 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD558\uAC70\uB098 \uAC8C\uC2A4\uD2B8\uB85C \uC774\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
+2. \uAC8C\uC2A4\uD2B8\uB85C \uC774\uC6A9\uD558\uBA74 \uB7AD\uD0B9\uC5D0 \uC624\uB974\uC9C0 \uC54A\uC73C\uBA70, \uC571\uC744 \uC9C0\uC6B0\uBA74 \uAE30\uB85D\uC774 \uC0AC\uB77C\uC9C8 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
+3. \uB2E4\uB978 \uC0AC\uB78C\uC758 \uACC4\uC815\uC744 \uC4F0\uAC70\uB098 \uB2C9\uB124\uC784\uC744 \uB3C4\uC6A9\uD574\uC11C\uB294 \uC548 \uB429\uB2C8\uB2E4.
+
+\uC81C3\uC870 (\uC774\uC6A9\uAD8C, \uC774\uB978\uBC14 \uD2F0\uCF13)
+1. \uAC8C\uC784\uC744 \uD55C \uD310 \uC2DC\uC791\uD560 \uB54C \uC774\uC6A9\uAD8C \uD55C \uC7A5\uC774 \uC4F0\uC785\uB2C8\uB2E4.
+2. \uC774\uC6A9\uAD8C\uC740 \uC2DC\uAC04\uC774 \uC9C0\uB098\uBA74 \uC77C\uC815\uB7C9\uAE4C\uC9C0 \uB2E4\uC2DC \uCC39\uB2C8\uB2E4.
+3. \uAD11\uACE0\uB97C \uB05D\uAE4C\uC9C0 \uBCF4\uBA74 \uC774\uC6A9\uAD8C\uC744 \uBC1B\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
+4. \uC774\uC6A9\uAD8C\uC740 \uD604\uAE08\uC73C\uB85C \uBC14\uAFC0 \uC218 \uC5C6\uACE0, \uC0AC\uACE0\uD314 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.
+
+\uC81C4\uC870 (\uAE08\uC9C0\uD558\uB294 \uC77C)
+1. \uAC8C\uC784\uC744 \uACE0\uCCD0\uC11C \uB3CC\uB9AC\uAC70\uB098, \uC815\uC0C1\uC801\uC774\uC9C0 \uC54A\uC740 \uBC29\uBC95\uC73C\uB85C \uC774\uC6A9\uAD8C\xB7\uC810\uC218\uB97C \uC5BB\uB294 \uC77C
+2. \uB2E4\uB978 \uC774\uC6A9\uC790\uB97C \uAD34\uB86D\uD788\uAC70\uB098 \uBD88\uCF8C\uD558\uAC8C \uD558\uB294 \uB2C9\uB124\uC784\xB7\uD45C\uD604\uC744 \uC4F0\uB294 \uC77C
+3. \uAC8C\uC784 \uC11C\uBC84\uC5D0 \uBD80\uB2F4\uC744 \uC8FC\uB294 \uC77C
+
+\uC81C5\uC870 (\uC11C\uBE44\uC2A4 \uC911\uB2E8)
+\uC810\uAC80\xB7\uACE0\uC7A5\xB7\uCC9C\uC7AC\uC9C0\uBCC0 \uB4F1\uC73C\uB85C \uAC8C\uC784\uC744 \uC7A0\uC2DC \uBA48\uCD9C \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBBF8\uB9AC \uC54C\uB9B4 \uC218 \uC788\uC73C\uBA74 \uC54C\uB9BD\uB2C8\uB2E4.
+
+\uC81C6\uC870 (\uCC45\uC784)
+\uAC8C\uC784\uC740 \uBB34\uB8CC\uB85C \uC81C\uACF5\uB418\uBA70, \uC774\uC6A9\uC5D0 \uB530\uB978 \uC190\uD574\uC5D0 \uB300\uD574 \uBC95\uC774 \uC815\uD55C \uBC94\uC704\uC5D0\uC11C \uCC45\uC784\uC9D1\uB2C8\uB2E4.
+
+\uC81C7\uC870 (\uC57D\uAD00 \uBCC0\uACBD)
+\uC57D\uAD00\uC774 \uBC14\uB00C\uBA74 \uC571 \uC548\uC5D0\uC11C \uC54C\uB9BD\uB2C8\uB2E4. \uBC14\uB010 \uB4A4\uC5D0\uB3C4 \uACC4\uC18D \uC774\uC6A9\uD558\uBA74 \uB3D9\uC758\uD55C \uAC83\uC73C\uB85C \uBD05\uB2C8\uB2E4.
+
+\uBB38\uC758: ${CONTACT}`
+  },
+  en: {
+    title: "Terms of Service",
+    body: `1. Purpose
+These terms cover the use of "Zoo President" (the "Game").
+
+2. Accounts
+You may sign in with Google or play as a guest. Guests do not appear on the
+leaderboard and may lose their records if the app is removed. Do not use another
+person's account or impersonate others.
+
+3. Tickets
+Starting a game uses one ticket. Tickets refill over time up to a limit, and you
+can earn one by watching an ad to the end. Tickets have no cash value and cannot
+be sold or transferred.
+
+4. Prohibited use
+Modifying the game, obtaining tickets or scores by abnormal means, using
+offensive nicknames, or placing undue load on the servers.
+
+5. Interruptions
+The service may pause for maintenance, faults, or events beyond our control.
+We give notice where possible.
+
+6. Liability
+The Game is provided free of charge. Liability is limited to the extent permitted
+by law.
+
+7. Changes
+Changes to these terms are announced in the app. Continued use after a change
+means you accept it.
+
+Contact: ${CONTACT}`
+  }
+};
+var PRIVACY = {
+  ko: {
+    title: "\uAC1C\uC778\uC815\uBCF4\uCC98\uB9AC\uBC29\uCE68",
+    body: `"\uB3D9\uBB3C\uC758 \uC655\uAD6D"(\uC774\uD558 "\uAC8C\uC784")\uC774 \uC5B4\uB5A4 \uC815\uBCF4\uB97C \uC5B4\uB5BB\uAC8C \uB2E4\uB8E8\uB294\uC9C0 \uC54C\uB824 \uB4DC\uB9BD\uB2C8\uB2E4.
+
+1. \uBAA8\uC73C\uB294 \uC815\uBCF4
+\xB7 \uAD6C\uAE00\uB85C \uB85C\uADF8\uC778\uD55C \uACBD\uC6B0: \uC774\uBA54\uC77C \uC8FC\uC18C, \uC774\uB984, \uD504\uB85C\uD544 \uC0AC\uC9C4
+\xB7 \uAC8C\uC2A4\uD2B8\uB85C \uC774\uC6A9\uD55C \uACBD\uC6B0: \uACC4\uC815\uC744 \uAD6C\uBD84\uD558\uB294 \uC784\uC758\uC758 \uBC88\uD638
+\xB7 \uAC8C\uC784 \uAE30\uB85D: \uB2C9\uB124\uC784, \uC810\uC218, \uC804\uC801, \uC774\uC6A9\uAD8C \uC218
+\xB7 \uAD11\uACE0: \uAD6C\uAE00\uC774 \uAD11\uACE0\uB97C \uB744\uC6B0\uAE30 \uC704\uD574 \uAE30\uAE30 \uC815\uBCF4(\uAD11\uACE0 \uC2DD\uBCC4\uC790 \uB4F1)\uB97C \uC501\uB2C8\uB2E4
+
+2. \uC4F0\uB294 \uACF3
+\xB7 \uB85C\uADF8\uC778\uACFC \uACC4\uC815 \uAD6C\uBD84
+\xB7 \uB7AD\uD0B9\uACFC \uC804\uC801 \uD45C\uC2DC
+\xB7 \uBD80\uC815 \uC774\uC6A9 \uD655\uC778
+\xB7 \uAD11\uACE0 \uB178\uCD9C
+
+3. \uB9E1\uACA8 \uB450\uB294 \uACF3
+\xB7 \uAD6C\uAE00 \uD30C\uC774\uC5B4\uBCA0\uC774\uC2A4 \u2014 \uACC4\uC815\uACFC \uAC8C\uC784 \uAE30\uB85D \uBCF4\uAD00
+\xB7 \uAD6C\uAE00 \uC560\uB4DC\uBAB9 \u2014 \uAD11\uACE0 \uB178\uCD9C
+\uAC01 \uD68C\uC0AC\uC758 \uCC98\uB9AC\uBC29\uCE68\uC740 \uC544\uB798\uC5D0\uC11C \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4.
+https://firebase.google.com/support/privacy
+https://policies.google.com/privacy
+
+4. \uC5BC\uB9C8\uB098 \uB450\uB294\uAC00
+\uACC4\uC815\uC744 \uC9C0\uC6B8 \uB54C\uAE4C\uC9C0 \uBCF4\uAD00\uD558\uACE0, \uC9C0\uC6B0\uBA74 \uC9C0\uCCB4 \uC5C6\uC774 \uD30C\uAE30\uD569\uB2C8\uB2E4.
+
+5. \uAD11\uACE0 \uAC1C\uC778\uD654
+\uAE30\uAE30 \uC124\uC815\uC5D0\uC11C \uAD11\uACE0 \uC2DD\uBCC4\uC790\uB97C \uCD08\uAE30\uD654\uD558\uAC70\uB098 \uAC1C\uC778\uD654\uB97C \uB04C \uC218 \uC788\uC2B5\uB2C8\uB2E4.
+\uC720\uB7FD \uB4F1 \uC77C\uBD80 \uC9C0\uC5ED\uC5D0\uC11C\uB294 \uC571\uC744 \uCC98\uC74C \uCF24 \uB54C \uAD6C\uAE00\uC774 \uC81C\uACF5\uD558\uB294 \uB3D9\uC758 \uCC3D\uC774 \uB739\uB2C8\uB2E4.
+\uADF8 \uCC3D\uC5D0\uC11C \uC120\uD0DD\uC744 \uBC14\uAFC0 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
+
+6. \uC5B4\uB9B0\uC774
+\uC774 \uAC8C\uC784\uC740 \uC5B4\uB9B0\uC774\uB97C \uB300\uC0C1\uC73C\uB85C \uB9CC\uB4E4\uC5B4\uC9C0\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.
+
+7. \uAD8C\uB9AC
+\uC790\uC2E0\uC758 \uC815\uBCF4\uB97C \uBCF4\uAC70\uB098 \uC9C0\uC6CC \uB2EC\uB77C\uACE0 \uC694\uCCAD\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC544\uB798\uB85C \uC5F0\uB77D\uD574 \uC8FC\uC138\uC694.
+
+8. \uACC4\uC815 \uC9C0\uC6B0\uAE30
+\uC571\uC758 \uC124\uC815\uC5D0\uC11C \uACC4\uC815\uC744 \uC9C0\uC6B0\uAC70\uB098, \uC544\uB798 \uC8FC\uC18C\uB85C \uC694\uCCAD\uD558\uBA74 \uACC4\uC815\uACFC \uAE30\uB85D\uC744 \uBAA8\uB450 \uC9C0\uC6C1\uB2C8\uB2E4.
+
+\uBB38\uC758: ${CONTACT}
+\uB9C8\uC9C0\uB9C9 \uC218\uC815: ${UPDATED}`
+  },
+  en: {
+    title: "Privacy Policy",
+    body: `This explains what "Zoo President" (the "Game") collects and how it is used.
+
+1. What we collect
+\xB7 Google sign-in: email address, name, profile photo
+\xB7 Guest play: a random identifier for the account
+\xB7 Game records: nickname, score, match history, ticket count
+\xB7 Ads: Google uses device information (such as an advertising ID) to serve ads
+
+2. How it is used
+Signing in, showing rankings and history, checking for abuse, and serving ads.
+
+3. Processors
+\xB7 Google Firebase \u2014 accounts and game records
+\xB7 Google AdMob \u2014 advertising
+https://firebase.google.com/support/privacy
+https://policies.google.com/privacy
+
+4. Retention
+Kept until the account is deleted, then destroyed without delay.
+
+5. Ad personalisation
+You can reset your advertising ID or turn off personalisation in device settings.
+In some regions a Google consent form appears when the app first starts, and you
+can change your choice there.
+
+6. Children
+This game is not directed at children.
+
+7. Your rights
+You may ask to see or delete your data at the address below.
+
+8. Deleting your account
+Delete your account in the app's settings, or write to the address below and we
+will remove the account and its records.
+
+Contact: ${CONTACT}
+Last updated: ${UPDATED}`
+  }
+};
+
 // src/screens/entry.js
 function mount(root) {
   const document2 = scoped(root);
@@ -10572,7 +10810,12 @@ function mount(root) {
       guest: "\uAC8C\uC2A4\uD2B8\uB85C \uC2DC\uC791\uD558\uAE30",
       hintIn: "\uAD6C\uAE00\uB85C \uB85C\uADF8\uC778\uD558\uBA74 \uB7AD\uD0B9\uC5D0 \uC624\uB985\uB2C8\uB2E4",
       hintErr: "\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694",
-      hintNet: "\uC778\uD130\uB137 \uC5F0\uACB0\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694"
+      hintNet: "\uC778\uD130\uB137 \uC5F0\uACB0\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694",
+      agTerms: "[\uD544\uC218] \uC774\uC6A9\uC57D\uAD00\uC5D0 \uB3D9\uC758\uD569\uB2C8\uB2E4",
+      agPriv: "[\uD544\uC218] \uAC1C\uC778\uC815\uBCF4\uCC98\uB9AC\uBC29\uCE68\uC5D0 \uB3D9\uC758\uD569\uB2C8\uB2E4",
+      agView: "\uBCF4\uAE30",
+      agGo: "\uB3D9\uC758\uD558\uACE0 \uC2DC\uC791\uD558\uAE30",
+      agClose: "\uB2EB\uAE30"
     },
     en: {
       eyebrow: "CARD CLASH",
@@ -10584,7 +10827,12 @@ function mount(root) {
       guest: "Play as guest",
       hintIn: "Sign in with Google to appear on the leaderboard",
       hintErr: "Sign-in failed. Please try again",
-      hintNet: "Check your internet connection"
+      hintNet: "Check your internet connection",
+      agTerms: "[Required] I agree to the Terms of Service",
+      agPriv: "[Required] I agree to the Privacy Policy",
+      agView: "View",
+      agGo: "Agree and start",
+      agClose: "Close"
     }
   };
   let lang = window.__lang || "ko";
@@ -10648,6 +10896,103 @@ function mount(root) {
       }
     }
   }
+  const AGREE_KEY = "zk_agree";
+  const AGREE_VER = 1;
+  let agreedNow = false;
+  const agreed = () => {
+    if (agreedNow) return true;
+    try {
+      return Number(localStorage.getItem(AGREE_KEY)) >= AGREE_VER;
+    } catch (e2) {
+      return false;
+    }
+  };
+  const setAgreed = () => {
+    agreedNow = true;
+    try {
+      localStorage.setItem(AGREE_KEY, String(AGREE_VER));
+    } catch (e2) {
+    }
+  };
+  function showDoc(doc2) {
+    const t2 = T2[lang];
+    let box = document2.getElementById("docBox");
+    if (!box) {
+      box = window.document.createElement("div");
+      box.id = "docBox";
+      box.className = "doc";
+      box.innerHTML = '<div class="doc__veil"></div><div class="doc__panel"><div class="doc__head"><span class="doc__title"></span><button class="doc__x"></button></div><pre class="doc__body"></pre></div>';
+      root.appendChild(box);
+      const close = () => {
+        box.hidden = true;
+      };
+      box.querySelector(".doc__veil").addEventListener("click", close);
+      box.querySelector(".doc__x").addEventListener("click", close);
+    }
+    box.querySelector(".doc__title").textContent = doc2[lang].title;
+    box.querySelector(".doc__body").textContent = doc2[lang].body;
+    box.querySelector(".doc__x").textContent = t2.agClose;
+    box.hidden = false;
+  }
+  let gate = null;
+  function buildGate() {
+    if (gate) return gate;
+    gate = window.document.createElement("div");
+    gate.className = "agree";
+    gate.innerHTML = '<div class="agree__r"><label><input type="checkbox" id="agTerms"><span id="agTermsT"></span></label><button class="agree__v" id="agTermsV"></button></div><div class="agree__r"><label><input type="checkbox" id="agPriv"><span id="agPrivT"></span></label><button class="agree__v" id="agPrivV"></button></div><button class="btn" id="agGo" disabled></button>';
+    const startBtn = document2.getElementById("start");
+    startBtn.parentNode.insertBefore(gate, startBtn);
+    const go = gate.querySelector("#agGo");
+    const boxes = [gate.querySelector("#agTerms"), gate.querySelector("#agPriv")];
+    const refresh = () => {
+      go.disabled = !boxes.every((b2) => b2.checked);
+    };
+    boxes.forEach((b2) => b2.addEventListener("change", refresh));
+    gate.querySelector("#agTermsV").addEventListener("click", () => showDoc(TERMS));
+    gate.querySelector("#agPrivV").addEventListener("click", () => showDoc(PRIVACY));
+    go.addEventListener("click", async () => {
+      setAgreed();
+      paintGate();
+      try {
+        const { askAdConsent: askAdConsent2 } = await Promise.resolve().then(() => (init_ads(), ads_exports));
+        await askAdConsent2();
+      } catch (e2) {
+      }
+    });
+    return gate;
+  }
+  function paintGate() {
+    const need = !agreed();
+    if (need) buildGate();
+    if (gate) {
+      gate.hidden = !need;
+      const t2 = T2[lang];
+      gate.querySelector("#agTermsT").textContent = t2.agTerms;
+      gate.querySelector("#agPrivT").textContent = t2.agPriv;
+      gate.querySelector("#agTermsV").textContent = t2.agView;
+      gate.querySelector("#agPrivV").textContent = t2.agView;
+      gate.querySelector("#agGo").textContent = t2.agGo;
+    }
+    const st2 = document2.getElementById("start");
+    const gb = document2.getElementById("testin");
+    if (st2) st2.hidden = need;
+    if (gb && need) gb.hidden = true;
+    const hint = document2.getElementById("hint");
+    if (hint && need) hint.textContent = "";
+    if (!need) {
+      try {
+        paintEntry();
+      } catch (e2) {
+      }
+      try {
+        showTest();
+      } catch (e2) {
+      }
+    }
+  }
+  window.__agreeNeeded = () => !agreed();
+  paintGate();
+  window.addEventListener("langchange", paintGate);
   document2.getElementById("start").addEventListener("click", async (e2) => {
     const a = window.ACCOUNT;
     if (a && a.signedIn) return;
@@ -10689,7 +11034,7 @@ function mount(root) {
     if (!tb) return;
     const a = window.ACCOUNT;
     tb.textContent = T2[lang].guest;
-    tb.hidden = Boolean(a && a.signedIn);
+    tb.hidden = Boolean(a && a.signedIn) || window.__agreeNeeded && window.__agreeNeeded();
   }
   window.addEventListener("accountready", showTest);
   window.addEventListener("accountchange", showTest);

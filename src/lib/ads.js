@@ -110,3 +110,24 @@ export async function showInterstitial(){
     return { ok: false, why: "load" };          /* 못 불러왔다 — 그냥 넘어간다 */
   } finally { showing = false; }
 }
+
+/* ---------- 광고 개인화 동의 ----------
+   유럽 등에서는 광고를 개인에 맞춰 띄우려면 따로 동의를 받아야 한다.
+   그 창은 **구글이 만들어 준다**(UMP). 우리가 체크박스로 흉내내면 규정에 안 맞는다.
+   동의가 필요 없는 곳에서는 아무 창도 안 뜬다.
+
+   광고 때문에 앱이 막히면 안 되므로, 실패해도 조용히 넘어간다 */
+export async function askAdConsent(){
+  if (!adsAvailable()) return { ok: false, why: "web" };
+  try {
+    const { AdMob } = await import("@capacitor-community/admob");
+    const info = await AdMob.requestConsentInfo();
+    if (info && info.isConsentFormAvailable && info.status === "REQUIRED"){
+      const after = await AdMob.showConsentForm();
+      return { ok: true, status: after && after.status };
+    }
+    return { ok: true, status: info && info.status };
+  } catch (e){
+    return { ok: false, why: String(e && e.message || e) };
+  }
+}

@@ -68,7 +68,23 @@ check("구글로 시작 단추가 있다", q("#start") && q("#start").textConten
       q("#start") ? q("#start").textContent : "없음");
 check("게스트로 시작 단추가 있다", q("#testin") && q("#testin").textContent.includes("게스트"),
       q("#testin") ? q("#testin").textContent : "없음");
-check("게스트 단추가 보인다 (localhost 가 아니어도)", q("#testin") && !q("#testin").hidden);
+/* **동의 전에는 로그인 단추가 안 보이는 것이 맞다.**(이용약관·개인정보처리방침)
+   그래서 동의를 먼저 하고 본다 */
+{
+  const go = q("#agGo");
+  check("처음 켜면 동의 화면이 뜬다", Boolean(q(".agree")) && !q(".agree").hidden);
+  if (go){
+    /* jsdom 에서는 상태를 직접 바꾸고 신호를 줘야 확실하다 */
+    for (const id of ["#agTerms", "#agPriv"]){
+      const b = q(id); b.checked = true;
+      b.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+    }
+    go.click();
+  }
+  check("동의 뒤 동의 화면이 사라진다", q(".agree") && q(".agree").hidden,
+        q(".agree") ? String(q(".agree").hidden) : "없음");
+}
+check("동의하면 게스트 단추가 보인다", q("#testin") && !q("#testin").hidden);
 check("안내 문구가 랭킹을 알린다", (q("#hint").textContent || "").includes("랭킹"),
       q("#hint").textContent);
 

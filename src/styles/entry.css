@@ -103,3 +103,27 @@
 .testin{display:block;margin:10px auto 0;padding:7px 14px;
   border:1px dashed rgba(198,154,62,.7);border-radius:3px;
   background:rgba(0,0,0,.45);color:#C9B58C;font-size:11.5px;cursor:pointer}
+/* ---------- 처음 켤 때 받는 동의 ----------
+   동의하기 전에는 로그인 단추가 안 보인다. 글은 "보기" 로 창을 띄워 보여 준다 */
+#entry .agree{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin:0 auto 6px}
+#entry .agree__r{display:flex;align-items:center;gap:8px;justify-content:space-between}
+#entry .agree__r label{display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:13px;color:#E8DCC0;line-height:1.35}
+#entry .agree__r input{width:18px;height:18px;accent-color:#C69A3C;flex:none}
+#entry .agree__v{background:none;border:none;color:#C69A3C;font-size:12px;
+  text-decoration:underline;cursor:pointer;padding:4px;flex:none}
+#entry .agree #agGo:disabled{opacity:.45}
+
+/* 약관 글 창 */
+#entry .doc{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center}
+#entry .doc[hidden]{display:none}
+#entry .doc__veil{position:absolute;inset:0;background:rgba(0,0,0,.72)}
+#entry .doc__panel{position:relative;width:min(92vw,480px);max-height:80vh;display:flex;
+  flex-direction:column;background:#1C1610;border:1px solid var(--gold-dim,#6B4E22);border-radius:6px}
+#entry .doc__head{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid rgba(198,154,60,.25)}
+#entry .doc__title{font-weight:700;color:#E8DCC0}
+#entry .doc__x{background:none;border:1px solid var(--gold-dim,#6B4E22);color:#C69A3C;
+  border-radius:4px;padding:4px 10px;cursor:pointer}
+#entry .doc__body{margin:0;padding:14px;overflow:auto;white-space:pre-wrap;
+  font-family:inherit;font-size:13px;line-height:1.6;color:#D9CCB0}
