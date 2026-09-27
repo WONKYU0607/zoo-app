@@ -177,8 +177,15 @@ button:disabled{opacity:.42}
 /* 확인창은 아래에서 올라오는 시트가 아니라 **화면 한가운데 네모 상자** */
 #ask{display:flex;align-items:center;justify-content:center}
 /* 어두운 바탕이 **틀 밑까지** 깔려야 한다.
-   padding-box 로 자르면 틀 그림이 놓인 테두리 자리가 비어 보인다 */
+   padding-box 로 자르면 틀 그림이 놓인 테두리 자리가 비어 보인다.
+   다만 테두리 칸(26px) 전체에 깔면 안 된다 — 틀 그림의 금색 무늬는
+   그 안쪽 6~14px 자리에만 그려져 있어서, 바깥 7px 은 무늬 없이 검정만 남아
+   **틀 밖으로 삐져나온 검은 테**로 보인다. 그래서 바깥 7px 은 비워 둔다 */
 #ask .cfg__p{background-clip:border-box !important;
+  background-origin:border-box !important;
+  background-repeat:no-repeat !important;
+  background-position:center !important;
+  background-size:calc(100% - 14px) calc(100% - 14px) !important;
   position:relative;width:84%;max-width:340px;
   transform:scale(.9);opacity:0;transition:transform .18s ease-out,opacity .18s ease-out;
   border-radius:0;border-top:0;padding-bottom:0;margin:0 !important}
@@ -287,7 +294,14 @@ button:disabled{opacity:.42}
   border:12px solid transparent;
   border-image:url(/assets/frame_row.webp) 110 fill stretch;
   color:#E8DCC4}
-.fr__row--me{box-shadow:inset 0 0 0 99px rgba(240,209,140,.14)}
+/* inset 그림자는 **안쪽 칸까지만** 칠해진다. 테두리 칸(12px)이 빈 채로 남아
+   틀과 베이지 사이에 검은 띠가 보인다. 바탕으로 깔아 테두리 자리까지 채우되,
+   틀 그림의 무늬 바깥 3px 은 비워 둔다 (그 자리는 무늬가 없어 색이 삐져나온다) */
+.fr__row--me{
+  background-image:linear-gradient(rgba(240,209,140,.14),rgba(240,209,140,.14));
+  background-origin:border-box;background-clip:border-box;
+  background-repeat:no-repeat;background-position:center;
+  background-size:calc(100% - 6px) calc(100% - 6px)}
 .fr__k{flex:none;width:20px;text-align:center;font-size:12px;color:#E3C67C;font-weight:700}
 .fr__n{flex:1;min-width:0;font-size:13px;font-weight:700;color:#F4EEE0;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}

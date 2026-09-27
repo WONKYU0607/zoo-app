@@ -52,6 +52,22 @@
           }
         },
         {
+          "client_id": "998080317001-k9s0ss30qpc5bkljgfdirdl9rmikg3gh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wonkyu.zoopresident",
+            "certificate_hash": "df931f47e87c10c92451dfbf69a7e8ac44dabf75"
+          }
+        },
+        {
+          "client_id": "998080317001-otvd17u1o5ffevf8n7idb3tc9b4b6rvc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wonkyu.zoopresident",
+            "certificate_hash": "8dcb03ca2ee8f01eed9bf86d56e390ec314c10db"
+          }
+        },
+        {
           "client_id": "998080317001-sf88nme023m04ichgerihlq9hq1869qk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
