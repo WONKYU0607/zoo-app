@@ -139,6 +139,17 @@ async function nextGuestName(){
   return "게스트" + no;
 }
 
+/* 이름 문서가 남의 것인가. `uid` 가 비어 있으면(예전에 놓아준 이름) 비어 있는 이름으로 본다 —
+   규칙도 그런 이름은 잡을 수 있게 해 둔다 */
+const heldByOther = (got, uid) => got.exists() && got.data().uid && got.data().uid !== uid;
+
+/* 옛 이름 놓아주기 — **지운다.**
+   예전에는 `uid: null` 로 덮어썼는데 규칙이 그 쓰기를 거부해서(조용히 실패) 옛 이름이
+   영영 내 것으로 남았다. 내 이름 문서를 지우는 것은 규칙이 허용한다(계정 삭제와 같은 줄) */
+async function releaseName(old){
+  try { await deleteDoc(doc(db, "names", key(old))); } catch(e){}
+}
+
 /* 별명 정하기. 이미 쓰는 이름이면 taken 을 돌려준다 */
 /* 프로필 얼굴. 앞 5개는 처음부터, 그 뒤는 5,000점마다 하나씩 */
 export const AVT_NEED = i => (i < 5 ? 0 : (i - 4) * TIER_STEP);
@@ -164,7 +175,7 @@ export async function setNickname(wanted){
   try {
     await runTransaction(db, async tx => {
       const got = await tx.get(ref);
-      if (got.exists() && got.data().uid !== account.uid) throw new Error("taken");
+      if (heldByOther(got, account.uid)) throw new Error("taken");
       tx.set(ref, { uid: account.uid, name: want });
     });
   } catch(e){
@@ -178,7 +189,7 @@ export async function setNickname(wanted){
   account.needName = false;
   try { await updateDoc(doc(db, "users", account.uid), { needName: false }); } catch(e){}
   if (old && key(old) !== key(want)){
-    try { await setDoc(doc(db, "names", key(old)), { uid: null, name: old }); } catch(e){}
+    await releaseName(old);
   }
   window.dispatchEvent(new Event("accountchange"));
   return { ok: true, name: want };
@@ -193,7 +204,7 @@ async function claimName(uid, wanted){
     try {
       await runTransaction(db, async tx => {
         const got = await tx.get(ref);
-        if (got.exists() && got.data().uid !== uid) throw new Error("taken");
+        if (heldByOther(got, uid)) throw new Error("taken");
         tx.set(ref, { uid, name: tryName });
       });
       return tryName;
@@ -212,7 +223,7 @@ export async function changeName(wanted){
   try {
     await runTransaction(db, async tx => {
       const got = await tx.get(ref);
-      if (got.exists() && got.data().uid !== account.uid) throw new Error("taken");
+      if (heldByOther(got, account.uid)) throw new Error("taken");
       tx.set(ref, { uid: account.uid, name: want });
     });
   } catch(e){
@@ -223,7 +234,7 @@ export async function changeName(wanted){
   await updateDoc(doc(db, "users", account.uid), { name: want });
   account.name = want;
   if (old && key(old) !== key(want)){
-    try { await setDoc(doc(db, "names", key(old)), { uid: null, name: old }); } catch(e){}
+    await releaseName(old);
   }
   window.dispatchEvent(new Event("accountchange"));
   return want;

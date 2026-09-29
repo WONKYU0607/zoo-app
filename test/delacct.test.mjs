@@ -203,6 +203,35 @@ check("게스트 로그인 계정도 사라짐 (에뮬레이터 기준)", !(awai
 const lostO2 = OTHERS.filter(p => !has(p));
 check("끝까지 남의 것은 그대로", lostO2.length === 0, lostO2.join(", "));
 
+/* ============ 6. 게스트 번호 · 별명 바꾸기 ============
+   게스트 번호는 들어온 순서대로. 별명을 바꾸면 옛 이름이 풀려야 한다
+   (예전에는 uid: null 로 덮으려다 규칙에 막혀 영영 묶여 있었다) */
+console.log("\n[게스트 번호 · 별명 바꾸기]");
+const numOf = n => Number(String(n).replace(/^게스트/, ""));
+await A.signInGuest();
+const g1 = A.account.name;
+await A.deleteAccount();
+await A.signInGuest();
+const g2 = A.account.name, uR = A.account.uid;
+check("게스트 번호가 순서대로", /^게스트\d+$/.test(g1) && numOf(g2) === numOf(g1) + 1, g1 + " → " + g2);
+
+check("별명 바꾸기", (await A.setNickname("새이름")).ok);
+check("옛 이름(게스트 번호)이 풀림", !has("names/" + g2.toLowerCase()), "names/" + g2);
+check("새 이름은 내 것", STORE.get("names/새이름") && STORE.get("names/새이름").uid === uR);
+
+put("names/빈이름", { uid: null, name: "빈이름" });    /* 예전 방식으로 놓아준 이름 */
+check("주인 없는 이름은 잡을 수 있음", (await A.setNickname("빈이름")).ok);
+check("잡은 뒤 내 것", STORE.get("names/빈이름").uid === uR);
+check("그 전 이름도 풀림", !has("names/새이름"));
+
+const taken = await A.setNickname("비");
+check("남의 이름은 못 잡음", !taken.ok && taken.why === "taken" && STORE.get("names/비").uid === "uB");
+
+const cn = await A.changeName("또이름");
+check("changeName 도 옛 이름을 풀어 줌", cn === "또이름" && !has("names/빈이름") && STORE.get("names/또이름").uid === uR);
+await A.deleteAccount();
+check("정리", mineLeft(uR).length === 0, mineLeft(uR).join(", "));
+
 stop();
 console.log("\n계정 삭제: " + pass + "/" + fail);
 process.exit(fail ? 1 : 0);
