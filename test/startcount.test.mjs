@@ -98,16 +98,27 @@ check("방장 화면도 같은 인원 판에 붙었다", seen.length > 0 && seen
 /* **판이 실제로 굴러가는가.** 봇 자리가 빈 채로 남으면 아무도 안 둬서 멈추거나,
    봇 대리인이 빈 자리를 두려다 서버가 통째로 죽었다 */
 {
+  /* **"안 움직인다" 와 "내 차례다" 를 갈라야 한다.**
+     이 검사는 봇 자리가 빈 채로 남았는지를 보는 것인데, 뽑기에서 내가 선을 잡으면
+     판은 **나를 기다리는 게 맞다.** 그때 멈춘 것을 고장으로 잡으면 안 된다.
+     봇이 한 수 두는 데 평균 2.6~12초 걸리므로(bottimetest 실측) 창도 넉넉히 준다 —
+     예전에는 15초였고, 검사 두 개를 같이 돌려 기계가 바쁠 때 거짓 실패가 났다 */
   const n0 = await page.evaluate(() => (window.__eng.view || {}).moveNo || 0);
-  let n1 = n0;
-  for (let i = 0; i < 30; i++){
+  let n1 = n0, mine = false;
+  for (let i = 0; i < 60; i++){
     await nap(500);
-    n1 = await page.evaluate(() => (window.__eng.view || {}).moveNo || 0);
-    if (n1 > n0 + 2) break;
+    const st = await page.evaluate(() => {
+      const v = window.__eng.view || {};
+      return { n: v.moveNo || 0, mine: Boolean(v.myTurn) };
+    });
+    n1 = st.n;
+    if (st.mine) mine = true;
+    if (n1 > n0 + 2 || mine) break;
   }
   let alive = false;
   try { alive = Boolean((await api("/zoo/health")).ok); } catch(e){}
-  check("판이 굴러간다 (봇이 둔다)", n1 > n0, "수 번호 " + n0 + " → " + n1);
+  check("판이 굴러간다 (봇이 둔다)", n1 > n0 || mine,
+        "수 번호 " + n0 + " → " + n1 + (mine ? " · 내 차례라 나를 기다리는 중" : ""));
   check("서버가 안 죽었다", alive);
 }
 

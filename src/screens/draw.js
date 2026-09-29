@@ -172,15 +172,63 @@ export function mount(root){
       w.innerHTML = '<div class="pk__in">' +
         '<div class="pk__f pk__f--b"><img src="' + ART.back + '" alt=""></div>' +
         '<div class="pk__f pk__f--a">' + cardFace(c) + '</div></div>';
-      w.onclick = () => { if (waiting[0] === 0) pick(0, k); };
       deck.appendChild(w);
     });
+    wireDeck();
+  }
+
+  /* ---------- 누름은 **바닥 전체**에서 한 번만 받는다 ----------
+
+     예전에는 카드마다 `w.onclick` 을 붙였다. 두 가지로 새어 나갔다.
+       (1) 뽑기 화면은 남은 시간 때문에 자주 다시 그린다. 그때 카드 칸이 새로 만들어지면
+           앞서 붙여 둔 처리기는 사라진 칸에 남아, 손을 떼는 신호가 갈 곳을 잃는다
+       (2) `click` 은 **손을 뗄 때** 나온다. 그 사이에 칸이 바뀌면 통째로 사라진다
+     게임 화면(table.js)에서 똑같은 "터치 씹힘" 을 겪고 `onTap` 을 만들었는데,
+     뽑기 화면만 그 고침을 안 받고 있었다.
+
+     여기서는 **바닥(#deck)** 에 한 번만 붙인다. 바닥은 다시 그려도 그대로 있으므로
+     안에 든 카드가 새로 만들어져도 신호를 놓치지 않는다.
+     그리고 `click` 이 아니라 **`pointerdown`(손이 닿는 순간)** 에 처리한다 —
+     "한 번 누르면 바로 뽑힌다" 가 되려면 손 떼기를 기다리면 안 된다. */
+  let lastTapAt = 0;
+  function wireDeck(){
+    const deck = el("deck");
+    if (!deck || deck.__wired) return;
+    deck.__wired = true;
+    const fire = (e) => {
+      const t = e.target;
+      const w = t && t.closest ? t.closest(".pk") : null;
+      if (!w || w.classList.contains("taken")) return;
+      /* 손가락 하나에 pointerdown 과 click 이 둘 다 온다. 한 번만 친다 */
+      if (Date.now() - lastTapAt < 400) return;
+      lastTapAt = Date.now();
+      if (waiting.indexOf(0) < 0) return;       /* 내가 이미 뽑았다 */
+      pick(0, Number(w.dataset.k));
+    };
+    deck.addEventListener("pointerdown", fire);
+    deck.addEventListener("click", fire);       /* 마우스와 검사용 */
   }
   
   /* 뽑기 제한 시간 5초. 안 뽑으면 자동으로 한 장 집는다.
      남들은 나를 기다리지 않고 저마다 뽑는다 */
   const PICK_SEC = 5;
   let pickTimer = null, pickLeft = 0, pickTickId = null, botLoopId = null, offView = null;
+  /* **이 화면이 지금 판을 맡고 있는가.**
+     판에서 나가면 `eng.stop()` 이 `onGone` 으로 알려 준다. 그때 false 가 되고,
+     다음 `boot()` 에서 다시 true 가 된다.
+     이게 없을 때는 나간 뒤에도 구독이 살아 있어서, 새 판이 첫 상태를 보내면
+     **앞 방의 자리 수 그대로 뽑기판을 한 번 그렸다**(8인 방에서 나온 뒤
+     4인 방을 만들었더니 8자리로 그려짐을 재현해 확인).
+     그 뒤 boot 이 제대로 다시 그리므로 "잔상이 보였다 돌아온다" 로 보인다 */
+  let live = true;
+  function standDown(){
+    live = false;
+    if (offView){ offView(); offView = null; }
+    stopPickTimer();
+    stopBotLoop();
+    if (cdId){ clearInterval(cdId); cdId = null; }
+  }
+  eng.onGone(standDown);
   function armPickTimer(){
     stopPickTimer();
     if (phase !== "pick") return;
@@ -303,34 +351,72 @@ export function mount(root){
       if (ox || oy) s.style.transform = "translate(calc(-50% + " + ox + "px)," + (-dy + oy) + "px)";
     });
   }
+  /* ---------- 자리 그리기 ----------
+
+     **매번 지우고 새로 만들면 안 된다.** 예전에는 `box.innerHTML = ""` 로 통째로
+     지우고 자리를 새로 만들었다. 뽑기 화면은 남은 시간 때문에 1초마다, 그리고
+     엔진이 새 상태를 보낼 때마다 다시 그리는데, 그때마다 얼굴 `<span>` 이 새로
+     생기고 브라우저가 배경 그림을 다시 불러오면서 **번쩍였다**
+     (2026-09-28 신고: "카드 뽑으러 들어갈 때 나 빼고 7명 프로필이 깜빡인다").
+     판 화면(table.js)에서 같은 문제를 먼저 고쳤는데 여기는 그대로였다.
+
+     이제 자리는 **인원이 바뀔 때만** 새로 만들고, 그 뒤로는 바뀐 값만 고쳐 쓴다.
+     뽑은 숫자표는 위·아래 두 칸을 미리 만들어 두고 쓰는 쪽만 보여 준다 —
+     자리마다 붙는 위치가 달라서, 그때그때 넣었다 뺐다 하면 또 새로 만들게 된다 */
+  let seatNodes = [], seatBits = [];
+  function setChip(node, v){
+    if (node.textContent !== v) node.textContent = v;
+    const d = v === "" ? "none" : "";
+    if (node.style.display !== d) node.style.display = d;
+  }
   function renderSeats(){
     syncRing();
-    const box = el("seats"); box.innerHTML = "";
-    const order = phase === "done" ? ranking().map(x => x.i) : [];
+    const box = el("seats");
+    if (seatNodes.length !== N || seatNodes.some(d => d.parentNode !== box)){
+      box.innerHTML = "";
+      seatNodes = []; seatBits = [];
+      for (let i = 0; i < N; i++){
+        const d = document.createElement("div");
+        d.className = "seat";
+        d.innerHTML =
+          '<span class="seat__r"></span>' +
+          '<span class="seat__d" style="display:none"></span>' +
+          '<span class="seat__av"></span>' +
+          '<span class="seat__n"></span>' +
+          '<span class="seat__d" style="display:none"></span>';
+        box.appendChild(d);
+        const ds = d.querySelectorAll(".seat__d");
+        seatNodes.push(d);
+        seatBits.push({ r: d.querySelector(".seat__r"), up: ds[0], dn: ds[1],
+                        av: d.querySelector(".seat__av"), n: d.querySelector(".seat__n") });
+      }
+    }
+    const fs = (N <= 6 ? 10.5 : 9) + "px";
     for (let i = 0; i < N; i++){
-      const a = (Math.PI / 2) + (i * 2 * Math.PI / N);
+      const d = seatNodes[i], q = seatBits[i];
       const p = seatPos(i);
-      const d = document.createElement("div");
-      const r = order.indexOf(i);
-      d.className = "seat" + (i === 0 ? " seat--me" : "") +
-        (waiting[0] === i && phase === "pick" ? " seat--turn" : "") +
-        "";
-      d.style.left = p.x.toFixed(1) + "%"; d.style.top = p.y.toFixed(1) + "%";
-      const big = N <= 6;
-      d.style.setProperty("--av", 42 + "px");   /* 인원과 무관하게 같은 크기 */
-      d.style.setProperty("--fs", (big ? 10.5 : 9) + "px");
+      const cls = "seat" + (i === 0 ? " seat--me" : "") +
+        (waiting[0] === i && phase === "pick" ? " seat--turn" : "");
+      if (d.className !== cls) d.className = cls;
+      const L = p.x.toFixed(1) + "%", TP = p.y.toFixed(1) + "%";
+      if (d.style.left !== L) d.style.left = L;
+      if (d.style.top !== TP) d.style.top = TP;
+      /* 인원과 무관하게 같은 크기 */
+      if (d.style.getPropertyValue("--av") !== "42px") d.style.setProperty("--av", "42px");
+      if (d.style.getPropertyValue("--fs") !== fs) d.style.setProperty("--fs", fs);
       const first = phase === "done" && i === winner();
-      const dv = drawn[i] == null ? "" : val(drawn[i]);
-      const chip = dv === "" ? "" : '<span class="seat__d">' + dv + '</span>';
+      const rcls = "seat__r" + (first ? " on" : "");
+      if (q.r.className !== rcls) q.r.className = rcls;
+      if (q.r.textContent !== T[lang].first) q.r.textContent = T[lang].first;
+      /* **그림은 주소가 바뀔 때만 손댄다.** 같은 주소를 다시 넣어도 한 번 번쩍인다 */
+      const bg = "url(" + A_RINGS.avatar + "),url(" + avtOf(faceOf(i)) + ")";
+      if (q.av.__bg !== bg){ q.av.style.backgroundImage = bg; q.av.__bg = bg; }
+      const nm = nameOf(i);
+      if (q.n.textContent !== nm) q.n.textContent = nm;
+      const dv = drawn[i] == null ? "" : String(val(drawn[i]));
       const upper = Math.sin((Math.PI / 2) + (i * 2 * Math.PI / N)) < 0;  /* 위쪽 자리 */
-      d.innerHTML =
-        '<span class="seat__r' + (first ? " on" : "") + '">' + T[lang].first + '</span>' +
-        (upper ? chip : "") +
-        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-          avtOf(faceOf(i)) + ')"></span>' +
-        '<span class="seat__n">' + nameOf(i) + '</span>' +
-        (upper ? "" : chip);
-      box.appendChild(d);
+      setChip(q.up, upper ? dv : "");
+      setChip(q.dn, upper ? "" : dv);
     }
     const md = el("mid");
     anchorSeats(box, md ? md.getBoundingClientRect().top - 4 : 0);
@@ -365,9 +451,19 @@ export function mount(root){
   }
   
   function boot(){
-    /* 옛 자리와 옛 카드가 잠깐 보이지 않게 먼저 비운다 */
-    const sbox0 = el("seats"); if (sbox0) sbox0.innerHTML = "";
-    const dbox0 = el("deck");  if (dbox0) dbox0.innerHTML = "";
+    /* **자리를 여기서 지우지 않는다.**
+
+       예전에는 들어올 때마다 `#seats` 를 통째로 비웠다. 그러면 얼굴 `<span>` 이
+       일곱 개 한꺼번에 새로 생기고, 폰은 그때마다 그림을 다시 풀어 그린다
+       (대기실은 46px, 뽑기는 42px 이라 크기가 달라 다시 푼다).
+       그게 "카드 뽑으러 들어갈 때 나 빼고 프로필이 깜빡인다" 로 보인다.
+
+       지울 이유도 없다 — `boot()` 은 화면을 **보이기 전에** nav 가 부르고
+       (`go()` 안에서 `__bootDraw()` 가 먼저다), 아래 `draw()` 가 그 자리에서
+       값을 다 맞춘다. 옛 내용이 눈에 보이는 순간은 없다.
+       인원이 달라지면 `renderSeats()` 가 알아서 새로 만든다.
+
+       바닥 카드(`#deck`)는 판마다 아예 다른 것이라 `layout()` 이 새로 깐다 */
     /* 온라인이면 인원과 선을 서버 값에서 가져온다. 뽑기 연출은 그대로 보여준다.
        이 판단을 먼저 해야 인원이 잠깐 잘못 그려지지 않는다 */
     online = Boolean(window.__net);
@@ -389,14 +485,12 @@ export function mount(root){
       window.GAME = {N: N, roundNo: 1, score: Array(N).fill(0), order: null, finish: null, hold: null};
     }
     phase = "pick";
-    /* 앞 판의 자리·카드가 한 프레임 비쳤다가 새로 그려진다.
-       그동안 얼굴이 옛 값(기본 생쥐)으로 보이므로 먼저 지운다 */
-    { const sb = el("seats"), db = el("deck");
-      if (sb) sb.innerHTML = ""; if (db) db.innerHTML = ""; }
     layout(Array.from({length: N}, (_, i) => i));
     /* 엔진이 바닥을 알려 준다. 남들이 고르는 것도 여기로 들어온다 */
+    live = true;
     if (offView) offView();
     offView = eng.onView(v => {
+      if (!live) return;          /* 나간 판이다 — 그리지 않는다 */
       if (phase === "done") return;
       syncDeck(v.draw);
       if (v.phase !== "draw"){ stopBotLoop(); stopPickTimer(); setTimeout(settle, 700); }

@@ -10,7 +10,7 @@
    지금 모으는 것 — 구글 계정(이메일·이름·사진), 닉네임·점수·전적, 광고용 기기 정보 */
 
 export const CONTACT = "dnjsrb980607@gmail.com";
-export const UPDATED = "2026-09-24";
+export const UPDATED = "2026-09-29";
 
 export const TERMS = {
   ko: {
@@ -119,7 +119,8 @@ https://policies.google.com/privacy
 자신의 정보를 보거나 지워 달라고 요청할 수 있습니다. 아래로 연락해 주세요.
 
 8. 계정 지우기
-앱의 설정에서 계정을 지우거나, 아래 주소로 요청하면 계정과 기록을 모두 지웁니다.
+앱 위쪽의 프로필을 눌러 계정 창의 "계정 삭제"로 지우거나, 아래 주소로 요청하면
+계정과 기록을 모두 지웁니다.
 
 문의: ${CONTACT}
 마지막 수정: ${UPDATED}`,
@@ -158,8 +159,8 @@ This game is not directed at children.
 You may ask to see or delete your data at the address below.
 
 8. Deleting your account
-Delete your account in the app's settings, or write to the address below and we
-will remove the account and its records.
+Tap your profile at the top of the app and choose "Delete account", or write to
+the address below and we will remove the account and its records.
 
 Contact: ${CONTACT}
 Last updated: ${UPDATED}`,

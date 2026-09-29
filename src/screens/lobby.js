@@ -15,6 +15,7 @@ export function mount(root){
       hQuick:"",   /* 설명 글은 뺐다. 이 줄은 "들어갈 방이 없습니다" 안내에만 쓴다 */
       lbNew:"친구와 하기", btNew:"방 만들기",
       hNew:"방을 만들면 4자리 번호가 나옵니다. 친구에게 번호를 알려 주세요. 4명부터 8명까지 함께할 수 있습니다.",
+      hNoTicket:"티켓이 없어 방을 만들 수 없습니다. 30분마다 한 장씩 채워지고, 광고를 보면 바로 한 장 받습니다.",
       lbJoin:"번호로 들어가기", btJoin:"참가",
       mkTitle:"방 만들기", mkGo:"방 만들기",
       mkCap:["방 인원","4명 \u2013 8명"],
@@ -40,6 +41,7 @@ export function mount(root){
       hQuick:"",
       lbNew:"PLAY WITH FRIENDS", btNew:"Create room",
       hNew:"You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
+      hNoTicket:"You need a ticket to create a room. One refills every 30 minutes, or watch an ad for one now.",
       lbJoin:"JOIN BY NUMBER", btJoin:"Join",
       mkTitle:"Create a room", mkGo:"Create room",
       mkCap:["Table size","4 \u2013 8 players"],
@@ -83,6 +85,8 @@ export function mount(root){
     /* 단추 전체를 바꾸면 안에 든 빈방 칸이 지워진다 — 글자 칸만 바꾼다 */
     set("lbNew", t.lbNew); set("btNew", t.btNew); set("hNew", t.hNew);
     set("lbJoin", t.lbJoin); set("btJoin", t.btJoin);
+    /* 설명 줄을 방금 원래 글로 되돌렸으니, 티켓 상태를 다시 입힌다 */
+    paintNew();
     set("btRules", t.rules); set("shTitle", t.shTitle);
     document.getElementById("shLead").innerHTML = t.shLead;
   
@@ -127,6 +131,30 @@ export function mount(root){
   window.addEventListener("langchange", () => { lang = window.__lang; render(); });
   
   
+  /* ---------- 티켓이 없으면 방 만들기를 잠근다 ----------
+
+     방을 만들어 놓고 시작을 누르는 순간에야 "티켓이 없습니다" 가 뜨면,
+     번호를 친구에게 알려 주고 모아 놓은 뒤에 못 하게 되는 꼴이다.
+     (2026-09-29 신고: "티켓이 없는데 방만들기가 가능함")
+     그래서 들어가기 전에 막고, 왜 막혔는지 설명 줄에 적는다.
+
+     빠른 참가·번호로 들어가기는 그대로다 — 티켓은 **방을 여는 쪽**이 낸다
+     (room.js 의 시작 단추에서 한 장 쓴다). */
+  function paintNew(){
+    const b = document.getElementById("btNew");
+    if (!b) return;
+    const a = window.ACCOUNT;
+    /* 계정을 아직 못 읽었으면 잠그지 않는다 — 켜자마자 잠긴 것처럼 보이면 안 된다 */
+    const none = Boolean(a && a.loaded) && (Number(a.tickets) || 0) <= 0;
+    b.disabled = none;
+    const h = document.getElementById("hNew");
+    if (h){
+      h.textContent = none ? T[lang].hNoTicket : T[lang].hNew;
+      h.classList.toggle("hint--warn", none);
+    }
+  }
+  window.__paintNew = paintNew;
+
   function paintAcct(){
     const a = window.ACCOUNT;
     if (!a) return;
@@ -143,12 +171,17 @@ export function mount(root){
     }
     if (s) s.textContent = a.score.toLocaleString();
     if (k) k.textContent = a.tickets;
+    paintNew();
     paintTimer();
   }
   /* 다음 티켓까지 남은 시간 */
   function paintTimer(){
     const el2 = document.getElementById("acctTimer");
     if (!el2) return;
+    /* **시간이 지나 찬 티켓을 여기서 반영한다.** 안 그러면 로비를 켜 둔 채
+       30분이 지나도 숫자가 0 그대로고 방 만들기도 잠긴 채 남는다.
+       값이 달라졌을 때만 accountchange 가 나가고, 그게 paintAcct 를 다시 부른다 */
+    if (window.__syncTickets) window.__syncTickets();
     const ms = window.__ticketLeft ? window.__ticketLeft() : 0;
     if (!ms || ms <= 0){ el2.textContent = ""; return; }
     const s = Math.ceil(ms / 1000);

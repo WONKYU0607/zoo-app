@@ -98,7 +98,11 @@
 #lobby .lead{font-size:13.5px;line-height:1.75;color:#C9B792;margin-bottom:18px}
 #lobby .lead b{color:var(--gold-hi);font-weight:400}
 #lobby /* rank grid */
-.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px 4px;margin-bottom:22px}
+/* **minmax(0,1fr) 이어야 한다.** 그냥 1fr 은 최소 폭이 "내용 크기"라,
+   nowrap 인 긴 영문 이름(CROCODILE)이 그 칸을 밀어 넓힌다.
+   카드에 aspect-ratio 가 걸려 있어 넓어진 칸은 세로로도 길어지고,
+   결국 한 장만 크게 튀어나온다 */
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 4px;margin-bottom:22px}
 #lobby .cell{display:flex;flex-direction:column;align-items:center;gap:5px}
 #lobby .cell__c{font-size:10px;color:#7C6C4E;line-height:1}
 #lobby /* mini card */
@@ -125,7 +129,26 @@
   font-size:7px;line-height:1;letter-spacing:-.01em;
   color:var(--card-ink-2);white-space:nowrap;
 }
-#lobby body[data-lang="en"] .card__name{font-size:5.4px;letter-spacing:.01em}
+/* **`#lobby body[...]` 는 절대 안 걸린다** — #lobby 안에 <body> 가 있어야 하는 조건이다.
+   data-lang 은 <body> 에 붙으므로 body 가 앞에 와야 한다 */
+
+/* **영문은 6칸으로는 답이 없다.**
+   360px 폰에서 카드가 39px 인데 위 띠에 숫자 둘(10·11·12는 두 자리)과 이름이 같이 들어간다.
+   이름에 남는 자리가 21px 뿐이라 글씨를 3.8px 까지 줄여도 CROCODILE 이 잘린다 —
+   크기로 풀 수 있는 문제가 아니라 자리가 없는 것이다.
+   그래서 영문일 때만
+     1. 4칸으로 줄여 카드를 39px -> 57px 로 넓히고
+     2. 위 띠의 숫자를 숨겨 이름이 띠 전체를 쓰게 한다 (숫자는 아래 띠에 그대로 있다)
+   360·390·412·430px 넷 다에서 가장 긴 CROCODILE 이 80% 만 써서 여유가 20% 남는다.
+   글씨도 6.5px 로 한글 7px 과 거의 같다 — 6칸일 때 4.8px 보다 오히려 읽기 낫다 */
+body[data-lang="en"] #lobby .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+body[data-lang="en"] #lobby .card__band:first-child .card__num{display:none}
+body[data-lang="en"] #lobby .card__band:first-child{justify-content:center}
+body[data-lang="en"] #lobby .card__name{font-size:6.5px;letter-spacing:.01em}
+/* 이름이 칸을 넘더라도 카드를 밀지 못하게 막는다 — 그물망 */
+#lobby .card{overflow:hidden}
+#lobby .card__band{overflow:hidden}
+#lobby .card__name{min-width:0;overflow:hidden}
 #lobby .card__art{
   flex:1;min-height:0;position:relative;
   border:1px solid var(--gold-dim);background:#1A1410;overflow:hidden;
@@ -134,7 +157,15 @@
 #lobby /* rules text */
 .rule{margin-bottom:16px}
 #lobby .rule--joker{display:flex;gap:13px;align-items:flex-start}
-#lobby .rule--joker .jk{width:calc((100% - 20px) / 6 * 1.17);flex:none}
+/* **카멜레온 카드는 위 낱장들과 똑같은 크기여야 한다.**
+   칸 하나의 폭은 `(줄 폭 - 칸 사이 틈 전부) / 칸 수` 다.
+   `.grid` 와 `.rule--joker` 는 같은 줄 폭을 쓰므로 여기서 그대로 계산하면 된다.
+   한글은 6칸(틈 4px × 5 = 20px), 영문은 4칸(4px × 3 = 12px).
+   예전에는 6칸 기준에 1.17 을 곱해 놨다. 실측(폰 폭 412px):
+     한글 카멜레온 53px · 낱장 45.3px → 혼자 컸다
+     영문 카멜레온 53px · 낱장 70px   → 혼자 작았다 (영문은 4칸이라 낱장이 넓어진다) */
+#lobby .rule--joker .jk{width:calc((100% - 20px) / 6);flex:none}
+body[data-lang="en"] #lobby .rule--joker .jk{width:calc((100% - 12px) / 4)}
 #lobby /* 그리드 카드는 줄 높이에 맞춰 늘어나므로 높이를 맞춘다 */
 .rule h3{font-family:"Gowun Batang",serif;font-weight:700;font-size:14px;color:var(--gold-hi);margin-bottom:5px}
 #lobby body[data-lang="en"] .rule h3{font-family:"Playfair Display",serif}

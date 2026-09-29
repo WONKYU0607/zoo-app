@@ -54,7 +54,10 @@
   line-height:1;min-width:calc(var(--w) * .145);text-align:center}
 #entry .card__name{font-family:"Noto Serif KR",serif;font-weight:700;font-size:calc(var(--w) * .086);
   letter-spacing:.03em;white-space:nowrap;color:var(--card-ink-2)}
-#entry body[data-lang="en"] .card__name{font-size:calc(var(--w) * .073);letter-spacing:.01em}
+/* **`#entry body[...]` 는 절대 안 걸린다** — #entry 안에 <body> 가 있어야 하는 조건이다.
+   data-lang 은 <body> 에 붙으므로 body 가 앞에 와야 한다 */
+/* 폰 폭에서 ELEPHANT 가 84% 로 빠듯했다. .070 으로 내려 81% 로 둔다 */
+body[data-lang="en"] #entry .card__name{font-size:calc(var(--w) * .070);letter-spacing:.01em}
 #entry .card.is-joker .card__band{justify-content:center}
 #entry .card__mark{font-family:"Noto Serif KR",serif;font-weight:600;font-size:calc(var(--w) * .072);
   letter-spacing:.24em;text-indent:.24em;color:var(--card-ink-2)}

@@ -160,20 +160,27 @@ check("손패 이름을 숨기는 규칙이 없다",
 /* ---------- 카드 안 글씨가 띠 밖으로 나가지 않는가 ----------
    숫자 두 개 + 이름이 한 줄에 들어가야 한다. 예전에는 --w 를 52px 로 박아 두고
    실제 카드는 34px 이라 오른쪽 숫자가 잘렸다. 대충 재는 것이라도 없는 것보다 낫다 */
-function bandFits(w, numR, nameR, padR, minR, longest){
+/* `em` 은 글자 하나가 글자 크기의 몇 배 폭인가. 한글은 거의 1배지만
+   영문 대문자는 0.58배쯤이다. 예전에는 둘 다 1배로 잡아서, 실제로는 들어가는
+   영문 이름을 "넘친다" 고 잡았다. 브라우저로 직접 잰 값과 어긋났다.
+   이 식은 어디까지나 **대충 보는 그물망**이고, 진짜 확인은 브라우저로 재는 쪽이다 */
+function bandFits(w, numR, nameR, padR, minR, longest, em = 1){
   const inner = w - 2 * (w * .042) - 2 * (w * padR);
   const numW  = Math.max(w * minR, 2.2 * (w * numR) * .55);   /* "10" 두 자리 기준 */
-  const nameW = longest * (w * nameR);
+  const nameW = longest * (w * nameR) * em;
   return { ok: 2 * numW + nameW <= inner, need: (2*numW + nameW).toFixed(1), inner: inner.toFixed(1) };
 }
 {
   const dcss = readFileSync(join(ROOT, "src/styles/draw.css"), "utf8");
   const dnum = Number((dcss.match(/#draw \.card__num\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
-  const dname = Number((dcss.match(/#draw \.card__name\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
   check("뽑기 카드가 실제 폭(--pw)을 쓴다", /#draw \.card\{--w:var\(--pw/.test(dcss));
+  /* **뽑기 카드에는 이름을 안 넣는다.** 카드가 26~46px 이라 양옆 숫자를 빼면
+     이름 자리가 없다. 글씨를 줄이면 폰이 도로 키워서(base.css 의 글씨 확대) 넘쳤다.
+     예전에는 여기서 "이름이 띠 안에 들어가는가" 를 쟀는데, 이제 들어갈 이름이 없다 */
+  check("뽑기 카드는 이름을 숨긴다", /#draw\.card__name\{display:none\}/.test(dcss.replace(/\s+/g, "")));
   for (const w of [26, 46]){
-    const r = bandFits(w, dnum, dname, .016, .17, 4);      /* 카멜레온 4글자 */
-    check("뽑기 카드 " + w + "px 에서 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+    const r = bandFits(w, dnum, 0, .016, .17, 0);          /* 이름 없이 숫자 둘만 */
+    check("뽑기 카드 " + w + "px 에서 숫자 둘이 띠 안에 들어간다", r.ok, r.need + " / " + r.inner);
   }
   const dsrc = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
   check("뽑기 카드 폭을 세로도 보고 잡는다", /Math\.min\(46, byW, byH\)/.test(dsrc));
@@ -208,27 +215,61 @@ function bandFits(w, numR, nameR, padR, minR, longest){
 {
   const tcss = readFileSync(join(ROOT, "src/styles/tax.css"), "utf8");
   const tnum = Number((tcss.match(/#tax \.card__num\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
-  const tname = Number((tcss.match(/#tax \.card__name\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
-  const tsrc2 = readFileSync(join(ROOT, "src/screens/tax.js"), "utf8");
-  check("세금·혁명 화면 카드가 이름을 그린다", /card__name/.test(tsrc2));
+  /* 세금 카드도 바닥패와 같은 크기라 이름을 뺀다 (위 뽑기와 같은 이유) */
+  check("세금 카드는 이름을 숨긴다", /#tax\.card__name\{display:none\}/.test(tcss.replace(/\s+/g, "")));
   for (const w of [32, 54]){
-    const r = bandFits(w, tnum, tname, .016, .17, 4);
-    check("세금 카드 " + w + "px 에서 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+    const r = bandFits(w, tnum, 0, .016, .17, 0);
+    check("세금 카드 " + w + "px 에서 숫자 둘이 띠 안에 들어간다", r.ok, r.need + " / " + r.inner);
   }
 }
 {
   const tc = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
   const num = Number((tc.match(/#table \.card__num\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
-  const nam = Number((tc.match(/#table \.card__name\{[^}]*font-size:calc\(var\(--w\) \* ([\d.]+)\)/) || [])[1]);
-  const r = bandFits(60, num, nam, .016, .145, 4);
-  check("게임 화면 손패 60px 에서 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+  /* **손패 전용 규칙을 읽어야 한다.** 예전에는 `#table .card__name`(모든 카드의 기본값)을
+     읽었는데, 손패만 따로 키운 뒤로는 그 값이 실제와 다르다 */
+  const flat = tc.replace(/\s+/g, "");
+  /* **선택자가 여럿 묶여 있어도 읽는다.** 손패 규칙에 카멜레온(`.card.is-joker`)을
+     같이 넣으면서 `#table.hand.card__name,#table.hand.card.is-joker.card__name{...}`
+     가 됐는데, 앞의 이름 바로 뒤에 `{` 가 오는 것만 찾고 있어서 **NaN 이 됐다.**
+     크기가 틀린 게 아니라 못 읽은 것이었다 — `[^{]*` 로 뒤에 붙는 선택자를 넘긴다.
+     (실제로 그려지는 크기는 `cardsize.test.mjs` 가 브라우저에서 잰다) */
+  const nam = Number((flat.match(/#table\.hand\.card__name[^{]*\{font-size:calc\(var\(--w\)\*([\d.]+)\)/) || [])[1]);
+  const namEn = Number((flat.match(/body\[data-lang="en"\]#table\.hand\.card__name[^{]*\{font-size:calc\(var\(--w\)\*([\d.]+)\)/) || [])[1]);
+  check("손패 이름 크기를 찾았다", nam > 0 && namEn > 0, "한글 " + nam + " · 영문 " + namEn);
+  /* **카멜레온은 양옆 숫자 칸이 비어 띠를 통째로 쓴다**(table.css 의 `.as:empty`).
+     그러니 숫자와 나란히 서는 가장 긴 한글 이름은 **세 글자**(호랑이·코끼리·원숭이·멧돼지)이고,
+     네 글자인 카멜레온은 숫자 없이 따로 재야 맞다.
+     예전에는 "네 글자 + 숫자 둘" 로 쟀는데 그런 카드는 없다 — 7.2px 일 때는 우연히
+     통과했고, 9.5px 로 키우자 **없는 카드 때문에 거짓 실패**가 났다.
+     (실제로 그려지는 크기와 잘림 여부는 `cardsize.test.mjs` 가 브라우저에서 잰다) */
+  const r = bandFits(60, num, nam, .016, .145, 3);            /* 숫자와 같이 서는 가장 긴 이름 */
+  check("손패 60px · 한글이 띠 안에 다 들어간다", r.ok, r.need + " / " + r.inner);
+  const rJk = bandFits(60, 0, nam, .016, 0, 4);               /* 카멜레온 — 숫자 칸이 비어 있다 */
+  check("손패 60px · 카멜레온이 띠 안에 다 들어간다", rJk.ok, rJk.need + " / " + rJk.inner);
+  /* **영문 손패는 띠 좌우 여백을 없앤다**(table.css). 그래야 5.3px 이 들어간다 —
+     여백 1px 로는 CROCODILE 이 32/31px 로 1px 모자란다(실측). 여백 0 으로 잰다 */
+  check("영문 손패는 띠 좌우 여백이 0 이다",
+        /body\[data-lang="en"\]#table\.hand\.card__band\{padding:0\}/.test(flat));
+  const rEn = bandFits(60, num, namEn, 0, .145, 9, .58);      /* CROCODILE 9글자, 영문 폭 */
+  check("손패 60px · 영문이 띠 안에 다 들어간다", rEn.ok, rEn.need + " / " + rEn.inner);
 }
 
-/* ---------- 뽑기 화면 카드에도 이름이 있는가 ---------- */
-const drawSrc = readFileSync(join(ROOT, "src/screens/draw.js"), "utf8");
-check("뽑기 카드가 이름을 그린다", /card__name/.test(drawSrc));
-const drawCss = readFileSync(join(ROOT, "src/styles/draw.css"), "utf8");
-check("뽑기 카드 이름에 글자 크기가 있다", /#draw \.card__name\s*\{/.test(drawCss));
+/* ---------- 이름은 손패와 규칙 보기에만 둔다 ----------
+   작은 카드(바닥패·펼쳐보기·세금·뽑기)는 양옆 숫자를 빼면 이름 자리가 없다.
+   줄이면 폰이 도로 키워서 넘치므로, 넣지 않는 쪽으로 정했다 */
+const noName = [
+  ["바닥패·펼쳐보기", "src/styles/table.css", /#table\.pile\.card__name,#table\.spread\.card__name\{display:none\}/],
+  ["세금",          "src/styles/tax.css",   /#tax\.card__name\{display:none\}/],
+  ["뽑기",          "src/styles/draw.css",  /#draw\.card__name\{display:none\}/],
+];
+for (const [name, file, re] of noName){
+  const t = readFileSync(join(ROOT, file), "utf8").replace(/\s+/g, "");
+  check(name + " 카드는 이름을 숨긴다", re.test(t));
+}
+/* **폰이 글씨를 키우는 것을 막아 둬야 한다.** 이게 없으면 여기서 정한 크기가
+   폰에서 그대로 안 나온다 — 작은 글씨일수록 크게 부풀려져 띠 밖으로 넘친다 */
+const baseCss = readFileSync(join(ROOT, "src/styles/base.css"), "utf8").replace(/\s+/g, "");
+check("글씨 자동 확대를 꺼 뒀다", /text-size-adjust:100%/.test(baseCss));
 
 /* ---------- 이번에 없앤 것들 ---------- */
 check("게임 화면에 판 종료 단추가 없다", !root.querySelector("#endRound"));
@@ -458,8 +499,11 @@ for (let i = 0; i < 400 && !outSeen; i++){
 }
 check("누군가 다 내고 완주했다", outSeen);
 {
+  /* **글자가 든 태그를 골라야 한다.**
+     자리 속을 통째로 다시 만들지 않으려고 태그 칸은 늘 두고 비워 둔다(숨김).
+     그래서 "태그 칸이 있는 자리" 로 고르면 빈 칸이 걸린다 */
   const seat = [...root.querySelectorAll(".seat")]
-    .filter(d => d.querySelector(".seat__tag"))[0];
+    .filter(d => { const t = d.querySelector(".seat__tag"); return t && t.textContent.trim(); })[0];
   const tagCss = readFileSync(join(ROOT, "src/styles/table.css"), "utf8");
   check("등수표는 프로필 원 안에 붙는다 (자리 상자가 아니라)",
         /\.seat__avwrap\{[^}]*position:relative/.test(tagCss));
@@ -469,6 +513,10 @@ check("누군가 다 내고 완주했다", outSeen);
   check("완주 대신 등수를 쓴다", /rankTag\(s\.r\)/.test(tsrc));
   const tagTxt = seat ? seat.querySelector(".seat__tag").textContent : "";
   check("붙은 글자가 등수 꼴이다 (완주 아님)", /^\d+등$/.test(tagTxt) || tagTxt === "패스", tagTxt || "없음");
+  /* 빈 태그 칸이 화면에 보이면 프로필 옆에 빈 상자가 뜬다 */
+  const emptyShown = [...root.querySelectorAll(".seat__tag")]
+    .filter(t => !t.textContent.trim() && t.style.display !== "none").length;
+  check("빈 태그 칸은 숨겨 둔다", emptyShown === 0, "보이는 빈 칸 " + emptyShown + "개");
   check("등수표가 프로필 원 안에 들어 있다",
         Boolean(seat) && Boolean(seat.querySelector(".seat__avwrap .seat__tag")),
         seat ? seat.innerHTML.slice(0, 80) : "없음");

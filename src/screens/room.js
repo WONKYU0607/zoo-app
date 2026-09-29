@@ -45,7 +45,7 @@ export function mount(root){
          clrD:"2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다.",
          on:"켜져 있습니다.", off:"꺼져 있습니다.",
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
-         copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 내일 다시 채워집니다",
+         copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 30분마다 한 장씩 채워집니다",
          wait:"방장이 시작하기를 기다리는 중입니다" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
@@ -61,7 +61,7 @@ export function mount(root){
          clrD:"Playing a 2 clears the pile and you lead again.",
          on:"On.", off:"Off.",
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
-         copied:"Copied", start:"Start", starting:"Dealing", needFour:"Four players are needed", noTicket:"No tickets left. They refill tomorrow",
+         copied:"Copied", start:"Start", starting:"Dealing", needFour:"Four players are needed", noTicket:"No tickets left. One refills every 30 minutes",
          wait:"Waiting for the host to start" }
   };
   let lang = window.__lang || "ko";
@@ -197,14 +197,54 @@ export function mount(root){
     };
   }
 
+  /* ---------- 자리 그리기 ----------
+
+     **매번 지우고 새로 만들면 안 된다.** 예전에는 `box.innerHTML = ""` 로 통째로
+     지우고 자리를 새로 만들었다. 대기실은 서버를 계속 물어보느라 자주 다시 그리는데,
+     그때마다 얼굴 `<span>` 이 새로 생기고 브라우저가 배경 그림을 다시 불러와
+     **번쩍였다**(2026-09-28 신고). 뽑기 화면(draw.js)·판 화면(table.js)도 같았다.
+
+     이제 자리는 **인원이 바뀔 때만** 새로 만들고, 그 뒤로는 바뀐 값만 고쳐 쓴다.
+     자리 안의 칸(얼굴·자리비움·이름·방장표)도 미리 만들어 두고 보이고 숨긴다 —
+     있을 때만 넣으면 그때그때 새로 만들게 된다.
+     빈자리 누름(친구 초대)은 칸을 다시 쓰므로 **한 번만** 붙이고, 지금 빈자리인지는
+     누를 때 다시 따진다 */
+  let seatNodes = [], seatBits = [];
+  const showIf = (node, on, txt) => {
+    if (txt != null && node.textContent !== txt) node.textContent = txt;
+    const d = on ? "" : "none";
+    if (node.style.display !== d) node.style.display = d;
+  };
   function renderSeats(){
     RB = ringBox();
     const box = document.getElementById("seats");
-    box.innerHTML = "";
     const list = seatList();
     seatSound(list.filter(x => x && x.name).length);
     const R = window.__room;
     if (R) cap = R.cap || cap;
+    if (seatNodes.length !== cap || seatNodes.some(d => d.parentNode !== box)){
+      box.innerHTML = "";
+      seatNodes = []; seatBits = [];
+      for (let i = 0; i < cap; i++){
+        const el = document.createElement("div");
+        el.className = "seat";
+        el.innerHTML =
+          '<span class="seat__av"></span>' +
+          '<span class="seat__off" style="display:none"></span>' +
+          '<span class="seat__n"></span>' +
+          '<span class="seat__b" style="display:none"></span>';
+        el.__i = i;
+        onTap(el, () => {
+          if (!el.classList.contains("seat--empty")) return;   /* 앉은 자리는 아무 일도 안 한다 */
+          if (window.__openFriends) window.__openFriends("invite");
+        });
+        box.appendChild(el);
+        seatNodes.push(el);
+        seatBits.push({ av: el.querySelector(".seat__av"), off: el.querySelector(".seat__off"),
+                        n: el.querySelector(".seat__n"), b: el.querySelector(".seat__b") });
+      }
+    }
+    const fs = (cap <= 6 ? 11 : 9.5) + "px";
     for (let i = 0; i < cap; i++){
       const a = (Math.PI / 2) + (i * 2 * Math.PI / cap);   // 아래에서 시계 방향
       const sy = Math.sin(a);
@@ -213,24 +253,29 @@ export function mount(root){
       const top  = RB.cy + sy * RB.ry + bias;
       const p = list[i] || null;
       const filled = Boolean(p);
-      const el = document.createElement("div");
-      el.className = "seat" + (filled ? "" : " seat--empty")
+      const el = seatNodes[i], q = seatBits[i];
+      const cls = "seat" + (filled ? "" : " seat--empty")
         + (p && p.me ? " seat--me" : "") + (p && (p.off || p.left) ? " seat--off" : "");
-      el.style.left = left.toFixed(2) + "%";
-      el.style.top  = top.toFixed(2) + "%";
-      const big = cap <= 6;
-      el.style.setProperty("--av", 46 + "px");   /* 인원과 무관하게 같은 크기 */
-      el.style.setProperty("--fs", (big ? 11 : 9.5) + "px");
-      el.innerHTML = filled
-        ? '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-            avtSeat(p, faceOf(i)) + ')"></span>' +
-          (p.off || p.left ? '<span class="seat__off"></span>' : '') +
-          '<span class="seat__n">' + p.name + '</span>' +
-          (p.host ? '<span class="seat__b">' + L[lang].hostTag + '</span>' : '')
-        : '<span class="seat__av seat__av--empty" style="background-image:url(' + A_RINGS.empty + ')"></span>' +
-          '<span class="seat__n seat__inv">' + L[lang].inviteHere + '</span>';
-      if (!filled) onTap(el, () => { if (window.__openFriends) window.__openFriends("invite"); });
-      box.appendChild(el);
+      if (el.className !== cls) el.className = cls;
+      const L2 = left.toFixed(2) + "%", T2 = top.toFixed(2) + "%";
+      if (el.style.left !== L2) el.style.left = L2;
+      if (el.style.top !== T2) el.style.top = T2;
+      /* 인원과 무관하게 같은 크기 */
+      if (el.style.getPropertyValue("--av") !== "46px") el.style.setProperty("--av", "46px");
+      if (el.style.getPropertyValue("--fs") !== fs) el.style.setProperty("--fs", fs);
+      /* **그림은 주소가 바뀔 때만 손댄다.** 같은 주소를 다시 넣어도 한 번 번쩍인다 */
+      const bg = filled
+        ? "url(" + A_RINGS.avatar + "),url(" + avtSeat(p, faceOf(i)) + ")"
+        : "url(" + A_RINGS.empty + ")";
+      if (q.av.__bg !== bg){ q.av.style.backgroundImage = bg; q.av.__bg = bg; }
+      const avCls = "seat__av" + (filled ? "" : " seat__av--empty");
+      if (q.av.className !== avCls) q.av.className = avCls;
+      showIf(q.off, Boolean(p && (p.off || p.left)), null);
+      const nCls = "seat__n" + (filled ? "" : " seat__inv");
+      if (q.n.className !== nCls) q.n.className = nCls;
+      const nTxt = filled ? p.name : L[lang].inviteHere;
+      if (q.n.textContent !== nTxt) q.n.textContent = nTxt;
+      showIf(q.b, Boolean(p && p.host), L[lang].hostTag);
     }
     const sm = document.getElementById("sum");
     anchorSeats(box, sm ? sm.getBoundingClientRect().top - 6 : 0);

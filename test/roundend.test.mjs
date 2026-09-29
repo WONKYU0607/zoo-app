@@ -50,6 +50,8 @@ for (let gi = 1; gi <= 12; gi++){
   }
   c.updatePlayerID("0");
   let guard = 0, seenRound = 1;
+  /* 판이 끝나기 **직전**의 자리 배치를 들고 있는다 (자리 이름을 순서대로) */
+  let beforeSeats = null;
 
   while (guard++ < 3000){
     const st = c.store.getState();
@@ -60,6 +62,20 @@ for (let gi = 1; gi <= 12; gi++){
       seenRound = st.G.roundNo;
       sawRoundEnd++;
       const v = screenView(st.G, st.ctx, "0", NAMES);
+
+      /* ---------- 마지막 장면의 자리가 그대로인가 ----------
+         판이 끝나면 엔진이 곧바로 자리를 등수대로 다시 앉힌다(`G.seatOrder`).
+         화면은 마지막 장면을 2초 보여 주는데, 그것을 **새 자리**로 그리면
+         자리가 통째로 튄다 — 2026-09-28 신고("꼴찌가 갑자기 내 오른쪽으로 이동").
+         `lastRound.seats` 는 **그 판을 돌 때의 자리**여야 한다 */
+      if (sawRoundEnd <= 6 && beforeSeats){
+        const nowSeats = (v.lastRound && v.lastRound.seats)
+          ? v.lastRound.seats.map(x => x.name) : null;
+        check("**판이 끝나도 마지막 장면의 자리가 안 바뀐다**",
+              Boolean(nowSeats) && nowSeats.join("|") === beforeSeats.join("|"),
+              (beforeSeats.join("|")) + "  →  " + (nowSeats ? nowSeats.join("|") : "없음"));
+        /* 새 판 자리는 바뀌는 것이 맞다 — 그건 결과 화면을 보는 동안 일어난다 */
+      }
 
       if (sawRoundEnd <= 3){
         check("판 끝 장면이 남아 있다", Boolean(v.lastRound));
@@ -84,10 +100,13 @@ for (let gi = 1; gi <= 12; gi++){
         }
         /* 그 장면도 자리마다 따라 돌아야 한다 */
         /* 자리 줄이 판마다 바뀌므로 번호로 비교하면 안 된다.
-           "그 자리에 앉은 사람이 같은 사람인가"로 본다 */
+           "그 자리에 앉은 사람이 같은 사람인가"로 본다.
+           **`seats`(지금 자리)가 아니라 `lastRound.seats`(그때 자리)로 봐야 한다** —
+           판 끝 장면은 그때 자리 줄로 그리기 때문이다 (자리 튐을 고치면서 바뀌었다) */
         for (let me = 1; me < N; me++){
           const w = screenView(st.G, st.ctx, String(me), NAMES);
-          const who = (view, pos) => view.seats[pos].name;
+          const who = (view, pos) => (view.lastRound && view.lastRound.seats
+                                       ? view.lastRound.seats : view.seats)[pos].name;
           const ok = w.lastRound.table.every((t, k) =>
                        who(w, t.by) === who(v, v.lastRound.table[k].by))
                   && w.lastRound.order.every((o, k) =>
@@ -118,6 +137,8 @@ for (let gi = 1; gi <= 12; gi++){
       c.updatePlayerID(null);
       continue;
     }
+    /* 매 수마다 지금 자리 배치를 적어 둔다 — 판이 끝나면 이것과 비교한다 */
+    beforeSeats = screenView(st.G, st.ctx, "0", NAMES).seats.map(x => x.name);
     const seat = Number(st.ctx.currentPlayer);
     const mv = pick(st.G.hands[seat], st.G.pile);
     c.updatePlayerID(String(seat));

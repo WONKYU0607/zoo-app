@@ -67,7 +67,13 @@ if (n0 === 0){
   const hint = await page.evaluate(() => (document.getElementById("hQuick")||{}).textContent || "");
   check("빈방이 없으면 로비에 그대로 있다 (새 방을 안 만든다)", (await now()) === "lobby", "화면 " + (await now()));
   check("단추 밑에 '들어갈 방이 없습니다' 가 뜬다", /들어갈 방이 없습니다/.test(hint), hint);
-  check("빈방 수는 여전히 0", (await api("/zoo/open")).count === 0);
+  /* **전역 빈방 수로 재면 안 된다.** 같은 서버에서 다른 검사가 나란히 돌며
+     방을 만든다. 그러면 빠른참가가 아무 짓도 안 했는데 수가 1이 되어 실패한다
+     (2026-09-29, 새로 붙인 `drawghost` 와 부딪혀 확인).
+     볼 것은 **내가 방을 갖게 됐는가** 하나다 — 빠른참가가 새 방을 팠다면
+     그 방의 방장이 되어 방 번호를 들고 있을 것이다. 이건 남이 뭘 하든 안 흔들린다 */
+  const got = await page.evaluate(() => (window.__roomCode && window.__roomCode()) || null);
+  check("빠른참가가 새 방을 만들지 않았다 (내 방 번호가 없다)", got == null, "방 번호 " + got);
 } else {
   check("빈방이 없을 때 (다른 방이 열려 있어 건너뜀)", true, "빈방 " + n0);
 }

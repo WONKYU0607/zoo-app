@@ -29,6 +29,7 @@
     "test:fr": "node test/friendtab.test.mjs",
     "test:screens": "node test/tapscreens.test.mjs",
     "test:resume": "node test/reconnect.test.mjs",
+    "test:del": "node test/delacct.test.mjs && node test/delbtn.test.mjs",
     "shot": "node test/shot.mjs",
     "admob": "node scripts/android-admob.mjs",
     "test:admob": "node test/admob.test.mjs",

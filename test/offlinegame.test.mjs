@@ -1,0 +1,217 @@
+/* 인터넷이 끊기면 **끊겼다고 알려 주는가.**
+
+   2026-09-29 사용자 신고: "게임 도중에 렉이 걸려서 카드를 제출했는데도 아무런 시현이
+   안 되고, 시간초도 15초가 다 흘러갔는데 화면 변화가 없다가 한 5초 뒤에 다시 돌아옴."
+
+   재현해 보니 정확히 그랬다. 인터넷을 끊고 카드를 내면
+     - 카드는 내 화면에서만 빠지고 (서버에는 안 감)
+     - 화면이 **20초 넘게 그대로 멈춰 있고**
+     - 남은 시간만 0까지 깎이고
+     - 왜 그런지 알려 주는 것이 **하나도 없다**
+   앱이 고장 난 줄 알게 된다.
+
+   그런데 boardgame.io 는 끊긴 것을 **1초 안에** 알려 준다(`isConnected`).
+   화면이 그걸 아무 데도 안 쓰고 있었을 뿐이다.
+
+   이제 끊기면 안내를 띄우고, 누르는 것을 막고, 남은 시간을 멈춘다.
+
+   쓰는 법:  창1) cd zoo-server && node server.js
+             창2) node test/offlinegame.test.mjs
+   (서버 대전에서만 생기는 일이라 서버가 없으면 건너뛴다)  */
+
+import { serve, open, shut, ensureBuild, findBrowser } from "./shot.mjs";
+
+const SRV = process.env.ZOO_SERVER || "http://127.0.0.1:8000";
+try { await fetch(SRV + "/zoo/health"); }
+catch (e){ console.log("\n게임 서버가 안 떠 있어 건너뜁니다 (" + SRV + ")\n");
+           console.log("=== 통과 0 / 실패 0 ===\n"); process.exit(0); }
+if (!(await findBrowser())){ console.log("\n크롬이 없어 건너뜁니다\n");
+           console.log("=== 통과 0 / 실패 0 ===\n"); process.exit(0); }
+
+let pass = 0, fail = 0;
+const check = (n, ok, note) => {
+  if (ok){ pass++; console.log("  [OK]   " + n + (note ? "  " + note : "")); }
+  else   { fail++; console.log("  [실패] " + n + (note ? "  " + note : "")); }
+};
+const nap = ms => new Promise(r => setTimeout(r, ms));
+
+ensureBuild();
+const srv = await serve(5901);
+const { browser, page } = await open({ srv });
+await page.evaluateOnNewDocument((s) => {
+  globalThis.__ZOO_SERVER = s;
+  try { localStorage.setItem("zk_lang", "ko"); } catch(e){}
+  HTMLMediaElement.prototype.play = function(){ return Promise.resolve(); };
+}, SRV);
+const cdp = await page.createCDPSession();
+await cdp.send("Network.enable");
+await page.reload({ waitUntil: "networkidle0" });
+
+const now = () => page.evaluate(() => (document.querySelector(".page.is-on") || {}).id);
+await page.evaluate(() => { window.__opts = { cap: 4, seated: 1, rounds: 3, tax: false, clear2: false }; });
+await page.evaluate(async () => { await window.__createRoom(); });
+await page.evaluate(() => window.__goto("room"));
+for (let i = 0; i < 90; i++){
+  if (await page.evaluate(() => (window.__opts && window.__opts.seated) || 0) >= 4) break;
+  await nap(300);
+}
+await page.evaluate(async () => { await window.__startRound(); });
+for (let k = 0; k < 120; k++){
+  if (await now() === "table") break;
+  await page.evaluate(() => {
+    const c = [...document.querySelectorAll("#draw .pk")].find(x => !x.className.includes("taken"));
+    if (c) c.click();
+    const g = document.querySelector("#draw #go");
+    if (g && !g.disabled) g.click();
+  });
+  await nap(400);
+}
+check("판 화면까지 갔다", (await now()) === "table", "화면 " + (await now()));
+if ((await now()) !== "table"){ shut(srv, browser); process.exit(1); }
+await nap(1200);
+
+/* ---------- 손패 장수를 계속 적어 둔다 ----------
+   한 판 안에서 **늘어나는 순간**이 곧 "나갔던 카드가 되돌아온" 순간이다.
+   판이 바뀌면(새로 나눠 준다) 다시 센다 */
+await page.evaluate(() => {
+  window.__grew = [];
+  if (window.__hsTimer) clearInterval(window.__hsTimer);
+  let last = -1, lastR = -1;
+  window.__hsTimer = setInterval(() => {
+    if ((document.querySelector(".page.is-on") || {}).id !== "table") return;
+    const n = document.querySelectorAll("#table #hand .slot").length;
+    const r = window.__roundNo || 0;
+    if (r !== lastR){ lastR = r; last = n; return; }
+    if (last > 0 && n > last) window.__grew.push({ from: last, to: n, r });
+    last = n;
+  }, 25);
+});
+
+/* 손패에서 낼 수 있는 한 벌을 고른다. 골라졌으면 true.
+   진짜 누름과 같은 길로 간다 — `#table` 이 click 을 받아 좌표/대상으로 찾는다.
+   **잠겨 있으면 아무것도 안 골린다** — 그게 여기서 보려는 것이다 */
+const SELECT = `(() => {
+  const slots = () => [...document.querySelectorAll("#table #hand .slot")];
+  const play = document.querySelector("#table #play");
+  if (!play) return false;
+  slots().filter(s => s.className.includes("slot--sel")).forEach(s => s.click());
+  const by = new Map();
+  slots().forEach(s => {
+    if (s.className.includes("slot--dead")) return;
+    const k = s.__card;
+    if (!by.has(k)) by.set(k, []);
+    by.get(k).push(s);
+  });
+  for (const g of [...by.entries()].sort((a, b) => b[1].length - a[1].length)){
+    for (const s of g[1]){
+      s.click();
+      if (!play.disabled) return true;
+    }
+    slots().filter(s => s.className.includes("slot--sel")).forEach(s => s.click());
+  }
+  return !play.disabled;
+})()`;
+const trySelect = () => page.evaluate(SELECT);
+const unselect = () => page.evaluate(() => {
+  [...document.querySelectorAll("#table #hand .slot--sel")].forEach(s => s.click());
+});
+const tapPlay = () => page.evaluate(() => {
+  const b = document.querySelector("#table #play");
+  if (!b || b.disabled) return false;
+  b.click();
+  return true;
+});
+/* **낼 수 있는 조합이 손에 없어도 잠겼는지 알 수 있어야 한다.**
+   처음에는 "한 벌 골라서 내기 단추가 열리나" 만 봤는데, 바닥보다 낮은 조합이
+   손에 없는 차례에는 열려 있어도 못 골라서 **고장을 놓쳤다**(14번 중 1번만 잡힘).
+   패스 단추는 조합과 상관없이 `차례 + 처리중` 만 보므로, 바닥에 카드가 있으면
+   이것만으로 잠금 상태를 그대로 읽을 수 있다 */
+const passOpen = () => page.evaluate(() => {
+  const b = document.querySelector("#table #pass");
+  return Boolean(b && !b.disabled);
+});
+/* 판 규칙이 말하는 "다음에 둘 사람" 이 나인가 */
+const dueMine = () => page.evaluate(() => {
+  try {
+    const E = window.__eng, st = E.client.getState();
+    const n = st.G.counts.length;
+    const due = Number.isInteger(st.G.next) && st.G.next >= 0 && st.G.next < n
+      ? st.G.next : Number(st.ctx.currentPlayer);
+    return due === Number(E.myID);
+  } catch(e){ return true; }
+});
+const mine = () => page.evaluate(() => {
+  const v = window.__eng && window.__eng.view;
+  return Boolean(v && v.myTurn);
+});
+
+
+
+/* ---------- 인터넷을 끊어 본다 ---------- */
+const look = () => page.evaluate(() => {
+  const v = window.__eng && window.__eng.view;
+  const play = document.querySelector("#table #play");
+  const pass = document.querySelector("#table #pass");
+  const need = document.querySelector("#table #need");
+  const timer = document.querySelector("#table #timer");
+  const m = (need ? need.textContent : "").match(/(\d+)\s*초/);
+  return { conn: (() => { try { return window.__eng.client.getState().isConnected; } catch(e){ return null; } })(),
+           off: Boolean(need && need.querySelector(".off")),
+           need: need ? need.textContent : "",
+           playOff: play ? play.disabled : null, passOff: pass ? pass.disabled : null,
+           mineClock: Boolean(timer && timer.classList.contains("mine")),
+           left: m ? Number(m[1]) : null,
+           hand: document.querySelectorAll("#table #hand .slot").length,
+           my: Boolean(v && v.myTurn) };
+});
+
+let turns = 0, ran = false;
+const T0 = Date.now();
+while (!ran && turns < 12 && Date.now() - T0 < 150000){
+  if (await now() !== "table"){ await nap(400); continue; }
+  if (await page.evaluate(() => Boolean(window.__gameOver))) break;
+  if (!(await mine())){ await nap(100); continue; }
+  if (!(await trySelect())){
+    await page.evaluate(() => { const p = document.querySelector("#table #pass");
+      if (p && !p.disabled) p.click(); });
+    await nap(450); continue;
+  }
+  turns++;
+  /* 처음 두 차례는 정상으로 낸다 — 판이 굴러가야 내 차례가 또 온다 */
+  if (turns < 3){ await tapPlay(); await nap(700); continue; }
+
+  const before = await look();
+  check("끊기 전에는 안내가 없다", !before.off, JSON.stringify(before.need.slice(0, 20)));
+
+  await cdp.send("Network.emulateNetworkConditions",
+    { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 });
+  /* boardgame.io 가 끊긴 것을 알아차릴 때까지 */
+  let off = null;
+  for (let i = 0; i < 40; i++){ await nap(250); off = await look(); if (off.off) break; }
+  check("**끊기면 3초 안에 알려 준다**", Boolean(off && off.off),
+        off ? (off.conn + " · " + JSON.stringify(off.need.slice(0, 24))) : "없음");
+  check("**끊긴 동안에는 내기·패스가 잠긴다**", Boolean(off && off.playOff && off.passOff),
+        off ? ("내기" + off.playOff + " 패스" + off.passOff) : "");
+  check("끊긴 동안 내 차례 시계가 안 돈다", Boolean(off && !off.mineClock));
+
+  const a = await look();
+  await nap(6000);
+  const b = await look();
+  check("**끊긴 동안 남은 시간이 안 깎인다**",
+        !(a.left != null && b.left != null && b.left < a.left),
+        (a.left == null ? "시계 없음" : a.left + "초 → " + b.left + "초"));
+  check("끊긴 동안에도 손패는 그대로", a.hand === b.hand, a.hand + " → " + b.hand);
+
+  await cdp.send("Network.emulateNetworkConditions",
+    { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+  let back = null;
+  for (let i = 0; i < 60; i++){ await nap(500); back = await look(); if (!back.off) break; }
+  check("**다시 붙으면 안내가 사라진다**", Boolean(back && !back.off),
+        back ? (back.conn + " · " + JSON.stringify(back.need.slice(0, 24))) : "없음");
+  ran = true;
+}
+check("실험을 실제로 돌렸다", ran, "내 차례 " + turns + "번");
+
+shut(srv, browser);
+console.log("\n=== " + (fail ? "통과 " + pass + " / 실패 " + fail : "전부 통과 (" + pass + ")") + " ===\n");
+process.exit(fail ? 1 : 0);

@@ -161,6 +161,8 @@
 #table .autotiny[aria-pressed="true"] i{background:#5AD682;
   box-shadow:0 0 6px rgba(90,214,130,.95),0 0 12px rgba(90,214,130,.5)}
 #table .need b{color:var(--gold-hi);font-weight:400}
+/* 연결이 끊겼을 때 안내. 눈에 띄어야 하지만 놀래킬 필요는 없다 */
+#table .need .off{color:#E8B25A}
 #table .timer{height:3px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:8px}
 #table .timer i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-hi),var(--gold));
   transform-origin:left;animation:tick 15s linear forwards}
@@ -202,7 +204,14 @@
 #table .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}
 /* 12시 자리는 카드·장수를 프로필 위로 올린다 (바닥 카드에 가려서) */
 #table .seat--above{display:flex;flex-direction:column;align-items:center}
-#table .seat--above .seat__c{order:-1;margin:0 0 1px}
+/* **12시 자리는 장수·부채를 프로필 위로 올린다.**
+   예전에는 JS 가 자리 속을 만들 때 순서를 바꿔 넣었는데, 그러면 순서가 바뀔 때마다
+   속을 통째로 다시 만들어 프로필이 새로 붙고 깜빡였다.
+   이제 속의 차례는 늘 같고(프로필·이름·부채·장수) 보이는 차례만 여기서 바꾼다 */
+#table .seat--above .seat__c{order:-2;margin:0 0 1px}
+#table .seat--above .fan{order:-1}
+#table .seat--above .seat__avwrap{order:0}
+#table .seat--above .seat__n{order:1}
 
 /* ---------- 감정표현 ---------- */
 
@@ -282,7 +291,73 @@ html[lang="en"] #table .seat__emo .emobub{font-size:7.5px}
    손패는 카드가 커서 지금 크기가 맞는데, 바닥에 쌓이는 카드는 훨씬 작아
    같은 비율이면 글씨만 커 보인다(신고받음). 바닥과 펼쳐 보기에서만 줄인다.
    손패(.hand)는 건드리지 않는다 */
+/* **바닥패와 펼쳐 보기에는 이름을 넣지 않는다.**
+   이 카드들은 30~44px 밖에 안 된다. 거기에 양옆 숫자까지 들어가면 이름 자리가 없다.
+   글씨를 줄이면 폰이 도로 키워서(위 base.css 참고) 숫자를 밀고 넘쳐 나왔다.
+   숫자(1~12)만으로 어느 카드인지 다 알 수 있고, 그림도 있다.
+   이름은 손패와 규칙 보기에만 둔다 */
 #table .pile .card__name,
-#table .spread .card__name{ font-size: calc(var(--w) * .068) }
-#table .pile .card.is-joker .card__name,
-#table .spread .card.is-joker .card__name{ font-size: calc(var(--w) * .058) }
+#table .spread .card__name{ display:none }
+
+/* **손패 이름 크기.**
+
+   폰이 글씨를 키우던 것을 base.css 에서 껐고, 웹뷰의 8px 바닥도
+   MainActivity 에서 1px 로 내렸으므로, **여기 적은 값이 폰에서 그대로 나온다.**
+
+   412px 폭에서 손패 카드는 60px 이다(table.js 의 `const w = 60`).
+     한글 .120    → 7.2px
+     영문 .08833  → **5.3px** (2026-09-29 요청. 4.86px 에서 올림)
+
+   **영문은 띠 좌우 여백을 없애야 5.3px 이 들어간다.** 아래를 같이 볼 것.
+
+   **카멜레온도 같은 크기로 그린다.** 위쪽 `#table .card.is-joker .card__name`(.072)
+   이 선택자 힘이 더 세서 한글 손패에서 **카멜레온만 4.32px** 로 그려지고 있었다
+   (다른 카드 7.2px — 실측으로 확인). 여기서 같이 잡아 준다.
+   카멜레온은 양옆 숫자 칸이 비어 띠를 통째로 쓰므로 넉넉하다.
+
+   (바닥패·세금·뽑기는 카드가 더 작아 아예 이름을 안 넣는다 — 위/다른 파일 참고) */
+#table .hand .card__name,
+#table .hand .card.is-joker .card__name{font-size:calc(var(--w) * .120)}
+body[data-lang="en"] #table .hand .card__name,
+body[data-lang="en"] #table .hand .card.is-joker .card__name{font-size:calc(var(--w) * .08833)}
+
+/* **영문 손패는 띠의 좌우 여백을 없앤다.**
+
+   양옆 숫자를 빼고 나면 이름 자리가 **31px** 뿐이다. 영문은 글자가 많아
+   5.3px 에서 CROCODILE 이 32px 을 요구해 **1px 이 모자란다**(실측).
+   자간을 좁히는 방법은 -0.07em 에서도 32/31px 이라 여유가 반올림 수준이라 안 쓴다.
+
+   띠 좌우 여백(`--w * .016` = 60px 에서 1px 씩)을 없애면 자리가 **33px** 이 되어
+   들어간다. 숫자는 위아래 그대로 두고, 카드 생김새도 그대로다.
+
+   실측(카드 60px, 양옆 숫자는 두 자리 `12`, 자간 -0.02em):
+     여백 1px   5.2px 까지 · 5.3px 은 CROCODILE 32/31 로 1px 모자람
+     여백 0px   **5.5px 까지 잘림 0** (5.3px 은 넉넉)
+   한글과 같은 9.5px 은 어떤 방법으로도 안 된다 — CHAMELEON 이 63px 을 요구해
+   카드(60px)보다 넓어진다 */
+body[data-lang="en"] #table .hand .card__band{padding:0}
+
+/* ---------- 이름이 카드 밖으로 나가지 않게 ----------
+
+   **안드로이드 웹뷰는 8px 보다 작은 글씨를 안 그린다.**
+   (`WebSettings.minimumFontSize`·`minimumLogicalFontSize` 기본값이 8이다)
+   그래서 위에 4.86px 라고 적어도 폰에서는 **8px 로 그려진다.**
+   그러면 긴 영문 이름이 자리보다 넓어져 옆 카드 위로 흘러나간다 —
+   2026-09-28 신고("카멜레온 글씨가 오른쪽으로 치우쳐 있다")가 이것이다.
+   가운데 정렬이 깨진 게 아니라, `space-between` 이라 왼쪽에 붙고 오른쪽으로 넘친 것이다.
+
+   8px 바닥에서 재 보면 CHAMELEON 54.8px · CROCODILE 49.6px · ELEPHANT 46px 인데
+   이름 자리는 37.6px 뿐이다. **크기를 더 줄이는 것으로는 못 막는다**(안 줄어든다).
+   그래서 여기서는 띠 밖으로 못 나가게 잘라 둔다.
+   근본은 웹뷰의 8px 바닥을 내리는 것이고, 그건 안드로이드 쪽에서 한다.
+
+   재현: 크로미움을 `--blink-settings=minimumFontSize=8,minimumLogicalFontSize=8` 로 띄운다 */
+#table .card__band{overflow:hidden}
+#table .card__num{flex:none}                 /* 숫자는 안 찌그러진다 — 손패에서 제일 중요한 정보다 */
+#table .card__name{min-width:0;overflow:hidden}
+/* 카멜레온은 양옆 숫자 칸이 비어 있다. 비었으면 자리를 안 차지하게 해서
+   이름에 띠를 통째로 내준다(37.6 → 53.1px). 폭이 0이라도 `space-between` 이
+   가운데에 놓아 준다 — 칸을 아예 없애면 이름이 왼쪽 끝으로 밀린다 */
+#table .card.is-joker .card__num.as:empty{min-width:0}
+/* 영문은 글자가 넓어 그래도 빠듯하다. 자간을 조금 좁혀 카멜레온을 들여놓는다 */
+body[data-lang="en"] #table .hand .card__name{letter-spacing:-.02em}

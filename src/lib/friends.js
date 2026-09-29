@@ -8,6 +8,12 @@
      freq/{받는uid}/from/{보낸uid}    { name, at }        신청함
      pres/{uid}                       { name, state, at }  접속 상태
      inv/{받는uid}/list/{보낸uid}     { name, code, at }   초대
+     sent/{보낸uid}/req/{받는uid}     { at }               내가 보낸 신청 — 계정 삭제 때 찾으려고
+     sent/{보낸uid}/inv/{받는uid}     { at }               내가 보낸 초대 — 〃
+
+   보낸 신청·초대는 **상대 쪽**에 적히므로 내 쪽에서는 목록을 뽑을 수 없다.
+   그래서 보낼 때 sent 에 받는 사람을 같이 적어 둔다. 이 기록을 넣기 전에
+   보낸 것은 찾을 수 없다.
 
    게스트도 쓴다. 기기를 바꾸면 계정이 사라지므로 친구도 같이 사라진다 — 그건 감수한다 */
 
@@ -62,6 +68,7 @@ export async function sendRequest(uid, name){
   if (!ok() || !uid || uid === me().uid) return { ok: false };
   /* 이미 친구면 그만 */
   if (await isFriend(uid)) return { ok: false, why: "already" };
+  await noteSent("req", uid);
   try {
     await setDoc(doc(db, "freq", uid, "from", me().uid),
       { name: me().name || "", at: Date.now() });
@@ -154,6 +161,7 @@ export async function friendRank(){
 
 export async function invite(uid, code){
   if (!ok() || !uid || !code) return false;
+  await noteSent("inv", uid);
   try {
     await setDoc(doc(db, "inv", uid, "list", me().uid),
       { name: me().name || "", code: String(code), at: Date.now() });
@@ -184,4 +192,37 @@ export async function invites(){
 export async function dropInvite(uid){
   if (!ok() || !uid) return;
   try { await deleteDoc(doc(db, "inv", me().uid, "list", uid)); } catch(e){}
+}
+
+/* ---------- 계정 삭제 ---------- */
+
+/* 보낼 때 받는 사람을 내 쪽에 적어 둔다. 못 적어도 보내는 것은 막지 않는다 */
+async function noteSent(kind, uid){
+  try { await setDoc(doc(db, "sent", me().uid, kind, uid), { at: Date.now() }); } catch(e){}
+}
+
+/* 내 흔적을 전부 지운다 — 친구(양쪽), 받은·보낸 신청, 받은·보낸 초대, 접속 상태.
+   **실패하면 던진다.** 부르는 쪽은 그때 계정을 지우지 않고 멈춘다 —
+   반쯤 지운 채 로그인 계정만 사라지면 남은 것을 지울 길이 없다.
+   몇 번을 다시 불러도 된다(이미 없는 것을 지워도 괜찮다). */
+export async function wipeMine(){
+  if (!ok()) throw new Error("로그인 상태가 아닙니다");
+  const my = me().uid;
+  const ids = async (...path) => (await getDocs(collection(db, ...path))).docs.map(d => d.id);
+
+  for (const uid of await ids("friends", my, "list")){
+    await deleteDoc(doc(db, "friends", uid, "list", my));
+    await deleteDoc(doc(db, "friends", my, "list", uid));
+  }
+  for (const uid of await ids("freq", my, "from")) await deleteDoc(doc(db, "freq", my, "from", uid));
+  for (const uid of await ids("inv", my, "list"))  await deleteDoc(doc(db, "inv", my, "list", uid));
+  for (const uid of await ids("sent", my, "req")){
+    await deleteDoc(doc(db, "freq", uid, "from", my));
+    await deleteDoc(doc(db, "sent", my, "req", uid));
+  }
+  for (const uid of await ids("sent", my, "inv")){
+    await deleteDoc(doc(db, "inv", uid, "list", my));
+    await deleteDoc(doc(db, "sent", my, "inv", uid));
+  }
+  await deleteDoc(doc(db, "pres", my));
 }

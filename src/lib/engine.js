@@ -10,7 +10,7 @@
 import { Client } from "boardgame.io/dist/esm/client.js";
 import { SocketIO } from "boardgame.io/dist/esm/multiplayer.js";
 import { ZooPresident } from "./game.js";
-import { screenView } from "./view.js";
+import { screenView, dueSeat } from "./view.js";
 import { isJoker } from "./deck.js";
 
 export const engine = {
@@ -32,6 +32,20 @@ export const engine = {
 };
 
 let listeners = [];
+/* ---------- 판이 없어졌다고 알려 주는 통로 ----------
+
+   `stop()` 은 엔진만 접고 **화면에는 아무 말도 안 했다.** 그래서 판에서 나가도
+   판 화면·뽑기 화면의 구독과 타이머가 그대로 살아 있었다. 2026-09-28 신고:
+     - 나갔다가 새 방을 만들면 **전 게임 소리가 들린다**
+       (죽은 판 화면이 새 판의 수를 받아 소리를 낸다 — `card_play@draw` 로 재현)
+     - 뽑기 화면에 **앞 방의 잔상**이 그려졌다 다시 그려진다
+       (죽은 뽑기 화면이 앞 방의 자리 수로 한 번 그린다 — 8인 자리로 그려짐을 확인)
+   구독을 푸는 곳이 `boot()` 뿐이라, 다시 들어가기 전까지는 아무도 안 풀었다.
+
+   이제 `stop()` 이 여기 등록된 화면들에게 **"판이 없어졌다"**고 알린다.
+   화면은 그 자리에서 타이머·소리를 끄고 다음 `boot()` 까지 조용히 있는다.
+   `onView` 를 건드리지 않으므로 flow.js 의 구독은 그대로 산다 */
+let goneFns = [];
 let unsub = null;
 let botTimer = null;
 let gen = 0;           /* 판이 바뀌면 올려서 예전 예약을 무효화한다 */
@@ -40,6 +54,12 @@ export function onView(fn){
   listeners.push(fn);
   if (engine.view) fn(engine.view);
   return () => { listeners = listeners.filter(f => f !== fn); };
+}
+
+/* 판이 접힐 때 불린다. 화면이 스스로 물러나는 자리 */
+export function onGone(fn){
+  goneFns.push(fn);
+  return () => { goneFns = goneFns.filter(f => f !== fn); };
 }
 
 function raw(){
@@ -52,6 +72,14 @@ function push(){
   const st = raw();
   if (!st) return;
   engine.view = screenView(st.G, st.ctx, engine.myID, engine.names);
+  /* **서버에 붙어 있는가.** 판 상태가 아니라 연결 상태라 view.js 가 아니라 여기서 붙인다.
+     boardgame.io 가 연결이 끊기면 1초 안에 `isConnected` 를 false 로 바꾸고
+     구독자를 다시 부른다(재현으로 확인). 그런데 화면은 그걸 **아무 데도 안 썼다.**
+     그래서 인터넷이 끊기면 카드를 내도 아무 일이 안 일어나고 화면이 20초씩 멈춰 있는데
+     **왜 그런지 알려주는 것이 하나도 없었다** (2026-09-29 신고: "렉 걸려서 카드를
+     제출했는데 아무 시현이 없고 시간초도 다 흘렀다가 5초 뒤에 돌아옴").
+     이 기기 방(local)은 연결이랄 것이 없으니 늘 붙어 있는 것으로 본다 */
+  engine.view.connected = engine.mode === "online" ? st.isConnected !== false : true;
   /* 실제로 둔 수를 그대로 적어 둔다 — **검사가 정답으로 삼을 유일한 기록**.
      이것이 없으면 "눌렀는데 패스가 됐나"를 손패 장수 따위로 짐작해야 하고,
      눌러도 안 된 경우를 "소리가 빠졌다" 로 잘못 세게 된다 */
@@ -241,7 +269,16 @@ function scheduleBot(){
      이걸 안 나눠서, 세금 화면을 보는 동안 봇들이 이미 카드를 다 내버렸다 */
   if (engine.paused && ctx.phase !== "tax") return;
 
-  const seat = Number(ctx.currentPlayer);
+  /* **`ctx.currentPlayer` 가 아니라 `dueSeat` 를 본다.**
+     서버 대전에서 내가 둔 직후에는 `currentPlayer` 가 아직 나로 남아 있어서
+     (차례 넘기기는 서버만 한다 — view.js 의 dueSeat 설명 참고)
+     여기서 그것을 믿으면 **자동치기가 한 차례에 두 번 둔다.**
+     화면에서는 "패스가 살짝 눌렸다 풀리고 곧바로 또 패스" 로 보인다.
+     `G.next` 는 내 수를 내 화면에서 처리할 때 같이 계산되므로 곧바로 맞다.
+     못 두고 그냥 돌아가도 멈추지 않는다 — 서버가 확인을 보내 주면
+     화면이 갱신되고 여기를 다시 부른다 */
+  const seat = dueSeat(G, ctx);
+  if (seat !== Number(ctx.currentPlayer)) return;   /* 아직 안 넘어갔다 */
   if (!actsFor(seat)) return;
 
   /* **방금 보낸 수가 아직 확인되기 전이면 또 보내지 않는다.**
@@ -262,7 +299,8 @@ function scheduleBot(){
     if (g !== gen) return;
     const s2 = raw();
     if (!s2 || s2.ctx.gameover || s2.ctx.phase !== "play") { push(); return; }
-    const now = Number(s2.ctx.currentPlayer);
+    const now = dueSeat(s2.G, s2.ctx);
+    if (now !== Number(s2.ctx.currentPlayer)) { push(); return; }
     if (!actsFor(now)) { push(); return; }
     const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
     engine.client.updatePlayerID(String(now));
@@ -353,6 +391,9 @@ export function stop(){
   engine.client = null;
   engine.view = null;
   emoteSeen = 0;      /* 새 판에서 옛 쪽지를 다시 읽지 않게 */
+  /* **화면에도 알린다.** 안 알리면 나간 판의 화면이 계속 살아서
+     다음 판의 수를 받아 소리를 내고 그림을 그린다 (위 goneFns 설명 참고) */
+  goneFns.slice().forEach(f => { try { f(); } catch(e){ console.error(e); } });
 }
 
 /* ---------- 내 수 ---------- */

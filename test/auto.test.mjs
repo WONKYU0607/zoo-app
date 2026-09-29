@@ -81,6 +81,12 @@ eng.stop();
 eng.startLocal({ numPlayers: 4, myID: "0", names: ["나","A","B","C"], opts: { rounds: 3, tax: true } });
   eng.autoDraw();   /* 뽑기 단계를 끝내고 판부터 본다 */
 eng.engine.botMs = 3000;
+/* **새 판을 세웠으면 화면도 다시 세운다.**
+   앱에서는 판 화면에 들어설 때 `nav.go("table")` 이 늘 `__bootTable()` 을 부른다.
+   여기서만 안 부르고 앞 판의 구독이 살아 있는 것에 기대고 있었는데,
+   판에서 나가면 화면이 물러나도록 고치면서 그 기대가 깨졌다.
+   (아래 4번은 원래부터 부르고 있었다) */
+if (window.__bootTable) window.__bootTable();
 await wait(60);
 eng.setAuto(false);                       /* 앞 판에서 켜 둔 것을 내린다 */
 q("#auto").click();

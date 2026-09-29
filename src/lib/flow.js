@@ -8,8 +8,9 @@
    그대로 돌려볼 수 있다. main.js 는 이걸 설치만 한다. */
 
 import * as eng from "./engine.js";
-import { createRoom, addBot, setCap, toRoomView, seatCount } from "./localroom.js";
+import { createRoom, addBot, setCap, toRoomView, seatCount, seatLabel } from "./localroom.js";
 import * as lobby from "./lobby.js";
+import { botLabel } from "./botnames.js";
 
 let opt = null;             /* { goto, boot, myName } */
 let myRoom = null;
@@ -29,6 +30,14 @@ function emitRoom(){
   W().dispatchEvent(new Event("roomchange"));
 }
 
+/* 서버는 봇 이름을 **번호**로 준다. 여기서 지금 언어의 이름으로 바꾼다.
+   한 방에 한국 사람과 외국 사람이 같이 있어도 각자 읽을 수 있는 이름을 본다.
+   `botName` 이 없는 옛 서버면 서버가 준 글자를 그대로 쓴다 */
+function seatName(p){
+  if (p && p.bot && p.botName != null) return botLabel(p.botName, W().__lang || "ko");
+  return (p && p.name) || "";
+}
+
 /* 서버가 알려 준 자리들을 방 대기실이 읽는 모양으로 */
 function netRoomView(){
   if (!net) return null;
@@ -37,7 +46,7 @@ function netRoomView(){
     const i = Number(p.id);
     if (!p.name) return;
     seats[i] = {
-      uid: "s" + i, name: p.name, bot: Boolean(p.bot),
+      uid: "s" + i, name: seatName(p), bot: Boolean(p.bot),
       avatar: Number(p.avatar) || 0,
       off: Boolean(p.away), left: Boolean(p.left),
     };
@@ -213,7 +222,7 @@ function startGame(){
   eng.startLocal({
     numPlayers: n,
     myID: "0",
-    names: myRoom.seats.map(s => s.name),
+    names: myRoom.seats.map(seatLabel),
     opts: { rounds, tax: o.tax !== false, clear2: Boolean(o.clear2) },
   });
 
@@ -224,7 +233,7 @@ function startGame(){
   const v = eng.engine.view;
   if (!v) throw new Error("판을 세우지 못했습니다");
   W().__opts = Object.assign(W().__opts || {}, { rounds });
-  openTable(v, n, myRoom.seats.map(s => s.name));
+  openTable(v, n, myRoom.seats.map(seatLabel));
 }
 
 /* 서버 대전 시작 — 빈자리는 서버가 봇으로 채운다 */
@@ -255,7 +264,7 @@ function enterOnlineGame(){
     playerID: net.playerID,
     credentials: net.credentials,
     numPlayers: net.numPlayers,
-    names: (net.players || []).map(p => p.name || ""),
+    names: (net.players || []).map(seatName),
   });
   eng.setPaused(true);                    /* 판 화면이 설 때까지 멈춰 둔다 */
 
@@ -265,7 +274,7 @@ function enterOnlineGame(){
     const v = eng.engine.view;
     if (!v){ if (tries++ > 120){ clearInterval(wait); } return; }
     clearInterval(wait);
-    openTable(v, net.numPlayers, (net.players || []).map(p => p.name || ""));
+    openTable(v, net.numPlayers, (net.players || []).map(seatName));
   }, 100);
 }
 
@@ -644,7 +653,18 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   /* 마지막 판 결과에서 "다음"을 누르면 새 게임을 세운다 */
   /* 방 초읽기도 같이 멈춘다. 안 끄면 다음 방에서 초읽기가 아예 안 시작한다
      (startRoomCount 가 "이미 세는 중"으로 보고 그냥 돌아간다) */
+  /* **판 화면이 붙여 둔 것을 덮어쓰지 않는다.**
+     `table.js` 는 mount 할 때 `__quitGame` 에 "완주 실패로 기록"(점수 절반)을 걸어 둔다.
+     여기(install)는 그보다 나중에 도므로, 그냥 넣으면 그것을 **통째로 덮어써서**
+     나가기를 눌러도 점수가 아예 기록되지 않았다(확인창은 "완주 실패로 기록됩니다"
+     라고 하는데 실제로는 0점, 판수도 안 늘었다. 나간 뒤 `__scored` 가 null 로
+     남는 것으로 확인). 위의 `__bootTable`·`__toTable` 처럼 앞의 것을 불러 준다.
+     **점수부터 적고** 판을 접는다 — 접은 뒤에 적으면 셀 것이 남아 있지 않다 */
+  const prevQuitGame = W().__quitGame;
   W().__quitGame = () => {
+    if (typeof prevQuitGame === "function"){
+      try { prevQuitGame(); } catch(e){ console.error(e); }
+    }
     stopCount(); stopRoomCount(); botFillStop(); eng.stop(); eng.setPaused(false);
     /* **나간 게임은 내 손에서 뗀다.**
        예전에는 "하던 방" 기록을 안 지워서, 다른 게임을 하고 로비로 돌아오면

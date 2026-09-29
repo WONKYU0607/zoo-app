@@ -8,10 +8,12 @@
 import { ready, auth, db } from "./firebase.js";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInAnonymously, signOut,
          linkWithPopup, linkWithRedirect, getRedirectResult, signInWithCredential, linkWithCredential,
-         updateProfile, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, runTransaction,
+         updateProfile, onAuthStateChanged,
+         reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction,
          collection, query, where, orderBy, limit, getDocs, getCountFromServer,
          increment, serverTimestamp } from "firebase/firestore";
+import { wipeMine } from "./friends.js";
 
 /* 티켓. account 보다 **먼저** 선언해야 한다 —
    const 는 선언 전에 못 쓰고, account 는 파일이 열리는 순간 만들어진다.
@@ -76,6 +78,25 @@ export function ticketLeft(){
   if (account.tickets >= TICKET_MAX) return 0;
   const r = refill(account.tickets, account.ticketAt);
   return r.left;
+}
+
+/* **시간이 지나 찬 티켓을 화면에도 반영한다.**
+
+   `refill()` 은 값을 계산만 하고 `account` 에 안 적는다. 쓸 때(useTicket)나
+   받을 때(rewardTicket)만 적어 넣는다. 그래서 로비를 켜 둔 채 30분이 지나도
+   위쪽 티켓 숫자가 0 그대로였다 — 방 만들기를 티켓으로 잠그면 그게 그대로
+   "30분이 지났는데도 안 풀린다" 가 된다.
+
+   초읽기를 그리는 쪽이 1초마다 불러 준다. **달라졌을 때만** 알린다.
+   디스크(Firestore)에는 안 적는다 — 쓸 때·받을 때 어차피 다시 계산한다 */
+export function syncTickets(){
+  if (account.tickets >= TICKET_MAX) return account.tickets;
+  const r = refill(account.tickets, account.ticketAt);
+  if (r.tickets === account.tickets) return account.tickets;
+  account.tickets = r.tickets;
+  account.ticketAt = r.at;
+  window.dispatchEvent(new Event("accountchange"));
+  return account.tickets;
 }
 
 function today(){ return new Date().toISOString().slice(0, 10); }
@@ -407,6 +428,46 @@ export async function signOutNow(){
   Object.assign(account, { uid: null, name: "", photo: "", score: 0,
                            tier: 0, tickets: TICKET_MAX, games: 0, signedIn: false });
   window.dispatchEvent(new Event("accountchange"));
+}
+
+/* ---------- 계정 삭제 ----------
+   플레이 스토어 요건 — 앱 안에서 계정과 기록을 지울 수 있어야 한다.
+
+   순서가 중요하다.
+   1) 구글이면 **먼저** 본인 확인을 다시 한다. 파이어베이스는 로그인한 지 오래된
+      계정의 삭제를 거부한다(auth/requires-recent-login). 기록을 다 지운 뒤에
+      거부당하면 로그인 계정만 남으므로 맨 앞에서 한다.
+   2) 기록을 지운다 — 친구·신청·초대·접속 상태 → 이름 → 사용자 문서.
+      하나라도 실패하면 던진다. 로그인 계정은 그대로 두므로 다시 누르면 이어서 지운다.
+   3) 로그인 계정을 지운다. 게스트는 다시 확인할 방법이 없어 거부될 수 있다 —
+      그때는 로그아웃만 한다. 남는 것은 개인정보 없는 익명 번호뿐이다.
+   돌려주는 값: { ok: true, authLeft } — authLeft 는 로그인 계정이 남았는가 */
+export async function deleteAccount(){
+  if (!ready) throw new Error("Firebase 설정이 없습니다");
+  const user = auth.currentUser;
+  if (!user) throw new Error("로그인 상태가 아닙니다");
+  const uid = user.uid;
+
+  if (!user.isAnonymous){
+    if (isApp()) await reauthenticateWithCredential(user, await googleCredential());
+    else await reauthenticateWithPopup(user, new GoogleAuthProvider());
+  }
+
+  await wipeMine();
+  /* 이름 — 지금 이름만이 아니라 **내 것으로 잡혀 있는 이름 전부**.
+     별명을 바꿀 때 옛 이름을 놓아주는 쓰기가 실패하면 옛 이름이 내 것으로 남아 있다 */
+  const mine = await getDocs(query(collection(db, "names"), where("uid", "==", uid)));
+  for (const d of mine.docs) await deleteDoc(d.ref);
+  await deleteDoc(doc(db, "users", uid));
+
+  let authLeft = false;
+  try { await deleteUser(user); }
+  catch(e){
+    authLeft = true;
+    console.warn("[계정 삭제] 로그인 계정은 못 지움:", (e && e.code) || e);
+  }
+  await signOutNow();
+  return { ok: true, authLeft, guest: Boolean(user.isAnonymous) };
 }
 
 /* 이미 로그인돼 있으면 그대로 이어간다 */

@@ -26,6 +26,8 @@ export const ACCT_HTML =
 
   '<div class="cfg__row" id="acLinkRow" hidden><button id="acLink"></button></div>' +
   '<div class="cfg__row"><button id="acOut"></button></div>' +
+  /* 계정 삭제 — 플레이 스토어 요건. 로그아웃 아래 */
+  '<div class="cfg__row"><button id="acDel"></button></div>' +
   '</div></div></div>';
 
 export const CFG_HTML =
@@ -446,6 +448,8 @@ export function initNav(){
     }).join("");
   }
 
+  /* 계정을 지우는 중인가. paintAcct 가 읽으므로 그보다 위에 둔다(선언 전에 읽으면 터진다) */
+  let delBusy = false;
   function paintAcct(){
     paintVol();
     const ko = (window.__lang || "ko") === "ko";
@@ -490,6 +494,8 @@ export function initNav(){
     if (pen){ pen.innerHTML = PENCIL; pen.hidden = false; }
     const outBtn = document.getElementById("acOut");
     if (outBtn){ outBtn.textContent = ko ? "로그아웃" : "Sign out"; outBtn.hidden = false; }
+    const delBtn = document.getElementById("acDel");
+    if (delBtn && !delBusy){ delBtn.textContent = ko ? "계정 삭제" : "Delete account"; delBtn.disabled = false; }
   }
   window.addEventListener("accountchange", () => {
     const b = document.getElementById("acctBox");
@@ -625,6 +631,43 @@ export function initNav(){
     }
   });
 
+  /* 계정 삭제. 확인창은 한 번. 지우는 동안 단추를 잠가 두 번 안 눌리게 한다
+     (구글은 본인 확인 창이 한 번 더 뜨고, 기록을 하나씩 지우느라 몇 초 걸린다) */
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#acDel") || delBusy) return;
+    const ko = (window.__lang || "ko") === "ko";
+    ask(ko ? "계정 삭제" : "Delete account",
+        ko ? "모든 기록이 지워지고 되돌릴 수 없습니다"
+           : "All your records will be erased for good",
+        ko ? "삭제" : "Delete",
+        async () => {
+          const btn = document.getElementById("acDel");
+          delBusy = true;
+          if (btn){ btn.disabled = true; btn.textContent = ko ? "지우는 중..." : "Deleting..."; }
+          let r = null, err = null;
+          try { r = window.deleteAccount ? await window.deleteAccount() : null; }
+          catch(x){ err = x; }
+          delBusy = false;
+          if (err){
+            const code = String((err && err.code) || (err && err.message) || err);
+            /* 본인 확인에서 다른 구글 계정을 고른 경우 */
+            const why = code === "auth/user-mismatch"
+              ? (ko ? "지금 로그인한 구글 계정을 골라 주세요" : "Please choose the Google account you are signed in with")
+              : code;
+            window.alert((ko ? "계정을 지우지 못했습니다\n" : "Could not delete the account\n") + why);
+            paintAcct();
+            return;
+          }
+          /* 구글인데 로그인 계정만 남은 경우 — 기록은 이미 다 지워졌다 */
+          if (r && r.authLeft && !r.guest){
+            window.alert(ko ? "기록은 모두 지웠지만 구글 로그인 연결은 지우지 못했습니다. 다시 로그인한 뒤 한 번 더 지워 주세요"
+                            : "Your records were erased, but the Google sign-in could not be removed. Sign in and delete again");
+          }
+          closeAcct();
+          go("entry");
+        });
+  });
+
   /* 게스트 → 구글 잇기 */
   document.addEventListener("click", async e => {
     if (!e.target.closest("#acLink")) return;
@@ -758,14 +801,37 @@ export function initNav(){
     }
     go("room");
   });
-  /* 방 만들기는 설정을 먼저 받는다 */
-  document.querySelector("#lobby #btNew").addEventListener("click", () => openOpts("create"));
-  /* 대기실 시작 → 세금·혁명 */
-  document.querySelector("#room #action").addEventListener("click", e => {
-    const b = e.target.closest(".btn-primary");
-    if (!b || b.disabled) return;
-    go("draw");                     /* 첫 판은 뽑기부터 */
+  /* 방 만들기는 설정을 먼저 받는다.
+     **티켓이 없으면 아예 못 연다.** 단추는 로비가 잠가 두지만(lobby.js 의 paintNew),
+     계정을 늦게 읽어 아직 안 잠겼을 수 있으므로 여기서 한 번 더 본다 */
+  document.querySelector("#lobby #btNew").addEventListener("click", e => {
+    const b = e.currentTarget;
+    if (b && b.disabled) return;
+    const a = window.ACCOUNT;
+    if (a && a.loaded && (Number(a.tickets) || 0) <= 0){
+      if (window.__paintNew) window.__paintNew();     /* 왜 막혔는지 설명 줄에 적는다 */
+      return;
+    }
+    openOpts("create");
   });
+  /* ---------- 대기실 시작 단추는 **여기서 화면을 넘기지 않는다** ----------
+
+     예전에는 누르는 즉시 `go("draw")` 를 했다. 그때는 아직 새 판이 없어서
+     뽑기 화면이 **앞 판의 `window.GAME`** 으로 한 번 그려졌다 —
+     그게 2026-09-29 신고 "카드뽑기 들어갈 때 전에 하던 뽑기 잔상이 0.5초 보였다 바뀜" 이다.
+     재현으로 확인: 8인 방(6명)에서 나와 4인 방을 시작하면
+       +5203ms  draw · 자리6 (앞 방 사람들)      ← 잔상
+       +5340ms  draw · 자리4 (지금 방 사람들)
+     폰은 서버 왕복이 느려 0.5초쯤 된다.
+
+     `room.js` 가 `e.stopImmediatePropagation()` 으로 막으려 했지만,
+     그 앞에 `await window.spendTicket()` 이 있다. **기다리는 사이에 이벤트가
+     이미 다 퍼져서** 이 처리기가 벌써 돌아 버린 뒤라 아무 소용이 없었다.
+
+     화면을 넘기는 일은 `flow.js` 의 `openTable()` 이 한다 —
+     **엔진이 새 판의 첫 상태를 받은 뒤에** `goto("draw")` 를 부른다.
+     이 기기 방(봇전)도 서버 대전도 같은 길이라 빠지는 데가 없다.
+     덤으로, 티켓이 없어 시작이 막혔을 때 엉뚱하게 뽑기로 넘어가던 것도 없어진다. */
   /* 뽑기 완료 → 1판 시작 (첫 판은 세금 없음) */
   document.querySelector("#draw #go").addEventListener("click", e => {
     if (!e.currentTarget.disabled){ window.__fresh = true; go("table"); }

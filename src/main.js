@@ -4,7 +4,7 @@ import { MARKUP } from "./screens/_markup.js";
 import { db } from "./lib/firebase.js";
 import * as FR from "./lib/friends.js";
 import { initFriends } from "./lib/friends.js";
-import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft, setAvatar, rewardTicket, TICKET_MAX } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, deleteAccount, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft, syncTickets, setAvatar, rewardTicket, TICKET_MAX } from "./lib/account.js";
 import { showRewardAd } from "./lib/ads.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
@@ -148,6 +148,7 @@ window.signInGuest = signInGuest;
 window.linkGoogle = linkGoogle;
 window.switchToGoogle = switchToGoogle;
 window.signOutNow = signOutNow;
+window.deleteAccount = deleteAccount;
 window.setNickname = setNickname;
 window.__isLocal = isLocal;
 
@@ -182,6 +183,8 @@ window.reportGame = (rank, players, earned, quit) => {
 /* 티켓 한 장. 없으면 false */
 window.spendTicket = () => useTicket();
 window.__ticketLeft = () => ticketLeft();
+/* 시간이 지나 찬 티켓을 화면 값에도 반영한다 (로비가 1초마다 부른다) */
+window.__syncTickets = () => syncTickets();
 
 /* ---------- 대전 연결 (엔진) ---------- */
 /* 흐름은 lib/flow.js 가 다 갖고 있다. 여기서는 설치만 한다.

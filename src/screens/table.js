@@ -29,6 +29,7 @@ export function mount(root){
          need:(c,n)=>'<b>'+c+'장</b>을 <b>'+n+'번 이하</b>로 받으세요',
          emptyPile:"바닥이 비었습니다<br>원하는 카드를 내세요",
          pass:"패스", pick:"대기중", play:n=>n+"장 내기",
+         offline:"연결이 끊겼습니다 · 다시 연결하는 중",
          notTurn:"대기중", mix:"같은 숫자만 함께 낼 수 있습니다",
          cnt:n=>n+"장을 맞춰 주세요", lower:"더 낮은 숫자를 내세요",
          autoOff:"자동 OFF", autoOn:"자동 ON", emoBtn:"이모티콘",
@@ -43,6 +44,7 @@ export function mount(root){
          need:(c,n)=>'Beat with <b>'+c+(c===1?' card':' cards')+'</b> of <b>'+n+' or lower</b>',
          emptyPile:"The pile is empty<br>Play anything you like",
          pass:"Pass", pick:"Waiting", play:n=>"Play "+n,
+         offline:"Connection lost · reconnecting",
          notTurn:"Waiting", mix:"Cards must share one number",
          cnt:n=>"Play exactly "+n, lower:"Play a lower number",
          autoOff:"AUTO OFF", autoOn:"AUTO ON", emoBtn:"EMOJI",
@@ -68,6 +70,16 @@ export function mount(root){
   let offView = null, offEmote = null;
   let lastRound = -1, overSent = false, holdPile = null, ghost = [], ghostSig = "";
   let holdingEnd = false;
+  /* **이 화면이 지금 판을 맡고 있는가.**
+     판에서 나가면 `eng.stop()` 이 `onGone` 으로 알려 준다. 그때 false 가 되고,
+     다음 `boot()` 에서 다시 true 가 된다.
+     이게 없을 때는 나간 뒤에도 구독이 살아 있어서, **새 판의 수를 받아
+     소리를 내고 그림을 그렸다** (2026-09-28 신고: 새 방을 만들었는데 전 게임
+     소리가 들린다 / 뽑기 화면에 앞 방 잔상이 그려진다).
+     구독을 푸는 곳이 `boot()` 뿐이라 다시 들어가기 전까지 아무도 안 풀었다 */
+  let live = false;
+  /* 서버에 붙어 있는가. 끊기면 카드를 내도 안 나가므로 **누르는 것부터 막고 알린다** */
+  let offline = false;
 
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
@@ -157,6 +169,7 @@ export function mount(root){
 
   function apply(v){
     if (!v) return;
+    if (!live) return;          /* 나간 판이다 — 그리지도 울리지도 않는다 */
     /* ---------- 화면은 뒤로 가지 않는다 ----------
        내가 수를 두면 내 화면이 **먼저** 반영한다. 그런데 서버는 그 뒤에도 한동안
        **내 수를 처리하기 전 상태**를 보내온다(그 사이 들어온 봇 수 등). 그걸 그대로
@@ -212,6 +225,8 @@ export function mount(root){
     if (SEATS[0]) SEATS[0].hold = hand;
     finish = v.finish.slice();
     turn = v.turn;
+    /* 옛 서버·이 기기 방은 `connected` 를 안 준다 — 그때는 붙어 있는 것으로 본다 */
+    offline = v.connected === false;
     busy = !v.myTurn;
     /* 서버가 확인해 줄 때까지는 계속 잠가 둔다.
        안 그러면 내 화면 → 서버 확인 사이에 단추가 잠깐 다시 열려
@@ -331,7 +346,13 @@ export function mount(root){
     /* 그때의 장수를 그대로 쓴다. 엔진은 판이 끝나자마자 다음 판을 나누므로
        지금 view 의 장수는 이미 새 판 것이다 — 마지막 남은 사람 손이 갑자기 10장이 됐었다 */
     const lc = lr.counts || [];
-    SEATS = v.seats.map((x, i) => ({
+    /* **그 판을 돌 때의 자리로 그린다.** `v.seats` 는 이미 다음 판 자리(등수대로 다시
+       앉힌 것)라, 그걸로 그리면 마지막 장면에서 **자리가 통째로 튄다**
+       (2026-09-28 신고: "꼴찌가 갑자기 내 오른쪽으로 이동"). 재현으로 확인함.
+       엔진이 `lastRound.seats` 로 그때 자리를 실어 준다. 옛 서버가 안 실어 주면
+       예전처럼 지금 자리로 그린다 — 튀더라도 화면이 비는 것보다는 낫다 */
+    const base = (lr.seats && lr.seats.length === v.seats.length) ? lr.seats : v.seats;
+    SEATS = base.map((x, i) => ({
       n: x.name, c: lc[i] != null ? lc[i] : (i === lr.order[lr.order.length - 1] ? x.c : 0),
       s: "", hold: [], av: x.seat, r: lr.order.indexOf(i),
     }));
@@ -354,9 +375,35 @@ export function mount(root){
     if (eng.engine.auto) setAuto(false);
   }
 
+  /* 판이 접혔다 — 이 화면이 물러난다.
+     구독만 푸는 것으로는 모자란다. 걸어 둔 시계들이 남아서
+     **로비에 나와 있는데도 계속 돌고**(내 차례 표시를 다시 세우는 150ms 되풀이),
+     내 차례 제한이 끝나면 자동 패스 소리까지 낸다 */
+  function standDown(){
+    live = false;
+    if (offView){ offView(); offView = null; }
+    if (offEmote){ offEmote(); offEmote = null; }
+    stopClocks();
+  }
+  function stopClocks(){
+    if (timerId){ clearTimeout(timerId); timerId = null; }
+    if (tickId){ clearInterval(tickId); tickId = null; }
+    if (showId){ clearTimeout(showId); showId = null; }
+    if (bellTimer){ clearTimeout(bellTimer); bellTimer = null; }
+    if (holdPile){ clearTimeout(holdPile); holdPile = null; }
+    if (unlockId){ clearTimeout(unlockId); unlockId = null; }
+    if (flushId){ clearTimeout(flushId); flushId = null; }
+    queued = null;
+    tLeft = 0;
+    sndStop("tick");
+  }
+  eng.onGone(standDown);
+
   function boot(){
+    live = true;
     if (offView) offView();
     if (offEmote) offEmote();
+    stopClocks();
     if (el("auto")) setAuto(false);
     eng.setAuto(false);
     if (holdPile){ clearTimeout(holdPile); holdPile = null; }
@@ -557,6 +604,50 @@ export function mount(root){
      패스 한 번에 네 번까지 다시 만들어지고 있었다(test/passflicker.test.mjs).
      인원이 바뀔 때만 새로 만들고, 그 뒤로는 있는 것을 고쳐 쓴다 */
   let seatNodes = [];
+
+  /* 자리 하나의 속. **한 번만 만들고 그 뒤로는 고쳐 쓴다.**
+     순서는 늘 같게 두고, 12시 자리에서 위아래를 바꾸는 것은 CSS(order)가 한다 —
+     순서를 바꾸려고 다시 만들면 그때마다 프로필이 새로 붙어 깜빡인다 */
+  function seatParts(d){
+    if (d.__parts && d.__parts.av.isConnected) return d.__parts;
+    d.innerHTML =
+      '<span class="seat__avwrap"><span class="seat__av"></span>' +
+        '<span class="seat__tag" style="display:none"></span></span>' +
+      '<span class="seat__n"></span>' +
+      '<div class="fan"></div>' +
+      '<span class="seat__c"></span>';
+    d.__parts = {
+      av: d.querySelector(".seat__av"),
+      tag: d.querySelector(".seat__tag"),
+      nm: d.querySelector(".seat__n"),
+      fan: d.querySelector(".fan"),
+      cnt: d.querySelector(".seat__c"),
+    };
+    return d.__parts;
+  }
+
+  /* 남은 장수 부채. 장수가 바뀔 때만 **모자란 만큼만** 더하거나 뺀다.
+     통째로 다시 만들면 카드 뒷면 그림이 매번 새로 붙는다 */
+  function setFan(box, c){
+    if (box.__c === c) return;
+    box.__c = c;
+    /* 내 자리에는 부채가 없다(-1). 빈 칸으로 두면 22px 자리를 먹어 배치가 틀어진다 */
+    const hide = c < 0 ? "none" : "";
+    if (box.style.display !== hide) box.style.display = hide;
+    if (c < 0) return;
+    const shown = Math.min(c, 7), step = 5;
+    box.style.width = shown ? (13 + (shown - 1) * step) + "px" : "";
+    while (box.children.length > shown) box.removeChild(box.lastChild);
+    while (box.children.length < shown){
+      const i = document.createElement("i");
+      box.appendChild(i);
+    }
+    [...box.children].forEach((el2, k) => {
+      el2.style.left = (k * step) + "px";
+      el2.style.zIndex = k;
+    });
+  }
+
   function renderSeats(){
     syncRing();
     const box = el("seats");
@@ -594,17 +685,27 @@ export function mount(root){
       if (topSeat) d.classList.add("seat--above");
       /* 등수표는 프로필 원을 기준으로 붙여야 자리 배치가 바뀌어도 따라간다.
          12시 자리는 카드가 위로 가서, .seat 기준으로 잡으면 엉뚱한 데 붙는다 */
-      const av = '<span class="seat__avwrap">' +
-        '<span class="seat__av" style="background-image:url(' + A_RINGS.avatar + '),url(' +
-          avtOf(s.av == null ? i : s.av) + ')"></span>' +
-        (tag ? '<span class="seat__tag">' + tag + '</span>' : '') + '</span>';
-      const nm = '<span class="seat__n">' + (s.n || "") + '</span>';
-      const fan = i === 0 ? '' : fanHTML(s.c);
-      const cnt = '<span class="seat__c">' + T[lang].left(s.c) + '</span>';
-      /* **같은 내용이면 손대지 않는다.** 같은 글자를 다시 넣어도
-         그림이 다시 붙어 번쩍인다 */
-      const html = topSeat ? (fan + cnt + av + nm) : (av + nm + fan + cnt);
-      if (d.__html !== html){ d.innerHTML = html; d.__html = html; }
+      /* **자리 속을 통째로 갈아끼우지 않는다.**
+
+         예전에는 자리 하나를 글자 한 덩어리(html)로 만들어 놓고, 그게 다르면
+         `d.innerHTML = html` 로 통째로 바꿨다. 그러면 **장수 한 번 바뀔 때마다
+         프로필 그림도 같이 새로 붙는다** — 폰은 그때마다 그림을 다시 그리므로
+         깜빡인다. 8인 판이 시작될 때 장수가 0에서 20으로 바뀌면서
+         일곱 명이 한꺼번에 깜빡였다(실측: 처음 몇 초에 28번 다시 붙음).
+
+         이제 속은 **한 번만 만들고**, 바뀐 것만 그 자리에서 고친다.
+         프로필 그림은 얼굴이 진짜로 바뀔 때만 건드린다. */
+      const q = seatParts(d);
+      const bg = "url(" + A_RINGS.avatar + "),url(" + avtOf(s.av == null ? i : s.av) + ")";
+      if (q.av.__bg !== bg){ q.av.style.backgroundImage = bg; q.av.__bg = bg; }
+      if (q.tag.textContent !== tag) q.tag.textContent = tag;
+      const tagOn = tag ? "" : "none";
+      if (q.tag.style.display !== tagOn) q.tag.style.display = tagOn;
+      const nmv = s.n || "";
+      if (q.nm.textContent !== nmv) q.nm.textContent = nmv;
+      setFan(q.fan, i === 0 ? -1 : s.c);
+      const cntHtml = T[lang].left(s.c);
+      if (q.cnt.__h !== cntHtml){ q.cnt.innerHTML = cntHtml; q.cnt.__h = cntHtml; }
     });
     const nd = el("need");
     anchorSeats(box, nd ? nd.getBoundingClientRect().top - 4 : 0);
@@ -691,7 +792,7 @@ export function mount(root){
       handNodes = hand.map((c, i) => {
         const s = document.createElement("div");
         s.__i = i;                    /* 몇 번째 칸인가. 칸을 다시 쓰므로 여기서 읽는다 */
-        onTap(s, () => { handTouched(); if (turn !== 0 || busy) return;
+        onTap(s, () => { handTouched(); if (turn !== 0 || busy || offline) return;
           const i = s.__i;                    /* 칸을 다시 쓰므로 번호는 여기서 읽는다 */
           const k = sel.indexOf(i);
           if (k >= 0){ sel.splice(k, 1); draw(); return; }
@@ -721,14 +822,19 @@ export function mount(root){
   function renderBottom(){
     const c = cur();
     const t = T[lang];
-    const mine = turn === 0 && !busy;
+    const mine = turn === 0 && !busy && !offline;
     const who = turn === 0 ? "" : t.theirTurn((SEATS[turn] && SEATS[turn].n) || "") + " \u00B7 ";
     const left = mine && tLeft > 0
       ? ' \u00B7 <span class="count' + (tLeft <= 5 ? " warn" : "") + '">' + t.left2(tLeft) + '</span>'
       : "";
-    el("need").innerHTML = who + (c
-      ? (c.num === 1 ? t.top1 : t.need(c.count, c.num - 1))
-      : (turn === 0 ? t.lead : "")) + left;
+    /* **연결이 끊겼으면 그것부터 알린다.**
+       끊긴 동안에는 카드를 내도 서버에 안 가서 화면이 멈춘 것처럼 보인다.
+       왜 멈췄는지 안 알려주면 앱이 고장 난 줄 안다 */
+    el("need").innerHTML = offline
+      ? '<span class="off">' + t.offline + '</span>'
+      : who + (c
+        ? (c.num === 1 ? t.top1 : t.need(c.count, c.num - 1))
+        : (turn === 0 ? t.lead : "")) + left;
   
     const rn = window.__roundNo || 1;
     const NM = lang === "ko" ? KO_N : EN_N;
@@ -738,7 +844,7 @@ export function mount(root){
     el("round").textContent = t.roundN(rn) + (rname ? " · " + rname : "");
     el("pass").textContent = t.pass;
     const list = sel.map(i => hand[i]);
-    const ok = legal(list) && turn === 0 && !busy;
+    const ok = legal(list) && turn === 0 && !busy && !offline;
     const b = el("play");
     b.disabled = !ok;
     /* 못 누르는 단추에는 안내를 길게 적지 않는다 — 흐려져 있어 어차피 못 누른다.
@@ -749,7 +855,7 @@ export function mount(root){
       : ok ? t.play(list.length)
       : cur() ? t.play(cur().count)
       : t.pick;
-    el("pass").disabled = turn !== 0 || busy || !cur();   /* 선은 패스할 수 없다 */
+    el("pass").disabled = turn !== 0 || busy || offline || !cur();   /* 선은 패스할 수 없다 */
   }
   
   /* 손가락을 대고 있는 동안 다시 그리지 않게 미뤄 봤다가 **되돌렸다.**
@@ -762,6 +868,11 @@ export function mount(root){
     /* 아직 판이 없으면 그릴 것도 없다.
        화면들은 앱이 뜰 때 한꺼번에 붙으므로, 게임 전에도 draw 가 불린다 */
     if (!SEATS.length) return;
+    /* **나간 판은 다시 그리지 않는다.**
+       창 크기가 바뀌거나 말이 바뀌면 여기가 불리는데, 그때마다 죽은 판이
+       옛 손패를 다시 깔았다. 보이지도 않는 화면을 계속 손대는 셈이라
+       "나갔는데 앞 판이 남아 있다" 의 뿌리가 된다 */
+    if (!live) return;
     renderSeats(); renderPile(); renderHand(); renderBottom();
     paintEmotes();   /* 자리를 새로 그렸으니 떠 있던 감정표현을 다시 붙인다 */
     el("seats").querySelectorAll(".seat__tag").forEach(keepInView);   /* 등수·패스 표도 */
@@ -783,17 +894,19 @@ const TURN_SEC = 15;
     if (showId) clearTimeout(showId);
     showId = null;
     el("timer").innerHTML = "<i></i>";
-    el("timer").classList.toggle("mine", turn === 0 && !busy);
+    el("timer").classList.toggle("mine", turn === 0 && !busy && !offline);
     if (timerId) clearTimeout(timerId);
     if (tickId) clearInterval(tickId);
     sndStop("tick");                   /* 내 차례가 끝나면 재촉 소리도 그친다 */
     tLeft = 0;
     /* 화면을 세우는 것이 보이기보다 먼저다. 아직 안 보이면 잠깐 뒤에 다시 본다 */
-    if (turn === 0 && !busy && !onScreen()){
+    if (turn === 0 && !busy && !offline && !onScreen()){
       showId = setTimeout(resetTimer, 150);
       return;
     }
-    if (turn === 0 && !busy){
+    /* **끊긴 동안에는 시계를 돌리지 않는다.** 어차피 아무것도 못 보내는데
+       초만 깎이면 "시간이 다 흘렀는데 아무 일도 없다" 가 된다 */
+    if (turn === 0 && !busy && !offline){
       tLeft = turnSec();
       renderBottom();
       tickId = setInterval(() => {

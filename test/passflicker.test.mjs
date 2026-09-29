@@ -88,7 +88,7 @@ async function ready(){
 }
 
 let tried = 0, flicker = 0, never = 0;
-const delays = [], rebuilds = [], opens = [], why = [];
+const delays = [], rebuilds = [], opens = [], why = [], avNews = [];
 let sendFail = 0, notSent = 0;   /* 검사가 손가락 신호를 못 보낸 횟수 */
 for (let round = 1; round <= 12 && tried < 3; round++){
   if (await ready() === false) break;
@@ -152,6 +152,22 @@ for (let round = 1; round <= 12 && tried < 3; round++){
       ms.forEach(m => { if (m.removedNodes && m.removedNodes.length) window.__rebuilds++; });
     });
     window.__mo.observe(document.querySelector("#table #seats"), { childList: true });
+
+    /* **자리 요소가 그대로여도 그 안을 갈아끼우면 프로필이 다시 붙는다.**
+       위 감시는 자리(.seat) 자체가 없어질 때만 센다. 자리는 그대로 두고
+       `innerHTML` 만 바꾸면 안 잡힌다 — 2026-09-28 에 실제로 그렇게 새고 있었다.
+       장수가 한 번 바뀔 때마다 프로필이 새로 붙어, 8인 판이 시작될 때
+       일곱 명이 한꺼번에 깜빡였다. 그래서 프로필 자체가 새로 생기는 것을 따로 센다 */
+    window.__avNew = 0;
+    if (window.__mo2) window.__mo2.disconnect();
+    window.__mo2 = new MutationObserver(ms => {
+      ms.forEach(m => m.addedNodes && m.addedNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        if ((n.classList && (n.classList.contains("seat__av") || n.classList.contains("seat__avwrap")))
+            || (n.querySelector && n.querySelector(".seat__av"))) window.__avNew++;
+      }));
+    });
+    window.__mo2.observe(document.querySelector("#table #seats"), { childList: true, subtree: true });
   });
   const trickAt = await page.evaluate(() => window.__eng?.view?.trickNo);
 
@@ -186,6 +202,7 @@ for (let round = 1; round <= 12 && tried < 3; round++){
     if (openAt >= 0) opens.push(openAt);
   }
   rebuilds.push(await page.evaluate(() => window.__rebuilds));
+  avNews.push(await page.evaluate(() => window.__avNew));
   /* **안 떴으면 그 자리에서 까닭을 남긴다.**
      "눌렀는데 패스 자체가 안 된 것"과 "패스는 됐는데 표시가 안 뜬 것"은 다른 문제다.
      엔진이 적어 둔 수 기록이 유일한 정답지다 */
@@ -286,6 +303,8 @@ if (opens.length){
 }
 check("자리 요소를 다시 만들지 않는다", rebuilds.every(n => n === 0),
       "패스 뒤 1.6초 동안 " + rebuilds.join(" / ") + "번");
+check("**프로필 그림을 다시 붙이지 않는다**", avNews.every(n => n === 0),
+      "패스 뒤 1.6초 동안 " + avNews.join(" / ") + "번");
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 shut(srv, browser);

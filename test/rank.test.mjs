@@ -95,5 +95,14 @@ await wait(100);
 check("주간 탭이 선택된다",
       q('#rkTabs button[data-k="week"]').getAttribute("aria-pressed") === "true");
 
+/* 완주 실패(도중에 나감)는 그때까지 쌓은 점수의 **절반**만 준다.
+   나가기 단추가 이 값을 실제로 기록하는지는 `leavegame.test.mjs` 가 본다 */
+check("완주하면 쌓은 점수를 그대로 받는다", B.acct.scoreFor(0, 4, 300, false) === 300,
+      String(B.acct.scoreFor(0, 4, 300, false)));
+check("**도중에 나가면 절반만 받는다**", B.acct.scoreFor(0, 4, 300, true) === 150,
+      String(B.acct.scoreFor(0, 4, 300, true)));
+check("홀수는 내림", B.acct.scoreFor(0, 4, 301, true) === 150,
+      String(B.acct.scoreFor(0, 4, 301, true)));
+
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);

@@ -107,6 +107,8 @@
   border:none !important;box-shadow:none !important;border-radius:50%;
   display:block;flex:none;overflow:visible}
 #tax .seat__av--empty{background-size:100% 100% !important;background-color:transparent !important}
-/* 세금 화면에 올라오는 카드도 바닥 카드와 같은 크기다 — 이름을 같이 줄인다 */
-#tax .card__name{ font-size: calc(var(--w) * .068) }
-#tax .card.is-joker .card__name{ font-size: calc(var(--w) * .058) }
+/* **세금 화면 카드에는 이름을 넣지 않는다.**
+   여기 카드는 바닥패와 같은 크기(54px)라 양옆 숫자를 빼면 이름 자리가 없다.
+   글씨를 줄이면 폰이 도로 키워서 넘쳐 나왔다(base.css 의 글씨 확대 참고).
+   숫자만으로 충분하다. 이름은 손패와 규칙 보기에만 둔다 */
+#tax .card__name{ display:none }
