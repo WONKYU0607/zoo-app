@@ -4,7 +4,15 @@
    - 이름은 names/{소문자이름} 문서를 선점하는 방식으로 중복을 막는다.
      두 사람이 같은 순간에 같은 이름을 잡아도 한 명만 성공한다
    - 점수는 절대 깎이지 않는다. 상위 절반만 얻는다
-   - 티어는 1000점 단위 숫자 */
+   - 티어는 1000점 단위 숫자
+
+   **점수·판 수·티켓은 앱이 적지 않는다(2026-09-30).**
+   예전에는 여기서 Firestore 에 직접 적었고, 개발자도구로 숫자를 바꾸거나 티켓 빼기를
+   건너뛰면 그대로 통했다. 이제는 게임 서버가 적는다(server/accounts.js):
+     점수  판이 끝나면 서버가 판 기록을 보고 적는다
+     티켓  방장이 시작을 누르면 서버가 뺀다 / 광고는 AdMob 이 서버로 직접 알려 온 것만
+   보안 규칙도 앱이 이 칸들을 못 고치게 막는다. 앱은 **읽기만** 하고(refreshAccount),
+   화면에 보이는 티켓 수는 서버와 같은 식(refill)으로 계산만 한다 */
 import { ready, auth, db } from "./firebase.js";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInAnonymously, signOut,
          linkWithPopup, linkWithRedirect, getRedirectResult, signInWithCredential, linkWithCredential,
@@ -12,7 +20,7 @@ import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInAnonymou
          reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction,
          collection, query, where, orderBy, limit, getDocs, getCountFromServer,
-         increment, serverTimestamp } from "firebase/firestore";
+         serverTimestamp } from "firebase/firestore";
 import { wipeMine } from "./friends.js";
 
 /* 티켓. account 보다 **먼저** 선언해야 한다 —
@@ -31,11 +39,15 @@ export const account = {
   guest: false,
 };
 
-/* 이번 주 / 이번 달 딱지. 주는 월요일 시작 */
+/* 이번 주 / 이번 달 딱지. 주는 월요일 시작.
+   **한국 시각(KST)으로 자른다** — 서버(accounts.js)가 같은 식으로 적는다.
+   기기 시각으로 자르면 외국에 있는 사람은 월요일 아침에 지난주 랭킹을 본다 */
 export function periodKeys(at){
-  const d = at ? new Date(at) : new Date();
-  const mo = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  /* at 은 숫자(밀리초)·Date 둘 다 받는다 — Date 에 바로 숫자를 더하면 글자 잇기가 된다 */
+  const base = at ? +new Date(at) : Date.now();
+  const d = new Date(base + 9 * 3600 * 1000);   /* KST 벽시계를 UTC 칸으로 읽는다 */
+  const mo = d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0");
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const day = (t.getUTCDay() + 6) % 7;            /* 월=0 */
   t.setUTCDate(t.getUTCDate() - day + 3);         /* 그 주 목요일 */
   const year = t.getUTCFullYear();
@@ -58,12 +70,14 @@ export function scoreFor(rank, n, earned, quit){
 
 
 /* 마지막으로 기록한 시각부터 지난 만큼 채운다.
-   최대치를 넘지 않고, 남은 시간을 같이 돌려준다. */
-function refill(tickets, at){
+   최대치를 넘지 않고, 남은 시간을 같이 돌려준다.
+   **서버(accounts.js 의 refill)와 같은 식이다** — 화면 숫자와 서버가 아는 숫자가 같아야 한다 */
+export function refill(tickets, at){
   const now = Date.now();
-  let t = typeof tickets === "number" ? tickets : TICKET_MAX;
+  let t = typeof tickets === "number" && Number.isFinite(tickets) ? Math.floor(tickets) : TICKET_MAX;
   let last = typeof at === "number" && at > 0 ? at : now;
   if (t >= TICKET_MAX) return { tickets: TICKET_MAX, at: now, left: 0 };
+  if (t < 0) t = 0;
   const gained = Math.floor((now - last) / TICKET_MS);
   if (gained > 0){
     t = Math.min(TICKET_MAX, t + gained);
@@ -82,13 +96,12 @@ export function ticketLeft(){
 
 /* **시간이 지나 찬 티켓을 화면에도 반영한다.**
 
-   `refill()` 은 값을 계산만 하고 `account` 에 안 적는다. 쓸 때(useTicket)나
-   받을 때(rewardTicket)만 적어 넣는다. 그래서 로비를 켜 둔 채 30분이 지나도
-   위쪽 티켓 숫자가 0 그대로였다 — 방 만들기를 티켓으로 잠그면 그게 그대로
+   `refill()` 은 값을 계산만 하고 `account` 에 안 적는다. 그래서 로비를 켜 둔 채
+   30분이 지나도 위쪽 티켓 숫자가 0 그대로였다 — 방 만들기를 티켓으로 잠그면 그게 그대로
    "30분이 지났는데도 안 풀린다" 가 된다.
 
    초읽기를 그리는 쪽이 1초마다 불러 준다. **달라졌을 때만** 알린다.
-   디스크(Firestore)에는 안 적는다 — 쓸 때·받을 때 어차피 다시 계산한다 */
+   디스크(Firestore)에는 안 적는다 — 서버가 쓸 때·줄 때 같은 식으로 다시 계산한다 */
 export function syncTickets(){
   if (account.tickets >= TICKET_MAX) return account.tickets;
   const r = refill(account.tickets, account.ticketAt);
@@ -212,7 +225,24 @@ async function claimName(uid, wanted){
       if (e.message !== "taken") throw e;
     }
   }
-  return base + Math.floor(Math.random() * 9000 + 1000);
+  /* 40개가 다 찼으면 뒤에 네 자리 숫자를 붙여 **잡아 본다.**
+     예전에는 잡지 않은 이름을 그냥 돌려줬는데, 이제 보안 규칙이 "내가 잡은 이름만" 계정에
+     적게 해서 그 이름으로는 계정을 못 만든다 */
+  for (let k = 0; k < 5; k++){
+    const tryName = base + Math.floor(Math.random() * 9000 + 1000);
+    const ref = doc(db, "names", key(tryName));
+    try {
+      await runTransaction(db, async tx => {
+        const got = await tx.get(ref);
+        if (heldByOther(got, uid)) throw new Error("taken");
+        tx.set(ref, { uid, name: tryName });
+      });
+      return tryName;
+    } catch(e){
+      if (e.message !== "taken") throw e;
+    }
+  }
+  throw new Error("이름을 정하지 못했습니다");
 }
 
 /* 별명 바꾸기. 성공하면 새 이름, 이미 쓰는 이름이면 null */
@@ -277,6 +307,9 @@ const CONFLICT = new Set([
 ]);
 
 async function markLinked(user){
+  /* **표를 새로 받은 뒤에 적는다.** 보안 규칙은 "구글이 이어진 표" 일 때만 게스트 표시를 끄게 한다.
+     잇기 직후의 표는 옛것(게스트)일 수 있다 */
+  try { await user.getIdToken(true); } catch(e){}
   try { await updateDoc(doc(db, "users", user.uid), { guest: false }); } catch(e){}
   account.guest = false;
   if (user.photoURL) account.photo = user.photoURL;
@@ -393,6 +426,7 @@ async function loadProfile(user){
     } else {
       name = await claimName(user.uid, "새사용자");
     }
+    /* 처음 만들 때만 앱이 적는다 — 보안 규칙이 값을 못박는다(점수 0·판 0·티켓 3·얼굴 0) */
     const fresh = { name, score: 0, games: 0, tickets: TICKET_MAX,
                     ticketAt: Date.now(), createdAt: serverTimestamp(),
                     guest, needName: !guest, avatar: 0 };
@@ -402,11 +436,9 @@ async function loadProfile(user){
     const d = snap.data();
     Object.assign(account, d);
     account.needName = Boolean(d.needName);
-    /* 지난 시간만큼 티켓을 채운다 */
+    /* 지난 시간만큼 채운 티켓을 **화면에만** 보인다. 적지는 않는다 —
+       티켓은 서버만 적는다. 서버도 쓸 때 같은 식으로 채워서 계산한다 */
     const r = refill(d.tickets, d.ticketAt);
-    if (r.tickets !== d.tickets || !d.ticketAt){
-      await updateDoc(ref, { tickets: r.tickets, ticketAt: r.at });
-    }
     account.tickets = r.tickets;
     account.ticketAt = r.at;
   }
@@ -517,35 +549,43 @@ export function watchAuth(){
   });
 }
 
-/* 한 게임(정해진 판 수)이 끝났을 때.
-   rank 는 0부터 (0 이 1등), earned 는 게임 안에서 쌓은 누적 점수,
-   quit 는 완주하지 못하고 나갔는지 */
-export async function finishGame(rank, players, earned, quit){
-  const gained = scoreFor(rank, players, earned, quit);
-  if (!account.signedIn || gained <= 0) return gained;
-  account.score += gained;
-  account.games += 1;
-  account.tier = tierOf(account.score);
-
-  /* 주간·월간은 딱지가 바뀌면 0부터 다시 센다 */
-  const k = periodKeys();
-  const patch = {
-    score: increment(gained), games: increment(1), lastPlayed: serverTimestamp(),
-    guest: Boolean(account.guest),
-  };
-  patch.wkKey = k.wk;
-  patch.moKey = k.mo;
-  patch.wk = account.wkKey === k.wk ? increment(gained) : gained;
-  patch.mo = account.moKey === k.mo ? increment(gained) : gained;
-  account.wk = (account.wkKey === k.wk ? (account.wk || 0) : 0) + gained;
-  account.mo = (account.moKey === k.mo ? (account.mo || 0) : 0) + gained;
-  account.wkKey = k.wk; account.moKey = k.mo;
-
-  await updateDoc(doc(db, "users", account.uid), patch);
+/* ---------- 서버가 적은 값을 다시 읽는다 ----------
+   점수·판 수·티켓은 서버가 적으므로, 적힐 만한 때(시작한 뒤·게임이 끝난 뒤·광고를 본 뒤)
+   계정 문서를 다시 읽어 화면에 반영한다. 이름·얼굴은 앱이 바꾸는 값이라 여기서 덮지 않는다
+   (고르는 도중에 옛 값으로 되돌아가면 안 된다) */
+const SERVER_FIELDS = ["score", "games", "tickets", "ticketAt", "wk", "mo", "wkKey", "moKey"];
+export async function refreshAccount(){
+  if (!ready || !account.uid) return account;
+  const snap = await getDoc(doc(db, "users", account.uid));
+  if (!snap.exists()) return account;
+  const d = snap.data() || {};
+  for (const k of SERVER_FIELDS) if (d[k] !== undefined) account[k] = d[k];
+  const r = refill(d.tickets, d.ticketAt);
+  account.tickets = r.tickets;
+  account.ticketAt = r.at;
+  account.tier = tierOf(account.score || 0);
   window.dispatchEvent(new Event("accountchange"));
-  return gained;
+  return account;
 }
 
+/* 서버에 보낼 로그인 표. 방에 앉을 때 서버가 이걸로 누구인지 가린다(점수·티켓을 적을 계정) */
+export async function idToken(){
+  if (!ready || !auth || !auth.currentUser) return null;
+  try { return await auth.currentUser.getIdToken(); } catch(e){ return null; }
+}
+
+/* 한 게임(정해진 판 수)이 끝났을 때.
+   rank 는 0부터 (0 이 1등), earned 는 게임 안에서 쌓은 누적 점수,
+   quit 는 완주하지 못하고 나갔는지.
+   **점수는 서버가 적는다** — 여기서는 얼마나 받을지 계산해 돌려주고,
+   서버가 적을 때쯤 계정을 다시 읽어 화면을 맞춘다 */
+export async function finishGame(rank, players, earned, quit){
+  const gained = scoreFor(rank, players, earned, quit);
+  if (!account.signedIn) return gained;
+  /* 서버는 판이 끝나는 순간(또는 나가는 순간) 적는다. 결과 화면이 뜰 즈음이면 대개 적혀 있다 */
+  for (const ms of [1500, 5000, 12000]) setTimeout(() => { refreshAccount().catch(() => {}); }, ms);
+  return gained;
+}
 /* ---------- 랭킹 ---------- */
 /* 게스트는 목록에서 뺀다. 거르는 것은 받아온 뒤에 한다 —
    그래야 색인(index)을 하나 덜 만들어도 된다 */
@@ -590,43 +630,27 @@ export async function myRank(kind = "all"){
   } catch(e){ return null; }
 }
 
-export async function useTicket(){
-  if (!account.signedIn) return false;
+/* 시작할 수 있을 만큼 티켓이 있는가 — **화면에서 미리 막는 용도일 뿐**이다.
+   진짜로 빼는 것은 서버다(시작을 누르면 서버가 방장 티켓을 한 장 뺀다. 없으면 402) */
+export function hasTicket(){
+  if (!account.signedIn) return true;          /* 로그인 전(검사·개발)에는 서버가 가린다 */
   const r = refill(account.tickets, account.ticketAt);
-  account.tickets = r.tickets; account.ticketAt = r.at;
-  if (account.tickets <= 0) return false;
-  /* 가득 찬 상태에서 한 장을 쓰면 그때부터 다시 시간을 잰다 */
-  const wasFull = account.tickets >= TICKET_MAX;
-  account.tickets -= 1;
-  if (wasFull) account.ticketAt = Date.now();
-  await updateDoc(doc(db, "users", account.uid),
-    { tickets: account.tickets, ticketAt: account.ticketAt });
-  window.dispatchEvent(new Event("accountchange"));
-  return true;
+  return r.tickets > 0;
 }
 
-/* 광고를 끝까지 봤을 때 티켓 1장.
-   **시간이 지나 차 있어야 할 몫을 먼저 계산한 뒤** 더한다 — 안 그러면
-   차 있어야 할 티켓이 덜 잡혀서 광고를 보고도 손해를 본다.
-   보유 3장을 넘지 않는다. 이미 3장이면 false (화면은 그때 단추를 잠가 둔다) */
-export async function rewardTicket(){
+/* 광고를 끝까지 봤다 — **티켓은 AdMob 이 서버로 알려 와서 서버가 준다**(서버 측 확인).
+   앱은 그게 계정에 적힐 때까지 계정을 몇 번 다시 읽어 본다.
+   돌려주는 값: true(들어왔다) / false(시간 안에 안 들어왔다 — 늦게라도 들어오면 로비가 다시 읽는다) */
+export async function waitReward(before, maxMs = 25000){
   if (!account.signedIn) return false;
-  const r = refill(account.tickets, account.ticketAt);
-  account.tickets = r.tickets; account.ticketAt = r.at;
-  if (account.tickets >= TICKET_MAX) return false;
-  account.tickets += 1;
-  /* 가득 차면 시간 재기를 멈춘다(다음에 한 장 쓸 때부터 다시 잰다) */
-  if (account.tickets >= TICKET_MAX) account.ticketAt = Date.now();
-  await updateDoc(doc(db, "users", account.uid),
-    { tickets: account.tickets, ticketAt: account.ticketAt });
-  window.dispatchEvent(new Event("accountchange"));
-  return true;
-}
-
-export async function addTicket(n = 1){
-  if (!account.signedIn) return account.tickets;
-  account.tickets = Math.min(TICKET_MAX, account.tickets + n);
-  await updateDoc(doc(db, "users", account.uid), { tickets: account.tickets });
-  window.dispatchEvent(new Event("accountchange"));
-  return account.tickets;
+  const was = typeof before === "number" ? before : refill(account.tickets, account.ticketAt).tickets;
+  const t0 = Date.now();
+  while (Date.now() - t0 < maxMs){
+    await new Promise(r => setTimeout(r, 1500));
+    try { await refreshAccount(); } catch(e){}
+    if (account.tickets > was || account.tickets >= TICKET_MAX) return true;
+  }
+  /* 늦게 온 것도 반영되게 한 번 더 */
+  setTimeout(() => { refreshAccount().catch(() => {}); }, 60000);
+  return false;
 }

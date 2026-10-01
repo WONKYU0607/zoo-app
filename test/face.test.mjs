@@ -425,7 +425,10 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
         /w\.dataset\.val !== String\(val\)/.test(ds));
 
   const gs2 = readFileSync(join(ROOT, "src/lib/game.js"), "utf8");
-  check("엔진에 뽑기 단계가 있다", /draw: \{[\s\S]{0,400}takeCard/.test(gs2));
+  /* 글자 모양이 아니라 엔진 자체를 본다 — 설명 주석이 길어져 글자 거리 검사가 거짓 실패했다(2026-09-30) */
+  const { ZooPresident: ZP } = await import("../src/lib/game.js");
+  const tk = ZP.phases && ZP.phases.draw && ZP.phases.draw.turn.stages.picking.moves.takeCard;
+  check("엔진에 뽑기 단계가 있다", Boolean(tk) && typeof (tk.move || tk) === "function");
   check("고른 결과로 순서를 정한다", /drawOrder\(G\.draw, ctx\.numPlayers\)/.test(gs2));
 
   /* 진짜로 돌려 본다 — 낮은 숫자를 집은 사람이 선이 되는가 */

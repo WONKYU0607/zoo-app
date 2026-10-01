@@ -65,6 +65,12 @@ async function toTable(cap){
   await page.evaluate(async () => { await window.__createRoom(); });
   await page.evaluate(() => window.__goto("room"));
   await nap(900);
+  /* 서버는 4명이 앉기 전에는 시작을 받지 않는다(방장 화면의 단추도 잠겨 있다).
+     예전 서버는 이 확인이 빠져 있어서 봇이 덜 앉은 채로도 시작됐다 */
+  for (let k = 0; k < 80; k++){
+    if (await page.evaluate(() => ((window.__opts || {}).seated || 0) >= 4)) break;
+    await nap(250);
+  }
   await page.evaluate(async () => { await window.__startRound(); });
   for (let k = 0; k < 60; k++){
     if (await now() === "table") break;
@@ -139,6 +145,10 @@ await page.evaluate(() => { window.__opts = { cap: 4, seated: 1, rounds: 3, tax:
 await page.evaluate(async () => { await window.__createRoom(); });
 await page.evaluate(() => window.__goto("room"));
 await nap(900);
+for (let k = 0; k < 80; k++){                   /* 4명이 앉을 때까지 (위 toTable 설명) */
+  if (await page.evaluate(() => ((window.__opts || {}).seated || 0) >= 4)) break;
+  await nap(250);
+}
 const beforeStart = await page.evaluate(() => window.__redraw);
 await page.evaluate(async () => { await window.__startRound(); });
 /* 판을 세운 직후 — **뽑기 화면이 자기 boot 으로 다시 서기 전**이다 */

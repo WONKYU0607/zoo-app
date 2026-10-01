@@ -4,10 +4,15 @@ import "../styles/result.css";
 
 export function mount(root){
 
-  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
-  function avtOf(seat){
+  /* 화면 자리 → 그 사람이 고른 얼굴.
+     GAME.avatars 는 **엔진 자리** 순서다. 이 화면의 줄은 화면 자리이므로
+     nowFaces(화면 자리 → 엔진 자리)로 한 번 옮겨야 한다.
+     예전에는 화면 자리로 바로 꺼내서, 나 말고는 남의 얼굴이 붙었다 */
+  function avtOf(pos){
     const g = window.GAME || {};
     const a = g.avatars || [];
+    const f = g.nowFaces;
+    const seat = f && f[pos] != null ? f[pos] : pos;
     return avtFile(Number(a[seat]) || 0);
   }
   const document = scoped(root);
@@ -23,7 +28,7 @@ export function mount(root){
          subF:n=>'<b>'+n+'</b>님이 가장 높은 점수로 이겼습니다.',
          colP:"등수", colG:"이번 판", colT:"총점",
          next:"다음 판", quit:"나가기",
-         tie:"동점입니다. 사자를 더 많이 한 분이 앞섭니다." },
+         tie:"동점이면 1등을 더 많이 한 분, 그것도 같으면 마지막 판 등수가 높은 분이 앞섭니다." },
     en:{ kickR:n=>"Round "+n, kickF:"Final",
          titleR:"This round", titleF:"Winner",
          subR:(a,b)=>a+" rounds played, "+b+" to go.",
@@ -31,7 +36,7 @@ export function mount(root){
          subF:n=>'<b>'+n+'</b> finishes with the highest score.',
          colP:"Place", colG:"Round", colT:"Total",
          next:"Next round", quit:"Leave",
-         tie:"Tied on points. More Lion finishes ranks higher." }
+         tie:"Ties go to more 1st places, then the better finish in the last round." }
   };
   let lang = window.__lang || "ko";
   
@@ -55,17 +60,25 @@ export function mount(root){
     window.__resultFinal = last;
     const t = T[lang];
   
-    /* 최종은 총점순, 중간은 이번 판 등수순 */
+    /* 최종은 총점순, 중간은 이번 판 등수순.
+       **최종 동점은 모든 기기에서 같은 답이 나오게 가른다** — 1등 한 횟수, 그다음 마지막 판 등수.
+       예전에는 "나" 를 맨 앞에 둔 채 정렬해서 동점인 사람마다 자기가 우승으로 보였다 */
+    const lions = G.lions || [];
+    const lastPos = i => { const k = finish.indexOf(i); return k < 0 ? 99 : k; };
     const rows = last
-      ? names.map((_, i) => i).sort((a, b) => (score[b] || 0) - (score[a] || 0))
+      ? names.map((_, i) => i).sort((a, b) =>
+          ((score[b] || 0) - (score[a] || 0)) ||
+          ((lions[b] || 0) - (lions[a] || 0)) ||
+          (lastPos(a) - lastPos(b)))
       : finish.slice();
+    const tied = last && rows.length > 1 && (score[rows[0]] || 0) === (score[rows[1]] || 0);
   
     el("kicker").textContent = last ? t.kickF : t.kickR(played);
     el("title").innerHTML = last
       ? '<span class="crown">\u265B</span><br>' + t.titleF
       : t.titleR;
     el("sub").innerHTML = last
-      ? t.subF(names[rows[0]] || "")
+      ? t.subF(names[rows[0]] || "") + (tied ? "<br>" + t.tie : "")
       : (played + 1 > rounds ? t.subLast : t.subR(played, rounds - played));
     el("legend").innerHTML = '<span>' + t.colP + '</span><span>' + t.colG + ' · ' + t.colT + '</span>';
   

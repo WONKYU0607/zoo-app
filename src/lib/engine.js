@@ -27,6 +27,7 @@ export const engine = {
      봇은 남이라 생각하는 척해야 하지만, 내 자리는 그럴 이유가 없다.
      3초로 두었더니 서버 왕복까지 붙어 4~5초씩 걸렸다 */
   autoMs: 1000,
+  onAutoMine: null,    /* 자동치기가 내 자리를 둘 때 부른다 — 서버에 "여기 있다" 를 알리는 데 쓴다 */
   moveLog: [],         /* 실제로 둔 수 [{no,k,by}] — 검사용 정답지 */
   lastLogged: 0,
 };
@@ -188,6 +189,9 @@ function botPick(hand, pile){
 }
 
 const worstFirst = (a, b) => (isJoker(b) ? 99 : b) - (isJoker(a) ? 99 : a);
+/* 사람 자리(자동치기를 켠 내 자리)를 대신해 세금을 낼 때 — **카멜레온은 빼고 큰 숫자부터**
+   (2026-09-30 결정). 봇은 위 worstFirst 그대로 */
+const humanGiveFirst = (a, b) => (isJoker(b) ? -1 : b) - (isJoker(a) ? -1 : a);
 
 /* 봇 차례면 잠시 뒤에 둔다. 사람 차례면 아무것도 안 한다 */
 /* 이 자리를 내가 대신 둬 주는가 — 봇이거나, 자동치기를 켠 내 자리 */
@@ -218,9 +222,9 @@ function scheduleBot(){
       if (d2.took[seat] != null){ push(); return; }
       const free = d2.by.map((v, i) => (v == null ? i : -1)).filter(i => i >= 0);
       if (!free.length) return;
-      engine.client.updatePlayerID(String(seat));
+      asSeat(engine.client, String(seat));
       engine.client.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
-      engine.client.updatePlayerID(engine.myID);
+      asSeat(engine.client, engine.myID);
       push();
     }, Math.min(engine.botMs, 800));   /* 뽑기는 기다릴 것이 없다. 너무 느리면 답답하다 */
     return;
@@ -243,21 +247,22 @@ function scheduleBot(){
       if (g !== gen) return;
       const s2 = raw(); if (!s2 || s2.ctx.phase !== "tax") { push(); return; }
       if (revTodo && s2.G.revolution && !s2.G.revDecided){
-        engine.client.updatePlayerID(String(s2.G.revolution.seat));
+        asSeat(engine.client, String(s2.G.revolution.seat));
         engine.client.moves.declare();          /* 봇은 늘 이득을 택한다 */
       }
       const s3 = raw();
       if (s3 && s3.ctx.phase === "tax" && s3.G.revDecided && !s3.G.taxCancelled && s3.G.taxOn){
         for (const seat of [s3.G.taxOrder[0], s3.G.taxOrder[1]]){
           if (!actsFor(seat) || s3.G.given[seat] !== undefined) continue;
-          const hand = (s3.G.hands[seat] || []).slice().sort(worstFirst);
+          const hand = (s3.G.hands[seat] || []).slice()
+            .sort(String(seat) === engine.myID ? humanGiveFirst : worstFirst);
           const need = seat === s3.G.taxOrder[0] ? 2 : 1;
           if (hand.length < need) continue;
-          engine.client.updatePlayerID(String(seat));
+          asSeat(engine.client, String(seat));
           engine.client.moves.give(hand.slice(0, need));
         }
       }
-      engine.client.updatePlayerID(engine.myID);
+      asSeat(engine.client, engine.myID);
       push();
     }, 700);
     return;
@@ -303,10 +308,14 @@ function scheduleBot(){
     if (now !== Number(s2.ctx.currentPlayer)) { push(); return; }
     if (!actsFor(now)) { push(); return; }
     const mv = botPick(s2.G.hands[now] || [], s2.G.pile);
-    engine.client.updatePlayerID(String(now));
+    asSeat(engine.client, String(now));
     if (mv) engine.client.moves.play(mv.num, mv.count);
     else    engine.client.moves.pass();
-    engine.client.updatePlayerID(engine.myID);
+    asSeat(engine.client, engine.myID);
+    /* 서버 대전에서 자동치기로 **내 자리**를 뒀으면 "여기 있다" 고 알린다 (flow 가 서버에 보낸다) */
+    if (now === Number(engine.myID) && engine.mode !== "local" && typeof engine.onAutoMine === "function"){
+      try { engine.onAutoMine(); } catch(e){}
+    }
     push();
   /* 내 자리는 생각하는 척할 이유가 없어 짧게 간다.
      다만 **봇보다 오래 기다리지는 않는다** — 검사처럼 봇을 아주 빠르게 맞춰 둔
@@ -352,6 +361,12 @@ export function startLocal({ numPlayers = 6, opts = {}, names = [], myID = "0", 
   const game = Object.assign({}, ZooPresident, {
     setup: (ctx) => ZooPresident.setup(ctx, opts),
   });
+  /* 검사에서만: 패를 섞는 씨앗을 고정해 나누는 패가 늘 같게 한다(혁명이 나는 판을 일부러 만든다).
+     배포판에는 이 통로가 없다 */
+  /* `import.meta.env &&` — 노드에서 이 파일을 바로 불러 쓰는 검사도 있다(거기엔 env 가 없다).
+     빌드에서는 VITE_TEST_HOOKS 가 값으로 바뀌어 배포판에서는 이 줄이 통째로 빠진다 */
+  if (import.meta.env && import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && globalThis.__ZOO_SEED)
+    game.seed = String(globalThis.__ZOO_SEED);
   attach(Client({ game, numPlayers, playerID: engine.myID }));
 }
 
@@ -396,6 +411,19 @@ export function stop(){
   goneFns.slice().forEach(f => { try { f(); } catch(e){ console.error(e); } });
 }
 
+/* ---------- 누구 자리로 둘지 ----------
+   **자리가 이미 그 사람이면 바꾸지 않는다.**
+   boardgame.io 의 updatePlayerID 는 서버 대전에서 **판 전체를 다시 받아 오라(sync)** 고
+   서버에 요청한다. 수마다 이걸 불러서, 내 수를 내 화면에 먼저 반영한 직후
+   "수 전의 판" 이 도착해 **내 수가 잠깐 지워졌다.** 그 틈에 세금 화면이 "아직 안 냈다" 고
+   보고 가장 나쁜 카드(카멜레온)를 대신 내 버려, **사람이 고른 세금 카드가 바뀌었다**
+   (2026-09-30 사람 4명 판에서 재현). 서버 대전에서 내 창의 자리는 늘 나라서
+   바꿀 일이 없다. 이 기기 방은 봇 자리로 바꿔 두어야 하므로 그때만 바꾼다 */
+function asSeat(c, id){
+  const s = String(id);
+  if (c && c.playerID !== s) c.updatePlayerID(s);
+}
+
 /* ---------- 내 수 ---------- */
 /* 자리 번호를 붙이지 않는다. 엔진이 내가 누구인지 안다 */
 
@@ -403,7 +431,7 @@ export function stop(){
 export function takeCard(idx){
   const c = engine.client;
   if (!c) return;
-  c.updatePlayerID(engine.myID);
+  asSeat(c, engine.myID);
   c.moves.takeCard(idx);
 }
 
@@ -420,42 +448,42 @@ export function autoDraw(){
     if (s2.G.draw.took[seat] != null) continue;
     const free = s2.G.draw.by.map((v, i) => (v == null ? i : -1)).filter(i => i >= 0);
     if (!free.length) break;
-    c.updatePlayerID(String(seat));
+    asSeat(c, String(seat));
     c.moves.takeCard(free[Math.floor(Math.random() * free.length)]);
   }
-  c.updatePlayerID(engine.myID);
+  asSeat(c, engine.myID);
   push();
 }
 
 export function play(num, count){
   if (!engine.client) return false;
-  engine.client.updatePlayerID(engine.myID);
+  asSeat(engine.client, engine.myID);
   engine.client.moves.play(num, count);
   return true;
 }
 export function passTurn(){
   if (!engine.client) return false;
-  engine.client.updatePlayerID(engine.myID);
+  asSeat(engine.client, engine.myID);
   engine.client.moves.pass();
   return true;
 }
 /* 혁명 선언 / 안 하고 넘기기 */
 export function declareRev(){
   if (!engine.client) return;
-  engine.client.updatePlayerID(engine.myID);
+  asSeat(engine.client, engine.myID);
   engine.client.moves.declare();
   push();
 }
 export function passRev(){
   if (!engine.client) return;
-  engine.client.updatePlayerID(engine.myID);
+  asSeat(engine.client, engine.myID);
   engine.client.moves.passRev();
   push();
 }
 
 export function give(cards){
   if (!engine.client) return false;
-  engine.client.updatePlayerID(engine.myID);
+  asSeat(engine.client, engine.myID);
   engine.client.moves.give(cards);
   return true;
 }

@@ -37,6 +37,20 @@ export function checkEnv(text){
   return out;
 }
 
+/* **막지는 않고 알리기만** 하는 것. 비공개 테스트 중에는 일부러 이렇게 둘 수 있다 */
+export function warnEnv(text){
+  const out = [];
+  const has = name => String(text || "").split(/\r?\n/).some(line => {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
+    return m && m[1] === name && m[2].trim().replace(/^["']|["']$/g, "");
+  });
+  /* 광고 보상 티켓은 AdMob 이 게임 서버로 알려 와야 들어온다(서버 측 확인).
+     구글 공개 시험용 광고 단위는 우리 AdMob 콘솔 것이 아니라 그 알림이 안 온다 */
+  if (!has("VITE_AD_REWARD_ID"))
+    out.push("VITE_AD_REWARD_ID 가 비어 있어 시험용 광고를 씁니다 — 광고를 끝까지 봐도 티켓이 안 들어옵니다(출시 전 진짜 번호로)");
+  return out;
+}
+
 if (process.argv[1] && process.argv[1].endsWith("prebuild-check.mjs")){
   const bad = [];
 
@@ -51,6 +65,12 @@ if (process.argv[1] && process.argv[1].endsWith("prebuild-check.mjs")){
     const holes = checkBundle(js);
     if (holes.length)
       bad.push("dist 가 **검사용 빌드**입니다(" + holes.join(", ") + ") — npm run build 로 다시 만드세요");
+  }
+
+  const warn = warnEnv(envText);
+  if (warn.length){
+    console.log("\n[빌드 전 점검] 알림 (멈추지는 않습니다)");
+    for (const w of warn) console.log("  - " + w);
   }
 
   if (bad.length){

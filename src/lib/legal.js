@@ -10,7 +10,7 @@
    지금 모으는 것 — 구글 계정(이메일·이름·사진), 닉네임·점수·전적, 광고용 기기 정보 */
 
 export const CONTACT = "dnjsrb980607@gmail.com";
-export const UPDATED = "2026-09-29";
+export const UPDATED = "2026-09-30";
 
 export const TERMS = {
   ko: {
@@ -90,6 +90,7 @@ export const PRIVACY = {
 · 게스트로 이용한 경우: 계정을 구분하는 임의의 번호
 · 게임 기록: 닉네임, 점수, 전적, 이용권 수
 · 광고: 구글이 광고를 띄우기 위해 기기 정보(광고 식별자 등)를 씁니다
+· 보상형 광고: 광고를 끝까지 봤는지 확인하려고 계정 번호(임의의 번호)를 광고와 함께 보냅니다
 
 2. 쓰는 곳
 · 로그인과 계정 구분
@@ -134,6 +135,7 @@ https://policies.google.com/privacy
 · Guest play: a random identifier for the account
 · Game records: nickname, score, match history, ticket count
 · Ads: Google uses device information (such as an advertising ID) to serve ads
+· Rewarded ads: your account's random identifier is sent with the ad so the reward can be verified
 
 2. How it is used
 Signing in, showing rankings and history, checking for abuse, and serving ads.

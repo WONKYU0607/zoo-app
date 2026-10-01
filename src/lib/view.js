@@ -194,7 +194,13 @@ export function screenView(G, ctx, myID, names){
       }
       return {
         roundNo: G.lastRound.roundNo,
+        /* 그 판 자리 줄 기준 등수 — 판 화면의 마지막 장면(seats·table 과 같은 줄)이 쓴다 */
         order: G.lastRound.order.map(s => toPrev(s)),
+        /* **지금 자리 줄 기준 등수** — 결과·세금 화면이 쓴다. 그 화면들은 이름·점수를
+           지금 자리 줄(names·score)로 받으므로 등수도 같은 줄이어야 한다.
+           `order` 를 그대로 쓰면 자리가 바뀐 판마다 이름과 등수가 엇갈린다
+           (2026-09-30 재현: 1판 결과에서 0점인 사람이 1등으로 나옴) */
+        orderNow: G.lastRound.order.map(s => toScreen(s, me, n)),
         /* 그때의 자리 줄로 옮긴 '그때의 장수' */
         counts,
         /* 그때의 자리 줄로 앉힌 사람들 (이름·얼굴 번호·등수) */
@@ -210,6 +216,8 @@ export function screenView(G, ctx, myID, names){
       ? {
           score: G.counts.map((_, seat) => ctx.gameover.score[toSeat(seat, me, n)]),
           order: (ctx.gameover.order || []).map(s => toScreen(s, me, n)),
+          /* 1등 한 횟수 — 최종 동점을 가른다 */
+          lions: G.counts.map((_, seat) => (ctx.gameover.lions || [])[toSeat(seat, me, n)] || 0),
         }
       : null,
   };

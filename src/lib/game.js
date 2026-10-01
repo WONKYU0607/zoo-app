@@ -175,6 +175,10 @@ function openNextRound(G, random){
   };
 
   order.forEach((seat, rank) => { G.score[seat] += roundPoints(rank, n); });
+  /* 1등 한 횟수. 최종 점수가 같으면 이것으로 가른다 — 기기마다 같은 답이 나와야 한다.
+     예전에는 화면이 저마다 "나를 앞에" 두고 정렬해서 동점이면 각자 자기가 우승이었다 */
+  G.lions = (G.lions && G.lions.length === n) ? G.lions : new Array(n).fill(0);
+  G.lions[order[0]] += 1;
   G.lastOrder = order;
   G.roundNo += 1;
 
@@ -274,7 +278,12 @@ export const ZooPresident = {
         stages: {
           picking: {
             moves: {
-              takeCard: ({ G, playerID }, idx) => {
+              /* **여럿이 같은 순간에 집어도 다 받는다(ignoreStaleStateID).**
+                 boardgame.io 는 기본으로 "보낸 사람이 본 판 번호" 가 서버 것과 다르면 그 수를 버린다.
+                 넷이 거의 같이 누르면 먼저 도착한 하나만 받고 셋을 버렸다
+                 (2026-09-30 사람 4명 판에서 서버 오류 줄로 발견, simultest.js 로 재현).
+                 판 번호 대신 아래 조건(이미 골랐나·남이 가져갔나)을 지금 판에서 그대로 본다 */
+              takeCard: { ignoreStaleStateID: true, move: ({ G, playerID }, idx) => {
                 const seat = Number(playerID);
                 const d = G.draw;
                 if (!d) return INVALID_MOVE;
@@ -284,7 +293,7 @@ export const ZooPresident = {
                 d.by[idx] = seat;
                 d.took[seat] = idx;
                 d.seq.push(seat);
-              },
+              } },
             },
           },
         },
@@ -394,12 +403,19 @@ export const ZooPresident = {
                 if (G.revolution.seat !== seat) return INVALID_MOVE;
                 G.revDecided = true;
               },
-              give: ({ G, playerID }, cards) => {
+              /* 1·2등이 같은 순간에 내도 둘 다 받는다 — 위 takeCard 설명과 같다.
+                 예전에는 나중에 도착한 쪽이 버려진 채 "냈다" 로 쳐져, 서버가 45초 뒤 대신 낼 때까지
+                 모두가 멈췄다(둘 다 시간이 다 돼 화면이 자동으로 낼 때 잘 겹친다) */
+              give: { ignoreStaleStateID: true, move: ({ G, playerID }, cards) => {
                 const seat = Number(playerID);
                 if (!G.revDecided || G.taxCancelled || !G.taxOn) return INVALID_MOVE;
                 const o = G.taxOrder;
                 const need = seat === o[0] ? 2 : (seat === o[1] ? 1 : 0);
                 if (!need) return INVALID_MOVE;
+                /* **먼저 낸 것이 정답이다.** 예전에는 두 번째 give 가 앞의 것을 덮어써서,
+                   사람이 고른 카드를 보낸 직후 "아직 안 냈다" 고 잘못 본 쪽이 가장 나쁜 카드를
+                   다시 보내면 **사람이 고른 것이 바뀌었다**(2026-09-30 재현) */
+                if (G.given[seat] !== undefined) return INVALID_MOVE;
                 if (!Array.isArray(cards) || cards.length !== need) return INVALID_MOVE;
                 const hand = G.hands[seat];
                 const tmp = hand.slice();
@@ -409,7 +425,7 @@ export const ZooPresident = {
                   tmp.splice(at, 1);
                 }
                 G.given[seat] = cards.slice();
-              },
+              } },
             },
           },
         },
@@ -431,7 +447,10 @@ export const ZooPresident = {
     },
   },
 
-  endIf: ({ G }) => (G.gameOver ? { score: G.score.slice(), order: G.lastOrder } : undefined),
+  endIf: ({ G }) => (G.gameOver
+    ? { score: G.score.slice(), order: G.lastOrder,
+        lions: (G.lions || new Array(G.score.length).fill(0)).slice() }
+    : undefined),
 
   /* 봇이 고를 수 있는 수 목록 */
   ai: {

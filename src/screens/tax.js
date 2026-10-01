@@ -7,10 +7,13 @@ import "../styles/tax.css";
 
 export function mount(root){
 
-  /* 엔진 자리 → 그 사람이 고른 얼굴. GAME.avatars 가 없으면 첫 번째(생쥐) */
-  function avtOf(seat){
+  /* 화면 자리 → 그 사람이 고른 얼굴. GAME.avatars 는 엔진 자리 순서라
+     nowFaces(화면 자리 → 엔진 자리)로 옮겨서 꺼낸다 (result.js 와 같다) */
+  function avtOf(pos){
     const g = window.GAME || {};
     const a = g.avatars || [];
+    const f = g.nowFaces;
+    const seat = f && f[pos] != null ? f[pos] : pos;
     return avtFile(Number(a[seat]) || 0);
   }
   const document = scoped(root);
@@ -32,6 +35,9 @@ export function mount(root){
       revGreatOther:n=>n+"님이 꼴등으로 대혁명을 선언했습니다. 세금이 사라지고 등수가 통째로 뒤집힙니다.",
       revGreatMine:"꼴등인데 카멜레온 두 장을 모두 쥐었습니다. 대혁명을 선언하면 세금이 사라지고 계급이 통째로 뒤집힙니다.",
       revGreatDone:"대혁명. 계급이 뒤집혔습니다.", revDone:"혁명. 이번 판 세금은 없습니다.",
+      revWait:n=>n+"님이 카멜레온 두 장을 쥐었습니다. 혁명을 선언할지 고르는 중입니다.",
+      revPassed:n=>n+"님이 혁명을 선언하지 않았습니다. 세금을 그대로 걷습니다.",
+      revPassedMine:"혁명을 선언하지 않았습니다. 세금을 그대로 걷습니다.",
       taxH:"세금", taxSkip:"혁명으로 이번 판 세금은 걷지 않습니다.",
       taxMineTop:n=>'꼴등 <b>'+n+'</b>님의 가장 좋은 카드 두 장을 가져옵니다. 대신 아무 카드나 두 장을 주세요.',
       taxMineTop2:n=>'뒤에서 두 번째 <b>'+n+'</b>님과 한 장씩 바꿉니다. 줄 카드 한 장을 고르세요.',
@@ -56,6 +62,9 @@ export function mount(root){
       revGreatOther:n=>n+" declared a great revolution from last place. Tax is cancelled and every standing reverses.",
       revGreatMine:"You are last and hold both chameleons. A great revolution cancels tax and reverses every rank.",
       revGreatDone:"Great revolution. Every rank is reversed.", revDone:"Revolution. No tax this round.",
+      revWait:n=>n+" holds both chameleons and is deciding whether to declare a revolution.",
+      revPassed:n=>n+" did not declare a revolution. Tax goes ahead.",
+      revPassedMine:"You did not declare a revolution. Tax goes ahead.",
       taxH:"Tax", taxSkip:"The revolution cancels tax for this round.",
       taxMineTop:n=>'You take the two best cards from <b>'+n+'</b>, last place. Hand back any two.',
       taxMineTop2:n=>'You swap one card with <b>'+n+'</b>, second from last. Pick one to give.',
@@ -76,6 +85,32 @@ export function mount(root){
   let online = false;   /* 인원. 선언 없이 쓰고 있어서 모듈에서 막혔다 */
   let ranks = [];
   let wasGreat = false;   /* 선언 시점의 대혁명 여부 (뒤집은 뒤엔 다시 계산하면 틀린다) */
+  /* ---------- 혁명은 엔진이 정한 대로 보여 준다 ----------
+     예전에는 혁명 단계 시간이 다 되면 "다음" 을 눌러 넘겼는데, 그 단추가 이 단계에서는
+     곧 "혁명 선언" 이었다. 그래서
+       - 쥔 사람: 시간이 다 되면 "안 부름" 을 보낸 직후 **선언까지 보냈다**(엔진은 거부).
+         화면에는 혁명 소리와 "세금 없음" 이 떴는데 실제로는 세금을 걷었다
+       - 나머지: 쥔 사람이 고르기도 전에 "선언했습니다. 이번 판 세금은 없습니다" 가 떴다
+     (2026-09-30 사람 4명 판에서 재현: 엔진이 "invalid move: declare" 를 냈다).
+     이제 쥔 사람만 스스로 선언하고, 나머지는 엔진이 정한 것(__revolution.decided/declared)을 따른다.
+     autoFire = 시간이 다 돼 화면이 스스로 넘기는 중 (사람이 누른 게 아니다) */
+  let autoFire = false, revWatch = null;
+  let revSeenAt = 0;   /* 혁명이 정해진 것을 이 화면이 안 때 — 결과를 몇 초 보여 주고 넘긴다 */
+  let revWaitFrom = 0; /* 쥔 사람의 결정을 기다리기 시작한 때 */
+  /* 혁명은 **엔진의 지금 값**을 먼저 본다(window.__eng.view). 흐름이 적어 둔 값(__revolution)은
+     판이 끝난 순간의 것이라 늦을 수 있다 — 늦은 값만 보면 "아직 안 정함" 으로 영영 기다린다 */
+  const liveRev = () => {
+    const v = window.__eng && window.__eng.view;
+    if (!v || (window.GAME && v.roundNo !== (window.GAME.roundNo || 0) + 1)) return undefined;
+    return v.revolution ? { seat: v.revolution.seat, great: v.revolution.great, mine: v.revolution.mine,
+      decided: v.revolution.decided, declared: v.revolution.declared } : null;
+  };
+  const revInfo = () => {
+    if (!online) return null;
+    const lv = liveRev();
+    return lv !== undefined ? lv : window.__revolution;
+  };
+  const revPassedNow = () => { const rv = revInfo(); return Boolean(rv && rv.decided && !rv.declared); };
   const G = () => (window.GAME = window.GAME || {});
   const holds = () => G().hold || [];
   /* 남의 손패는 온라인에서 원래 모른다. 없으면 빈 것으로 친다 */
@@ -180,7 +215,7 @@ export function mount(root){
     if (online){
       /* 엔진이 이미 나눴다. 손패도 혁명도 엔진이 알려 준 것을 쓴다.
          여기서 다시 나누면 화면과 실제 판이 어긋난다 */
-      const rv = window.__revolution;
+      const rv = revInfo();
       revSeat = rv ? rv.seat : null;
       return;
     }
@@ -340,7 +375,11 @@ export function mount(root){
     return myHand().map((c, i) => i).sort((a, b) => myHand()[a] - myHand()[b]).slice(0, k);
   }
   function taxSkipped(){
-    /* 엔진이 정한 값이 있으면 그걸 따른다 (선언해야 세금이 사라진다) */
+    /* 엔진이 정한 값이 있으면 그걸 따른다 (선언해야 세금이 사라진다) — 지금 값을 먼저 */
+    if (online){
+      const v = window.__eng && window.__eng.view;
+      if (v && liveRev() !== undefined) return Boolean(v.taxCancelled);
+    }
     if (online && window.__taxCancelled !== undefined) return Boolean(window.__taxCancelled);
     return revSeat !== null && declared;
   }
@@ -355,12 +394,15 @@ export function mount(root){
       html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + t.dealS + '</div>';
     } else if (step === 2){
       const great = revSeat !== null && rankOf(revSeat) === n - 1;
+      const passed = revPassedNow();
       html = '<div class="mid__h">' + t.revH + '</div><div class="mid__s">' +
         (revSeat === null ? t.revNone
          : declared ? (wasGreat ? t.revGreatDone : t.revDone)
+         : passed ? (revSeat === 0 ? t.revPassedMine : t.revPassed(nameOf(revSeat)))
          : revSeat === 0 ? (great ? t.revGreatMine : t.revMine)
+         : online ? t.revWait(nameOf(revSeat))
          : (great ? t.revGreatOther(nameOf(revSeat)) : t.revOther(nameOf(revSeat)))) + '</div>';
-      if (revSeat === 0 && !declared)
+      if (revSeat === 0 && !declared && !passed)
         html += '<div class="flow rev"><div class="frow"><span class="frow__c">' +
           cardHTML(13, 40) + cardHTML(14, 40) + '</span></div></div>';
     } else if (step === 3){
@@ -410,14 +452,14 @@ export function mount(root){
     const bar = b.parentElement;
     /* 넘기기 단추는 없앤다. 전부 초읽기로 저절로 넘어간다.
        남기는 것은 "고를 것이 있는" 두 가지뿐 — 혁명 선언, 세금 주기 */
-    const mine = step === 2 ? (revSeat === 0 && !declared)
+    const mine = step === 2 ? (revSeat === 0 && !declared && !revPassedNow())
       : step === 3 ? (g > 0 && !taxSkipped() && !window.__taxCancelled)
       : false;
     if (bar) bar.style.visibility = mine ? "" : "hidden";
     el("hint").innerHTML = step === 3 && g && mine
       ? (sel.length < g ? t.giveNeed(g - sel.length) : "")
       : (!mine && (step === 2 || step === 3) && tickLeft > 0 ? t.waitSec(tickLeft) : "");
-    if (step === 2 && revSeat === 0 && !declared){
+    if (step === 2 && revSeat === 0 && !declared && !revPassedNow()){
       b.className = "bt-rev"; b.textContent = great ? t.declareG : t.declare; b.disabled = false;
     } else {
       b.className = "bt-main";
@@ -442,7 +484,8 @@ export function mount(root){
     N = g.N || 6;
     ranks = (g.finish && g.finish.length === N) ? g.finish.slice()
           : Array.from({length: N}, (_, i) => i);
-    step = 0; sel = []; selVal = []; declared = false; reversed = false; revSeat = null; wasGreat = false;
+    step = 0; sel = []; selVal = []; declared = false; reversed = false; revSeat = null; wasGreat = false; revSeenAt = 0; revWaitFrom = 0;
+    autoFire = false; stopRevWatch();
     /* **처음부터 손패를 감춘다.**
        엔진은 판이 끝나는 즉시 다음 판을 나눠 놓기 때문에, 등수 발표 단계(0)에서
        이미 다음 판의 패가 손에 들어와 있다. 감추지 않으면
@@ -471,8 +514,11 @@ export function mount(root){
       revSeat = Number.isInteger(seat) ? seat : 0;
       declared = false; wasGreat = false; reversed = false;
       hideHand = false;
-      step = 2; sel = []; selVal = [];
+      step = 2; sel = []; selVal = []; revSeenAt = 0; revWaitFrom = 0;
+      autoFire = false; stopRevWatch();
       clearFx(); draw();
+      /* 엔진이 붙은 판이면 진짜처럼 이 단계의 시계·감시도 건다 */
+      if (online) autoNext();
       return { step, revSeat };
     },
     /* 고르는 단계(3)로 바로 세운다. ranks 를 주면 등수도 바꾼다 */
@@ -489,7 +535,8 @@ export function mount(root){
       const hand = myHand();
       const out = [];
       (vals || []).forEach(v => {
-        const i = hand.indexOf(v);
+        /* 같은 숫자를 두 장 고르면 서로 다른 자리로 (indexOf 는 늘 첫 자리만 준다) */
+        const i = hand.findIndex((c, k) => c === v && !sel.includes(k));
         if (i < 0 || sel.includes(i) || sel.length >= giveCount()) return;
         sel.push(i); selVal.push(hand[i]); out.push(hand[i]);
       });
@@ -574,14 +621,37 @@ export function mount(root){
     /* 혁명: 쥔 사람이 있을 때만 고민할 것이 있다. 아무도 없으면 알리고 5초에 넘긴다 */
     else if (step === 2) wait = (revSeat === null ? 5000 : 10000);
     else if (step === 3) wait = 10000;  /* 세금 */
+    /* 검사에서만 짧게 — 배포판에는 이 통로가 없다 */
+    if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && wait && window.__taxWaitMs)
+      wait = Number(window.__taxWaitMs) || wait;
     if (!wait) return;
     startTick(wait);
-    autoId = setTimeout(() => {
+    /* 혁명 결과를 읽을 틈 — 검사에서는 짧게 */
+    const revShow = (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && window.__taxWaitMs)
+      ? Math.min(2500, Number(window.__taxWaitMs) || 2500) : 2500;
+    const fire = () => {
       const sec2 = window.document.getElementById("tax");
       if (!sec2 || !sec2.classList.contains("is-on")){ autoNext(); return; }
-      /* 혁명은 안 부르고 넘기면 그대로 세금을 걷는다 (쥐고도 안 부르는 것이 전략) */
-      if (step === 2 && online && revSeat === 0 && !declared && window.__passRev){
-        window.__passRev();
+      if (step === 2 && online && revSeat !== null){
+        /* 혁명은 안 부르고 넘기면 그대로 세금을 걷는다 (쥐고도 안 부르는 것이 전략) */
+        if (revSeat === 0 && !declared && !revPassedNow() && window.__passRev){
+          window.__passRev();
+          if (!revSeenAt) revSeenAt = Date.now();
+          draw();
+        }
+        /* **쥔 사람이 아직 고르는 중이면 넘기지 않고 기다린다.** 정해지면 결과를 보여 준 뒤 넘긴다.
+           예전에는 내 화면 시계(10초)가 쥔 사람 화면보다 먼저 끝나, 결과를 못 보고 세금으로 넘어갔다
+           (2026-09-30 사람 4명 판: 안 불렀는데 나머지 셋은 "고르는 중" 만 보고 지나감.
+           선언했으면 혁명 소리·대혁명 뒤집기까지 통째로 못 봤다) */
+        const rv = revInfo();
+        /* 끝없이 기다리지는 않는다 — 서버가 앱이 꺼진 사람 대신 정하는 60초를 넘기면 그냥 넘긴다(안전장치) */
+        if (!declared && !(rv && rv.decided)){
+          if (!revWaitFrom) revWaitFrom = Date.now();
+          if (Date.now() - revWaitFrom < 75000){ autoId = setTimeout(fire, 250); return; }
+        }
+        if (!revSeenAt) revSeenAt = Date.now();
+        const left = revShow - (Date.now() - revSeenAt);
+        if (left > 0){ autoId = setTimeout(fire, left); return; }
       }
       /* 세금이 사라졌는데 이 단계에 서 있으면 그냥 넘긴다.
          (혁명을 선언한 순간과 화면이 그걸 아는 순간이 어긋날 수 있다) */
@@ -592,48 +662,85 @@ export function mount(root){
         setTimeout(() => { if (window.__toTable) window.__toTable(); }, 400);
         return;
       }
-      /* 세금에서 안 고르고 시간을 넘기면 가장 나쁜 카드를 자동으로 준다 */
+      /* 세금에서 안 고르고 시간을 넘기면 자동으로 준다 — **카멜레온은 빼고 큰 숫자부터** (2026-09-30 결정) */
       if (step === 3){
         const g = giveCount();
         if (g > 0 && sel.length < g){
+          /* **내가 이미 고른 것은 그대로 두고, 모자란 만큼만** 채운다.
+             예전에는 자리(sel)만 새로 채우고 실제로 보내는 값(selVal)은 그대로 둬서,
+             2장 낼 차례에 1장만 고르고 시간이 다 되면 **1장만 나가 엔진이 거부했다.**
+             그 뒤로는 "이미 냈다" 로 보여 아무도 안 내서 판이 멈췄다
+             (서버 판은 45초 뒤 서버가 대신, 이 기기 판은 영영 — 2026-09-30 사람 4명 판에서 재현) */
           const mine = myHand();
-          const idx = mine.map((c, i) => i)
-            .sort((a, b) => (mine[b] >= 13 ? 99 : mine[b]) - (mine[a] >= 13 ? 99 : mine[a]));
-          sel = idx.slice(0, g);
+          /* 카멜레온(13·14)은 맨 뒤 — 숫자 카드가 모자랄 때만 나간다 */
+          const giveKey = c => (c >= 13 ? -1 : c);
+          const keep = selVal.slice(0, sel.length);
+          const rest = mine.slice();
+          keep.forEach(c => { const k = rest.indexOf(c); if (k >= 0) rest.splice(k, 1); });
+          rest.sort((a, b) => giveKey(b) - giveKey(a));
+          selVal = keep.concat(rest.slice(0, g - keep.length));
+          /* 화면에 고른 표시(자리)도 값에 맞춰 다시 짚는다 — 같은 숫자가 둘이면 서로 다른 자리로 */
+          sel = [];
+          selVal.forEach(c => { const k = mine.findIndex((x, i) => x === c && !sel.includes(i)); if (k >= 0) sel.push(k); });
           draw();
         }
       }
       const b = el("next");
-      if (b && !b.disabled) b.click();
-    }, wait);
+      autoFire = true;
+      try { if (b && !b.disabled) b.click(); } finally { autoFire = false; }
+    };
+    autoId = setTimeout(fire, wait);
+    /* 혁명 단계 동안은 엔진이 정한 것을 지켜본다 — 쥔 사람이 선언하면 그때 보여 준다 */
+    if (step === 2 && online && revSeat !== null && !revWatch) revWatch = setInterval(syncRev, 250);
+  }
+  function stopRevWatch(){ if (revWatch){ clearInterval(revWatch); revWatch = null; } }
+  function syncRev(){
+    if (step !== 2){ stopRevWatch(); return; }
+    const rv = revInfo();
+    if (!rv || !rv.decided) return;
+    stopRevWatch();
+    if (!revSeenAt) revSeenAt = Date.now();
+    if (rv.declared && !declared) showDeclared();     /* 남이 선언했다 */
+    else draw();                                       /* 안 불렀다 — 글만 바꾼다 */
+  }
+  /* 선언된 것을 보여 준다 (소리·대혁명이면 뒤집기) */
+  function showDeclared(){
+    const great = revSeat !== null && rankOf(revSeat) === N - 1;
+    declared = true;
+    if (!revSeenAt) revSeenAt = Date.now();
+    wasGreat = great;
+    /* **혁명 소리는 여기서 낸다.**
+       판 화면에도 같은 소리가 있었는데, 그때는 이 화면이 떠 있어서
+       소리가 삼켜지고, 판 화면에 들어설 때 뒤늦게 울렸다 */
+    snd("revolution");
+    if (great){
+      reversed = true;
+      el("flash").classList.remove("go"); void el("flash").offsetWidth; el("flash").classList.add("go");
+      draw();
+      document.querySelectorAll(".seat__r").forEach(x => x.classList.add("swap"));
+      setTimeout(() => document.querySelectorAll(".seat__r").forEach(x => x.classList.remove("swap")), 750);
+      return;
+    }
+    draw();
   }
   
   el("next").onclick = () => {
-    const great = revSeat !== null && rankOf(revSeat) === N - 1;
-    if (step === 2 && revSeat !== null && !declared){
-      declared = true;
-      wasGreat = great;
-      /* **혁명 소리는 여기서 낸다.**
-         판 화면에도 같은 소리가 있었는데, 그때는 이 화면이 떠 있어서
-         소리가 삼켜지고, 판 화면에 들어설 때 뒤늦게 울렸다 */
-      snd("revolution");
+    /* 혁명 선언 — **쥔 사람이 직접 누른 것만.** 시간이 다 돼 넘기는 것(autoFire)이나
+       남의 화면은 여기서 선언하지 않는다. 엔진이 정한 것을 syncRev 가 보여 준다.
+       (엔진이 없는 옛 시제품 화면만 예전처럼 여기서 정한다) */
+    const canDeclareHere = online
+      ? (revSeat === 0 && !autoFire && !revPassedNow())
+      : true;
+    if (step === 2 && revSeat !== null && !declared && canDeclareHere){
+      showDeclared();
       /* 엔진에 실제로 선언한다. 이걸 안 부르면 세금이 그대로 걷힌다 */
       if (online && revSeat === 0 && window.__declareRev) window.__declareRev();
-      if (great){
-        reversed = true;
-        el("flash").classList.remove("go"); void el("flash").offsetWidth; el("flash").classList.add("go");
-        draw();
-        document.querySelectorAll(".seat__r").forEach(x => x.classList.add("swap"));
-        setTimeout(() => document.querySelectorAll(".seat__r").forEach(x => x.classList.remove("swap")), 750);
-        /* 선언하고 나면 단추가 사라진다. 여기서 다시 시간을 걸지 않으면
-           아무도 다음으로 넘길 수 없어 화면이 영영 멈춘다 */
-        autoNext();
-        return;
-      }
-      draw();
+      /* 선언하고 나면 단추가 사라진다. 여기서 다시 시간을 걸지 않으면
+         아무도 다음으로 넘길 수 없어 화면이 영영 멈춘다 */
       autoNext();
       return;
     }
+    stopRevWatch();
     if (step === 3 && !taxSkipped()){
       /* 자리 번호가 아니라 **고를 때 적어 둔 값**을 보낸다 */
       window.__myGive = selVal.slice(0, giveCount());

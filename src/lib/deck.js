@@ -67,5 +67,9 @@ export function legalMove(hand, num, count, cur){
   if (num === 13){                                /* 카멜레온 단독 */
     return jok >= count;
   }
+  /* **카멜레온은 진짜 카드와 같이 낼 때만 그 숫자로 변신한다.** 카멜레온만 내면 13번이다.
+     예전에는 카멜레온 둘만으로 "5번 두 장" 같은 수를 받아 줬다 — 화면·봇은 그렇게 안 내지만
+     서버가 판정하는 곳이라 규칙대로 막는다(2026-09-30 규칙 점검) */
+  if (plain < 1) return false;
   return plain + jok >= count;
 }

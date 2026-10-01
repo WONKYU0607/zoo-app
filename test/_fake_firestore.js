@@ -1,13 +1,14 @@
 /* 계정 삭제 검사용 가짜 Firestore — 메모리에 문서를 들고 있는다.
    **보안 규칙은 흉내 내지 않는다.** 규칙은 진짜 Firestore 에뮬레이터로만 잴 수 있다.
    여기서 보는 것은 "무엇을 어떤 순서로 지우는가" 뿐이다.
-   globalThis.__fsFail(경로, 동작) 이 참이면 그 쓰기를 permission-denied 로 막는다. */
+   globalThis.__fsFail(경로, 동작, 새값, 옛값) 이 참이면 그 쓰기를 permission-denied 로 막는다.
+   (새값·옛값은 규칙을 흉내 내는 검사가 쓴다 — acctread.test.mjs) */
 export const STORE = globalThis.__fsStore || (globalThis.__fsStore = new Map());
 export const LOG = globalThis.__fsLog || (globalThis.__fsLog = []);
 
 const join = segs => segs.join("/").replace(/\/+/g, "/");
-const denied = (path, op) => {
-  if (globalThis.__fsFail && globalThis.__fsFail(path, op)){
+const denied = (path, op, data, prev) => {
+  if (globalThis.__fsFail && globalThis.__fsFail(path, op, data, prev)){
     const e = new Error("Missing or insufficient permissions."); e.code = "permission-denied"; throw e;
   }
 };
@@ -59,11 +60,11 @@ function apply(prev, data){
   return out;
 }
 export async function setDoc(ref, data, opt){
-  denied(ref.path, "set"); LOG.push(["set", ref.path]);
+  denied(ref.path, STORE.has(ref.path) ? "set" : "create", data, STORE.get(ref.path)); LOG.push(["set", ref.path]);
   STORE.set(ref.path, apply(opt && opt.merge ? STORE.get(ref.path) : null, data));
 }
 export async function updateDoc(ref, data){
-  denied(ref.path, "update");
+  denied(ref.path, "update", data, STORE.get(ref.path));
   if (!STORE.has(ref.path)){ const e = new Error("No document to update"); e.code = "not-found"; throw e; }
   LOG.push(["update", ref.path]);
   STORE.set(ref.path, apply(STORE.get(ref.path), data));
@@ -75,9 +76,9 @@ export async function deleteDoc(ref){
 export async function runTransaction(db, fn){
   const tx = {
     get: async ref => snap(ref),
-    set: (ref, data, opt) => { denied(ref.path, "set"); LOG.push(["set", ref.path]);
+    set: (ref, data, opt) => { denied(ref.path, STORE.has(ref.path) ? "set" : "create", data, STORE.get(ref.path)); LOG.push(["set", ref.path]);
       STORE.set(ref.path, apply(opt && opt.merge ? STORE.get(ref.path) : null, data)); return tx; },
-    update: (ref, data) => { denied(ref.path, "update"); STORE.set(ref.path, apply(STORE.get(ref.path), data)); return tx; },
+    update: (ref, data) => { denied(ref.path, "update", data, STORE.get(ref.path)); LOG.push(["update", ref.path]); STORE.set(ref.path, apply(STORE.get(ref.path), data)); return tx; },
     delete: ref => { denied(ref.path, "delete"); STORE.delete(ref.path); return tx; },
   };
   return fn(tx);

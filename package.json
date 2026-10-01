@@ -30,6 +30,8 @@
     "test:screens": "node test/tapscreens.test.mjs",
     "test:resume": "node test/reconnect.test.mjs",
     "test:del": "node test/delacct.test.mjs && node test/delbtn.test.mjs",
+    "test:hum": "node test/humroom.test.mjs && node test/humplay.test.mjs",
+    "test:hum4": "node test/hum4.test.mjs",
     "shot": "node test/shot.mjs",
     "admob": "node scripts/android-admob.mjs",
     "test:admob": "node test/admob.test.mjs",

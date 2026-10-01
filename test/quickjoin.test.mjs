@@ -53,8 +53,15 @@ const badge = () => page.evaluate(() => {
 const now = () => page.evaluate(() => (document.querySelector(".page.is-on")||{}).id);
 
 /* ---- 빈방 수가 단추에 뜬다 ---- */
-const n0 = (await api("/zoo/open")).count;
+/* 다른 검사가 같은 서버에서 방을 열고 닫는 중이면 한 번 읽은 값끼리는 엇갈린다 —
+   몇 초 안에 맞아지면 된다 */
+let n0 = (await api("/zoo/open")).count;
 let b = await badge();
+for (let k = 0; k < 20 && !(b && !b.hidden && b.n === n0); k++){
+  await nap(300);
+  n0 = (await api("/zoo/open")).count;
+  b = await badge();
+}
 check("빠른참가 단추에 빈방 수가 뜬다", b && !b.hidden && b.n === n0, b ? b.text : "칸 없음");
 check("단추 글자는 그대로 있다",
       await page.evaluate(() => (document.getElementById("btQuickT")||{}).textContent === "빠른 참가"));

@@ -80,6 +80,7 @@ export function mount(root){
   let live = false;
   /* 서버에 붙어 있는가. 끊기면 카드를 내도 안 나가므로 **누르는 것부터 막고 알린다** */
   let offline = false;
+  let timerKey = "";          /* 내 차례 시계를 마지막으로 건 상태 (아래 onView 참고) */
 
   /* ---------- 소리 ----------
      화면이 바뀌는 자리마다 울린다. 소리 파일이 없으면 조용히 넘어간다 */
@@ -336,7 +337,13 @@ export function mount(root){
     if (v.phase === "tax" && window.__onTax) window.__onTax(v);
 
     draw();
-    resetTimer();
+    /* **내 차례 시계는 차례가 바뀔 때만 다시 건다.**
+       화면은 판과 상관없는 신호(남의 이모티콘, 접속 정보)에도 새로 오는데,
+       예전에는 그때마다 15초로 되돌렸다. 남이 이모티콘을 보내면 내 시계가 계속
+       15초로 돌아가 스스로 넘기지 못하고, 서버가 20초에 대신 두며 나를
+       '자리 비움'으로 적었다(2026-09-30 재현) */
+    const tk = [turn, v.phase, v.roundNo, v.moveNo || 0, v.trickNo || 0, busy, offline].join("|");
+    if (tk !== timerKey){ timerKey = tk; resetTimer(); }
   }
 
   /* 방금 끝난 판의 마지막 장면을 그대로 세워 두고, 잠시 뒤 결과 화면으로 */
@@ -414,7 +421,7 @@ export function mount(root){
     handNodes = []; seatNodes = []; pileSig = null;
     passHeld = null; lastTrick = null; lastPass = null; justSent = null; shownNo = -1;
     lastRound = -1; overSent = false;
-    trick = []; sel = []; busy = false; animated = 0; spread = false;
+    trick = []; sel = []; busy = false; animated = 0; spread = false; timerKey = "";
     emoUntil = 0; emoPickOpen(false); paintEmoBtn();
     Object.keys(emoNow).forEach(p2 => delete emoNow[p2]);
     if (el("emolayer")) el("emolayer").innerHTML = "";

@@ -46,7 +46,10 @@ export function mount(root){
          on:"켜져 있습니다.", off:"꺼져 있습니다.",
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
          copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 30분마다 한 장씩 채워집니다",
-         wait:"방장이 시작하기를 기다리는 중입니다" },
+         wait:"방장이 시작하기를 기다리는 중입니다",
+         kickT:"내보내기", kickM:(n,k)=>n+"님을 내보낼까요? (남은 횟수 "+k+")", kickY:"내보내기",
+         kickNoneT:"내보내기", kickNone:"이 방에서는 더 내보낼 수 없습니다 (한 방에 2번까지)", ok:"확인",
+         kickFail:"내보내지 못했습니다", startFail:"시작하지 못했습니다" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
          needMore:"Four players are needed to start",
@@ -62,7 +65,10 @@ export function mount(root){
          on:"On.", off:"Off.",
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
          copied:"Copied", start:"Start", starting:"Dealing", needFour:"Four players are needed", noTicket:"No tickets left. One refills every 30 minutes",
-         wait:"Waiting for the host to start" }
+         wait:"Waiting for the host to start",
+         kickT:"Remove player", kickM:(n,k)=>"Remove "+n+" from the room? ("+k+" left)", kickY:"Remove",
+         kickNoneT:"Remove player", kickNone:"No more removals in this room (2 per room)", ok:"OK",
+         kickFail:"Could not remove the player", startFail:"Could not start" }
   };
   let lang = window.__lang || "ko";
   const PLAYERS = PLAYERS_KO;
@@ -147,6 +153,7 @@ export function mount(root){
         avatar: Number(s.avatar) || 0,     /* 이걸 안 실어서 대기실이 전부 생쥐였다 */
         me: i === R.me,
         host: s.uid && s.uid === R.host,
+        bot: Boolean(s.bot),
         off: Boolean(s.off),
         left: Boolean(s.left),
       } : null);
@@ -235,8 +242,11 @@ export function mount(root){
           '<span class="seat__b" style="display:none"></span>';
         el.__i = i;
         onTap(el, () => {
-          if (!el.classList.contains("seat--empty")) return;   /* 앉은 자리는 아무 일도 안 한다 */
-          if (window.__openFriends) window.__openFriends("invite");
+          if (el.classList.contains("seat--empty")){
+            if (window.__openFriends) window.__openFriends("invite");
+            return;
+          }
+          askKick(el.__i);                 /* 앉은 자리 — 방장이면 내보내기를 묻는다 */
         });
         box.appendChild(el);
         seatNodes.push(el);
@@ -294,11 +304,58 @@ export function mount(root){
       now < 4 ? t.needMore : now < cap ? t.canStart : t.full;
   }
   
+  /* ---------- 강퇴 ----------
+     방장이 대기실에서 **사람** 자리를 누르면 내보낼지 묻는다(자기·봇은 아무 일 없음).
+     한 방에 2번까지 — 남은 횟수를 확인창에 적는다. 규칙은 서버가 다시 가린다 */
+  let kicking = false;
+  function askKick(i){
+    const R = window.__room;
+    if (!R || !R.seats || !window.__kickSeat || !window.__ask) return;   /* 서버 방에서만 */
+    if (R.phase !== "waiting" || starting || kicking) return;
+    const arr = asArray(R.seats, R.cap || cap);
+    const meSeat = arr[R.me];
+    if (!meSeat || meSeat.uid !== R.host) return;                        /* 방장만 */
+    const p = arr[i];
+    if (!p || i === R.me || p.bot) return;                                /* 사람만, 자기는 안 됨 */
+    const t = L[lang];
+    const left = Math.max(0, (R.kickMax || 2) - (R.kicks || 0));
+    if (left <= 0){ window.__ask(t.kickNoneT, t.kickNone, t.ok, null, null, true); return; }
+    const who = p.name || "";
+    window.__ask(t.kickT, t.kickM(who, left), t.kickY, async () => {
+      /* 묻는 사이에 그 자리가 바뀌었으면(나갔다 딴 사람이 앉음) 내보내지 않는다 */
+      const R2 = window.__room;
+      const now = R2 && R2.seats ? asArray(R2.seats, R2.cap || cap)[i] : null;
+      if (!now || now.bot || now.name !== who) return;
+      kicking = true;
+      try { await window.__kickSeat(i); }
+      catch (err){
+        /* 서버 설명은 한국어라 한국어 화면에서만 덧붙인다 */
+        const msg = err && err.why === "limit" ? t.kickNone
+          : (t.kickFail + (lang === "ko" && err && err.message ? "\n" + err.message : ""));
+        window.__ask(t.kickT, msg, t.ok, null, null, true);
+      }
+      finally { kicking = false; }
+    });
+  }
+
   function syncOpts(){
     const o = window.__opts || {};
     cap = o.cap || cap; rounds = o.rounds || rounds;
     taxOn = o.tax !== false; clear2 = !!o.clear2;
     if (joined > cap) joined = cap;
+  }
+  /* 시작을 누르고 끝날 때까지. 이 동안은 단추를 다시 그려도 잠가 둔다.
+     예전에는 티켓을 쓰는(파이어베이스 왕복) 사이에 한 번 더 누르면
+     **티켓이 두 장 나갔다**(2026-09-30 재현). 1.5초마다 다시 그려지는 단추라
+     단추의 disabled 만으로는 못 막는다 */
+  let starting = false;
+  /* 설정 줄에 잠깐 띄우는 알림(티켓 없음). 이 줄은 1.5초마다 다시 그려지므로
+     글자만 바꾸면 곧바로 지워졌다 — 몇 초 동안은 다시 그려도 알림을 남긴다 */
+  let noteMsg = "", noteUntil = 0;
+  function flashNote(msg){
+    noteMsg = msg; noteUntil = Date.now() + 4000;
+    const sm = document.getElementById("sum");
+    if (sm) sm.textContent = msg;
   }
   function renderControls(){
     const t = L[lang];
@@ -313,14 +370,16 @@ export function mount(root){
       ' \u00B7 ' + t.sumT + ' ' + (taxOn ? t.on2 : t.off2) +
       ' \u00B7 ' + t.sumC + ' ' + (clear2 ? t.on2 : t.off2) +
       (iamHost ? '  <span style="color:#E3C67C">' + t.edit + '</span>' : '');
+    if (noteMsg && Date.now() < noteUntil) sm.textContent = noteMsg;
     sm.disabled = !iamHost;
     const a = document.getElementById("action");
     if (iamHost){
       /* 남은 초가 있으면 같이 적는다. 다시 그려도 숫자가 안 사라진다 */
       const lf = window.__roomLeft;
-      const lbl = now < 4 ? t.needFour
+      const lbl = starting ? t.starting
+                : now < 4 ? t.needFour
                 : t.start + (lf != null && lf > 0 ? " " + lf : "");
-      a.innerHTML = '<button class="btn-primary" ' + (now < 4 ? "disabled" : "") + '>' +
+      a.innerHTML = '<button class="btn-primary" ' + (now < 4 || starting ? "disabled" : "") + '>' +
         lbl + '</button>';
     } else {
       a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
@@ -358,16 +417,23 @@ export function mount(root){
   /* 시작을 누르는 순간의 실제 인원을 확정한다 (자리를 다 안 채우고 시작할 수 있음) */
   document.getElementById("action").addEventListener("click", async e => {
     const b = e.target.closest(".btn-primary");
-    if (!b || b.disabled) return;
+    if (!b || b.disabled || starting) return;
     const R = window.__room;
+    /* **기다리기 전에** 잠근다 — 아래 await 사이에 두 번째 누름이 들어온다 */
+    starting = true;
+    b.disabled = true;
+    b.textContent = L[lang].starting;
   
-    /* 티켓 한 장을 쓴다. 없으면 못 들어간다 */
+    /* 티켓이 있는지 미리 본다. **빼는 것은 서버다** — 시작을 부르면 서버가 방장 티켓을
+       한 장 빼고, 없으면 거절한다(아래 402). 여기서는 헛걸음만 줄인다 */
     if (window.spendTicket){
-      const ok = await window.spendTicket();
+      let ok = false;
+      try { ok = await window.spendTicket(); } catch(err){ ok = false; }
       if (!ok){
+        starting = false;
+        renderControls();
         e.stopImmediatePropagation();
-        const sm = document.getElementById("sum");
-        if (sm) sm.textContent = L[lang].noTicket;
+        flashNote(L[lang].noTicket);
         return;
       }
     }
@@ -376,15 +442,23 @@ export function mount(root){
     if (R){
       /* 온라인 — 서버가 카드를 나눈다. 모두는 방 상태를 보고 따라 들어간다 */
       e.stopImmediatePropagation();
-      b.disabled = true;
-      b.textContent = L[lang].starting;
       try { await window.__startRound(); }
       catch(err){
-        b.disabled = false; b.textContent = L[lang].start;
-        alert("시작하지 못했습니다 : " + (err && (err.message || err.code) || err));
+        starting = false;
+        renderControls();
+        /* 서버가 티켓이 없다고 거절했다 — 화면 숫자가 어긋났던 것이니 다시 읽는다 */
+        if (err && err.why === "ticket"){
+          flashNote(L[lang].noTicket);
+          if (window.__refreshAccount) window.__refreshAccount();
+          return;
+        }
+        alert(L[lang].startFail + " : " + (err && (err.message || err.code) || err));
+        return;
       }
+      starting = false;
       return;
     }
+    setTimeout(() => { starting = false; }, 1500);
     if (window.__opts) window.__opts.seated = joined;   /* 봇전 */
   }, true);
   

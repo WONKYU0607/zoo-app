@@ -4,7 +4,7 @@ import { MARKUP } from "./screens/_markup.js";
 import { db } from "./lib/firebase.js";
 import * as FR from "./lib/friends.js";
 import { initFriends } from "./lib/friends.js";
-import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, deleteAccount, setNickname, signInTest, isLocal, account, pending, finishGame, useTicket, ticketLeft, syncTickets, setAvatar, rewardTicket, TICKET_MAX } from "./lib/account.js";
+import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, deleteAccount, setNickname, signInTest, isLocal, account, pending, finishGame, hasTicket, ticketLeft, syncTickets, setAvatar, waitReward, refreshAccount, idToken, TICKET_MAX } from "./lib/account.js";
 import { showRewardAd } from "./lib/ads.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
@@ -117,8 +117,16 @@ window.__setAvatar = i => setAvatar(i);
 /* ---------- 광고 시청 티켓 ----------
    누르면 보상형 광고를 띄우고, **끝까지 보면** 티켓 1장. 횟수 제한 없음.
    보유 3장이면 단추를 잠근다(더 받을 수 없으니). 광고 보는 동안에도 잠근다 —
-   두 번 눌러 광고가 겹치면 안 된다 */
+   두 번 눌러 광고가 겹치면 안 된다.
+
+   **티켓은 서버가 준다.** 광고를 끝까지 보면 AdMob 이 게임 서버로 직접 알려 오고(서명 확인),
+   서버가 계정에 한 장 적는다. 앱은 그게 적힐 때까지 기다렸다가 화면에 반영한다.
+   예전에는 앱이 스스로 적어서, 광고를 안 보고도 그 함수만 부르면 티켓이 생겼다 */
 let adBusy = false;
+const AD_T = {
+  ko: { late: "광고 보상을 확인하는 중입니다. 잠시 뒤 티켓이 들어옵니다" },
+  en: { late: "Checking the ad reward. Your ticket will arrive shortly" },
+};
 function paintAd(){
   const b = document.getElementById("btAd");
   if (!b) return;
@@ -129,8 +137,17 @@ async function watchAd(){
   if (adBusy || (Number(account.tickets) || 0) >= TICKET_MAX) return;
   adBusy = true; paintAd();
   try {
-    const r = await showRewardAd();
-    if (r && r.ok) await ((import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && window.__rewardTicket) || rewardTicket)();
+    const before = Number(account.tickets) || 0;
+    /* 광고에 내 계정 번호(uid)를 실어 보낸다 — AdMob 이 서버에 "누가 봤는지" 로 그대로 전한다 */
+    const r = await showRewardAd(account.uid || "");
+    if (r && r.ok){
+      const hook = import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && window.__rewardTicket;
+      const got = hook ? await hook() : await waitReward(before);
+      if (!got && !hook){
+        const t = AD_T[window.__lang] || AD_T.ko;
+        if (window.__lobbyNote) window.__lobbyNote(t.late);
+      }
+    }
   } catch (e){
     console.warn("[광고] " + (e && e.message || e));
   } finally {
@@ -172,16 +189,20 @@ watchAuth().then(() => {
      서버 대전을 붙이면 그때 방 복귀를 다시 넣는다 */
 });
 
-/* 게임이 끝났을 때 계정에 점수를 올린다.
-   earned 는 게임 안에서 쌓은 누적 점수, quit 는 완주 실패 여부 */
+/* 게임이 끝났을 때. **점수는 서버가 판 기록을 보고 적는다** —
+   여기서는 서버가 적은 값을 다시 읽어 화면을 맞출 뿐이다 */
 window.reportGame = (rank, players, earned, quit) => {
   finishGame(rank, players, earned, quit)
-    .then(g => { if (g) console.log("획득", g); })
-    .catch(err => console.warn("점수 반영 실패", err));
+    .catch(err => console.warn("점수 확인 실패", err));
 };
 
-/* 티켓 한 장. 없으면 false */
-window.spendTicket = () => useTicket();
+/* 시작해도 되는지 미리 본다(티켓이 있는가). **빼는 것은 서버다** — 방장이 시작을 누르면
+   서버가 한 장 빼고, 없으면 거절한다(402). 여기서 막는 것은 헛걸음을 줄이려는 것뿐 */
+window.spendTicket = async () => hasTicket();
+/* 서버가 티켓을 뺐거나 점수를 적은 뒤 화면 값을 맞춘다 */
+window.__refreshAccount = () => refreshAccount().catch(() => {});
+/* 방에 앉을 때 서버에 보낼 로그인 표 — flow·lobby 는 파이어베이스를 모르므로 여기서 넣어 준다 */
+window.__idToken = () => idToken();
 window.__ticketLeft = () => ticketLeft();
 /* 시간이 지나 찬 티켓을 화면 값에도 반영한다 (로비가 1초마다 부른다) */
 window.__syncTickets = () => syncTickets();

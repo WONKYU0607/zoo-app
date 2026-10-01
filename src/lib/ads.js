@@ -36,22 +36,29 @@ export const adBusy = () => showing;
 
 /* 광고를 보여 주고 **끝까지 봤는지**를 알려 준다.
    { ok: true }  — 보상을 받을 자격이 생겼다
-   { ok: false, why } — 웹이라 못 띄움 / 못 불러옴 / 중간에 닫음 / 보여 주기 실패 */
-export async function showRewardAd(){
+   { ok: false, why } — 웹이라 못 띄움 / 못 불러옴 / 중간에 닫음 / 보여 주기 실패
+
+   userId = 내 계정 번호(uid). **서버 측 확인(SSV)** 에 실린다 — 끝까지 보면 AdMob 이
+   게임 서버(/zoo/admob/ssv)로 "이 사람이 봤다" 를 서명해서 알려 오고, 서버가 티켓을 준다.
+   AdMob 콘솔에서 그 광고 단위에 서버 주소를 넣어 둬야 한다.
+   ※ 구글 공개 시험용 광고 단위는 우리 콘솔 것이 아니라 서버로 알림이 오지 않는다 */
+export async function showRewardAd(userId){
   /* 검사용 — 진짜 광고 대신 결과를 흉내낸다 */
   if (import.meta.env.VITE_TEST_HOOKS && globalThis.__ZOO_TEST && typeof window.__adTest === "function") return window.__adTest();
   if (!adsAvailable()) return { ok: false, why: "web" };
   if (showing) return { ok: false, why: "busy" };
   showing = true;
-  try { return await rewardInner(); } finally { showing = false; }
+  try { return await rewardInner(userId); } finally { showing = false; }
 }
 
-async function rewardInner(){
+async function rewardInner(userId){
 
   const { AdMob, RewardAdPluginEvents } = await import("@capacitor-community/admob");
   try {
     if (!inited){ await AdMob.initialize({}); inited = true; }
-    await AdMob.prepareRewardVideoAd({ adId: AD_REWARD_ID, isTesting: AD_IS_TEST });
+    const opt = { adId: AD_REWARD_ID, isTesting: AD_IS_TEST };
+    if (userId) opt.ssv = { userId: String(userId) };
+    await AdMob.prepareRewardVideoAd(opt);
   } catch (e){
     return { ok: false, why: "load" };         /* 불러올 광고가 없거나 연결 문제 */
   }

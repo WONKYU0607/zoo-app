@@ -23,6 +23,8 @@ const ROOT = join(HERE, "..");
 const SLOW = [
   ["시퀀스",   ["test/sequence.test.mjs", "1"]],
   ["화면통째", ["test/table.test.mjs", "2"]],
+  ["사람넷",   ["test/hum4.test.mjs"]],
+  ["혁명판",   ["test/revlocal.test.mjs"]],
 ];
 const FAST = [
   ["엔진",     ["test/engine.test.js"]],
@@ -48,6 +50,7 @@ const FAST = [
   ["빌드점검",    ["test/prebuild.test.mjs"]],
   ["동의",       ["test/consent.test.mjs"]],
   ["세금",      ["test/tax.test.mjs", "test/touch2.test.mjs", "test/tap.test.mjs"]],
+  ["자동세금",    ["test/autogive.test.mjs"]],
   ["서버대전",    ["test/netplay.test.mjs"]],
   ["두번내기",    ["test/doubleplay.test.mjs"]],
   ["나가기",     ["test/leavegame.test.mjs"]],
@@ -60,6 +63,11 @@ const FAST = [
   ["뽑기잔상",    ["test/drawghost.test.mjs"]],
   ["계정삭제",    ["test/delacct.test.mjs"]],
   ["삭제단추",    ["test/delbtn.test.mjs"]],
+  ["사람방",     ["test/humroom.test.mjs"]],
+  ["사람판",     ["test/humplay.test.mjs"]],
+  ["강퇴·티켓",   ["test/kick.test.mjs"]],
+  ["계정읽기",    ["test/acctread.test.mjs"]],
+  ["광고확인",    ["test/adssv.test.mjs"]],
 
   ["자동",     ["test/auto.test.mjs"]],
   ["카드얼굴", ["test/face.test.mjs"]],
@@ -77,15 +85,33 @@ const jobs = all ? [...SLOW, ...FAST] : FAST;
 /* 코어 수만큼. 계산이 대부분이라 너무 늘려도 소용없다 */
 const LIMIT = Math.max(2, Math.min(8, cpus().length));
 
-function run(name, args){
+function run1(args){
   return new Promise(res => {
-    const t0 = Date.now();
     const p = spawn(process.execPath, args, { cwd: ROOT });
     let out = "";
     p.stdout.on("data", d => { out += d; });
     p.stderr.on("data", d => { out += d; });
-    p.on("close", code => res({ name, code, out, ms: Date.now() - t0 }));
+    p.on("close", code => res({ code, out }));
   });
+}
+/* **한 줄에 검사 파일이 여럿이면 하나씩 차례로 돌린다.**
+   예전에는 `node a.mjs b.mjs c.mjs` 로 한 번에 넘겨서 **첫 파일만 돌고** 나머지는
+   그 파일의 인자로 버려졌다(소리 줄의 touch, 세금 줄의 touch2·tap 이 한 번도 안 돌았다 — 2026-09-30 발견).
+   파일이 아닌 인자(판 수 같은 숫자)는 앞 파일에 붙인다 */
+async function run(name, args){
+  const t0 = Date.now();
+  const groups = [];
+  for (const a of args){
+    if (/\.(m?js)$/.test(a)) groups.push([a]);
+    else if (groups.length) groups[groups.length - 1].push(a);
+  }
+  let code = 0, out = "";
+  for (const g of groups){
+    const r = await run1(g);
+    out += r.out;
+    if (r.code !== 0 && code === 0) code = r.code;
+  }
+  return { name, code, out, ms: Date.now() - t0 };
 }
 
 const t0 = Date.now();

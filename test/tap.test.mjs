@@ -98,9 +98,12 @@ for (let round = 1; round <= 20 && done < 3; round++){
   const before = await page.evaluate(() => ({
     c: (window.__eng?.view?.seats||[])[0]?.c,
     t: (window.__eng?.view?.table||[]).length }));
-  await page.evaluate(() => { window.__snd.length = 0; });
+  /* 재는 동안 봇을 늦춘다 — 1.3초 안에 봇이 이어서 두면 바닥·소리가 2가 돼 거짓 실패한다
+     (2026-09-30: 내 손패는 고른 만큼만 줄었는데 "바닥 0 → 2" 로 실패) */
+  await page.evaluate(() => { window.__snd.length = 0; window.__botMsKeep = window.__eng.botMs; window.__eng.botMs = 6000; });
   await phoneTap(pb.x, pb.y);
   await new Promise(r=>setTimeout(r,1300));
+  await page.evaluate(() => { window.__eng.botMs = window.__botMsKeep; });
   const after = await page.evaluate(() => ({
     c: (window.__eng?.view?.seats||[])[0]?.c,
     t: (window.__eng?.view?.table||[]).length,
@@ -127,10 +130,11 @@ const qb = await page.evaluate(() => {
   return { x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2) };
 });
 if (qb){
-  await page.evaluate(() => { window.__snd.length = 0; });
+  await page.evaluate(() => { window.__snd.length = 0; window.__botMsKeep = window.__eng.botMs; window.__eng.botMs = 6000; });
   const t0 = await page.evaluate(() => (window.__eng?.view?.seats||[]).filter(x=>x.s==="pass").length);
   await phoneTap(qb.x, qb.y);
   await new Promise(r=>setTimeout(r,1300));
+  await page.evaluate(() => { window.__eng.botMs = window.__botMsKeep; });
   const got = await page.evaluate(() => window.__snd.slice());
   check("패스 소리가 한 번", got.filter(x => x === "pass").length <= 1, JSON.stringify(got));
   check("단추 소리도 한 번", got.filter(x => x === "button").length <= 1, JSON.stringify(got));

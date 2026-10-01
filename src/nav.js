@@ -170,7 +170,8 @@ export function initNav(){
       if (window.__createRoom){
         window.__createRoom()
           .then(code => { if (code) go("room"); })
-          .catch(() => { go("lobby"); netNote(); });   /* 서버에 못 붙었다 */
+          /* 서버에 못 붙었거나(연결) 로그인 표가 안 통했다(auth) — 까닭대로 알린다 */
+          .catch(e => { go("lobby"); lobbyNote(joinWhy(e)); });
       } else setTimeout(() => go("room"), 80);
     } else {
       window.dispatchEvent(new Event("optschange"));
@@ -414,7 +415,15 @@ export function initNav(){
           async () => {
             await FR().dropInvite(r.uid);
             if (window.__joinRoom){
-              const seat = await window.__joinRoom(r.code);
+              let seat = null;
+              try { seat = await window.__joinRoom(r.code); }
+              catch (e){
+                /* 초대받은 방이 이미 시작했거나 꽉 찼으면 이유를 보여 준다.
+                   지금 앉아 있던 자리는 그대로다(들어가기가 된 다음에만 비운다) */
+                const why = window.__joinWhy ? window.__joinWhy(e) : "";
+                ask(ko ? "초대" : "Invite", why, ko ? "확인" : "OK", null);
+                return;
+              }
               if (seat != null) go("room");
             }
           });
@@ -766,8 +775,25 @@ export function initNav(){
       h.textContent = h.dataset.orig || ""; h.classList.remove("hint--warn");
     }, 2500);
   }
+  window.__lobbyNote = lobbyNote;        /* 광고 보상이 늦을 때 main.js 가 쓴다 */
   const T_NET = { ko: "서버에 연결할 수 없습니다", en: "Can't reach the server" };
-  const netNote = () => lobbyNote(T_NET[window.__lang] || T_NET.ko);
+  /* 방에 못 들어간 이유 — 서버가 준 까닭(why)으로 고른다. 글자는 언어마다 */
+  const T_JOIN = {
+    ko: { none: "없는 방 번호입니다", started: "이미 게임을 시작한 방입니다", full: "자리가 꽉 찬 방입니다",
+          kicked: "방장이 내보낸 방에는 다시 들어갈 수 없습니다", already: "이미 이 방에 들어가 있습니다",
+          auth: "로그인이 필요합니다. 다시 로그인해 주세요", down: "계정 서버에 문제가 있습니다. 잠시 뒤 다시 시도해 주세요" },
+    en: { none: "No room with that number", started: "That game has already started", full: "That room is full",
+          kicked: "The host removed you from that room", already: "You are already in that room",
+          auth: "Please sign in again", down: "Account server problem. Please try again shortly" },
+  };
+  function joinWhy(e){
+    const L = T_JOIN[window.__lang] || T_JOIN.ko;
+    if (e && e.why && L[e.why]) return L[e.why];
+    if (e && e.status === 404) return L.none;
+    if (e && e.status === 409) return L.started;
+    return T_NET[window.__lang] || T_NET.ko;
+  }
+  window.__joinWhy = joinWhy;
 
   document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
     const f = window.__quickJoin;
@@ -779,7 +805,7 @@ export function initNav(){
       /* **서버에 못 붙으면 조용히 넘어가면 안 된다.**
          예전에는 실패를 받는 곳이 없어서, 인터넷이 끊기거나 서버가 내려가면
          눌러도 아무 일이 안 일어났다 — 사용자는 앱이 먹통이라고 느낀다 */
-      netNote();
+      lobbyNote(joinWhy(e));             /* 연결 문제면 "서버에 연결할 수 없습니다" 그대로 */
       return;
     }
     if (code){ go("room"); return; }
@@ -796,7 +822,9 @@ export function initNav(){
     const code = (inp && (inp.value || inp.textContent) || "").replace(/[^0-9]/g, "");
     if (code.length !== 4){ alert("네 자리 번호를 넣어 주세요"); return; }
     if (window.__joinRoom){
-      const seat = await window.__joinRoom(code);
+      let seat = null;
+      try { seat = await window.__joinRoom(code); }
+      catch (e){ lobbyNote(joinWhy(e)); return; }     /* 예전에는 아무것도 안 떴다 */
       if (seat == null) return;
     }
     go("room");
@@ -873,14 +901,20 @@ export function initNav(){
   });
   window.__toResult = () => go("result");
   
-  /* 세금까지 마치면 그 손패 그대로 다음 판을 시작한다 */
+  /* 세금까지 마치면 그 손패 그대로 다음 판을 시작한다.
+     **누르기 전의 글자를 봐야 한다 — 그래서 capture 로 먼저 듣는다.**
+     예전에는 세금 화면(tax.js)의 처리기가 먼저 돌아 단계를 4로 올리고 글자를 "판 시작" 으로 바꾼 뒤에
+     이 처리기가 그 글자를 읽었다. 그래서 세금을 주는 누름(또는 시간 넘김)만으로 0.14초 만에 판으로 넘어가,
+     세금 카드가 오가는 연출(2.1초, 2026-08-20 요청)이 통째로 잘렸다(2026-09-30 사람 여럿 판 기록에서 확인:
+     세금 주고 0.2초 뒤 판 화면). 이제 "판 시작" 을 직접 누를 때만 곧바로 넘어가고,
+     그 밖에는 tax.js 가 연출을 기다렸다가 넘긴다 */
   document.querySelector("#tax #next").addEventListener("click", e => {
     const label = e.currentTarget.textContent.trim();
     if (label === "판 시작" || label === "Start round"){
       window.__fresh = false;
       setTimeout(() => go("table"), 140);
     }
-  });
+  }, true);
   /* ---------- 확인창 ---------- */
   const ASK_T = {
     ko: { quit: "게임 종료", quitM: "게임을 종료할까요?", yes: "종료", no: "취소",
@@ -909,21 +943,42 @@ export function initNav(){
     try { r = await window.__resumable(); } catch(e){ r = null; }
     if (!r) return;
     const t = BACK_T[window.__lang] || BACK_T.ko;
-    ask(t.t, t.m(r.code), t.y, () => { if (window.__resume) window.__resume(); });
+    ask(t.t, t.m(r.code), t.y,
+        () => { if (window.__resume) window.__resume(); },
+        /* **아니오(닫기)면 그 자리를 놓는다.** 예전에는 서버에 안 알려서 남은 사람들이
+           그 자리 차례마다 20초씩 기다렸다 */
+        () => { if (window.__dropResume) window.__dropResume(); });
   }
 
-  let askYes = null;
-  function ask(title, msg, yesLabel, onYes){
+  let askYes = null, askNoFn = null;
+  /* single = 알림만(확인 단추 하나). 강퇴 알림처럼 고를 것이 없을 때 */
+  function ask(title, msg, yesLabel, onYes, onNo, single){
     const t = ASK_T[window.__lang] || ASK_T.ko;
     /* 확인창을 안 심은 화면(검사 등)에서는 묻지 않고 바로 한다 */
     if (!document.getElementById("askT")){ if (onYes) onYes(); return; }
     document.getElementById("askT").textContent = title;
     document.getElementById("askM").textContent = msg;
     document.getElementById("askYes").textContent = yesLabel;
-    document.getElementById("askNo").textContent = t.no;
+    const no = document.getElementById("askNo");
+    no.textContent = t.no;
+    no.style.display = single ? "none" : "";
     askYes = onYes;
+    askNoFn = onNo || null;
     document.getElementById("ask").classList.add("on");
   }
+  /* 방 대기실(room.js)이 강퇴 확인창을 여기서 띄운다 */
+  window.__ask = ask;
+  /* **방장이 나를 내보냈다** — flow.js 가 방을 들여다보다 알게 되면 부른다.
+     로비로 보내고 알린다. 하던 방 기록은 flow 가 이미 지웠다 */
+  const KICK_T = {
+    ko: { t: "방에서 나왔습니다", m: "방장이 방에서 내보냈습니다", y: "확인" },
+    en: { t: "Removed from room", m: "The host removed you from the room", y: "OK" },
+  };
+  window.__onKicked = () => {
+    const k = KICK_T[window.__lang] || KICK_T.ko;
+    go("lobby");
+    ask(k.t, k.m, k.y, null, null, true);
+  };
   /* 얼굴 누르기 */
   document.addEventListener("click", async e => {
     const b = e.target.closest("[data-avt]");
@@ -940,10 +995,11 @@ export function initNav(){
   function askClose(){
     document.getElementById("ask").classList.remove("on");
     askYes = null;
+    askNoFn = null;
   }
   function askOpen(){ return document.getElementById("ask").classList.contains("on"); }
   document.addEventListener("click", e => {
-    if (e.target.closest("[data-askno]")){ askClose(); return; }
+    if (e.target.closest("[data-askno]")){ const g = askNoFn; askClose(); if (g) g(); return; }
     if (e.target.closest("#askYes")){
       const f = askYes; askClose(); if (f) f();
     }

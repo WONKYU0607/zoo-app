@@ -25,52 +25,73 @@ async function api(path, body){
   const text = await res.text();
   let data = null;
   try { data = text ? JSON.parse(text) : {}; } catch(e){ data = {}; }
-  if (!res.ok) throw new Error((data && data.error) || ("서버 오류 " + res.status));
+  if (!res.ok){
+    const e = new Error((data && data.error) || ("서버 오류 " + res.status));
+    e.status = res.status;
+    /* none(없는 방) · started(이미 시작) · full(꽉 참) · kicked(내보내진 방) · already(이미 앉음)
+       auth(로그인 표가 안 통함) · ticket(티켓 없음) · limit(강퇴 횟수 끝) · down(계정 서버 문제) */
+    e.why = data && data.why;
+    throw e;
+  }
   return data;
 }
 
+/* **로그인 표.** 방에 앉을 때(만들기·번호·빠른참가) 같이 보낸다.
+   서버가 Firebase 서명을 확인해 누구인지(uid) 자리에 붙이고, 그 계정에 점수·티켓을 적는다.
+   이 파일은 파이어베이스를 모른다 — main.js 가 window.__idToken 을 넣어 준다 */
+async function token(){
+  try {
+    const f = typeof window !== "undefined" && window.__idToken;
+    return f ? (await f()) || undefined : undefined;
+  } catch(e){ return undefined; }
+}
+
 /* 방 만들기 — 만든 사람이 0번 자리 */
-export const createRoom = ({ numPlayers, name, rounds, tax, clear2, avatar, friends }) =>
-  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar, friends });
+export const createRoom = async ({ numPlayers, name, rounds, tax, clear2, avatar, friends }) =>
+  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar, friends, token: await token() });
 
 /* 번호로 참가 — 빈자리 중 앞쪽에 앉는다 */
-export const joinRoom = (code, name, avatar) =>
-  api(`/zoo/rooms/${code}/join`, { name, avatar });
+export const joinRoom = async (code, name, avatar) =>
+  api(`/zoo/rooms/${code}/join`, { name, avatar, token: await token() });
 
-/* 방 들여다보기 — 참가자·자리비움·이탈 */
-/* seat 을 주면 내 새 자리·자격증명도 같이 내려온다.
-   방장이 인원을 바꾸면 서버가 판을 새로 만들기 때문에 그때 필요하다 */
-/* gen = 내가 알고 있는 판 세대. 서버는 **옛 세대일 때만** 자리를 새 판으로 옮겨 준다 */
-export const peekRoom = (code, seat, gen) =>
-  api(`/zoo/rooms/${code}` + (seat == null ? "" : `?seat=${seat}` +
-      (Number.isInteger(gen) ? `&gen=${gen}` : "")));
+/* 방 들여다보기 — 참가자·자리비움·이탈·방장 자리.
+   **열쇠(key)를 주면** 내 지금 자리·자리표도 같이 내려온다.
+   방장이 인원·설정을 바꾸면 서버가 판을 새로 만들어 자리 번호가 바뀌기 때문이다.
+   열쇠는 앉을 때 서버가 나에게만 준다 — 자리 번호만으로는 남의 자리표를 못 받는다 */
+export const peekRoom = (code, key) =>
+  api(`/zoo/rooms/${code}` + (key ? `?key=${encodeURIComponent(key)}` : ""));
 
 /* 방에서 나가기 — 자리를 비운다.
    안 부르면 서버는 아직 앉아 있는 줄 알고, 다시 들어올 때 자리를 하나 더 준다 */
-export const leaveRoom = (code, playerID) =>
-  api(`/zoo/rooms/${code}/leave`, { playerID: String(playerID) }).catch(() => null);
+export const leaveRoom = (code, key) =>
+  api(`/zoo/rooms/${code}/leave`, { key }).catch(() => null);
 
 /* 빠른 참가 — 자리가 남은 방에 넣어 주고, 없으면 새로 만든다 */
 /* 이미 있는 방에만 들어간다. 들어갈 방이 없으면 { none: true } 가 온다 */
-export const quickJoin = ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>
-  api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2 });
+export const quickJoin = async ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>
+  api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2, token: await token() });
+
+/* 강퇴 — 방장만, 시작 전, 한 방에 2번까지(서버가 가린다). seat = 내보낼 사람의 자리 번호 */
+export const kickPlayer = (code, key, seat) =>
+  api(`/zoo/rooms/${code}/kick`, { key, seat });
 
 /* 빈방 개수 — 빠른참가 단추에 띄운다 */
 export const openRooms = () => api("/zoo/open").then(r => Number(r && r.count) || 0);
 
-/* 방 인원 바꾸기 — 대기 중, 방장만 */
-export const setRoomCap = (code, numPlayers, playerID) =>
-  api(`/zoo/rooms/${code}/cap`, { numPlayers, playerID: String(playerID) });
+/* 방 인원·설정 바꾸기 — 대기 중, 방장만.
+   판 수·세금·2번 엎기·친구끼리도 같이 보낸다 (예전에는 인원만 가서 서버와 어긋났다) */
+export const setRoomOpts = (code, key, { numPlayers, rounds, tax, clear2, friends }) =>
+  api(`/zoo/rooms/${code}/cap`, { key, numPlayers, rounds, tax, clear2, friends });
 
 /* 시작 — 빈자리를 봇으로 채우고 서버가 대리인을 붙인다 */
 /* seen = 방장 화면에 보이던 인원. 서버는 그보다 많이 앉아 있으면
    늦게 들어온 봇을 내보내고 시작한다 (누르는 찰나에 봇이 들어와도 보인 대로) */
-export const startRoom = (code, seen) =>
-  api(`/zoo/rooms/${code}/start`, Number.isInteger(seen) ? { seen } : {});
+export const startRoom = (code, key, seen) =>
+  api(`/zoo/rooms/${code}/start`, Number.isInteger(seen) ? { key, seen } : { key });
 
 /* 내가 직접 뒀다고 알린다 — 자리비움 판정을 되돌린다 */
-export const keepAlive = (code, seat) =>
-  api(`/zoo/rooms/${code}/alive`, { seat }).catch(() => null);
+export const keepAlive = (code, key) =>
+  api(`/zoo/rooms/${code}/alive`, { key }).catch(() => null);
 
 /* ---------- 하던 방 적어 두기 ----------
 
@@ -85,7 +106,7 @@ export function saveSeat(net){
     if (!net || net.code == null) return;
     localStorage.setItem(SEAT_KEY, JSON.stringify({
       code: net.code, matchID: net.matchID, playerID: net.playerID,
-      credentials: net.credentials, numPlayers: net.numPlayers,
+      credentials: net.credentials, numPlayers: net.numPlayers, key: net.key || null,
       gen: Number.isInteger(net.gen) ? net.gen : null,
       opts: net.opts || null, at: Date.now(),
     }));
@@ -107,5 +128,5 @@ export function clearSeat(){ try { localStorage.removeItem(SEAT_KEY); } catch(e)
 /* 판 화면에 들어섰다고 알린다.
    이 신호가 다 모일 때까지 서버 봇은 새 판에서 한 수도 두지 않는다.
    안 알리면 등수·세금 화면을 보는 동안 봇이 다 둬 버린다 */
-export const sayReady = (code, seat) =>
-  api(`/zoo/rooms/${code}/ready`, { seat }).catch(() => null);
+export const sayReady = (code, key) =>
+  api(`/zoo/rooms/${code}/ready`, { key }).catch(() => null);

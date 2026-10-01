@@ -4,7 +4,7 @@
    앱이 만들어졌다. 사람이 기억해야 하는 절차는 반드시 틀린다.
 
    쓰는 법:  node test/prebuild.test.mjs   */
-import { checkBundle, checkEnv, HOOK_MARKS } from "../scripts/prebuild-check.mjs";
+import { checkBundle, checkEnv, warnEnv, HOOK_MARKS } from "../scripts/prebuild-check.mjs";
 let pass = 0, fail = 0;
 const check = (n, ok, note) => {
   if (ok){ pass++; console.log("  [OK]   " + n + (note ? "  " + note : "")); }
@@ -29,6 +29,14 @@ check("다 차 있으면 통과시킨다",
       checkEnv("VITE_GAME_SERVER=https://x\nVITE_FB_API_KEY=abc\n").length === 0);
 check("따옴표가 있어도 읽는다",
       checkEnv('VITE_GAME_SERVER="https://x"\nVITE_FB_API_KEY=abc\n').length === 0);
+
+/* 시험용 광고면 광고 보상 티켓이 서버로 안 들어온다 — 막지는 않고 알린다 */
+check("보상 광고 번호가 비면 알린다",
+      warnEnv("VITE_GAME_SERVER=https://x\n").some(m => /AD_REWARD_ID/.test(m)));
+check("진짜 번호가 있으면 안 알린다",
+      warnEnv("VITE_AD_REWARD_ID=ca-app-pub-1/2\n").length === 0);
+check("알림은 막는 목록(checkEnv)에 안 들어간다",
+      !checkEnv("VITE_GAME_SERVER=https://x\nVITE_FB_API_KEY=abc\n").some(m => /AD_REWARD_ID/.test(m)));
 
 console.log("\n=== 통과 " + pass + " / 실패 " + fail + " ===\n");
 process.exit(fail ? 1 : 0);
