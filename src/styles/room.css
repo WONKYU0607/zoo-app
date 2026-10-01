@@ -141,5 +141,9 @@
 #room .seat--empty{cursor:pointer}
 #room .seat--empty .seat__av,
 #room .seat--empty .seat__inv{pointer-events:auto}
+/* 앉은 자리 — **얼굴 동그라미를 누르면** 방장에게 강퇴를 묻는다(room.js askKick).
+   예전 규칙은 빈자리만 되살려서 앉은 자리는 손가락이 아예 안 닿았다(2026-10-01 폰에서 강퇴가 안 뜸).
+   방장이 아니면 눌러도 아무 일 없다 */
+#room .seat:not(.seat--empty) .seat__av{pointer-events:auto}
 #room .seat__inv{color:#C69A3C;opacity:.9}
 #room .seat--empty:active .seat__inv{opacity:1}

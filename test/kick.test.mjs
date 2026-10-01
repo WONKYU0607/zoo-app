@@ -43,11 +43,23 @@ const askOn = p => p.page.evaluate(() => {
     no: getComputedStyle(document.getElementById("askNo")).display !== "none" } : null;
 });
 const click = (p, sel) => p.page.evaluate(s => { const e = document.querySelector(s); if (e) e.dispatchEvent(new MouseEvent("click", { bubbles: true })); return Boolean(e); }, sel);
-const tapSeat = (p, i) => p.page.evaluate(i => {
-  const s = document.querySelectorAll("#room .seat")[i];
-  if (s) s.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-  return Boolean(s);
-}, i);
+/* **진짜로 그 자리를 누른다** — 얼굴 동그라미 가운데 좌표를 마우스로 찍는다.
+   예전에는 자리 요소에 click 을 직접 쏴서, CSS 가 손가락을 막고 있는데도(앉은 자리 pointer-events:none)
+   통과했다(2026-10-01 폰에서 강퇴가 안 뜸). 좌표로 찍어야 화면이 실제로 받는지 본다 */
+const tapSeat = async (p, i) => {
+  const at = await p.page.evaluate(i => {
+    const s = document.querySelectorAll("#room .seat")[i];
+    const av = s && s.querySelector(".seat__av");
+    if (!av) return null;
+    const r = av.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    return { x, y, mine: Boolean(hit && s.contains(hit)) };
+  }, i);
+  if (!at) return false;
+  await p.page.mouse.click(at.x, at.y);
+  return at.mine;
+};
 const mySeat = async p => Number(((await p.seat()) || {}).playerID);
 const roomNames = async code => ((await api(srv, "/zoo/rooms/" + code)).body.players || []).map(x => x.name || "");
 
@@ -77,8 +89,9 @@ check("방장이 봇 자리를 누르면 아무 일 없다", Boolean(botSeat) &&
 
 /* ---------- 아니오 ---------- */
 console.log("\n[강퇴 — 아니오]");
-await tapSeat(H, sa); await nap(300);
+const reach = await tapSeat(H, sa); await nap(300);
 let q = await askOn(H);
+check("앉은 자리 얼굴이 손가락을 받는다 (위에 덮인 것이 없다)", reach);
 check("사람 자리를 누르면 한 번 묻는다", Boolean(q) && /손님하나/.test(q.m), q && q.m);
 check("남은 횟수를 적는다 (2)", Boolean(q) && /남은 횟수 2/.test(q.m), q && q.m);
 await click(H, "#askNo"); await nap(1800);
