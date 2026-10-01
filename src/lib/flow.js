@@ -55,6 +55,7 @@ function netRoomView(){
     code: net.code,
     cap: net.numPlayers,
     me: Number(net.playerID),
+    online: true,                   /* 서버 방 — 프로필 전적·강퇴가 된다 */
     /* 강퇴 — 이 방에서 몇 번 했고 몇 번까지 되는지(서버가 센다) */
     kicks: Number(net.kicks) || 0,
     kickMax: Number.isInteger(net.kickMax) ? net.kickMax : 2,
@@ -83,6 +84,7 @@ async function refreshNet(){
     net = null;
     lobby.clearSeat();
     emitRoom();
+    call("__closeProfile");
     call("__onKicked");
     return null;
   }
@@ -296,6 +298,7 @@ function enterOnlineGame(){
   if (!net || net.inGame) return;
   net.inGame = true;
   pollStop();
+  call("__closeProfile");               /* 대기실에서 열어 둔 프로필 창이 판 위에 남지 않게 */
 
   eng.startOnline({
     server: lobby.serverUrl(),
@@ -592,6 +595,11 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
 
   /* 강퇴 — 방장이 대기실에서 누른다. 규칙(방장만·시작 전·2번까지)은 서버가 가린다.
      실패는 그대로 던진다 — 부르는 쪽(room.js)이 까닭을 알린다 */
+  /* 프로필 창 전적 — 누를 때마다 서버에서 새로 받는다. 이 기기 방이면 없음(null) */
+  W().__seatRecord = async seat => {
+    if (!net || net.code == null) return null;
+    try { return await lobby.seatRecord(net.code, seat); } catch(e){ return null; }
+  };
   W().__kickSeat = async seat => {
     if (!net || net.code == null) return null;
     const r = await lobby.kickPlayer(net.code, net.key, Number(seat));

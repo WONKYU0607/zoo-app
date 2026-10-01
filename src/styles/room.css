@@ -147,3 +147,27 @@
 #room .seat:not(.seat--empty) .seat__av{pointer-events:auto}
 #room .seat__inv{color:#C69A3C;opacity:.9}
 #room .seat--empty:active .seat__inv{opacity:1}
+
+/* ---------- 프로필 상자 (2026-10-01) ----------
+   남의 얼굴을 누르면 그 자리 **바로 밑에** 붙는 작은 상자. 화면을 덮지 않는다(어둡게 깔지 않음).
+   전적·승률 두 줄 + 방장에게만 강퇴 단추. 꼭지(tip)가 그 얼굴을 가리킨다 */
+#room .pfpop{position:absolute;z-index:20;display:none;min-width:150px;max-width:200px;
+  padding:9px 11px 10px;border:1px solid rgba(198,154,60,.55);border-radius:6px;
+  background:rgba(14,10,6,.95);box-shadow:0 6px 18px rgba(0,0,0,.6)}
+#room .pfpop.on{display:block}
+#room .pfpop__tip{position:absolute;top:-6px;width:10px;height:10px;margin-left:-5px;
+  background:rgba(14,10,6,.95);border-left:1px solid rgba(198,154,60,.55);border-top:1px solid rgba(198,154,60,.55);
+  transform:rotate(45deg)}
+#room .pfpop--up .pfpop__tip{top:auto;bottom:-6px;transform:rotate(225deg)}
+#room .pfpop__row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  font-size:12.5px;line-height:1.75;white-space:nowrap}
+#room .pfpop__row + .pfpop__row{border-top:1px dashed rgba(198,154,60,.22)}
+#room .pfpop__k{color:#B8A47E}
+#room .pfpop__v{color:#F0DFA8;font-weight:700}
+#room .pfpop__kick{display:block;width:100%;margin-top:8px;min-height:32px;
+  border:1px solid #8E2B1F !important;border-radius:4px;
+  background:linear-gradient(180deg,#9B3424,#6E1F15) !important;
+  color:#FBEFCE !important;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;
+  text-shadow:0 1px 2px rgba(0,0,0,.7)}
+#room .pfpop__kick:active{transform:translateY(1px);filter:brightness(.9)}
+#room .pfpop__kick[hidden]{display:none !important}

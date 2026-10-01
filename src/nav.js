@@ -968,6 +968,7 @@ export function initNav(){
   }
   /* 방 대기실(room.js)이 강퇴 확인창을 여기서 띄운다 */
   window.__ask = ask;
+
   /* **방장이 나를 내보냈다** — flow.js 가 방을 들여다보다 알게 되면 부른다.
      로비로 보내고 알린다. 하던 방 기록은 flow 가 이미 지웠다 */
   const KICK_T = {

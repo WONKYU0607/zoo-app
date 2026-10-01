@@ -645,8 +645,9 @@ export async function waitReward(before, maxMs = 25000){
   if (!account.signedIn) return false;
   const was = typeof before === "number" ? before : refill(account.tickets, account.ticketAt).tickets;
   const t0 = Date.now();
+  /* 처음 8초는 0.5초마다 본다 — 구글 알림은 대개 1초 안팎에 온다(예전에는 1.5초마다라 늦어 보였다) */
   while (Date.now() - t0 < maxMs){
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, Date.now() - t0 < 8000 ? 500 : 1500));
     try { await refreshAccount(); } catch(e){}
     if (account.tickets > was || account.tickets >= TICKET_MAX) return true;
   }

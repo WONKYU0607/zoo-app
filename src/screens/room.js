@@ -49,7 +49,8 @@ export function mount(root){
          wait:"방장이 시작하기를 기다리는 중입니다",
          kickT:"내보내기", kickM:(n,k)=>n+"님을 내보낼까요? (남은 횟수 "+k+")", kickY:"내보내기",
          kickNoneT:"내보내기", kickNone:"이 방에서는 더 내보낼 수 없습니다 (한 방에 2번까지)", ok:"확인",
-         kickFail:"내보내지 못했습니다", startFail:"시작하지 못했습니다" },
+         kickFail:"내보내지 못했습니다", startFail:"시작하지 못했습니다",
+         pfRec:"전적", pfRate:"승률", pfWL:(w,l)=>w+"승 "+l+"패", pfKick:"강퇴" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
          needMore:"Four players are needed to start",
@@ -68,7 +69,8 @@ export function mount(root){
          wait:"Waiting for the host to start",
          kickT:"Remove player", kickM:(n,k)=>"Remove "+n+" from the room? ("+k+" left)", kickY:"Remove",
          kickNoneT:"Remove player", kickNone:"No more removals in this room (2 per room)", ok:"OK",
-         kickFail:"Could not remove the player", startFail:"Could not start" }
+         kickFail:"Could not remove the player", startFail:"Could not start",
+         pfRec:"Record", pfRate:"Win rate", pfWL:(w,l)=>w+"W "+l+"L", pfKick:"Remove" }
   };
   let lang = window.__lang || "ko";
   const PLAYERS = PLAYERS_KO;
@@ -246,7 +248,7 @@ export function mount(root){
             if (window.__openFriends) window.__openFriends("invite");
             return;
           }
-          askKick(el.__i);                 /* 앉은 자리 — 방장이면 내보내기를 묻는다 */
+          openProfile(el.__i);             /* 앉은 자리 — 프로필 창(전적·승률, 방장이면 강퇴 단추) */
         });
         box.appendChild(el);
         seatNodes.push(el);
@@ -289,6 +291,10 @@ export function mount(root){
     }
     const sm = document.getElementById("sum");
     anchorSeats(box, sm ? sm.getBoundingClientRect().top - 6 : 0);
+    /* 열어 둔 프로필 상자: 그 자리가 비었거나 방을 나왔으면 닫고, 아니면 자리에 다시 붙인다 */
+    if (pop.classList.contains("on")){
+      if (!R || !list[popSeat] || !R.seats) closeProfile(); else placePop(popSeat);
+    }
     const t = L[lang];
     document.getElementById("bt").textContent = t.title;
     document.getElementById("rl").textContent = t.roomL;
@@ -304,10 +310,92 @@ export function mount(root){
       now < 4 ? t.needMore : now < cap ? t.canStart : t.full;
   }
   
-  /* ---------- 강퇴 ----------
-     방장이 대기실에서 **사람** 자리를 누르면 내보낼지 묻는다(자기·봇은 아무 일 없음).
+  /* ---------- 프로필 상자 · 강퇴 ----------
+     대기실에서 **남의 얼굴**을 누르면 그 자리 **바로 밑에** 작은 상자가 뜬다(2026-10-01 사용자 지정 —
+     화면 전체를 가리는 창이 아니라 그 사람 옆에 붙는 상자). 전적(몇승 몇패)·승률, 방장에게만 강퇴 단추.
+     강퇴를 누르면 확인창 → 내보내기. 누구나 열 수 있고, 다른 곳을 누르면 닫힌다. 자기 자리는 아무 일 없음.
+     **봇도 사람과 똑같이** 열리고 내보낼 수 있다(봇도 이름마다 전적을 센다).
      한 방에 2번까지 — 남은 횟수를 확인창에 적는다. 규칙은 서버가 다시 가린다 */
   let kicking = false;
+  const pop = window.document.createElement("div");
+  pop.className = "pfpop";
+  pop.id = "pfPop";
+  pop.setAttribute("role", "dialog");          /* 뒤로가기가 열린 창으로 보고 이것부터 닫는다 */
+  pop.innerHTML =
+    '<i class="pfpop__tip"></i>' +
+    '<div class="pfpop__row"><span class="pfpop__k" id="pfRecK"></span><span class="pfpop__v" id="pfRec"></span></div>' +
+    '<div class="pfpop__row"><span class="pfpop__k" id="pfRateK"></span><span class="pfpop__v" id="pfRate"></span></div>' +
+    '<button class="pfpop__kick" id="pfKick" hidden></button>';
+  root.appendChild(pop);
+  let popSeat = -1, popSeq = 0;
+  function closeProfile(){ pop.classList.remove("on"); popSeat = -1; popSeq++; }
+  window.__closeProfile = closeProfile;
+  /* 그 자리 밑에 붙인다. 밑에 자리가 모자라면(화면 아래 끝) 위로, 좌우는 화면 안으로 당긴다 */
+  function placePop(i){
+    const seatEl = seatNodes[i];
+    if (!seatEl) return;
+    const box = root.getBoundingClientRect();
+    const av = (seatEl.querySelector(".seat__av") || seatEl).getBoundingClientRect();
+    const s = seatEl.getBoundingClientRect();
+    const w = pop.offsetWidth, h = pop.offsetHeight;
+    const cx = av.left + av.width / 2 - box.left;
+    let left = Math.round(cx - w / 2);
+    left = Math.max(6, Math.min(box.width - w - 6, left));
+    let top = Math.round(s.bottom - box.top + 6);
+    let up = false;
+    if (top + h > box.height - 6){ top = Math.round(av.top - box.top - h - 8); up = true; }
+    pop.style.left = left + "px";
+    pop.style.top = top + "px";
+    pop.classList.toggle("pfpop--up", up);
+    const tip = pop.querySelector(".pfpop__tip");
+    tip.style.left = Math.max(10, Math.min(w - 10, cx - left)) + "px";
+  }
+  function openProfile(i){
+    const R = window.__room;
+    if (!R || !R.seats) return;
+    const arr = asArray(R.seats, R.cap || cap);
+    const p = arr[i];
+    if (!p || i === R.me) return;
+    if (pop.classList.contains("on") && popSeat === i){ closeProfile(); return; }   /* 같은 얼굴을 또 누르면 닫는다 */
+    const t = L[lang];
+    const meSeat = arr[R.me];
+    const host = Boolean(meSeat && meSeat.uid === R.host);
+    const canKick = Boolean(R.online && host && R.phase === "waiting" && window.__kickSeat);
+    const my = ++popSeq;
+    popSeat = i;
+    document.getElementById("pfRecK").textContent = t.pfRec;
+    document.getElementById("pfRateK").textContent = t.pfRate;
+    const rec = document.getElementById("pfRec"), rate = document.getElementById("pfRate");
+    rec.textContent = "\u2026"; rate.textContent = "\u2026";
+    const kb = document.getElementById("pfKick");
+    kb.textContent = t.pfKick;
+    kb.hidden = !canKick;
+    kb.onclick = () => { closeProfile(); askKick(i); };
+    pop.classList.add("on");
+    placePop(i);
+    const fill = r => {
+      if (my !== popSeq) return;                /* 그사이 다른 사람을 눌렀다 */
+      const played = r && Number.isInteger(r.played) ? r.played : null;
+      const wins = r && Number.isInteger(r.wins) ? r.wins : null;
+      if (played == null || wins == null){ rec.textContent = "-"; rate.textContent = "-"; }
+      else {
+        rec.textContent = t.pfWL(wins, Math.max(0, played - wins));
+        rate.textContent = played ? Math.round(wins / played * 100) + "%" : "-";
+      }
+      placePop(i);                              /* 글자 길이가 바뀌었으니 다시 맞춘다 */
+    };
+    const f = window.__seatRecord;
+    if (typeof f !== "function") fill(null);
+    else Promise.resolve(f(i)).then(fill, () => fill(null));
+  }
+  /* 상자 밖을 누르면 닫는다 — 다른 얼굴을 누른 것은 그쪽 처리기가 새로 연다 */
+  window.document.addEventListener("pointerdown", e => {
+    if (!pop.classList.contains("on")) return;
+    if (pop.contains(e.target)) return;
+    if (e.target.closest && e.target.closest("#room .seat:not(.seat--empty) .seat__av")) return;
+    closeProfile();
+  }, true);
+  window.addEventListener("resize", () => { if (pop.classList.contains("on") && popSeat >= 0) placePop(popSeat); });
   function askKick(i){
     const R = window.__room;
     if (!R || !R.seats || !window.__kickSeat || !window.__ask) return;   /* 서버 방에서만 */
@@ -316,7 +404,7 @@ export function mount(root){
     const meSeat = arr[R.me];
     if (!meSeat || meSeat.uid !== R.host) return;                        /* 방장만 */
     const p = arr[i];
-    if (!p || i === R.me || p.bot) return;                                /* 사람만, 자기는 안 됨 */
+    if (!p || i === R.me) return;                                         /* 자기는 안 됨 */
     const t = L[lang];
     const left = Math.max(0, (R.kickMax || 2) - (R.kicks || 0));
     if (left <= 0){ window.__ask(t.kickNoneT, t.kickNone, t.ok, null, null, true); return; }
@@ -325,7 +413,7 @@ export function mount(root){
       /* 묻는 사이에 그 자리가 바뀌었으면(나갔다 딴 사람이 앉음) 내보내지 않는다 */
       const R2 = window.__room;
       const now = R2 && R2.seats ? asArray(R2.seats, R2.cap || cap)[i] : null;
-      if (!now || now.bot || now.name !== who) return;
+      if (!now || now.name !== who) return;
       kicking = true;
       try { await window.__kickSeat(i); }
       catch (err){

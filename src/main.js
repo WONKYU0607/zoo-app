@@ -5,7 +5,7 @@ import { db } from "./lib/firebase.js";
 import * as FR from "./lib/friends.js";
 import { initFriends } from "./lib/friends.js";
 import { watchAuth, signInGoogle, signInGuest, linkGoogle, switchToGoogle, signOutNow, deleteAccount, setNickname, signInTest, isLocal, account, pending, finishGame, hasTicket, ticketLeft, syncTickets, setAvatar, waitReward, refreshAccount, idToken, TICKET_MAX } from "./lib/account.js";
-import { showRewardAd } from "./lib/ads.js";
+import { showRewardAd, preloadRewardAd } from "./lib/ads.js";
 import { BAR_SWAP } from "./lib/bar.js";
 
 import * as entry  from "./screens/entry.js";
@@ -152,8 +152,17 @@ async function watchAd(){
     console.warn("[광고] " + (e && e.message || e));
   } finally {
     adBusy = false; paintAd();
+    preloadAd();                               /* 다음 광고를 미리 받아 둔다 */
   }
 }
+/* 티켓을 더 받을 수 있고 로그인돼 있으면 광고를 미리 받아 둔다(누르자마자 뜨게).
+   받아 둔 것이 아직 쓸 만하면 아무것도 안 한다 — 계정 변화마다 불러도 된다 */
+function preloadAd(){
+  if (adBusy || !account.signedIn || !account.uid) return;
+  if ((Number(account.tickets) || 0) >= TICKET_MAX) return;
+  preloadRewardAd(account.uid).catch(() => {});
+}
+window.addEventListener("accountchange", () => setTimeout(preloadAd, 300));
 document.addEventListener("click", e => { if (e.target.closest("#btAd")) watchAd(); });
 window.addEventListener("accountchange", paintAd);
 paintAd();

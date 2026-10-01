@@ -71,6 +71,10 @@ export const leaveRoom = (code, key) =>
 export const quickJoin = async ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>
   api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2, token: await token() });
 
+/* 프로필 창의 전적 — { played, wins } (계정이 꺼진 서버면 null) */
+export const seatRecord = (code, seat) =>
+  api(`/zoo/rooms/${code}/profile/${Number(seat)}`);
+
 /* 강퇴 — 방장만, 시작 전, 한 방에 2번까지(서버가 가린다). seat = 내보낼 사람의 자리 번호 */
 export const kickPlayer = (code, key, seat) =>
   api(`/zoo/rooms/${code}/kick`, { key, seat });

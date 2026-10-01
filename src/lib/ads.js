@@ -34,6 +34,39 @@ let inited = false;
 let showing = false;
 export const adBusy = () => showing;
 
+/* ---------- 미리 불러오기 (2026-10-01) ----------
+   예전에는 단추를 누른 **그때** 구글에서 광고를 받아 와(prepare) 약 1초 뒤에야 떴다.
+   로비에 있는 동안 다음 광고를 미리 받아 두면 누르자마자 뜬다.
+   광고에는 계정 번호(SSV userId)가 실리므로 **누구 것으로 받아 뒀는지** 기억한다 —
+   계정이 바뀌었으면 새로 받는다. 오래 묵은 것은 다시 받는다(구글은 받아 둔 광고에 유효 시간을 둔다) */
+const FRESH_MS = 45 * 60 * 1000;
+let pre = null;          /* { id, at, p: Promise<boolean> } */
+const preFresh = id => pre && pre.id === id && Date.now() - pre.at < FRESH_MS;
+async function prepare(AdMob, id){
+  if (!inited){ await AdMob.initialize({}); inited = true; }
+  const opt = { adId: AD_REWARD_ID, isTesting: AD_IS_TEST };
+  if (id) opt.ssv = { userId: id };
+  await AdMob.prepareRewardVideoAd(opt);
+}
+export function preloadRewardAd(userId){
+  if (!adsAvailable() || showing) return Promise.resolve(false);
+  const id = String(userId || "");
+  if (preFresh(id)) return pre.p;
+  const mine = { id, at: Date.now(), p: null };
+  pre = mine;
+  mine.p = (async () => {
+    try {
+      const { AdMob } = await import("@capacitor-community/admob");
+      await prepare(AdMob, id);
+      return true;
+    } catch (e){
+      if (pre === mine) pre = null;      /* 못 받았으면 누를 때 다시 받는다 */
+      return false;
+    }
+  })();
+  return mine.p;
+}
+
 /* 광고를 보여 주고 **끝까지 봤는지**를 알려 준다.
    { ok: true }  — 보상을 받을 자격이 생겼다
    { ok: false, why } — 웹이라 못 띄움 / 못 불러옴 / 중간에 닫음 / 보여 주기 실패
@@ -54,13 +87,16 @@ export async function showRewardAd(userId){
 async function rewardInner(userId){
 
   const { AdMob, RewardAdPluginEvents } = await import("@capacitor-community/admob");
-  try {
-    if (!inited){ await AdMob.initialize({}); inited = true; }
-    const opt = { adId: AD_REWARD_ID, isTesting: AD_IS_TEST };
-    if (userId) opt.ssv = { userId: String(userId) };
-    await AdMob.prepareRewardVideoAd(opt);
-  } catch (e){
-    return { ok: false, why: "load" };         /* 불러올 광고가 없거나 연결 문제 */
+  const id = String(userId || "");
+  /* 미리 받아 둔 것이 있으면(받는 중이면 끝날 때까지 기다려) 그걸 쓴다. 한 번 보이면 다 쓴 것이다 */
+  let ready = false;
+  if (preFresh(id)) ready = await pre.p;
+  pre = null;
+  if (!ready){
+    try { await prepare(AdMob, id); }
+    catch (e){
+      return { ok: false, why: "load" };       /* 불러올 광고가 없거나 연결 문제 */
+    }
   }
 
   /* 보상은 **광고가 닫힌 뒤에** 준다. 보는 도중 "보상" 신호가 오고, 닫으면 "닫힘" 이 온다.

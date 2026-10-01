@@ -54,5 +54,23 @@ await ads.showRewardAd("");
 check("계정 번호가 없으면 ssv 를 안 싣는다 (빈 값을 보내지 않는다)", globalThis.__prep[0] && !globalThis.__prep[0].ssv,
   JSON.stringify(globalThis.__prep[0]));
 
+/* ---------- 미리 불러오기 (2026-10-01) ----------
+   단추를 누른 그때 받아 오면 약 1초 늦게 뜬다. 로비에서 미리 받아 두면 누르자마자 뜬다 */
+globalThis.__prep = [];
+await ads.preloadRewardAd("uid-pre");
+check("미리 받아 둘 때 계정 번호를 싣는다", globalThis.__prep.length === 1 && globalThis.__prep[0].ssv && globalThis.__prep[0].ssv.userId === "uid-pre",
+  JSON.stringify(globalThis.__prep));
+await ads.preloadRewardAd("uid-pre");
+check("이미 받아 둔 게 있으면 또 받지 않는다", globalThis.__prep.length === 1, String(globalThis.__prep.length));
+const r2 = await ads.showRewardAd("uid-pre");
+check("누르면 받아 둔 것을 바로 보여 준다 (새로 받지 않는다)", r2.ok && globalThis.__prep.length === 1, String(globalThis.__prep.length));
+await ads.showRewardAd("uid-pre");
+check("한 번 보여 준 것은 다 쓴 것 — 다음엔 새로 받는다", globalThis.__prep.length === 2, String(globalThis.__prep.length));
+globalThis.__prep = [];
+await ads.preloadRewardAd("uid-old");
+await ads.showRewardAd("uid-new");
+check("계정이 바뀌었으면 받아 둔 것을 안 쓰고 새 계정 번호로 다시 받는다",
+  globalThis.__prep.length === 2 && globalThis.__prep[1].ssv.userId === "uid-new", JSON.stringify(globalThis.__prep.map(x => x.ssv && x.ssv.userId)));
+
 console.log("\n=== " + (fail ? "통과 " + pass + " / 실패 " + fail : "전부 통과 (" + pass + ")") + " ===\n");
 process.exit(fail ? 1 : 0);

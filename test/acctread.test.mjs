@@ -174,7 +174,9 @@ setTimeout(() => {                                   /* 2초 뒤 서버가 한 �
 }, 2000);
 const t0 = Date.now();
 const got = await A.waitReward(1, 8000);
-check("서버가 준 티켓이 들어오면 알아챈다", got === true && A.account.tickets === 2, (Date.now() - t0) + "ms · " + A.account.tickets);
+const tookMs = Date.now() - t0;
+check("서버가 준 티켓이 들어오면 알아챈다", got === true && A.account.tickets === 2, tookMs + "ms · " + A.account.tickets);
+check("적히고 0.6초 안에 화면에 오른다 (0.5초마다 확인 — 예전 1.5초)", tookMs < 2600, tookMs + "ms (서버가 2초에 적음)");
 const nog = await A.waitReward(2, 3200);
 check("안 들어오면 시간 안에 포기한다 (화면이 안내를 띄운다)", nog === false);
 check("기다리는 동안 티켓을 적지 않는다", userWrites(uG3).length === 0, JSON.stringify(userWrites(uG3)));
