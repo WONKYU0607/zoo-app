@@ -313,7 +313,8 @@ export function mount(root){
   /* ---------- 프로필 상자 · 강퇴 ----------
      대기실에서 **남의 얼굴**을 누르면 그 자리 **바로 밑에** 작은 상자가 뜬다(2026-10-01 사용자 지정 —
      화면 전체를 가리는 창이 아니라 그 사람 옆에 붙는 상자). 전적(몇승 몇패)·승률, 방장에게만 강퇴 단추.
-     강퇴를 누르면 확인창 → 내보내기. 누구나 열 수 있고, 다른 곳을 누르면 닫힌다. 자기 자리는 아무 일 없음.
+     강퇴를 누르면 확인창 → 내보내기. 누구나 열 수 있고, 다른 곳을 누르면 닫힌다.
+     자기 얼굴을 누르면 자기 전적만 뜬다(강퇴 단추 없음 — 2026-10-01 추가).
      **봇도 사람과 똑같이** 열리고 내보낼 수 있다(봇도 이름마다 전적을 센다).
      한 방에 2번까지 — 남은 횟수를 확인창에 적는다. 규칙은 서버가 다시 가린다 */
   let kicking = false;
@@ -355,12 +356,13 @@ export function mount(root){
     if (!R || !R.seats) return;
     const arr = asArray(R.seats, R.cap || cap);
     const p = arr[i];
-    if (!p || i === R.me) return;
+    if (!p) return;
     if (pop.classList.contains("on") && popSeat === i){ closeProfile(); return; }   /* 같은 얼굴을 또 누르면 닫는다 */
     const t = L[lang];
     const meSeat = arr[R.me];
     const host = Boolean(meSeat && meSeat.uid === R.host);
-    const canKick = Boolean(R.online && host && R.phase === "waiting" && window.__kickSeat);
+    /* 내 얼굴을 누르면 내 전적만 — 나를 내보내는 단추는 없다(2026-10-01 사용자 요청) */
+    const canKick = Boolean(i !== R.me && R.online && host && R.phase === "waiting" && window.__kickSeat);
     const my = ++popSeq;
     popSeat = i;
     document.getElementById("pfRecK").textContent = t.pfRec;

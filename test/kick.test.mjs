@@ -3,7 +3,7 @@
    강퇴 (2026-09-30 추가)
      - 방장이 대기실에서 **사람** 자리를 누르면 "OO님을 내보낼까요? (남은 횟수 N)" 한 번 묻는다
      - 아니오면 그대로, 예면 그 사람 화면에 "방장이 방에서 내보냈습니다" + 로비
-     - 방장이 아닌 사람·자기 자리·봇 자리는 눌러도 아무 일 없음
+     - 방장이 아닌 사람은 강퇴 단추가 없다. 자기 얼굴을 누르면 자기 전적만(강퇴 단추 없음)
      - 내보내진 사람은 번호로 다시 못 들어온다(까닭이 뜬다)
      - 한 방에 2번까지 — 세 번째는 "더 내보낼 수 없습니다" 만 뜨고 아무도 안 나간다
    티켓
@@ -121,8 +121,20 @@ pf = await pfOn(A, sb);
 check("손님끼리도 본다 (강퇴 단추 없이, 그 얼굴 밑에)", Boolean(pf) && !pf.kick && pf.below, JSON.stringify(pf));
 await tapSeat(A, sb); await nap(300);
 check("같은 얼굴을 또 누르면 닫힌다", !(await pfOn(A)));
+/* 내 얼굴을 누르면 내 전적 (2026-10-01 사용자 요청 — 전에는 아무 일 없었다) */
+check("내 얼굴도 손가락을 받는다", await tapSeat(A, sa));
+await waitFor(async () => { pf = await pfOn(A, sa); return pf && pf.rec !== "…"; }, 4000, 150);
+check("손님이 자기 얼굴을 누르면 자기 전적이 뜬다 (3승 2패 · 60%)", Boolean(pf) && pf.rec === "3승 2패" && pf.rate === "60%", JSON.stringify(pf));
+check("자기 상자도 그 얼굴에 붙는 작은 상자", Boolean(pf) && pf.under && pf.small && pf.inside, JSON.stringify(pf));
+await closePf(A); await nap(300);
+await seed("k0", { name: "방장님", avatar: 1, score: 0, games: 0, tickets: 3, ticketAt: Date.now(), played: 4, wins: 1 });
+await tapSeat(H, sh);
+await waitFor(async () => { pf = await pfOn(H, sh); return pf && pf.rec !== "…"; }, 4000, 150);
+check("방장이 자기 얼굴을 누르면 자기 전적 (1승 3패 · 25%)", Boolean(pf) && pf.rec === "1승 3패" && pf.rate === "25%", JSON.stringify(pf));
+check("방장이어도 자기 상자에는 강퇴 단추가 없다", Boolean(pf) && !pf.kick, JSON.stringify(pf));
+check("자기 상자는 화면 안에 다 들어온다 (맨 아래 자리라 위로 뜰 수 있음)", Boolean(pf) && pf.under && pf.inside, JSON.stringify(pf));
 await tapSeat(H, sh); await nap(300);
-check("방장이 자기 자리를 누르면 아무 일 없다", !(await pfOn(H)) && !(await askOn(H)));
+check("내 얼굴을 또 누르면 닫힌다", !(await pfOn(H)) && !(await askOn(H)));
 await waitFor(async () => (await api(srv, "/zoo/rooms/" + code)).body.players.some(x => x.bot), 8000);
 await nap(1700);                                      /* 방장 화면이 봇을 그릴 때까지 */
 const botSeat = (await api(srv, "/zoo/rooms/" + code)).body.players.find(x => x.bot);

@@ -150,9 +150,22 @@ for (let k = 0; k < 80; k++){                   /* 4명이 앉을 때까지 (위
   await nap(250);
 }
 const beforeStart = await page.evaluate(() => window.__redraw);
+/* **뽑기 화면이 자기 boot 으로 다시 서는 그 순간**의 수를 잡는다.
+   서버 방은 시작 뒤 서버 답이 늦게 와서 "시작 직후" 가 곧 boot 전이었다.
+   이 기기 방은 시작과 **같은 순간에** 새 뽑기 화면까지 그려 버려서, 시작 직후에 재면
+   새 화면이 정상으로 그린 것(95번)까지 죽은 화면이 움직인 것으로 셌다(2026-10-01 발견 —
+   앱은 멀쩡, 재는 시점이 틀렸다). 그래서 boot 이 불리는 순간을 걸어 둔다.
+   boot 이 아직 안 불렸으면(서버 방) 시작 직후 수를 그대로 쓴다 */
+await page.evaluate(() => {
+  window.__atBoot = null;
+  const ob = window.__bootDraw;
+  window.__bootDraw = function(){
+    if (window.__atBoot == null) window.__atBoot = window.__redraw;
+    return ob.apply(this, arguments);
+  };
+});
 await page.evaluate(async () => { await window.__startRound(); });
-/* 판을 세운 직후 — **뽑기 화면이 자기 boot 으로 다시 서기 전**이다 */
-const rightAfter = await page.evaluate(() => window.__redraw);
+const rightAfter = await page.evaluate(() => window.__atBoot != null ? window.__atBoot : window.__redraw);
 check("**새 판을 세워도 죽은 화면은 안 움직인다**", rightAfter === beforeStart,
       "세우기 전 " + beforeStart + "번 → 직후 " + rightAfter + "번");
 
