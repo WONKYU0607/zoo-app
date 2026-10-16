@@ -187,17 +187,30 @@ export function mount(root){
   }
   
   /* from/to: 자리 번호, -1이면 가운데 */
+  /* 카드 숫자로 쓸 수 있는 값인가 (1~12, 카멜레온 13·14) */
+  const isCard = c => Number.isInteger(c) && c >= 1 && c <= 14;
+  /* card 는 숫자이거나, **날아가는 순간에 알아낼 함수**다(엔진이 아직 세금을 안 걷었을 수 있어서).
+     **모르는 카드는 뒷면으로 그린다.** 예전에는 모르는 값을 그대로 앞면에 그려
+     이름 칸에 "undefined" 가 찍히고 그림이 깨졌다(2026-10-15 신고: 8인 판 2등 세금 받기) */
   function flyCard(from, to, card, delay, faceDown){
     const a = from < 0 ? {x:50,y:50} : seatPos(from);
     const b = to   < 0 ? {x:50,y:50} : seatPos(to);
     const d = document.createElement("div");
     d.className = "fly";
+    d.dataset.from = from; d.dataset.to = to;     /* 검사용 — 어디서 어디로 */
     d.style.left = a.x + "%"; d.style.top = a.y + "%";
     d.style.transform = "translate(-50%,-50%) scale(.7)";
     d.style.opacity = 0;
-    d.innerHTML = faceDown ? backHTML(32) : cardHTML(card, 32);
+    const face = () => {
+      const c = typeof card === "function" ? card() : card;
+      d.innerHTML = (faceDown || !isCard(c)) ? backHTML(32) : cardHTML(c, 32);
+      d.dataset.card = (faceDown || !isCard(c)) ? "back" : String(c);    /* 검사용 */
+    };
+    if (typeof card !== "function") face();
+    else d.innerHTML = backHTML(32);
     el("fx").appendChild(d);
     setTimeout(() => {
+      if (typeof card === "function") face();
       d.style.opacity = 1;
       d.style.left = b.x + "%"; d.style.top = b.y + "%";
       d.style.transform = "translate(-50%,-50%) scale(1) rotate(" + (Math.random()*20-10).toFixed(0) + "deg)";
@@ -268,19 +281,61 @@ export function mount(root){
   /* 세금 주고받기 — **소리는 안 낸다.**
      예전에는 패 나누는 소리를 그대로 썼는데, 바로 앞 2단계에서 이미 같은 소리가
      나서 몇 초 사이에 섞는 소리가 두 번 났다. 카드 날아가는 연출만 남긴다 */
+  /* 엔진이 받아 둔 세금 — 화면 자리 i 가 고른 카드. 아직 안 냈거나 모르면 null */
+  function givenBy(i){
+    if (!online) return null;
+    const c = window.__eng && window.__eng.client;
+    const st = c && c.getState && c.getState();
+    const s = (G().nowFaces || [])[i];
+    const g = st && st.G && st.G.given;
+    return (g && s != null && Array.isArray(g[s])) ? g[s].slice() : null;
+  }
+  /* 1·2등인 내가 받은 카드 — **엔진이 세금을 걷은 뒤에만** 안다(남의 손패는 원래 안 보인다).
+     걷은 뒤의 내 손 − (걷기 전 내 손 − 내가 준 것). 아직이면 null */
+  function receivedByMe(pre, gave){
+    if (!online) return null;
+    const c = window.__eng && window.__eng.client;
+    const st = c && c.getState && c.getState();
+    /* 세금 화면은 판 사이에만 뜬다 — 엔진이 카드 내기로 넘어가 있으면 이번 세금은 걷힌 것이다 */
+    if (!st || st.ctx.phase !== "play" || st.G.needTax) return null;
+    const now = (st.G.hands[Number(c.playerID)] || []).slice();
+    const kept = pre.slice();
+    for (const x of gave){ const k = kept.indexOf(x); if (k >= 0) kept.splice(k, 1); }
+    for (const x of kept){ const k = now.indexOf(x); if (k < 0) return null; now.splice(k, 1); }
+    return now.sort((a, b) => a - b);
+  }
   function runTax(){
     window.__myGive = window.__myGive || [];
     clearFx();
     const o = order(), n = N;
     const pairs = [[o[0], o[n-1], 2], [o[1], o[n-2], 1]];
+    const pre = myHand().slice();
     let t = 0;
     pairs.forEach(([hi, lo, k]) => {
       /* 내가 낀 교환만 앞면. 남들끼리 주고받는 건 원래 안 보이는 정보라 뒷면 */
       const mine = hi === 0 || lo === 0;
+      if (hi === 0){
+        /* 내가 위 — 내 카드가 먼저 나가고, 받는 카드는 조금 뒤에 날아온다.
+           받는 카드는 엔진이 세금을 걷어야 알 수 있어서 날아가는 순간에 다시 본다(모르면 뒷면) */
+        /* 내가 준 카드 — 엔진이 받아 둔 것이 있으면 그것(시간이 다 돼 대신 낸 경우도 맞게), 없으면 내가 고른 것 */
+        const give = window.__myGive.slice(0, k);
+        const gaveNow = () => { const g = givenBy(0); return g && g.length === k ? g : give; };
+        for (let j = 0; j < k; j++){ const jj = j; flyCard(0, lo, () => gaveNow()[jj], t, false); t += 150; }
+        t += 250;
+        for (let j = 0; j < k; j++){
+          const jj = j;
+          flyCard(lo, 0, () => { const r = receivedByMe(pre, gaveNow()); return r ? r[jj] : null; }, t, false); t += 150;
+        }
+        return;
+      }
+      /* 아래 등수의 가장 좋은 카드 — 내 손이면 알고, 남의 손이면(온라인) 모른다 */
       const best = holdOf(lo).slice().sort((a, b) => a - b).slice(0, k);
       for (let j = 0; j < k; j++){ flyCard(lo, hi, best[j], t, !mine); t += 150; }
       for (let j = 0; j < k; j++){
-        flyCard(hi, lo, hi === 0 ? window.__myGive[j] : 12, t, !mine); t += 150;
+        /* 위 등수가 고른 카드 — 엔진이 받아 둔 것(온라인). 이 기기 시제품 화면은 가장 큰 숫자 */
+        const jj = j;
+        const pick = () => { const g = givenBy(hi); return g ? g[jj] : (online ? null : 12); };
+        flyCard(hi, lo, pick, t, !mine); t += 150;
       }
     });
   }

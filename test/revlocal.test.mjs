@@ -7,6 +7,8 @@
                   (2026-09-30: 판이 끝난 순간의 옛 값 "아직 안 정함" 으로 덮어써 영영 기다리던 것)
      내가 쥠·선언  꼴찌로 만들어 대혁명 — 화면에 대혁명, 세금 없음, 다음 판 자리가 등수 거꾸로
      내가 쥠·안 부름  시간이 다 되면 "선언하지 않았습니다" 를 보여 주고 세금을 걷는다
+     세금 끔         카멜레온 둘을 쥐어도 혁명이 없다 — 세금 화면 없이 곧바로 다음 판, 1등이 선 (2026-10-11 결정 A)
+                     (예전에는 사람은 선언할 기회 없이 "안 부름" 처리되고, 봇만 선언했다)
 
    쓰는 법:  node test/revlocal.test.mjs     (서버 없이 돈다) */
 import { canRun, checker, launch, human, closeAll, nap, waitFor } from "./_hum.mjs";
@@ -27,11 +29,15 @@ const REC = `(() => {
     const v = window.__eng && window.__eng.view;
     if (s !== on){ on = s;
       if (s === "tax" && !window.__taxAt) window.__taxAt = Date.now();
-      if (s === "table" && window.__taxAt && !window.__tableAt) window.__tableAt = Date.now();
+      if (s === "result" && !window.__resAt) window.__resAt = Date.now();
+      /* 세금을 끄면 결과 → 판으로 곧장 간다. 결과를 본 뒤 첫 판 화면이 2판이다 */
+      if (s === "table" && (window.__taxAt || window.__resAt) && !window.__tableAt) window.__tableAt = Date.now();
     }
     /* 2판 카드 내기가 열린 순간의 차례 = 2판 선 (판 화면이 설 때까지 멈춰 있어 놓치지 않는다) */
     const st = window.__eng && window.__eng.client && window.__eng.client.store && window.__eng.client.store.getState();
     if (st && !window.__lead2 && st.ctx.phase === "play" && st.G.roundNo === 2) window.__lead2 = st.ctx.currentPlayer;
+    /* 2판에 나눈 패 — 카멜레온 둘을 누가 쥐었는지 (이 기기 방이라 엔진이 다 보인다) */
+    if (st && !window.__hands2 && st.G.roundNo === 2) window.__hands2 = st.G.hands.map(h => (h || []).filter(c => c >= 13).length);
     const p = window.__taxProbe;
     if (s === "tax" && p && p.step() === 2){
       const t = ((document.querySelector("#tax #mid .mid__s") || {}).textContent || "").trim();
@@ -40,16 +46,16 @@ const REC = `(() => {
   }, 120);
 })()`;
 
-async function play(seed, drv){
+async function play(seed, drv, tax = true){
   const env = await launch();
   const h = await human(env, { url: "" }, "원규");
   await h.drv(Object.assign({ think: [60, 150], tax: "pick" }, drv));
   await h.page.evaluate(REC);
-  await h.page.evaluate(async s => {
+  await h.page.evaluate(async (s, tax) => {
     window.__ZOO_SEED = s;
-    window.__opts = { cap: 4, seated: 1, rounds: 3, tax: true, clear2: false };
+    window.__opts = { cap: 4, seated: 1, rounds: 3, tax, clear2: false };
     await window.__createRoom(); window.__goto("room");
-  }, seed);
+  }, seed, tax);
   await waitFor(async () => (await h.seated()) >= 4, 20000);
   await h.page.evaluate(async () => { await window.__startRound(); });
   await h.page.evaluate(() => setInterval(() => { if (window.__eng) window.__eng.botMs = 150; }, 200));
@@ -63,9 +69,10 @@ async function play(seed, drv){
     const st = window.__eng.client.store.getState(), G = st.G, v = window.__eng.view;
     const lr = v.lastRound;
     return {
+      hands2: window.__hands2 || null, opts: G.opts,
       rev: G.revolution, declared: G.revDeclared, cancelled: G.taxCancelled, given: G.given,
       taxOrder: G.taxOrder, lastOrder: G.lastOrder, lead: window.__lead2,
-      texts: window.__revText, taxMs: window.__tableAt - window.__taxAt,
+      texts: window.__revText, taxMs: window.__tableAt - window.__taxAt, taxSeen: Boolean(window.__taxAt),
       rank1: lr && lr.order.map(p => lr.seats[p] && lr.seats[p].name),
       seats: (v.seats || []).map(x => x.name),
       dom: [...document.querySelectorAll("#table #seats .seat")].map(d => ((d.querySelector(".seat__n") || {}).textContent || "").trim()),
@@ -133,6 +140,24 @@ if (!ONLY || ONLY === "3"){
     check("화면에 '선언하지 않았습니다' 가 떴다", r.texts.some(t => /선언하지 않았습니다/.test(t)), JSON.stringify(r.texts));
     check("선언 문구는 안 떴다", !r.texts.some(t => /혁명\. 이번 판|대혁명\. /.test(t)), JSON.stringify(r.texts));
     seatCheck(r, "안 부름");
+  }
+  check("오류가 없다", errs.length === 0, errs.slice(0, 2).join(" | "));
+}
+
+/* ---------- 세금 끔 — 혁명이 없다 ---------- */
+for (const [seed, drv, who, k] of [[SEED_ME, { lose: true, rev: "declare" }, "내가", "4"], [SEED_BOT, {}, "봇이", "5"]]){
+  console.log("\n[세금 끔 — " + who + " 카멜레온 둘을 쥐어도 혁명이 없다]");
+  if (ONLY && ONLY !== k) continue;
+  const { got, r, errs } = await play(seed, drv, false);
+  check("2판까지 갔다", got, JSON.stringify(r).slice(0, 200));
+  if (r && !r.err){
+    const holder = (r.hands2 || []).indexOf(2);
+    check("세금 끔으로 돌았다", r.opts && r.opts.tax === false, JSON.stringify(r.opts));
+    check(who + " 2판에 카멜레온 둘을 쥐었다 (같은 씨앗)", holder === (seed === SEED_ME ? 0 : 1), JSON.stringify(r.hands2));
+    check("그래도 혁명이 없다", r.rev === null && !r.declared && !r.cancelled, JSON.stringify({ rev: r.rev, d: r.declared }));
+    check("세금 화면이 안 나왔다", r.taxSeen === false);
+    seatCheck(r, "세금 끔");
+    check("2판 선 = 1판 1등", String(r.lead) === String(r.lastOrder && r.lastOrder[0]), "선 " + r.lead + " · 1등 " + (r.lastOrder || [])[0]);
   }
   check("오류가 없다", errs.length === 0, errs.slice(0, 2).join(" | "));
 }

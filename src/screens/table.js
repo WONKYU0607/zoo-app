@@ -7,6 +7,7 @@ import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART as A_ART } from "../lib/assets.js";
 import { EMOTES, EMOTE_BTN } from "../lib/assets.js";
 import "../styles/table.css";
+import { buzz } from "../lib/haptic.js";
 
 export function mount(root){
 
@@ -139,16 +140,25 @@ export function mount(root){
        **판 화면에 막 들어온 직후에는 잠깐 미룬다.** 화면은 넘어가는 데 시간이 걸리는데
        상태는 먼저 도착해서, 세금 화면이 아직 보이는 중에 벨이 울렸다.
        삼키는 것이 아니라 화면이 자리를 잡은 뒤에 울린다 */
-    if (v.myTurn && !sndTurn && !mute){
+    /* 벨과 같은 순간에 폰도 떤다(2026-10-06). 자동치기 중이면 대신 두니까 안 떤다.
+       음소거와는 따로 — 진동은 설정 창의 켬/끔만 본다 (haptic.js) */
+    const turnBell = () => { snd("my_turn"); if (!eng.engine.auto) buzz(200); };
+    /* **판 화면에 막 들어서는 중이면 화면이 아직 안 보여도 미뤄 둔다.**
+       go("table") 은 boot() 를 먼저 부르고 그 뒤에 화면을 켠다. boot 안에서 첫 상태가 오면
+       onScreen() 이 아직 거짓이라 예전에는 벨을 삼키고 "울렸다" 고 적어 버렸다 —
+       그래서 **판의 첫 차례가 나이면 벨이 안 울렸다**(2026-10-06 진동 검사에서 발견, 매 판 첫 선).
+       미룬 벨은 울릴 때 화면이 켜져 있고 아직 내 차례인지 다시 본다 */
+    const entering = !quiet && Date.now() < bellAfter;
+    if (v.myTurn && !sndTurn && (!mute || entering)){
       const wait = bellAfter - Date.now();
       if (wait > 0){
         if (bellTimer) clearTimeout(bellTimer);
         bellTimer = setTimeout(() => {
           bellTimer = null;
           const cv = eng.engine.view;
-          if (cv && cv.myTurn && onScreen()) snd("my_turn");
+          if (cv && cv.myTurn && onScreen()) turnBell();
         }, wait);
-      } else snd("my_turn");
+      } else turnBell();
     }
     sndTurn = Boolean(v.myTurn);
     /* 누가 완주했다 */

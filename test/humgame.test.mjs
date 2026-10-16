@@ -22,6 +22,9 @@
      HG_CLEAR2=1             2번 카드 판 엎기 켬
      HG_ACCT=1               서버를 계정 켠 채(메모리 계정 + 검사용 로그인 표)로 — 끝나면 **서버가 계정에 적은 점수**를
                              판 기록과 맞춰 본다(끝까지 한 사람 = 전부, 도중에 나간 사람 = 나갈 때 점수의 절반), 방장 티켓 한 장
+     HG_TAX=0                세금 끔 (2026-10-11) — 판 사이 세금 화면이 없어야 하고, 판마다 바로 다음 판
+     HG_FRIENDS=1            친구들끼리 하기 (2026-10-11) — 봇 없이 사람만. 봇 수는 0 이어야 한다
+     HG_CAP=6                방 정원을 사람 수보다 크게 — 친구방이면 시작할 때 온 사람 수로 줄어든다
    (zoo-server 가 zoo-app 옆에 있거나 ZOO_SERVER_DIR 로 알려 줘야 한다) */
 import net from "node:net";
 import { canRun, checker, startServer, roomOf, api, launch, human, closeAll, nap, waitFor } from "./_hum.mjs";
@@ -36,7 +39,11 @@ const NET = process.env.HG_NET === "1";
 const EN = process.env.HG_EN === "1" && H_N >= 2;
 const CLEAR2 = process.env.HG_CLEAR2 === "1";
 const ACCT = process.env.HG_ACCT === "1";
+const TAX = process.env.HG_TAX !== "0";
+const FRIENDS = process.env.HG_FRIENDS === "1";
+const CAP = Number(process.env.HG_CAP || 0) || (H_N + B_N);
 const N = H_N + B_N;
+if (FRIENDS && B_N){ console.log("친구방에는 봇을 둘 수 없습니다"); process.exit(1); }
 if (!(await canRun())) process.exit(0);
 const C = checker();
 const { check } = C;
@@ -45,7 +52,7 @@ const T = () => ((Date.now() - t0) / 1000).toFixed(0) + "s";
 console.log("\n=== 사람 " + H_N + " + 봇 " + B_N + " = " + N + "명 · " + ROUNDS + "판 · 세금 " +
   (TAXMODE === "timer" ? "시간 넘김(자동)" : "사람이 고름") + " · 혁명 " + REV +
   (CHAOS ? " · 새로고침/나가기" : "") + (NET ? " · 느린 연결/끊김" : "") + (EN ? " · 영어 1명" : "") + (CLEAR2 ? " · 2번 판 엎기" : "") +
-  (ACCT ? " · 계정 켬" : "") + " ===");
+  (ACCT ? " · 계정 켬" : "") + (TAX ? "" : " · 세금 끔") + (FRIENDS ? " · 친구끼리" : "") + (CAP !== N ? " · 정원 " + CAP : "") + " ===");
 
 const srv = await startServer(Object.assign(B_N
   ? { ZOO_BOT_JOIN_MS: "1200", ZOO_BOT_MIN_MS: "600", ZOO_BOT_MAX_MS: "1500" }
@@ -143,14 +150,19 @@ const mergeLogs = (a, b) => ({ res: a.res.concat(b.res.filter(x => !a.res.some(y
     [k, [...new Set([...(a.revText[k] || []), ...(b.revText[k] || [])])]])) });
 
 /* ---------- 대기실 ---------- */
-const code = await H[0].create({ cap: N, rounds: ROUNDS, tax: true, clear2: CLEAR2 });
+const code = await H[0].create({ cap: CAP, rounds: ROUNDS, tax: TAX, clear2: CLEAR2, friends: FRIENDS });
 for (let i = 1; i < H_N; i++){
   await nap(400);
   const r = await H[i].join(code);
   if (r.err) console.log("  (" + names[i] + " 들어가기 실패: " + r.err + ")");
 }
 const full = await waitFor(async () => (await H[0].seated()) >= N, 30000);
-check("정원(" + N + "명)이 찼다", full, "앉은 " + (await H[0].seated()));
+check((CAP !== N ? "온 사람(" : "정원(") + N + "명)이 찼다", full, "앉은 " + (await H[0].seated()));
+if (FRIENDS){
+  await nap(2500);
+  const rf = await roomOf(srv, code);
+  check("친구방 — 기다려도 봇이 안 들어온다", rf.friends === true && !(rf.players || []).some(p => p.bot), JSON.stringify((rf.players || []).map(p => p.bot ? "봇" : p.name)));
+}
 await nap(1500);
 const room0 = await Promise.all(H.map(h => h.roomSeats().catch(() => [])));
 /* 봇 이름은 언어마다 다르게 보인다(한국어 "막가22" · 영어 "moth12") — 같은 언어끼리 비교하고, 자리 수는 모두 같아야 한다 */
@@ -179,11 +191,17 @@ await waitFor(async () => {
   return true;
 }, 30000, 300);
 check("자리 번호표를 읽었다", hostSeat != null && Object.keys(seatName).length === N, JSON.stringify(seatName));
-const opts0 = await H[1].page.evaluate(() => Object.assign({}, window.__opts)).catch(() => ({}));
+/* 둘째 사람 화면으로 본다(방장 말고). 사람이 하나뿐이면 그 사람 — 예전에는 H[1] 로 박혀 있어 사람 1명이면 터졌다 */
+const OTHER = H[Math.min(1, H_N - 1)];
+const opts0 = await OTHER.page.evaluate(() => Object.assign({}, window.__opts)).catch(() => ({}));
 if (CLEAR2) check("2번 판 엎기 설정이 다른 사람에게도 갔다", opts0.clear2 === true, JSON.stringify(opts0));
+if (!TAX) check("세금 끔 설정이 다른 사람에게도 갔다", opts0.tax === false, JSON.stringify(opts0));
+const eopts = await OTHER.page.evaluate(() => { const st = window.__eng.client && window.__eng.client.getState(); return st ? Object.assign({ n: st.G.counts.length }, st.G.opts) : null; }).catch(() => null);
+check("판(엔진)의 설정·인원이 고른 대로", eopts && eopts.tax === TAX && eopts.clear2 === CLEAR2 && eopts.n === N, JSON.stringify(eopts));
 
 /* ---------- 판을 따라가며 본다 ---------- */
 const active = names.map(() => true);        /* 판에서 나간 사람은 그 뒤로 안 본다 */
+const resOK = names.map(() => 0);            /* 사람마다 결과 화면을 본 판 (그 판의 판 화면 자리는 그 뒤에 잰다) */
 const seatRows = {};             /* 판 → 사람마다 둘러앉은 이름(원규부터 돌린 것) */
 const seatBad = [];
 const truthBy = {};              /* 판 → 사람마다 본 실제 등수(이름) */
@@ -194,7 +212,7 @@ const taxSnap = {};              /* 사람:판 → 세금 단계를 처음 본 �
 const taxRows = [];              /* 세금 단계가 얼마나 걸렸나 · 내가 낸 것 */
 const revBy = {};                /* 판 → 혁명(쥔 사람·대혁명·선언했나·세금 취소) */
 const events = [];               /* 새로고침·나가기·끊김 */
-let reloadDone = false, quitDone = false, cutDone = false;
+let reloadDone = false, quitDone = false, cutDone = false, r2mv = null;
 const RELOAD_I = 1, QUIT_I = H_N - 1, CUT_I = Math.min(2, H_N - 1);
 const rot = (arr, first) => { const k = arr.indexOf(first); return k < 0 ? arr : arr.slice(k).concat(arr.slice(0, k)); };
 const viewOf = i => H[i].page.evaluate(() => { const v = window.__eng && window.__eng.view;
@@ -207,7 +225,12 @@ for (let k = 0; k < 9000; k++){
   /* ---- 흔들기: 2판 카드 내기 도중 ---- */
   if (CHAOS || NET){
     const v1 = await viewOf(0);
-    if (v1 && v1.rn === 2 && v1.ph === "play" && v1.mv >= 4){
+    /* 2판 카드 내기가 시작된 뒤 **몇 수가 지나고**, 흔들 사람이 판 화면에 있을 때.
+       수 번호는 게임 내내 이어져서 "4수 넘게" 로만 보면 세금을 끈 방에서는 판이 끝나는 순간(결과 화면 중)에
+       흔들어 버렸다 — 결과 화면은 뒤로가기를 막으므로 나가기가 안 됐다(2026-10-11) */
+    if (v1 && v1.rn === 2 && v1.ph === "play" && r2mv == null) r2mv = v1.mv;
+    const r2 = v1 && v1.rn === 2 && v1.ph === "play" && r2mv != null ? v1.mv - r2mv : -1;
+    if (r2 >= 4 && scr[RELOAD_I] === "table"){
       if (CHAOS && !reloadDone){
         reloadDone = true;
         saved[RELOAD_I] = mergeLogs(saved[RELOAD_I], await pullLogs(RELOAD_I));
@@ -244,7 +267,7 @@ for (let k = 0; k < 9000; k++){
         events.push(names[CUT_I] + " 연결 8초 끊김(" + T() + ")");
       }
     }
-    if (CHAOS && reloadDone && !quitDone && v1 && v1.rn === 2 && v1.ph === "play" && v1.mv >= 12 && active[QUIT_I]){
+    if (CHAOS && reloadDone && !quitDone && r2 >= 12 && active[QUIT_I] && scr[QUIT_I] === "table"){
       quitDone = true;
       saved[QUIT_I] = mergeLogs(saved[QUIT_I], await pullLogs(QUIT_I));
       await H[QUIT_I].drv({ on: false });
@@ -306,11 +329,18 @@ for (let k = 0; k < 9000; k++){
       }
     }
 
-    /* 자리: 판마다 한 번, 판 화면에 들어오고 1.5초 뒤 */
+    /* 자리: 판마다 한 번, 판 화면에 들어오고 1.5초 뒤.
+       **세금을 끄면 엔진은 판이 끝나는 순간 다음 판(카드 내기)으로 간다.** 그런데 화면은 판 화면에서
+       방금 끝난 판의 마지막 장면을 2초 보여 준다(그때 자리로). 그 2초를 새 판으로 재면 안 된다 —
+       결과 화면을 거쳐 판 화면에 다시 들어온 뒤부터 잰다(2026-10-11 세금 끔 검사에서 잘못 잡음) */
+    if (scr[i] === "result"){
+      const rr = await H[i].page.evaluate(() => (window.__eng && window.__eng.view || {}).roundNo).catch(() => null);
+      if (rr != null) resOK[i] = rr;
+    }
     if (scr[i] === "table"){
       const rn = await H[i].page.evaluate(() => { const v = window.__eng && window.__eng.view;
         return v && v.phase === "play" && !v.over ? v.roundNo : null; }).catch(() => null);
-      if (rn != null){
+      if (rn != null && (rn === 1 || resOK[i] >= rn || (CHAOS && i === RELOAD_I && reloadDone && rn === 2))){
         const tk = i + ":" + rn;
         if (!tableAt[tk]) tableAt[tk] = Date.now();
         else if (tableAt[tk] > 0 && Date.now() - tableAt[tk] > 1500){
@@ -390,17 +420,25 @@ for (let r = 1; r < ROUNDS; r++){
 /* 새로고침하는 사이에 지나간 판 사이 화면은 못 볼 수 있다 — 흔들 때는 한 사람 몫까지 봐준다 */
 const slack = CHAOS ? 2 : 0;
 check("판 사이 결과 화면을 봤다 (" + resSeen + " / " + expectRes + ")", resSeen >= expectRes - slack && resSeen <= expectRes);
-check("판 사이 세금 화면을 봤다 (" + taxSeen + " / " + expectRes + ")", taxSeen >= expectRes - slack && taxSeen <= expectRes);
+if (TAX) check("판 사이 세금 화면을 봤다 (" + taxSeen + " / " + expectRes + ")", taxSeen >= expectRes - slack && taxSeen <= expectRes);
+else check("세금 끔 — 판 사이 세금 화면이 안 나왔다 (" + taxSeen + "번)", taxSeen === 0);
 check("판 사이 결과·세금 화면의 이름·등수가 모두 실제와 같다", bad.length === 0, bad.slice(0, 3).join(" | "));
 
 /* ---------- 혁명 ---------- */
 const revRounds = Object.entries(revBy).filter(([, v]) => v);
+/* 세금을 끄면 혁명도 없다 (2026-10-11 결정 A) — 사람마다 엔진 기록에서 혁명이 한 번이라도 보였는지 */
+if (!TAX){
+  const anyRev = await Promise.all(H.map((h, i) => !active[i] ? false : h.page.evaluate(() => {
+    const st = window.__eng && window.__eng.client && window.__eng.client.getState(); return Boolean(st && st.G.revolution); }).catch(() => false)));
+  check("세금 끔 — 혁명이 생기지 않았다", !revRounds.length && !anyRev.some(Boolean), JSON.stringify(revRounds));
+}
 if (!revRounds.length) console.log("  (이번 게임에는 혁명을 쥔 사람이 없었다)");
 for (const [r, v] of revRounds){
   const texts = logs.map((L, i) => ({ who: names[i], en: lang[i] === "en", t: (L.revText[r] || []).join(" / ") }))
     .filter((x, i) => activeAt(Number(r)).includes(names[i]) && x.t);
   const kind = (v.great ? "대혁명" : "혁명") + " · " + v.who + " · " + (v.declared ? "선언" : "안 부름");
   check(r + "판 " + kind + " — 엔진이 정했다", v.decided);
+  if (!TAX){ console.log("  (세금 끔 — " + r + "판 " + kind + " · 세금 화면이 없어 문구는 안 본다)"); continue; }
   if (v.declared){
     check(r + "판 선언 → 세금이 사라졌다", v.cancelled);
     const seenAll = texts.filter(x => x.en ? /Revolution\. |Great revolution\. /.test(x.t) : /혁명\. /.test(x.t));
@@ -429,7 +467,7 @@ check("사람이 고른 세금이 그대로 들어갔다 (" + humanTax + "번 �
    연결을 일부러 끊은 판에서 그 사람은 빼고 본다 */
 const slow = taxRows.filter(r => r.ms > 40000 && !(NET && r.who === names[CUT_I] && r.round === 2));
 check("세금 단계가 40초 안에 끝났다 (" + taxRows.length + "번 · 가장 긴 것 " +
-  Math.round(Math.max(0, ...taxRows.map(r => r.ms)) / 1000) + "초)", taxRows.length > 0 && slow.length === 0,
+  Math.round(Math.max(0, ...taxRows.map(r => r.ms)) / 1000) + "초)", (taxRows.length > 0 || !TAX) && slow.length === 0,
   slow.map(r => r.who + " " + r.round + "판 " + Math.round(r.ms / 1000) + "초").join(" · "));
 if (TAXMODE === "timer"){
   /* 시간이 다 돼 저절로 낼 때는 카멜레온을 빼고 큰 숫자부터 */
@@ -526,8 +564,19 @@ const errs = H.flatMap((h, i) => h.errs.filter(e => !(NET && i === CUT_I && /ERR
   .map(e => h.name + ": " + e));
 check("화면 오류·엔진이 거부한 수가 없다", errs.length === 0, errs.slice(0, 3).join(" | "));
 const stuck = [];
-for (let i = 0; i < H_N; i++){ if (active[i] && (await H[i].log()).some(l => l.includes("stuck"))) stuck.push(names[i]); }
-check("아무도 멈추지 않았다", stuck.length === 0, stuck.join(","));
+for (let i = 0; i < H_N; i++){
+  if (!active[i]) continue;
+  const lg = await H[i].log().catch(() => []);
+  /* 세금을 끄면 판이 끝나는 순간 엔진에서는 벌써 내 차례(1등이 선)인데, 화면은 마지막 장면(2초)을 보여 주며
+     누름을 막는다 — 그 사이의 "stuck" 은 멈춘 것이 아니다. 3초 안에 결과 화면으로 넘어갔으면 뺀다 */
+  const t = l => Number(l.split(" ")[0]);
+  const real = lg.filter((l, j) => l.includes("stuck") &&
+    !lg.slice(j + 1).some(m => / screen result/.test(m) && t(m) - t(l) < 3000));
+  const k = real.length ? lg.indexOf(real[0]) : -1;
+  /* 어디서 멈췄는지 앞뒤 줄을 같이 보인다 */
+  if (k >= 0) stuck.push(names[i] + " " + real.length + "번 — " + lg.slice(Math.max(0, k - 3), k + 2).join(" / "));
+}
+check("아무도 멈추지 않았다", stuck.length === 0, stuck.join(" || "));
 const end = await roomOf(srv, code);
 const marked = (end.players || []).filter(p => !p.bot && p.name && (p.left || p.away) && !(quitDone && p.name === names[QUIT_I]))
   .map(p => p.name + (p.left ? "(이탈)" : "(자리비움)"));
@@ -538,6 +587,7 @@ check("서버 오류 줄이 없다" + (drawClash.length ? " (뽑기에서 같은
   srvErr.length === 0, srvErr.slice(0, 3).join(" | "));
 console.log("   걸린 시간 " + T());
 console.log("SUMMARY " + JSON.stringify({ humans: H_N, bots: B_N, rounds: ROUNDS, tax: TAXMODE, rev: REV, chaos: CHAOS, net: NET, en: EN, clear2: CLEAR2,
+  taxOn: TAX, friends: FRIENDS, cap: CAP,
   pass: C.pass, fail: C.fail, sec: Math.round((Date.now() - t0) / 1000), taxChecked: humanTax,
   revs: revRounds.map(([r, v]) => r + (v.great ? "G" : "S") + (v.declared ? "D" : "P")).join(","),
   srvErr: srvErr.length, drawClash: drawClash.length }));

@@ -47,6 +47,22 @@ export async function getDocs(q){
   if (lim) docs = docs.slice(0, lim.n);
   return { docs, empty: docs.length === 0, size: docs.length };
 }
+/* 지켜보기 — 모음(collection) 하나. 쓰기·지우기가 있을 때마다 그 모음 전체를 다시 준다.
+   몇 번 알렸는지는 globalThis.__fsSnaps 에 센다(읽기 횟수 흉내) */
+const WATCH = globalThis.__fsWatch || (globalThis.__fsWatch = new Set());
+export function onSnapshot(q, next, err){
+  const w = { path: q.path, q, next };
+  WATCH.add(w);
+  const fire = () => getDocs(q).then(s => { globalThis.__fsSnaps = (globalThis.__fsSnaps || 0) + 1; next(s); }, e => err && err(e));
+  w.fire = fire;
+  Promise.resolve().then(fire);
+  return () => WATCH.delete(w);
+}
+function notify(path){
+  for (const w of WATCH){
+    if (path.startsWith(w.path + "/") && path.split("/").length === w.path.split("/").length + 1) w.fire();
+  }
+}
 export async function getCountFromServer(q){ const s = await getDocs(q); return { data: () => ({ count: s.size }) }; }
 export function increment(n){ return { __inc: n }; }
 export function serverTimestamp(){ return { __ts: true }; }
@@ -62,16 +78,19 @@ function apply(prev, data){
 export async function setDoc(ref, data, opt){
   denied(ref.path, STORE.has(ref.path) ? "set" : "create", data, STORE.get(ref.path)); LOG.push(["set", ref.path]);
   STORE.set(ref.path, apply(opt && opt.merge ? STORE.get(ref.path) : null, data));
+  notify(ref.path);
 }
 export async function updateDoc(ref, data){
   denied(ref.path, "update", data, STORE.get(ref.path));
   if (!STORE.has(ref.path)){ const e = new Error("No document to update"); e.code = "not-found"; throw e; }
   LOG.push(["update", ref.path]);
   STORE.set(ref.path, apply(STORE.get(ref.path), data));
+  notify(ref.path);
 }
 export async function deleteDoc(ref){
   denied(ref.path, "delete"); LOG.push(["delete", ref.path]);
-  STORE.delete(ref.path);
+  const had = STORE.delete(ref.path);
+  if (had) notify(ref.path);
 }
 export async function runTransaction(db, fn){
   const tx = {

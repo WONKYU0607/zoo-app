@@ -152,7 +152,8 @@ const DRIVER = `(() => {
       }
       return;
     }
-    if (s === "table" && v && v.myTurn){
+    /* table:false — 판에서는 손을 놓는다(자동치기에 맡기는 검사용) */
+    if (s === "table" && v && v.myTurn && window.__drv.table !== false){
       const q = document.querySelector("#table #pass");
       if (v.pile && (!q || q.disabled)) return;
       const key = (v.moveNo || 0) + ":" + (v.pile ? v.pile.num + "x" + v.pile.count : "-");
@@ -200,6 +201,61 @@ const DRIVER = `(() => {
   setInterval(tick, 250);
 })()`;
 
+/* 화면 지킴이 — human() 이 페이지마다 심는다. 같은 것은 한 번만 알린다 */
+const UIWATCH = `(() => {
+  const BAD = /(^|[^A-Za-z])(undefined|NaN)([^A-Za-z]|$)|object Object/;   /* 대괄호는 안 쓴다 - 이 코드가 글자 묶음 안에 들어 있어 역슬래시가 사라진다 */
+  const seen = new Set();
+  const say = (kind, t, el) => {
+    const where = el && el.closest ? ((el.closest(".page") || {}).id || "") + " " + (el.className && el.className.baseVal == null ? String(el.className).slice(0, 30) : "") : "";
+    const k = kind + "|" + t + "|" + where;
+    if (seen.has(k)) return; seen.add(k);
+    try { window.__uiBadReport(kind + " — " + String(t).slice(0, 100) + " @" + where.trim()); } catch(e){}
+  };
+  const checkEl = el => {
+    if (!el || el.nodeType !== 1) return;
+    if (el.tagName === "IMG"){
+      const src = el.getAttribute("src");
+      if (src === null || src.trim() === "" || /undefined|NaN|null$/.test(src)) say("그림 주소가 이상함", src === null ? "(없음)" : src || "(빈 주소)", el);
+    }
+    /* 배경 그림 주소가 깨진 것 — 티어 뱃지·얼굴처럼 style 로 거는 그림 */
+    const st = el.getAttribute && el.getAttribute("style");
+    if (st && /url[(]([^)]*)(undefined|NaN|null)/.test(st)) say("배경 그림 주소가 이상함", st, el);
+    for (const a of ["alt", "title", "aria-label", "placeholder"]){
+      const v = el.getAttribute && el.getAttribute(a);
+      if (v && BAD.test(v)) say(a + " 에 깨진 값", v, el);
+    }
+  };
+  const checkText = n => { if (n && n.nodeType === 3 && BAD.test(n.nodeValue)) say("글자에 깨진 값", n.nodeValue.trim(), n.parentElement); };
+  const walk = root => {
+    if (!root) return;
+    if (root.nodeType === 3){ checkText(root); return; }
+    if (root.nodeType !== 1) return;
+    if (root.tagName === "SCRIPT" || root.tagName === "STYLE") return;
+    checkEl(root);
+    const it = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, null);
+    for (let n = it.nextNode(); n; n = it.nextNode()){
+      if (n.nodeType === 3){ if (n.parentElement && /^(SCRIPT|STYLE)$/.test(n.parentElement.tagName)) continue; checkText(n); }
+      else checkEl(n);
+    }
+  };
+  window.addEventListener("error", e => {
+    const t = e.target;
+    if (t && t.tagName === "IMG") say("그림을 못 읽음", t.getAttribute("src") || "(빈 주소)", t);
+  }, true);
+  const start = () => {
+    walk(document.body);
+    new MutationObserver(recs => {
+      for (const r of recs){
+        if (r.type === "childList") r.addedNodes.forEach(walk);
+        else if (r.type === "characterData") checkText(r.target);
+        else checkEl(r.target);
+      }
+    }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true,
+      attributeFilter: ["src", "alt", "title", "aria-label", "placeholder", "style"] });
+  };
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+})()`;
+
 /* uid 를 주면 그 계정의 로그인 표("test:uid")를 보낸다 — 서버를 메모리 계정(ZOO_ACCOUNTS=memory,
    ZOO_TEST_TOKENS=1)으로 띄웠을 때. 앱(main.js)이 __idToken 을 덮어쓰지 못하게 못박아 둔다(새로고침해도 유지) */
 export async function human(env, srv, name, { lang = "ko", uid = null } = {}){
@@ -214,6 +270,11 @@ export async function human(env, srv, name, { lang = "ko", uid = null } = {}){
     if (m.type() === "error" && !/Failed to load resource/.test(t)) errs.push("console: " + t.slice(0, 200));
   });
   page.on("dialog", async d => { errs.push("dialog: " + d.message()); await d.dismiss().catch(() => {}); });
+  /* **화면에 깨진 값이 찍히면 오류로 센다** (2026-10-15 — 세금 연출에 "undefined" 카드가 날아간 신고 뒤).
+     글자에 undefined·NaN·[object Object], 그림 주소가 비었거나 undefined, 그림을 못 읽음.
+     human() 을 쓰는 모든 검사의 "화면 오류가 없다" 에 같이 걸린다 */
+  await page.exposeFunction("__uiBadReport", t => { errs.push("ui: " + t); }).catch(() => {});
+  await page.evaluateOnNewDocument(UIWATCH);
   await page.evaluateOnNewDocument((s, lang, uid) => {
     try { localStorage.setItem("zk_lang", lang); } catch(e){}
     globalThis.__ZOO_TEST = true; globalThis.__ZOO_SERVER = s;

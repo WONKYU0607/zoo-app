@@ -3,6 +3,7 @@ import { play as snd } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import "../styles/room.css";
+import { tierOf, TIER_MAX } from "../lib/tier.js";
 
 export function mount(root){
 
@@ -50,7 +51,8 @@ export function mount(root){
          kickT:"내보내기", kickM:(n,k)=>n+"님을 내보낼까요? (남은 횟수 "+k+")", kickY:"내보내기",
          kickNoneT:"내보내기", kickNone:"이 방에서는 더 내보낼 수 없습니다 (한 방에 2번까지)", ok:"확인",
          kickFail:"내보내지 못했습니다", startFail:"시작하지 못했습니다",
-         pfRec:"전적", pfRate:"승률", pfWL:(w,l)=>w+"승 "+l+"패", pfKick:"강퇴" },
+         pfRec:"전적", pfRate:"승률", pfWL:(w,l)=>w+"승 "+l+"패", pfKick:"강퇴",
+         pfTier:"티어", pfScore:"점수", pfPts:n=>n.toLocaleString("ko-KR")+"점" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
          needMore:"Four players are needed to start",
@@ -70,7 +72,8 @@ export function mount(root){
          kickT:"Remove player", kickM:(n,k)=>"Remove "+n+" from the room? ("+k+" left)", kickY:"Remove",
          kickNoneT:"Remove player", kickNone:"No more removals in this room (2 per room)", ok:"OK",
          kickFail:"Could not remove the player", startFail:"Could not start",
-         pfRec:"Record", pfRate:"Win rate", pfWL:(w,l)=>w+"W "+l+"L", pfKick:"Remove" }
+         pfRec:"Record", pfRate:"Win rate", pfWL:(w,l)=>w+"W "+l+"L", pfKick:"Remove",
+         pfTier:"Tier", pfScore:"Score", pfPts:n=>n.toLocaleString("en-US")+" pts" }
   };
   let lang = window.__lang || "ko";
   const PLAYERS = PLAYERS_KO;
@@ -324,6 +327,9 @@ export function mount(root){
   pop.setAttribute("role", "dialog");          /* 뒤로가기가 열린 창으로 보고 이것부터 닫는다 */
   pop.innerHTML =
     '<i class="pfpop__tip"></i>' +
+    /* 티어·점수 (2026-10-06) — 랭킹 화면과 같은 뱃지에 숫자를 얹는다 */
+    '<div class="pfpop__row"><span class="pfpop__k" id="pfTierK"></span><span class="pfpop__v" id="pfTier"></span></div>' +
+    '<div class="pfpop__row"><span class="pfpop__k" id="pfScoreK"></span><span class="pfpop__v" id="pfScore"></span></div>' +
     '<div class="pfpop__row"><span class="pfpop__k" id="pfRecK"></span><span class="pfpop__v" id="pfRec"></span></div>' +
     '<div class="pfpop__row"><span class="pfpop__k" id="pfRateK"></span><span class="pfpop__v" id="pfRate"></span></div>' +
     '<button class="pfpop__kick" id="pfKick" hidden></button>';
@@ -365,10 +371,14 @@ export function mount(root){
     const canKick = Boolean(i !== R.me && R.online && host && R.phase === "waiting" && window.__kickSeat);
     const my = ++popSeq;
     popSeat = i;
+    document.getElementById("pfTierK").textContent = t.pfTier;
+    document.getElementById("pfScoreK").textContent = t.pfScore;
     document.getElementById("pfRecK").textContent = t.pfRec;
     document.getElementById("pfRateK").textContent = t.pfRate;
     const rec = document.getElementById("pfRec"), rate = document.getElementById("pfRate");
+    const tierEl = document.getElementById("pfTier"), scoreEl = document.getElementById("pfScore");
     rec.textContent = "\u2026"; rate.textContent = "\u2026";
+    tierEl.textContent = "\u2026"; scoreEl.textContent = "\u2026";
     const kb = document.getElementById("pfKick");
     kb.textContent = t.pfKick;
     kb.hidden = !canKick;
@@ -383,6 +393,21 @@ export function mount(root){
       else {
         rec.textContent = t.pfWL(wins, Math.max(0, played - wins));
         rate.textContent = played ? Math.round(wins / played * 100) + "%" : "-";
+      }
+      /* 점수가 안 오면(옛 서버·계정 꺼짐) 티어·점수는 "-" */
+      const score = r && Number.isFinite(r.score) ? Math.max(0, Math.floor(r.score)) : null;
+      if (score == null){ tierEl.textContent = "-"; scoreEl.textContent = "-"; }
+      else {
+        const tn = Math.max(0, Math.min(TIER_MAX, tierOf(score)));
+        tierEl.textContent = "";
+        const b = window.document.createElement("span");
+        b.className = "pfpop__t";
+        b.style.backgroundImage = "url(/assets/tier_" + String(tn).padStart(2, "0") + ".webp)";
+        const num = window.document.createElement("b");
+        num.textContent = String(tn);
+        b.appendChild(num);
+        tierEl.appendChild(b);
+        scoreEl.textContent = t.pfPts(score);
       }
       placePop(i);                              /* 글자 길이가 바뀌었으니 다시 맞춘다 */
     };

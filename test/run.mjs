@@ -25,6 +25,7 @@ const SLOW = [
   ["화면통째", ["test/table.test.mjs", "2"]],
   ["사람넷",   ["test/hum4.test.mjs"]],
   ["혁명판",   ["test/revlocal.test.mjs"]],
+  ["세금연출",  ["test/taxfly.test.mjs", "4"]],
 ];
 const FAST = [
   ["엔진",     ["test/engine.test.js"]],
@@ -68,6 +69,10 @@ const FAST = [
   ["강퇴·티켓",   ["test/kick.test.mjs"]],
   ["계정읽기",    ["test/acctread.test.mjs"]],
   ["광고확인",    ["test/adssv.test.mjs"]],
+  ["내차례진동",   ["test/vibrate.test.mjs"]],
+  ["출시묶음",    ["test/release.test.mjs"]],
+  ["마지막손보기",  ["test/final1010.test.mjs"]],
+  ["초대·별명",   ["test/invname.test.mjs"]],
 
   ["자동",     ["test/auto.test.mjs"]],
   ["카드얼굴", ["test/face.test.mjs"]],

@@ -21,7 +21,7 @@ html{ -webkit-text-size-adjust:100%; text-size-adjust:100% }
 #draw .bt-main,#tax .bt-main,#tax .bt-ghost,
 #result .bt-main,#result .bt-ghost,
 #opts .opts__go,#cfg .cfg__row button,#acctBox .cfg__row button,
-#nkBox .cfg__row button,#ask .cfg__row button{
+#nkBox .cfg__row button,#ask .cfg__row button,#updGate .cfg__row button{
   border:13px solid transparent !important;
   border-image:var(--fr-btn) 33 fill stretch !important;
   border-image-width:13px !important;
@@ -331,3 +331,23 @@ button:disabled{opacity:.42}
 
 /* 확인창 본문의 줄바꿈을 그대로 보인다 (나가기 경고가 두 줄이다) */
 #ask #askM{ white-space: pre-line; }
+/* 설정 창 진동 켬/끔 — 놋쇠 틀이 눌린 모양(aria-pressed)을 덮어써서 어느 쪽이 골라졌는지 안 보였다.
+   안 고른 쪽을 흐리게 한다 (2026-10-06) */
+#cfg [data-vib][aria-pressed="false"]{opacity:.42}
+
+/* 언어 단추도 진동처럼 안 고른 쪽을 흐리게 — 놋쇠 틀이 눌린 모양을 덮어써 어느 쪽인지 안 보였다 (2026-10-09) */
+#cfg [data-l][aria-pressed="false"]{opacity:.42}
+
+/* 설정 창 아래 글자 단추 — 개인정보처리방침 · 이용약관 · 문의하기 (2026-10-09) */
+#cfg .cfg__links{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:16px}
+#cfg .cfg__links button{background:none;border:0;padding:8px 4px;font-size:12px;color:#B8A47E;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#cfg .cfg__links i{font-style:normal;color:#6B5A3A;font-size:12px}
+#cfg .cfg__ver{margin:2px 0 0;text-align:center;font-size:11px;color:#7E6C4C;letter-spacing:.03em}
+/* 문서 보기 창 — 설정 창 위 */
+#docView{z-index:65}
+#docView .docv__b{margin:0;padding:2px 2px 6px;max-height:62vh;overflow:auto;white-space:pre-wrap;
+  font-family:inherit;font-size:12.5px;line-height:1.7;color:#D9CBA8;word-break:keep-all}
+/* 업데이트 안내 — 무엇보다 위. 닫는 단추 없음 */
+#updGate{z-index:90}
+#updGate .upd__m{margin:4px 0 16px;font-size:14px;line-height:1.7;color:#E8DCC0;word-break:keep-all}

@@ -32,6 +32,17 @@ async function person(uid, name){
   return h;
 }
 const H = await person("k0", "방장님");
+/* **방이 꽉 차면 방장 화면이 15초 뒤 저절로 시작을 누른다.** 이 검사는 꽉 찬 방에서 오래 머물러서
+   그 초읽기가 끝나는 순간 판이 시작돼 뒤쪽(세 번째 강퇴·티켓)이 들쭉날쭉 실패했다(2026-10-04).
+   검사가 직접 누를 때(pressStart)만 통과시키고, 초읽기가 누르는 것(가짜 클릭)은 막는다 */
+await H.page.evaluate(() => {
+  window.__blockAuto = true;
+  document.addEventListener("click", e => {
+    if (window.__blockAuto && !e.isTrusted && e.target.closest && e.target.closest("#room #action")){
+      e.stopImmediatePropagation(); e.preventDefault();
+    }
+  }, true);
+});
 const A = await person("k1", "손님하나");
 const Bq = await person("k2", "손님둘");
 const Cq = await person("k3", "손님셋");
@@ -82,7 +93,11 @@ const pfOn = (p, seat) => p.page.evaluate(seat => {
   const sv = seat != null ? document.querySelectorAll("#room .seat")[seat] : null;
   const av = sv && sv.querySelector(".seat__av").getBoundingClientRect();
   const W = document.getElementById("room").getBoundingClientRect();
+  const tb = document.querySelector("#pfTier .pfpop__t");
   return { rec: document.getElementById("pfRec").textContent, rate: document.getElementById("pfRate").textContent,
+           tier: tb ? { n: tb.textContent, img: (tb.style.backgroundImage.match(/tier_(\d+)\.webp/) || [])[1] || null,
+                        w: Math.round(tb.getBoundingClientRect().width) } : document.getElementById("pfTier").textContent,
+           score: document.getElementById("pfScore").textContent,
            kick: Boolean(k && !k.hidden && k.offsetWidth > 0),
            below: av ? r.top >= av.bottom - 1 : null,
            under: av ? (r.left <= av.left + av.width / 2 && r.right >= av.left + av.width / 2) : null,
@@ -101,7 +116,7 @@ const press = async (p, sel) => {
 /* 상자 밖(방 번호 줄)을 누르면 닫힌다 */
 const closePf = p => press(p, "#room .roomno__n");
 /* 손님하나의 전적을 심어 둔다 — 5전 3승 */
-await seed("k1", { name: "손님하나", avatar: 1, score: 0, games: 0, tickets: 3, ticketAt: Date.now(), played: 5, wins: 3 });
+await seed("k1", { name: "손님하나", avatar: 1, score: 12340, games: 0, tickets: 3, ticketAt: Date.now(), played: 5, wins: 3 });
 
 /* ---------- 프로필 상자 ---------- */
 console.log("\n[프로필 상자 — 얼굴 밑에 붙는 작은 상자]");
@@ -113,6 +128,7 @@ check("손님이 방장 얼굴을 누르면 상자가 뜬다", Boolean(pf), JSON
 check("상자는 그 얼굴 바로 밑에, 얼굴을 가리키며 붙는다", Boolean(pf) && pf.below && pf.under, JSON.stringify(pf));
 check("화면을 덮지 않는 작은 상자다 (화면 안에 다 들어온다)", Boolean(pf) && pf.small && pf.inside, JSON.stringify(pf));
 check("처음인 사람은 0승 0패 · 승률 -", Boolean(pf) && pf.rec === "0승 0패" && pf.rate === "-", JSON.stringify(pf));
+check("처음인 사람은 티어 0 · 0점", Boolean(pf) && pf.tier && pf.tier.n === "0" && pf.tier.img === "00" && pf.score === "0점", JSON.stringify(pf));
 check("손님 화면에는 강퇴 단추가 없다", Boolean(pf) && !pf.kick);
 await closePf(A); await nap(300);
 check("상자 밖을 누르면 닫힌다", !(await pfOn(A)));
@@ -141,12 +157,15 @@ const botSeat = (await api(srv, "/zoo/rooms/" + code)).body.players.find(x => x.
 await tapSeat(H, Number(botSeat.id));
 await waitFor(async () => { pf = await pfOn(H, Number(botSeat.id)); return pf && pf.rec !== "\u2026"; }, 4000, 150);
 check("봇 얼굴도 사람처럼 상자가 뜬다 (전적 · 강퇴 단추)", Boolean(pf) && pf.rec === "0승 0패" && pf.kick, JSON.stringify(pf));
+check("봇 상자에도 티어·점수가 뜬다 (사람과 똑같이)", Boolean(pf) && pf.tier && pf.tier.n === "0" && pf.score === "0점", JSON.stringify(pf));
 await closePf(H); await nap(200);
 
 /* ---------- 강퇴 — 아니오 ---------- */
 console.log("\n[강퇴 — 아니오]");
 await tapSeat(H, sa);
 await waitFor(async () => { pf = await pfOn(H, sa); return pf && pf.rec !== "\u2026"; }, 4000, 150);
+check("손님하나 상자에 티어 2 뱃지 · 12,340점 (5000점마다 한 칸)", Boolean(pf) && pf.tier && pf.tier.n === "2" && pf.tier.img === "02" &&
+  pf.tier.w >= 18 && pf.score === "12,340점", JSON.stringify(pf));
 check("방장이 손님 얼굴을 누르면 그 밑에 상자 — 전적·승률", Boolean(pf) && pf.below && pf.rec === "3승 2패" && pf.rate === "60%",
   JSON.stringify(pf));
 check("방장 화면에는 그 옆에 강퇴 단추가 있다", Boolean(pf) && pf.kick);
@@ -183,6 +202,12 @@ check("내보내진 사람은 번호로 다시 못 들어온다 (까닭이 뜬�
 console.log("\n[한 방에 2번까지 — 봇도 센다]");
 const bNow = (await api(srv, "/zoo/rooms/" + code)).body.players.find(x => x.bot);
 const bIdx = (await api(srv, "/zoo/test/botidx/" + code)).body.botIdx[bNow.id];
+/* **방장 화면에 그 봇이 그려진 뒤에 누른다.** 손님하나를 내보낸 자리에 봇이 막 앉았으면
+   서버에는 있어도 방장 화면은 1.5초마다 받아 와서 아직 빈자리다 — 거기를 누르면 친구 초대 창이 열린다.
+   (2026-10-04: 세 번에 한 번꼴로 여기서 실패했다. 앱 문제가 아니라 검사가 너무 빨리 눌렀다) */
+/* 봇 이름은 화면이 번호(botName)로 골라 그려서 서버의 name 과 다르다 — "그 자리가 앉은 자리로 그려졌는가" 로 본다 */
+await waitFor(() => H.page.evaluate(i => { const e = document.querySelectorAll("#room .seat")[i];
+  return Boolean(e && !e.classList.contains("seat--empty")); }, Number(bNow.id)), 6000, 150);
 await tapSeat(H, Number(bNow.id)); await nap(400);
 await press(H, "#pfKick"); await nap(300);
 q = await askOn(H);
@@ -206,6 +231,7 @@ console.log("\n[티켓 — 서버가 뺀다]");
 await waitFor(async () => (await H.seated()) >= 4, 12000);
 /* 서버 계정에는 0장. 앱이 들고 있는 숫자와 어긋나도 서버가 막아야 한다 */
 await seed("k0", { name: "방장님", avatar: 1, score: 0, tickets: 0, ticketAt: Date.now() });
+await H.page.evaluate(() => { window.__blockAuto = false; });     /* 이제부터는 검사가 누른다 */
 await H.pressStart();
 await nap(1500);
 const sum = await H.page.evaluate(() => (document.getElementById("sum") || {}).textContent || "");

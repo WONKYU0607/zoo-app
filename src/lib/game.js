@@ -186,9 +186,14 @@ function openNextRound(G, random){
 
   dealRound(G, random);
 
+  const taxOn = Boolean(G.opts.tax) && n >= 4;
   /* 혁명은 "쥐었다"가 아니라 "선언했다"로 발동한다.
-     쥐고도 안 부르는 것이 전략이므로 여기서는 가능 여부만 표시한다 */
-  const rev = findRevolution(G, order);
+     쥐고도 안 부르는 것이 전략이므로 여기서는 가능 여부만 표시한다.
+     **세금을 끈 방에는 혁명이 없다** (2026-10-11 사용자 결정 A).
+     예전에는 세금을 꺼도 혁명 단계를 열었는데, 앱은 세금을 끄면 세금 화면을 건너뛰어서
+     사람은 선언할 기회가 없고(판에 들어설 때 "안 부름"으로 처리), 봇만 선언해 대혁명이면 자리가 말없이 뒤집혔다.
+     쥔 사람 앱이 꺼져 있으면 서버가 대신 정할 때까지 판 시작이 최대 60초 멈췄다 */
+  const rev = taxOn ? findRevolution(G, order) : { on: false, seat: -1, great: false };
   G.revolution = rev.on ? { seat: rev.seat, great: rev.great } : null;
   G.revDeclared = false;
   G.revDecided = !rev.on;                             /* 쥔 사람이 없으면 정할 것도 없다 */
@@ -196,8 +201,7 @@ function openNextRound(G, random){
   G.taxOrder = order;
   G.seatOrder = order.slice();          /* 등수대로 다시 앉는다 */
 
-  const taxOn = Boolean(G.opts.tax) && n >= 4;
-  /* 세금이 있거나, 선언할 사람이 있으면 그 단계를 거친다 */
+  /* 세금이 있으면 그 단계를 거친다(혁명은 세금이 있을 때만 생긴다) */
   G.needTax = taxOn || rev.on;
   G.taxOn = taxOn;
   G.next = order[0];                                  /* 1등이 선 */

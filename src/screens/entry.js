@@ -54,8 +54,65 @@ export function mount(root){
           '</div>';
       fan.appendChild(d);
     });
+    placeFan();
   }
-  
+
+  /* ---------- 키 작은 폰에서 부채꼴 자리 잡기 (2026-10-10) ----------
+     부채꼴은 화면 높이의 55% 에 놓인다. 키 작은 폰(640~800)에서는 아래쪽 동의 글·단추와
+     겹쳤다(640 에서 75px). 제목 밑과 단추 위 사이 빈자리에 **들어가면 그대로**, 안 들어가면
+     빈자리 안으로 옮기고 그래도 모자라면 카드를 줄인다(80 → 최소 52px).
+     키 큰 폰은 지금과 똑같다.
+     값은 transform 이 안 묻는 offsetTop 으로 잰다 — 처음 0.7초 동안 글자들이 올라오는
+     움직임(rise2) 때문에 화면 위치로 재면 12px 씩 틀린다 */
+  const FAN_TOP = 0.35, FAN_BOT = 2.21;   /* 카드 폭 대비 부채꼴 위·아래 끝 (재 본 값) */
+  const W_MAX = 80, W_MIN = 52, GAP = 12;
+  function placeFan(){
+    const box = fan.parentNode;                       /* .fan — 화면 전체 */
+    const scr = document.querySelector(".screen");
+    const plate = document.querySelector(".plate");
+    const hr = document.querySelector(".hr");
+    const sp = document.querySelector(".spacer");
+    if (!box || !scr || !plate || !hr || !sp || !box.offsetHeight) return;   /* 안 보일 때는 못 잰다 */
+    const st = scr.getBoundingClientRect().top - box.getBoundingClientRect().top;
+    const top = st + plate.offsetTop + hr.offsetTop + hr.offsetHeight;
+    let bot = Infinity;
+    for (let e = sp.nextElementSibling; e; e = e.nextElementSibling){
+      if (e.hidden || !e.offsetHeight) continue;
+      bot = Math.min(bot, st + e.offsetTop);
+    }
+    if (!isFinite(bot)) return;
+    const nat = box.offsetHeight * 0.55;
+    const span = w => (FAN_TOP + FAN_BOT) * w;
+    const room = bot - top - 2 * GAP;
+    let w = W_MAX, at = nat;
+    if (room >= span(W_MAX)){
+      /* 크기는 그대로, 겹치면 빈자리 안으로만 옮긴다 */
+      at = Math.min(Math.max(nat, top + GAP + FAN_TOP * w), bot - GAP - FAN_BOT * w);
+    } else {
+      w = Math.max(W_MIN, Math.floor(room / (FAN_TOP + FAN_BOT)));
+      at = top + GAP + FAN_TOP * w + Math.max(0, (room - span(w)) / 2);
+    }
+    if (w === W_MAX && Math.abs(at - nat) < 0.5){
+      fan.style.top = "";
+      fan.querySelectorAll(".card").forEach(c => c.style.removeProperty("--w"));
+    } else {
+      fan.style.top = Math.round(at) + "px";
+      fan.querySelectorAll(".card").forEach(c => c.style.setProperty("--w", w + "px"));
+    }
+    fan.dataset.w = w;                                /* 검사용 */
+  }
+  let fanQ = 0;
+  const queueFan = () => { if (!fanQ) fanQ = requestAnimationFrame(() => { fanQ = 0; placeFan(); }); };
+  window.addEventListener("resize", queueFan);
+  /* 동의 글이 사라지거나 게스트 단추가 나타나면 빈자리가 바뀐다 */
+  try {
+    new MutationObserver(queueFan).observe(document.querySelector(".screen"),
+      { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "class"], characterData: true });
+    new MutationObserver(queueFan).observe(root, { attributes: true, attributeFilter: ["class"] });
+  } catch(e){}
+  try { window.document.fonts && window.document.fonts.ready.then(queueFan); } catch(e){}
+  setTimeout(queueFan, 1200);
+
   function apply(){
     const t = T[lang];
     document.body.dataset.lang = lang;

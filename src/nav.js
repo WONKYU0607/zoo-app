@@ -3,6 +3,10 @@ import { AVATARS, AVT_FREE } from "./lib/assets.js";
 import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm, warm } from "./lib/sound.js";
 import "./state.js";
 import { showInterstitial } from "./lib/ads.js";
+import { vibOn, setVib } from "./lib/haptic.js";
+import { TERMS, PRIVACY, CONTACT } from "./lib/legal.js";
+import { appInfo, openExternal } from "./lib/appinfo.js";
+import { updateOpen } from "./lib/update.js";
 
 export const GEAR = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><path d=\"M3.5 7h9M17 7h3.5M3.5 12h4M12 12h8.5M3.5 17h8M15.5 17h5\"/><circle cx=\"14.6\" cy=\"7\" r=\"2.1\"/><circle cx=\"9.6\" cy=\"12\" r=\"2.1\"/><circle cx=\"13.2\" cy=\"17\" r=\"2.1\"/></svg>";
 export const OPT_HTML = "<div class=\"opts\" id=\"opts\" role=\"dialog\" aria-modal=\"true\"><div class=\"opts__v\" data-optclose></div><div class=\"opts__p\"><div class=\"opts__h\"><span id=\"optT\"></span><button class=\"opts__x\" data-optclose aria-label=\"close\">×</button></div><div class=\"opts__b\" id=\"optBody\"></div><div class=\"opts__f\"><button class=\"opts__go\" id=\"optGo\"></button></div></div></div>";
@@ -47,7 +51,23 @@ export const CFG_HTML =
   '<div class="vol"><span class="vol__n" id="volSfxN"></span>' +
   '<input class="vol__b" id="volSfx" type="range" min="0" max="100" step="5">' +
   '<span class="vol__v" id="volSfxV"></span></div>' +
+  /* 진동 — 내 차례가 오면 폰을 짧게 떤다 (2026-10-06) */
+  '<div class="cfg__l" id="cfgVibL"></div>' +
+  '<div class="cfg__row"><button data-vib="1"></button><button data-vib="0"></button></div>' +
+  /* 개인정보처리방침·약관·문의 (2026-10-09) — 처음 동의 화면에서만 볼 수 있던 것을 언제든 */
+  '<div class="cfg__links"><button data-doc="privacy"></button><i>\u00B7</i>' +
+  '<button data-doc="terms"></button><i>\u00B7</i><button data-contact></button></div>' +
+  /* 앱 버전 (2026-10-10) — 문의할 때 어느 버전인지 바로 알 수 있게 */
+  '<p class="cfg__ver" id="cfgVer"></p>' +
   '</div></div></div>';
+
+/* 문서 보기 창 — 설정 창 위에 뜬다. 대화창(role=dialog)이라 뒤로가기로 닫힌다 */
+export const DOC_HTML =
+  '<div class="cfg docv" id="docView" role="dialog" aria-modal="true">' +
+  '<div class="cfg__v" data-docclose></div><div class="cfg__p">' +
+  '<div class="cfg__h"><span id="docT"></span>' +
+  '<button class="cfg__x" data-docclose aria-label="close">\u00D7</button></div>' +
+  '<pre class="docv__b" id="docB"></pre></div></div>';
 
 /* 확인창 — 뒤로가기·앱 종료에 쓴다. 설정 창과 같은 틀 */
 export const ASK_HTML = "<div class=\"cfg\" id=\"ask\" role=\"dialog\" aria-modal=\"true\">" +
@@ -213,6 +233,56 @@ export function initNav(){
     const b = document.getElementById("volBgm"), f = document.getElementById("volSfx");
     if (b) b.value = String(sound.bgm);
     if (f) f.value = String(sound.sfx);
+    paintVib();
+    paintLinks();
+  }
+  /* 설정 창 아래 글자 단추 — 개인정보처리방침 · 이용약관 · 문의하기 */
+  function paintLinks(){
+    const ko = (window.__lang || "ko") === "ko";
+    const set = (sel, v) => { const e = document.querySelector(sel); if (e) e.textContent = v; };
+    set('#cfg [data-doc="privacy"]', ko ? "개인정보처리방침" : "Privacy");
+    set('#cfg [data-doc="terms"]', ko ? "이용약관" : "Terms");
+    set("#cfg [data-contact]", ko ? "문의하기" : "Contact");
+    appInfo().then(i => {
+      const e = document.getElementById("cfgVer");
+      if (!e) return;
+      e.textContent = i.version === "web" ? (ko ? "웹 버전" : "Web version")
+        : (ko ? "버전 " : "Version ") + i.version + (i.build ? " (" + i.build + ")" : "");
+    }).catch(() => {});
+  }
+  function openDoc(kind){
+    const lang = (window.__lang || "ko") === "en" ? "en" : "ko";
+    const d = (kind === "terms" ? TERMS : PRIVACY)[lang];
+    const v = document.getElementById("docView");
+    if (!v || !d) return;
+    document.getElementById("docT").textContent = d.title;
+    const b = document.getElementById("docB");
+    b.textContent = d.body;
+    b.scrollTop = 0;
+    v.classList.add("on");
+  }
+  /* 문의 — 메일 앱을 연다. 앱 버전과 계정 번호를 미리 적어 둔다(보내기 전에 본인이 본다) */
+  async function contact(){
+    const ko = (window.__lang || "ko") === "ko";
+    const info = await appInfo();
+    const uid = (window.ACCOUNT && window.ACCOUNT.uid) || "-";
+    const ver = info.version + (info.build ? " (" + info.build + ")" : "");
+    const subject = ko ? "[동물의 왕국] 문의" : "[Zoo President] Contact";
+    const body = "\n\n\n----\n" + (ko ? "앱 버전: " : "App version: ") + ver + "\n" +
+                 (ko ? "계정 번호: " : "Account ID: ") + uid;
+    openExternal("mailto:" + CONTACT + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body));
+  }
+  /* 진동 켬/끔 — 고른 쪽이 눌린 모양(aria-pressed) */
+  function paintVib(){
+    const ko = (window.__lang || "ko") === "ko";
+    const l = document.getElementById("cfgVibL");
+    if (l) l.textContent = ko ? "내 차례 진동" : "Vibrate on my turn";
+    const on = vibOn();
+    document.querySelectorAll("#cfg [data-vib]").forEach(x => {
+      const mine = x.dataset.vib === "1";
+      x.textContent = mine ? (ko ? "켬" : "On") : (ko ? "끔" : "Off");
+      x.setAttribute("aria-pressed", String(mine === on));
+    });
   }
 
   /* 홈 화면 소리 단추 — 누르면 음소거 */
@@ -221,7 +291,8 @@ export function initNav(){
     if (!b) return;
     b.setAttribute("aria-pressed", String(!sound.muted));
     b.classList.toggle("is-off", sound.muted);
-    b.setAttribute("aria-label", sound.muted ? "소리 켜기" : "소리 끄기");
+    const ko = (window.__lang || "ko") === "ko";
+    b.setAttribute("aria-label", sound.muted ? (ko ? "소리 켜기" : "Unmute") : (ko ? "소리 끄기" : "Mute"));
   }
 
   document.addEventListener("input", e => {
@@ -231,6 +302,12 @@ export function initNav(){
   let lastBtnAt = 0;            /* 단추 소리가 겹치지 않게 */
   document.addEventListener("click", e => {
     if (e.target.closest("#btMute")){ toggleMute(); paintMute(); paintVol(); return; }
+    const vb = e.target.closest("#cfg [data-vib]");
+    if (vb){ setVib(vb.dataset.vib === "1"); paintVib(); }
+    const dk = e.target.closest("#cfg [data-doc]");
+    if (dk){ openDoc(dk.dataset.doc); }
+    if (e.target.closest("#cfg [data-contact]")){ contact(); }
+    if (e.target.closest("#docView [data-docclose]")){ document.getElementById("docView").classList.remove("on"); }
     /* 단추 소리 — 누를 수 있는 것에만.
        진입창은 뺀다. 거기서는 아직 소리가 막혀 있기도 하고,
        첫 화면부터 소리가 나는 것이 부담스럽다 */
@@ -250,6 +327,8 @@ export function initNav(){
      시작하기를 누른 뒤라 그 조건도 같이 풀린다 */
   let touched = false;
   onSound(() => { paintMute(); });
+  /* 켤 때 한 번 — 꺼 둔 채 앱을 다시 켜면 단추가 켜짐 모양으로 남아 있었다(누르면 그제야 맞음) (2026-10-10) */
+  paintMute();
 
   /* 이름에 꺾쇠 같은 것이 들어와도 화면이 안 깨지게 */
   const esc = t => String(t == null ? "" : t)
@@ -385,7 +464,10 @@ export function initNav(){
   /* ---------- 접속 상태와 초대 알림 ----------
 
      로비·대기실에 있으면 부를 수 있고, 판에 들어가면 못 부른다.
-     초대는 10초마다 확인해 로비·대기실에서만 띄운다 */
+     초대는 Firestore 가 바뀔 때 알려 주고(지켜보기), 로비·대기실에서만 띄운다.
+     판 중에 온 초대는 들고 있다가 로비·대기실로 돌아오면 띄운다(2분 안이면).
+     (2026-10-10) 무료 한도 때문에 바꿨다 — 초대 10초마다 읽기 → 지켜보기,
+     접속 표시 1분마다 쓰기 → 3분마다 + 앱을 내리면 "off" */
   const PLAY = ["table", "draw", "tax", "result"];
   let lastState = "";
   function pushPresence(){
@@ -396,15 +478,39 @@ export function initNav(){
     lastState = st;
     if (FR().setPresence) FR().setPresence(st);
   }
-  setInterval(() => { lastState = ""; pushPresence(); }, 60000);   /* 살아 있다고 알린다 */
+  const PRES_MS = 3 * 60 * 1000;
+  /* 살아 있다고 알린다. 앱이 뒤로 가 있으면 안 적는다 — 그동안은 꺼진 것이 맞다 */
+  setInterval(() => { if (document.hidden) return; lastState = ""; pushPresence(); }, PRES_MS);
+  /* 앱을 내리면 바로 "off" — 3분 간격이라 안 적으면 7분 동안 접속 중으로 보인다 */
+  function presAway(){
+    if (!lastState || lastState === "off") return;
+    lastState = "off";
+    if (FR().setPresence) FR().setPresence("off");
+  }
+  function presBack(){ lastState = ""; pushPresence(); }
+  document.addEventListener("visibilitychange", () => { document.hidden ? presAway() : presBack(); });
+  window.addEventListener("apppause", presAway);
+  window.addEventListener("appresume", presBack);
 
   let invSeen = {};
-  async function checkInvites(){
+  let invRows = [], invStop = null, invUid = "";
+  /* 계정이 바뀌면(로그인·게스트·로그아웃) 지켜보는 곳도 바꾼다 */
+  function watchInv(){
+    const uid = (window.ACCOUNT || {}).uid || "";
+    if (uid === invUid) return;
+    if (invStop){ try { invStop(); } catch(e){} invStop = null; }
+    invUid = uid; invRows = []; invSeen = {};
+    if (!uid || !FR().watchInvites) return;
+    invStop = FR().watchInvites(rows => { invRows = rows || []; checkInvites(); });
+  }
+  window.addEventListener("accountready", watchInv);
+  window.addEventListener("accountchange", watchInv);
+  setTimeout(watchInv, 0);
+  function checkInvites(){
     const now = (document.querySelector(".page.is-on") || {}).id || "entry";
     if (now === "entry" || PLAY.includes(now)) return;   /* 판에서는 안 띄운다 */
-    if (!FR().invites) return;
-    const rows = await FR().invites();
-    const t = frT();
+    const fresh = FR().inviteFresh || (() => true);
+    const rows = invRows.filter(fresh);
     for (const r of rows){
       if (invSeen[r.uid] === r.code) continue;
       invSeen[r.uid] = r.code;
@@ -430,7 +536,6 @@ export function initNav(){
       break;                                             /* 한 번에 하나만 */
     }
   }
-  setInterval(checkInvites, 10000);
 
   function paintAvatars(){
     const wrap = document.getElementById("acAvt");
@@ -588,6 +693,8 @@ export function initNav(){
       why === "long"  ? (ko ? "너무 깁니다. 한글 6자 또는 영문 8자까지" : "Too long") :
       why === "space" ? (ko ? "띄어쓰기는 넣을 수 없습니다" : "No spaces") :
       why === "char"  ? (ko ? "한글, 영문, 숫자만 됩니다" : "Letters and numbers only") :
+      why === "bad"   ? (ko ? "쓸 수 없는 말이 들어 있습니다" : "That name isn't allowed") :
+      why === "official" ? (ko ? "운영자처럼 보이거나 '게스트'로 시작하는 이름은 쓸 수 없습니다" : "That name is reserved") :
                         (ko ? "이름을 넣어 주세요" : "Please enter a name");
     btn.disabled = false;
   });
@@ -731,6 +838,7 @@ export function initNav(){
        판에서는 끈다 — 효과음이 많아 겹치면 시끄럽다 */
     if (id === "lobby"){ touched = true; warm(); askResume(); }   /* 소리를 미리 받아 둔다 */
     setTimeout(pushPresence, 0);
+    setTimeout(() => { watchInv(); checkInvites(); }, 0);   /* 판 중에 온 초대는 로비·대기실에 오면 */
     if (touched){
       /* 로비와 랭킹에서만 배경음악. 방 대기실부터는 끈다 */
       if (id === "lobby" || id === "rank") playBgm("lobby");
@@ -1014,6 +1122,8 @@ export function initNav(){
 
      열려 있는 창이 있으면 그것부터 닫고, 그다음이 화면별 규칙이다 */
   function onBack(){
+    /* 업데이트 안내가 떠 있으면 그 창은 못 닫는다 — 뒤로가기는 앱 끄기 */
+    if (updateOpen()){ quitApp(); return; }
     if (askOpen()){ askClose(); return; }
     /* **열린 창이 있으면 그것만 닫는다.**
        예전에는 `.cfg.on`(설정·계정·별명) 만 찾아서, 방 만들기(`#opts.on`)와
@@ -1089,6 +1199,9 @@ export function initNav(){
         return;                                  /* 웹에서는 popstate 가 맡는다 */
       const { App } = await import("@capacitor/app");
       App.addListener("backButton", () => onBack());
+      /* 앱을 내리고 올릴 때 — 접속 표시가 쓴다 */
+      App.addListener("pause",  () => window.dispatchEvent(new Event("apppause")));
+      App.addListener("resume", () => window.dispatchEvent(new Event("appresume")));
     } catch (e){
       /* 못 걸었으면 옛 방식이라도 시도한다 */
       try {

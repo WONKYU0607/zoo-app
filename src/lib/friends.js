@@ -18,7 +18,7 @@
    게스트도 쓴다. 기기를 바꾸면 계정이 사라지므로 친구도 같이 사라진다 — 그건 감수한다 */
 
 import {
-  doc, getDoc, setDoc, deleteDoc, collection, getDocs,
+  doc, getDoc, setDoc, deleteDoc, collection, getDocs, onSnapshot,
   query, where, limit, serverTimestamp,
 } from "firebase/firestore";
 
@@ -33,7 +33,7 @@ const ok = () => Boolean(db && me().uid);
 
 /* ---------- 접속 상태 ---------- */
 
-/* state: "lobby"(로비·대기실 — 부를 수 있다) | "game"(판 중 — 못 부른다) */
+/* state: "lobby"(로비·대기실 — 부를 수 있다) | "game"(판 중 — 못 부른다) | "off"(앱을 내렸다) */
 export async function setPresence(state){
   if (!ok()) return;
   try {
@@ -42,9 +42,11 @@ export async function setPresence(state){
   } catch(e){}
 }
 
-/* 3분 넘게 소식이 없으면 접속 중이 아니라고 본다 */
-const FRESH = 3 * 60 * 1000;
-export const isOnline = p => Boolean(p && p.at && Date.now() - p.at < FRESH);
+/* 살아 있다는 소식은 3분마다 적는다(nav.js). 한 번 늦어도 꺼진 것처럼 안 보이게
+   7분 넘게 소식이 없을 때 접속 중이 아니라고 본다. 앱을 내리면 "off" 를 바로 적는다 (2026-10-10)
+   — 예전에는 1분마다 적고 3분을 봤다. 한 사람이 한 시간에 60번 쓰기라 무료 한도(하루 2만)에 걸린다 */
+export const FRESH = 7 * 60 * 1000;
+export const isOnline = p => Boolean(p && p.at && p.state !== "off" && Date.now() - p.at < FRESH);
 
 /* ---------- 찾기·신청 ---------- */
 
@@ -187,6 +189,33 @@ export async function invites(){
     }
     return rows.sort((a, b) => (b.at || 0) - (a.at || 0));
   } catch(e){ return []; }
+}
+
+/* 초대가 아직 살아 있는가 — 판 중에 온 초대를 로비에 돌아와서 띄울 때 다시 본다 */
+export const inviteFresh = r => Boolean(r && Date.now() - (r.at || 0) <= INV_LIFE);
+
+/* 나에게 온 초대를 **지켜본다** (2026-10-10).
+   예전에는 10초마다 목록을 다시 읽었다 — 한 사람이 한 시간에 360번 읽기(무료 한도는 하루 5만).
+   이제는 Firestore 가 바뀔 때만 알려 준다. 처음 한 번과 새 초대가 올 때만 읽기로 센다.
+   cb(rows) 에 살아 있는(2분 안) 초대를 준다. 돌려준 함수를 부르면 그만 본다 */
+export function watchInvites(cb){
+  if (!ok()) return () => {};
+  const uid = me().uid;
+  try {
+    return onSnapshot(collection(db, "inv", uid, "list"), snap => {
+      const rows = [];
+      for (const d of snap.docs){
+        const v = d.data() || {};
+        const r = { uid: d.id, ...v };
+        if (!inviteFresh(r)){
+          deleteDoc(doc(db, "inv", uid, "list", d.id)).catch(() => {});
+          continue;
+        }
+        rows.push(r);
+      }
+      cb(rows.sort((a, b) => (b.at || 0) - (a.at || 0)));
+    }, () => {});                                   /* 못 보면 조용히 — 초대만 안 뜬다 */
+  } catch(e){ return () => {}; }
 }
 
 export async function dropInvite(uid){

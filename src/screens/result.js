@@ -1,6 +1,7 @@
 import { scoped } from "../lib/scoped.js";
 import { avtFile } from "../lib/assets.js";
 import "../styles/result.css";
+import { noteGameDone } from "../lib/review.js";
 
 export function mount(root){
 
@@ -88,6 +89,8 @@ export function mount(root){
       const myRank = rows.indexOf(0);
       const earned = score[0] || 0;
       if (window.reportGame) window.reportGame(myRank, names.length, earned, false);
+      /* 끝까지 마친 게임을 센다 — 3번째에 별점 창을 한 번 (review.js) */
+      noteGameDone();
     }
   
     /* 점수를 받는 등수까지만 선을 긋는다 */

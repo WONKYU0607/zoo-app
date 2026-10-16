@@ -95,6 +95,41 @@ await wait(100);
 check("주간 탭이 선택된다",
       q('#rkTabs button[data-k="week"]').getAttribute("aria-pressed") === "true");
 
+/* 랭킹은 탭마다 10분 동안 다시 쓴다 (2026-10-10) — 화면을 열 때마다 160명씩 읽지 않게 */
+let calls = 0, mineCalls = 0;
+window.__topScores = async () => { calls++; return rows; };
+window.__myRank = async () => { mineCalls++; return { rank: 2, score: A.score, tier: 2 }; };
+q('#rkTabs button[data-k="all"]').click();
+await wait(50);
+check("10분 안에 다시 연 탭은 새로 안 읽는다", calls === 0 && mineCalls === 0 &&
+      q("#rkList").querySelectorAll(".rk__r").length === 3, "읽기 " + calls + "번");
+window.__bootRank(); await wait(50);
+check("화면을 다시 열어도 그대로 쓴다", calls === 0, "읽기 " + calls + "번");
+A.score = 12500;
+window.__bootRank(); await wait(50);
+check("**내 점수가 바뀌면(판을 마치면) 10분 전이라도 새로 읽는다**", calls === 1 && mineCalls === 1, "읽기 " + calls + "번");
+window.__bootRank(); await wait(50);
+check("그다음엔 다시 10분 동안 그대로", calls === 1, "읽기 " + calls + "번");
+const realNow = Date.now;
+Date.now = () => realNow() + 10 * 60 * 1000 + 1000;
+window.__bootRank(); await wait(50);
+check("10분이 지나면 새로 읽는다", calls === 2, "읽기 " + calls + "번");
+Object.assign(A, { uid: "other" });
+window.__bootRank(); await wait(50);
+check("계정이 바뀌면 새로 읽는다", calls === 3, "읽기 " + calls + "번");
+Object.assign(A, { uid: "me" });
+window.__topScores = async () => { calls++; throw new Error("net"); };
+Date.now = () => realNow() + 30 * 60 * 1000;
+const warn0 = console.warn; console.warn = () => {};     /* 화면이 남기는 경고 줄은 여기서 감춘다 */
+window.__bootRank(); await wait(50);
+console.warn = warn0;
+check("못 읽었을 때는 '불러오지 못했습니다'", (q("#rkList").textContent || "").includes("불러오지 못했습니다"));
+window.__topScores = async () => { calls++; return rows; };
+const c0 = calls;
+window.__bootRank(); await wait(50);
+check("못 읽은 것은 기억하지 않는다 — 다시 열면 다시 읽는다", calls === c0 + 1 && q("#rkList").querySelectorAll(".rk__r").length === 3);
+Date.now = realNow;
+
 /* 완주 실패(도중에 나감)는 그때까지 쌓은 점수의 **절반**만 준다.
    나가기 단추가 이 값을 실제로 기록하는지는 `leavegame.test.mjs` 가 본다 */
 check("완주하면 쌓은 점수를 그대로 받는다", B.acct.scoreFor(0, 4, 300, false) === 300,

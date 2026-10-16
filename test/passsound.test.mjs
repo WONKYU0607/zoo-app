@@ -61,7 +61,10 @@ function makeEar(){
 /* 한 게임을 끝까지 굴리면서, 수를 둘 때마다 화면 상태를 흘려 넣는다.
    feed(v) 를 통해 되돌림 같은 장난도 끼워 넣을 수 있다 */
 function playGame(n, hearFn, opts = {}){
-  const c = Client({ game: ZooPresident, numPlayers: n, setupData: { rounds: 3, tax: true, clear2: Boolean(opts.clear2) } });
+  /* **로컬 Client 는 setupData 를 안 넘긴다** — 예전에는 그대로 줘서 2번 판 엎기가 한 번도 안 켜진 채 돌았다
+     (2026-10-11 조합 검사에서 발견). 설정을 박은 게임으로 감싸 준다(앱 engine.js 와 같은 방식) */
+  const game = Object.assign({}, ZooPresident, { setup: a => ZooPresident.setup(a, { rounds: 3, tax: true, clear2: Boolean(opts.clear2) }) });
+  const c = Client({ game, numPlayers: n });
   c.start();
   for (let seat = 0; seat < n; seat++){
     const s0 = c.store.getState();

@@ -4,11 +4,24 @@
    게스트는 목록에 안 오르고, 대신 구글로 이으라고 알린다. */
 
 import "../styles/lobby.css";
-import { account, topScores, myRank } from "../lib/account.js";
+import { account, topScores, myRank, periodKeys } from "../lib/account.js";
 
 /* 검사에서 가짜 자료를 끼울 수 있게 한 겹 둔다 */
 const fetchTop  = (...a) => (window.__topScores || topScores)(...a);
 const fetchMine = (...a) => (window.__myRank    || myRank)(...a);
+
+/* 받아 온 랭킹은 탭마다 10분 동안 다시 쓴다 (2026-10-10).
+   화면을 열 때마다 160명씩 읽으면 무료 읽기 한도(하루 5만)를 금방 쓴다.
+   **내 점수가 바뀌면(판을 마치면) 10분 전이라도 새로 받는다** — 내 줄이 옛 점수로 남지 않게.
+   계정이 바뀌거나 주·달이 넘어가도 새로 받는다 */
+export const RANK_CACHE_MS = 10 * 60 * 1000;
+const cache = {};
+function cacheKey(kind){
+  const k = periodKeys();
+  const mine = kind === "all" ? account.score : (kind === "week" ? account.wk : account.mo);
+  return [account.uid || "", account.guest ? "g" : "", account.signedIn ? "s" : "",
+          Number(mine || 0), kind === "week" ? k.wk : kind === "month" ? k.mo : ""].join("|");
+}
 
 const T = {
   ko: {
@@ -113,10 +126,17 @@ export function mount(root){
   }
 
   async function load(){
+    const key = cacheKey(kind);
+    const c = cache[kind];
+    if (c && c.key === key && Date.now() - c.at < RANK_CACHE_MS){
+      rows = c.rows; mine = c.mine; state = "done"; draw();
+      return;
+    }
     state = "loading"; rows = null; mine = null; draw();
     const want = kind;
     try {
       const [list, r] = await Promise.all([fetchTop(kind, 100), fetchMine(kind)]);
+      cache[want] = { key, at: Date.now(), rows: list, mine: r };
       if (want !== kind) return;                 /* 그 사이 다른 탭을 눌렀다 */
       rows = list; mine = r; state = "done";
     } catch(e){
@@ -136,7 +156,7 @@ export function mount(root){
   window.addEventListener("langchange", () => { lang = window.__lang || "ko"; draw(); });
   window.addEventListener("accountchange", draw);
 
-  /* 화면이 열릴 때마다 새로 받아 온다 */
+  /* 화면이 열릴 때마다 — 10분 안이면 받아 둔 것을 쓴다 */
   window.__bootRank = () => { lang = window.__lang || "ko"; load(); };
   draw();
 }

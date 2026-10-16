@@ -56,8 +56,9 @@ export function periodKeys(at){
   return { wk: year + "-W" + String(wkNo).padStart(2, "0"), mo };
 }
 
-export const TIER_STEP = 5000;
-export function tierOf(score){ return Math.floor(score / TIER_STEP); }
+import { TIER_STEP, tierOf } from "./tier.js";     /* 기준은 tier.js 한 곳에 */
+import { badName } from "./badword.js";
+export { TIER_STEP, tierOf };
 export function winnersCount(n){ return Math.floor(n / 2); }
 
 /* 계정에 올릴 점수.
@@ -137,6 +138,9 @@ export function checkName(str){
     if (!HANGUL.test(ch) && !/[A-Za-z0-9]/.test(ch)) return { ok: false, why: "char" };
   }
   if (nameCost(v) > NAME_MAX + 0.001) return { ok: false, why: "long" };
+  /* 욕설·성적인 말("bad"), 운영자·게스트 흉내("official") — badword.js */
+  const bad = badName(v);
+  if (bad) return { ok: false, why: bad };
   return { ok: true, name: v };
 }
 
@@ -180,9 +184,10 @@ export async function setAvatar(i){
 }
 
 export async function setNickname(wanted){
-  if (!ready || !account.uid) throw new Error("로그인 상태가 아닙니다");
+  /* 글자 검사가 먼저 — 로그인 전이라도 왜 안 되는지는 알려 준다 */
   const c = checkName(wanted);
   if (!c.ok) return { ok: false, why: c.why };
+  if (!ready || !account.uid) throw new Error("로그인 상태가 아닙니다");
   const want = c.name;
   const ref = doc(db, "names", key(want));
   try {

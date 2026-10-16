@@ -1,5 +1,8 @@
 import "./state.js";
-import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, ASK_HTML, FRIEND_HTML, GEAR, CROWN } from "./nav.js";
+import { initNav, OPT_HTML, CFG_HTML, ACCT_HTML, ASK_HTML, FRIEND_HTML, DOC_HTML, GEAR, CROWN } from "./nav.js";
+import { checkUpdate } from "./lib/update.js";
+import { installErrorLog } from "./lib/applog.js";
+import { installAria } from "./lib/aria.js";
 import { MARKUP } from "./screens/_markup.js";
 import { db } from "./lib/firebase.js";
 import * as FR from "./lib/friends.js";
@@ -21,8 +24,8 @@ import * as rank   from "./screens/rank.js";
    예전에는 한국어로 박혀 있어서 **영어로 바꿔도 그대로였다**(랭킹·친구).
    광고 단추도 같은 모양으로 넣었다가 같이 고친다 */
 const BAR_T = {
-  ko: { ad: "광고 시청 티켓", rank: "랭킹", friend: "친구", mute: "소리 끄기" },
-  en: { ad: "Watch ad for ticket", rank: "Ranking", friend: "Friends", mute: "Mute" },
+  ko: { ad: "광고 시청 티켓", rank: "랭킹", friend: "친구", mute: "소리 끄기", unmute: "소리 켜기" },
+  en: { ad: "Watch ad for ticket", rank: "Ranking", friend: "Friends", mute: "Mute", unmute: "Unmute" },
 };
 function paintBarLabels(){
   const t = BAR_T[window.__lang] || BAR_T.ko;
@@ -31,7 +34,8 @@ function paintBarLabels(){
   put("rankLabel", t.rank);
   put("friendLabel", t.friend);
   const m = document.getElementById("btMute");
-  if (m) m.setAttribute("aria-label", t.mute);
+  /* 꺼져 있으면 "소리 켜기" — 예전에는 언어를 바꾸면 꺼져 있어도 "소리 끄기" 로 덮였다 */
+  if (m) m.setAttribute("aria-label", m.getAttribute("aria-pressed") === "false" ? t.unmute : t.mute);
 }
 window.addEventListener("langchange", paintBarLabels);
 
@@ -96,7 +100,7 @@ function build(){
       }
     }
   });
-  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML + ASK_HTML + FRIEND_HTML);
+  stageEl.insertAdjacentHTML("beforeend", OPT_HTML + CFG_HTML + ACCT_HTML + ASK_HTML + FRIEND_HTML + DOC_HTML);
 }
 
 build();
@@ -104,6 +108,19 @@ Object.entries(SCREENS).forEach(([id, mod]) => {
   if (mod.mount) mod.mount(document.getElementById(id));
 });
 initNav();
+
+/* 앱 오류를 서버로 (A3) — 가능한 한 일찍 건다 */
+installErrorLog();
+installAria();          /* 화면 읽기용 단추 이름을 고른 말로 (2026-10-10) */
+/* 업데이트 강제 안내 (A1) — 켤 때와 다시 앞으로 나올 때 */
+checkUpdate();
+(async () => {
+  try {
+    if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
+    const { App } = await import("@capacitor/app");
+    App.addListener("resume", () => { checkUpdate(); });
+  } catch(e){}
+})();
 
 /* 로그인 벽 — 구글로 로그인해야 들어간다 */
 window.ACCOUNT = account;
