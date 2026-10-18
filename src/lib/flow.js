@@ -18,6 +18,39 @@ let botTimer = null;
 /* 서버 대전 — 서버가 정한 자리와 자리표를 그대로 들고 있는다 */
 let net = null;            /* { code, matchID, playerID, credentials, numPlayers } */
 let pollId = null;
+/* ---------- 서버 문제로 끝난 판 알아채기 (2026-10-17) ----------
+   서버가 꺼졌다 켜지거나 대기 기계로 넘어가면 그 판은 **이어 하지 않고 끝난다**(서버가 보상한다).
+   그런데 앱은 다시 붙어도 "연결됨" 으로만 보이고 판 화면이 멈춘 채 남는다 —
+   서버는 없어진 판에 붙는 것을 거절할 뿐 따로 알려 줄 길이 없다.
+   그래서 판을 하는 동안 몇 초마다 방이 아직 있는지 묻는다. 없으면(404) 안내를 띄우고 로비로 간다.
+   인터넷이 끊긴 동안(물어볼 수 없음)은 그냥 넘긴다 — 그건 판 화면이 "다시 연결하는 중" 으로 알린다 */
+let watchId = null;
+const WATCH_MS = 6000;
+function watchStart(){
+  if (watchId || !net) return;
+  watchId = setInterval(async () => {
+    if (!net || !net.inGame){ watchStop(); return; }
+    /* 끝 결과를 이미 받았다 — 마지막 장면을 보는 중이다. 서버가 1분 뒤 방을 치워도 끝난 판이니 끼어들지 않는다 */
+    if (eng.engine.view && eng.engine.view.over) return;
+    const mine = net;
+    try { await lobby.peekRoom(mine.code, mine.key); }
+    catch(e){
+      if (e && e.status === 404 && net === mine) gameGone(e.data || {});
+    }
+  }, WATCH_MS);
+}
+function watchStop(){ if (watchId){ clearInterval(watchId); watchId = null; } }
+/* 판이 서버 문제로 끝났다 — 판을 접고, 하던 방 기록을 지우고, 계정(점수·티켓)을 다시 읽고, 안내를 띄운다 */
+function gameGone(info){
+  watchStop(); stopCount(); stopRoomCount(); botFillStop(); pollStop();
+  try { eng.stop(); eng.setPaused(false); } catch(e){}
+  net = null; myRoom = null;
+  lobby.clearSeat();
+  emitRoom();
+  call("__closeProfile");
+  call("__refreshAccount");
+  call("__onGameGone", info || {});
+}
 let offView = null;        /* 엔진 상태 구독 해제 */
 
 const W = () => window;
@@ -178,7 +211,11 @@ function pollStart(){
       const r = await refreshNet();
       /* 방장이 시작했으면 따라 들어간다 */
       if (r && r.started && !net.inGame) enterOnlineGame();
-    } catch(e){ /* 잠깐 끊긴 것은 넘긴다 */ }
+    } catch(e){
+      /* 잠깐 끊긴 것은 넘긴다. **방이 아예 없어졌으면(404)** 대기실에 영영 남지 않게 로비로 —
+         서버가 빈 디스크로 켜지면(대기 기계로 넘어감) 대기실도 같이 없어진다(2026-10-17) */
+      if (e && e.status === 404 && net && !net.inGame) gameGone(Object.assign({ waiting: true }, e.data || {}));
+    }
   }, 1500);
 }
 function pollStop(){ if (pollId){ clearInterval(pollId); pollId = null; } }
@@ -281,7 +318,7 @@ async function startOnlineGame(){
   /* 방장 화면에 보이던 인원을 같이 보낸다 — 누르는 찰나 봇이 들어와도 보인 대로 시작 */
   const seen = (W().__opts && W().__opts.seated) || null;
   await lobby.startRoom(net.code, net.key, Number.isInteger(seen) ? seen : undefined);
-  /* 서버가 방장 티켓을 한 장 뺐다 — 화면 숫자를 맞춘다 */
+  /* 서버가 앉은 사람 전원의 티켓을 한 장씩 뺐다 — 화면 숫자를 맞춘다 */
   call("__refreshAccount");
   /* **판 번호·자리·자리표를 다시 받아 온다.**
      8인 방에 4명일 때 시작하면 서버는 4인 판을 **새로 만들고 자리표도 새로 준다.**
@@ -298,6 +335,9 @@ function enterOnlineGame(){
   if (!net || net.inGame) return;
   net.inGame = true;
   pollStop();
+  watchStart();                         /* 서버 문제로 판이 끝나면 알아챈다 */
+  /* 시작할 때 서버가 **앉은 사람 전원**의 티켓을 한 장씩 뺐다(2026-10-17) — 손님 화면 숫자도 맞춘다 */
+  call("__refreshAccount");
   call("__closeProfile");               /* 대기실에서 열어 둔 프로필 창이 판 위에 남지 않게 */
 
   eng.startOnline({
@@ -401,6 +441,8 @@ function onRoundEnd(v){
 
 function onGameOver(over){
   stopCount();                             /* 최종 결과는 저절로 넘어가지 않는다 */
+  /* 끝까지 갔다 — 서버는 1분 뒤 방을 지우는데 그걸 "서버 문제로 끝남" 으로 잘못 보면 안 된다 */
+  watchStop();
   lobby.clearSeat();                       /* 끝난 게임은 이어서 할 것이 없다 */
   eng.setPaused(true);
   const G = (W().GAME = W().GAME || {});
@@ -535,7 +577,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (net && net.code != null){
       lobby.leaveRoom(net.code, net.key);
     }
-    botFillStop(); stopRoomCount(); pollStop();
+    botFillStop(); stopRoomCount(); pollStop(); watchStop();
     net = null;
     lobby.clearSeat();               /* 자리를 비웠으니 돌아갈 곳도 없다 */
   }
@@ -618,7 +660,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (net && net.code != null){
       lobby.leaveRoom(net.code, net.key);
     }
-    botFillStop(); stopRoomCount(); pollStop(); eng.stop();
+    botFillStop(); stopRoomCount(); pollStop(); watchStop(); eng.stop();
     myRoom = null; net = null; lobby.clearSeat(); emitRoom();
   };
   W().__saveOpts = async () => {
@@ -701,7 +743,11 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     /* 열쇠가 없는 옛 기록으로는 내 자리를 증명할 수 없다 */
     if (!s.key){ lobby.clearSeat(); return null; }
     try { r = await lobby.peekRoom(s.code, s.key); }
-    catch(e){ r = null; }
+    catch(e){
+      r = null;
+      /* 앱을 끈 사이 서버 문제로 끝난 판 — 돌아갈 곳은 없고, 보상받았다고 알려 준다 */
+      if (e && e.status === 404 && e.data && e.data.gone){ lobby.clearSeat(); call("__refreshAccount"); call("__onGameGone", e.data); return null; }
+    }
     /* 방이 없어졌거나 내가 그 자리에 없으면 돌아갈 곳이 아니다.
        내 자리는 서버가 새 판 기준으로 알려 준 번호(you)로 본다 —
        판이 새로 만들어졌으면 적어 둔 번호는 옛 것이다 */
@@ -822,7 +868,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (typeof prevQuitGame === "function"){
       try { prevQuitGame(); } catch(e){ console.error(e); }
     }
-    stopCount(); stopRoomCount(); botFillStop(); eng.stop(); eng.setPaused(false);
+    stopCount(); stopRoomCount(); botFillStop(); watchStop(); eng.stop(); eng.setPaused(false);
     /* **나간 게임은 내 손에서 뗀다.**
        예전에는 "하던 방" 기록을 안 지워서, 다른 게임을 하고 로비로 돌아오면
        나간 게임으로 돌아가라고 물었다. 서버에도 나갔다고 알린다 —
@@ -841,7 +887,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   const quit = D().querySelector("#result #quit");
   if (quit) quit.addEventListener("click", () => {
     if (!W().__resultFinal && W().__quitGame){ W().__quitGame(); return; }
-    stopCount(); eng.stop(); myRoom = null;
+    stopCount(); watchStop(); eng.stop(); myRoom = null;
     if (net){ try { lobby.leaveRoom(net.code, net.key); } catch(e){} }
     net = null; pollStop();
     lobby.clearSeat();                    /* 끝난 게임도 돌아갈 곳이 아니다 */
@@ -853,6 +899,7 @@ export function teardown(){
   stopRoomCount();
   stopCount();
   pollStop();
+  watchStop();
   if (offView){ offView(); offView = null; }
   net = null;
   eng.stop();

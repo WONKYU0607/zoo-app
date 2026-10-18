@@ -8,7 +8,7 @@
      - 한 방에 2번까지 — 세 번째는 "더 내보낼 수 없습니다" 만 뜨고 아무도 안 나간다
    티켓
      - 방장 계정에 티켓이 없으면 서버가 시작을 거절하고(402) 화면에 까닭이 뜬다 — 앱 숫자가 어긋나 있어도
-     - 있으면 시작되고 서버가 한 장 뺀다
+     - 있으면 시작되고 서버가 **앉은 사람 전원**에게서 한 장씩 뺀다(2026-10-17. 예전에는 방장만)
 
    계정은 서버의 메모리 저장소 + 검사용 로그인 표("test:uid") 로 돈다.
    쓰는 법:  node test/kick.test.mjs */
@@ -244,7 +244,8 @@ await H.pressStart();
 const started = await waitFor(async () => (await api(srv, "/zoo/rooms/" + code)).body.started, 8000, 300);
 check("티켓이 있으면 시작된다", started);
 check("서버가 방장 티켓을 한 장 뺐다 (1 → 0)", (await acct("k0")).tickets === 0);
-check("손님 티켓은 그대로", (await acct("k3")).tickets === 3);
+/* 2026-10-17 사용자 결정: "그 게임을 하는 인원들도 티켓을 각자 써야지" — 예전에는 방장만 냈다 */
+check("**손님도 한 장씩 냈다 (3 → 2)**", (await acct("k3")).tickets === 2, String((await acct("k3")).tickets));
 
 const errs = [H, A, Bq, Cq].flatMap(p => p.errs.map(e => p.name + ": " + e));
 check("화면 오류·알림창이 없다", errs.length === 0, errs.slice(0, 3).join(" | "));

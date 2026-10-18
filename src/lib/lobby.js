@@ -31,6 +31,8 @@ async function api(path, body){
     /* none(없는 방) · started(이미 시작) · full(꽉 참) · kicked(내보내진 방) · already(이미 앉음)
        auth(로그인 표가 안 통함) · ticket(티켓 없음) · limit(강퇴 횟수 끝) · down(계정 서버 문제) */
     e.why = data && data.why;
+    /* 서버가 같이 보낸 것 — 서버 문제로 끝난 방이면 gone·comp 가 들어 있다(2026-10-17) */
+    e.data = data || {};
     throw e;
   }
   return data;

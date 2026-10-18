@@ -636,7 +636,8 @@ export async function myRank(kind = "all"){
 }
 
 /* 시작할 수 있을 만큼 티켓이 있는가 — **화면에서 미리 막는 용도일 뿐**이다.
-   진짜로 빼는 것은 서버다(시작을 누르면 서버가 방장 티켓을 한 장 뺀다. 없으면 402) */
+   진짜로 빼는 것은 서버다(시작을 누르면 서버가 **앉은 사람 전원**에게서 한 장씩 뺀다.
+   티켓이 0장이면 대기실에 아예 못 들어온다 — 402 ticket. 2026-10-17) */
 export function hasTicket(){
   if (!account.signedIn) return true;          /* 로그인 전(검사·개발)에는 서버가 가린다 */
   const r = refill(account.tickets, account.ticketAt);

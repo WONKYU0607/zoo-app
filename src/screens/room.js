@@ -539,8 +539,8 @@ export function mount(root){
     b.disabled = true;
     b.textContent = L[lang].starting;
   
-    /* 티켓이 있는지 미리 본다. **빼는 것은 서버다** — 시작을 부르면 서버가 방장 티켓을
-       한 장 빼고, 없으면 거절한다(아래 402). 여기서는 헛걸음만 줄인다 */
+    /* 티켓이 있는지 미리 본다. **빼는 것은 서버다** — 시작을 부르면 서버가 앉은 사람
+       전원에게서 한 장씩 뺀다(2026-10-17). 여기서는 헛걸음만 줄인다 */
     if (window.spendTicket){
       let ok = false;
       try { ok = await window.spendTicket(); } catch(err){ ok = false; }

@@ -223,7 +223,7 @@ window.reportGame = (rank, players, earned, quit) => {
 };
 
 /* 시작해도 되는지 미리 본다(티켓이 있는가). **빼는 것은 서버다** — 방장이 시작을 누르면
-   서버가 한 장 빼고, 없으면 거절한다(402). 여기서 막는 것은 헛걸음을 줄이려는 것뿐 */
+   서버가 앉은 사람 전원에게서 한 장씩 뺀다(2026-10-17). 여기서 막는 것은 헛걸음을 줄이려는 것뿐 */
 window.spendTicket = async () => hasTicket();
 /* 서버가 티켓을 뺐거나 점수를 적은 뒤 화면 값을 맞춘다 */
 window.__refreshAccount = () => refreshAccount().catch(() => {});

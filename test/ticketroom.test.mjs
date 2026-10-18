@@ -9,7 +9,9 @@
      - 그 상태로 눌러도 방 만들기 창이 안 열린다
      - 티켓이 생기면 다시 풀리고 설명 줄도 원래대로 돌아온다
      - 시간이 지나 티켓이 차면(30분에 한 장) 화면이 저절로 풀린다
-     - 빠른 참가·번호로 들어가기는 안 막는다 (티켓은 방을 여는 쪽이 낸다)
+     - **빠른 참가·번호로 들어가기도 잠긴다** (2026-10-17 사용자 결정: 판에 앉은 사람 전원이 한 장씩 낸다.
+       "티켓이 없으면 방 대기실에 못 들어가게") — 계정을 늦게 읽어 아직 안 잠긴 단추를 눌러도
+       서버에 묻지 않고 막고, 왜 막혔는지 알려 준다
 
    쓰는 법:  node test/ticketroom.test.mjs   */
 
@@ -65,8 +67,31 @@ await setTickets(0);
 v = await look();
 check("**티켓이 0이면 방 만들기가 잠긴다**", v.dis);
 check("**왜 막혔는지 알려 준다**", v.warn && /티켓/.test(v.hint), JSON.stringify(v.hint));
-check("빠른 참가는 안 막는다 (티켓은 방을 여는 쪽이 낸다)", !v.quick);
-check("번호로 들어가기도 안 막는다", !v.join);
+check("**빠른 참가도 잠긴다**", v.quick);
+check("**번호로 들어가기도 잠긴다**", v.join);
+check("설명 줄이 셋 다에 맞는 말이다(방 만들기만이 아니라 \"게임에 들어갈 수 없습니다\")", /게임에 들어갈 수 없/.test(v.hint), JSON.stringify(v.hint));
+
+/* 아직 안 잠긴 단추(계정을 늦게 읽은 경우)를 눌러도 **서버에 안 묻고** 막는다 */
+const asked = await page.evaluate(async () => {
+  const n = { quick: 0, join: 0 };
+  const q0 = window.__quickJoin, j0 = window.__joinRoom;
+  window.__quickJoin = async () => { n.quick++; return null; };
+  window.__joinRoom = async () => { n.join++; return null; };
+  const q = document.querySelector("#lobby #btQuick"), j = document.querySelector("#lobby #btJoin");
+  q.disabled = false; q.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  await new Promise(r => setTimeout(r, 50));
+  const noteQ = document.querySelector("#lobby #hQuick").textContent;
+  document.querySelector("#lobby #code").value = "1234";
+  j.disabled = false; j.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  await new Promise(r => setTimeout(r, 50));
+  window.__quickJoin = q0; window.__joinRoom = j0;
+  document.querySelector("#lobby #code").value = "";
+  return { n, noteQ, quick: q.disabled, join: j.disabled, screen: document.querySelector(".on, .is-on") ? 1 : 0 };
+});
+check("**안 잠긴 빠른 참가를 눌러도 서버에 안 묻는다**", asked.n.quick === 0, JSON.stringify(asked.n));
+check("**안 잠긴 번호로 들어가기를 눌러도 서버에 안 묻는다**", asked.n.join === 0, JSON.stringify(asked.n));
+check("눌러 보면 티켓이 없다고 알려 준다", /티켓이 없습니다/.test(asked.noteQ), JSON.stringify(asked.noteQ));
+check("눌러 보면 두 단추가 다시 잠긴다", asked.quick && asked.join);
 
 /* 잠긴 단추를 눌러도 창이 안 열린다.
    `disabled` 라 진짜 누름은 안 들어가므로, 처리기를 직접 때려 본다 —
@@ -84,7 +109,7 @@ check("눌러 보면 단추가 다시 잠긴다", (await look()).dis);
 /* ---- 티켓이 생기면 풀린다 ---- */
 await setTickets(1);
 v = await look();
-check("티켓이 생기면 다시 풀린다", !v.dis);
+check("티켓이 생기면 다시 풀린다", !v.dis && !v.quick && !v.join);
 check("설명 줄도 원래대로", !v.warn && v.hint === hintFull);
 
 /* ---- 시간이 지나 저절로 차는 경우 ----
@@ -99,7 +124,7 @@ await nap(1600);
 v = await look();
 const got = await page.evaluate(() => window.ACCOUNT.tickets);
 check("**시간이 지나 찬 티켓이 화면에 반영된다**", got >= 1, "보유 " + got + "장");
-check("**저절로 다시 풀린다**", !v.dis);
+check("**저절로 다시 풀린다**", !v.dis && !v.quick && !v.join);
 
 shut(srv, browser);
 console.log("\n=== " + (fail ? "통과 " + pass + " / 실패 " + fail : "전부 통과 (" + pass + ")") + " ===\n");

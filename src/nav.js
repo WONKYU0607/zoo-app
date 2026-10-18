@@ -889,10 +889,12 @@ export function initNav(){
   const T_JOIN = {
     ko: { none: "없는 방 번호입니다", started: "이미 게임을 시작한 방입니다", full: "자리가 꽉 찬 방입니다",
           kicked: "방장이 내보낸 방에는 다시 들어갈 수 없습니다", already: "이미 이 방에 들어가 있습니다",
-          auth: "로그인이 필요합니다. 다시 로그인해 주세요", down: "계정 서버에 문제가 있습니다. 잠시 뒤 다시 시도해 주세요" },
+          auth: "로그인이 필요합니다. 다시 로그인해 주세요", down: "계정 서버에 문제가 있습니다. 잠시 뒤 다시 시도해 주세요",
+          ticket: "티켓이 없습니다. 30분마다 한 장씩 채워지고, 광고를 보면 바로 한 장 받습니다" },
     en: { none: "No room with that number", started: "That game has already started", full: "That room is full",
           kicked: "The host removed you from that room", already: "You are already in that room",
-          auth: "Please sign in again", down: "Account server problem. Please try again shortly" },
+          auth: "Please sign in again", down: "Account server problem. Please try again shortly",
+          ticket: "No tickets left. One refills every 30 minutes, or watch an ad for one now" },
   };
   function joinWhy(e){
     const L = T_JOIN[window.__lang] || T_JOIN.ko;
@@ -903,9 +905,23 @@ export function initNav(){
   }
   window.__joinWhy = joinWhy;
 
-  document.querySelector("#lobby #btQuick").addEventListener("click", async () => {
+  /* **티켓이 없으면 대기실에 못 들어간다** (2026-10-17) — 빠른참가·번호로 들어가기도 방 만들기처럼.
+     단추는 로비가 잠가 두지만(lobby.js 의 paintNew) 계정을 늦게 읽어 아직 안 잠겼을 수 있어 여기서도 본다.
+     서버도 한 번 더 막는다(402 ticket) */
+  const noTicket = () => {
+    const a = window.ACCOUNT;
+    if (a && a.loaded && (Number(a.tickets) || 0) <= 0){
+      if (window.__paintNew) window.__paintNew();
+      lobbyNote((T_JOIN[window.__lang] || T_JOIN.ko).ticket);
+      return true;
+    }
+    return false;
+  };
+  document.querySelector("#lobby #btQuick").addEventListener("click", async e => {
     const f = window.__quickJoin;
     if (!f) return;
+    if (e.currentTarget && e.currentTarget.disabled) return;
+    if (noTicket()) return;
     window.__quickNone = false;
     let code = null;
     try { code = await f(); }
@@ -928,6 +944,7 @@ export function initNav(){
   document.querySelector("#lobby #btJoin").addEventListener("click", async () => {
     const inp = document.querySelector("#lobby #code");
     const code = (inp && (inp.value || inp.textContent) || "").replace(/[^0-9]/g, "");
+    if (noTicket()) return;
     if (code.length !== 4){ alert("네 자리 번호를 넣어 주세요"); return; }
     if (window.__joinRoom){
       let seat = null;
@@ -1087,6 +1104,28 @@ export function initNav(){
     const k = KICK_T[window.__lang] || KICK_T.ko;
     go("lobby");
     ask(k.t, k.m, k.y, null, null, true);
+  };
+  /* **서버 문제로 판이 끝났다** (2026-10-17) — 서버가 판을 이어 하지 않고 끝낸 뒤 보상했다.
+     comp = 서버가 보상했다(그 전 판 점수 + 100점, 1승, 낸 티켓 반환) · over = 끝까지 간 판(결과를 못 받고 잠들어 있었다)
+     waiting = 대기실이 없어졌다 */
+  const GONE_T = {
+    ko: { t: "게임이 끝났습니다",
+          comp: "서버 문제로 이 게임이 끝났어요. 지금까지 딴 점수에 100점을 더해 1승으로 기록했고, 낸 티켓도 돌려드렸어요.",
+          plain: "서버 문제로 이 게임이 끝났어요. 다시 시작해 주세요.",
+          over: "이 게임은 이미 끝났어요. 점수와 전적은 기록됐어요.",
+          waitT: "방이 없어졌습니다", wait: "방이 닫혔어요. 방을 다시 만들거나 다시 들어가 주세요.", y: "확인" },
+    en: { t: "Game ended",
+          comp: "This game ended because of a server problem. You got your points so far plus 100, a win, and your ticket back.",
+          plain: "This game ended because of a server problem. Please start a new one.",
+          over: "This game has already ended. Your score and record were saved.",
+          waitT: "Room closed", wait: "The room was closed. Please create or join again.", y: "OK" },
+  };
+  window.__onGameGone = info => {
+    const k = GONE_T[window.__lang] || GONE_T.ko;
+    const i = info || {};
+    go("lobby");
+    if (i.waiting && !i.comp) ask(k.waitT, k.wait, k.y, null, null, true);
+    else ask(k.t, i.comp ? k.comp : i.over ? k.over : k.plain, k.y, null, null, true);
   };
   /* 얼굴 누르기 */
   document.addEventListener("click", async e => {

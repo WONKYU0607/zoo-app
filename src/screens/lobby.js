@@ -15,7 +15,7 @@ export function mount(root){
       hQuick:"",   /* 설명 글은 뺐다. 이 줄은 "들어갈 방이 없습니다" 안내에만 쓴다 */
       lbNew:"친구와 하기", btNew:"방 만들기",
       hNew:"방을 만들면 4자리 번호가 나옵니다. 친구에게 번호를 알려 주세요. 4명부터 8명까지 함께할 수 있습니다.",
-      hNoTicket:"티켓이 없어 방을 만들 수 없습니다. 30분마다 한 장씩 채워지고, 광고를 보면 바로 한 장 받습니다.",
+      hNoTicket:"티켓이 없어 게임에 들어갈 수 없습니다. 30분마다 한 장씩 채워지고, 광고를 보면 바로 한 장 받습니다.",
       lbJoin:"번호로 들어가기", btJoin:"참가",
       mkTitle:"방 만들기", mkGo:"방 만들기",
       mkCap:["방 인원","4명 \u2013 8명"],
@@ -41,7 +41,7 @@ export function mount(root){
       hQuick:"",
       lbNew:"PLAY WITH FRIENDS", btNew:"Create room",
       hNew:"You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
-      hNoTicket:"You need a ticket to create a room. One refills every 30 minutes, or watch an ad for one now.",
+      hNoTicket:"You need a ticket to play. One refills every 30 minutes, or watch an ad for one now.",
       lbJoin:"JOIN BY NUMBER", btJoin:"Join",
       mkTitle:"Create a room", mkGo:"Create room",
       mkCap:["Table size","4 \u2013 8 players"],
@@ -138,8 +138,9 @@ export function mount(root){
      (2026-09-29 신고: "티켓이 없는데 방만들기가 가능함")
      그래서 들어가기 전에 막고, 왜 막혔는지 설명 줄에 적는다.
 
-     빠른 참가·번호로 들어가기는 그대로다 — 티켓은 **방을 여는 쪽**이 낸다
-     (room.js 의 시작 단추에서 한 장 쓴다). */
+     **빠른 참가·번호로 들어가기도 같이 잠근다** (2026-10-17 사용자 결정) — 판이 시작될 때
+     앉은 사람 전원이 한 장씩 내므로, 티켓이 없으면 대기실에 아예 못 들어간다.
+     (예전에는 방장만 냈다 — 내가 그렇게 만들어 놓고 확인을 안 받았다) */
   function paintNew(){
     const b = document.getElementById("btNew");
     if (!b) return;
@@ -147,6 +148,7 @@ export function mount(root){
     /* 계정을 아직 못 읽었으면 잠그지 않는다 — 켜자마자 잠긴 것처럼 보이면 안 된다 */
     const none = Boolean(a && a.loaded) && (Number(a.tickets) || 0) <= 0;
     b.disabled = none;
+    for (const id of ["btQuick", "btJoin"]){ const x = document.getElementById(id); if (x) x.disabled = none; }
     const h = document.getElementById("hNew");
     if (h){
       h.textContent = none ? T[lang].hNoTicket : T[lang].hNew;
