@@ -73,6 +73,7 @@ const FAST = [
   ["출시묶음",    ["test/release.test.mjs"]],
   ["마지막손보기",  ["test/final1010.test.mjs"]],
   ["초대·별명",   ["test/invname.test.mjs"]],
+  ["웹막기",     ["test/webgate.test.mjs"]],
 
   ["자동",     ["test/auto.test.mjs"]],
   ["카드얼굴", ["test/face.test.mjs"]],
