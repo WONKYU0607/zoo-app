@@ -50,17 +50,34 @@ function serve(dir, port){
   });
 }
 const browser = await pup.launch({ executablePath: found.path, args: [...found.args, "--no-sandbox", "--disable-dev-shm-usage"], headless: true });
-const look = async (port, { asApp = false, lang = "ko" } = {}) => {
+/* **진짜 웹판 주소로 띄운다** — 막는 건 Vercel 주소일 때뿐이라(안전장치) 127.0.0.1 로 띄우면 안 막힌다.
+   브라우저가 그 주소로 가는 요청을 가로채 빌드한 웹판 내용으로 답한다 */
+const WEBHOST = "http://zoo-app-weld.vercel.app";
+const look = async (port, { asApp = false, lang = "ko", base = WEBHOST } = {}) => {
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();
   await page.setViewport({ width: 412, height: 745, isMobile: true, hasTouch: true });
+  await page.setRequestInterception(true);
   const outside = [];
-  page.on("request", r => { const u = r.url(); if (!u.startsWith(`http://127.0.0.1:${port}`) && !u.startsWith("data:")) outside.push(u); });
+  page.on("request", async r => {
+    const u = new URL(r.url());
+    if (/vercel\.app$/.test(u.hostname)){
+      try {
+        const res = await fetch(`http://127.0.0.1:${port}${u.pathname}${u.search}`);
+        const body = Buffer.from(await res.arrayBuffer());
+        await r.respond({ status: res.status, headers: { "content-type": res.headers.get("content-type") || "text/html" }, body });
+      } catch(e){ r.abort().catch(() => {}); }
+      return;
+    }
+    const s = r.url();
+    if (!s.startsWith(`http://127.0.0.1:${port}`) && !s.startsWith(`http://localhost:${port}`) && !s.startsWith("data:")) outside.push(s);
+    r.continue().catch(() => {});
+  });
   await page.evaluateOnNewDocument((app, l) => {
     try { localStorage.setItem("zk_lang", l); } catch(e){}
     if (app) window.Capacitor = { isNativePlatform: () => true, getPlatform: () => "android", Plugins: {} };
   }, asApp, lang);
-  await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "networkidle0", timeout: 30000 }).catch(() => {});
+  await page.goto(`${base === WEBHOST ? WEBHOST : base}/`, { waitUntil: "networkidle0", timeout: 30000 }).catch(() => {});
   await nap(1200);
   const r = await page.evaluate(() => ({
     gate: !!document.querySelector(".web-only"),
@@ -90,6 +107,14 @@ try {
   {
     const r = await look(5961, { asApp: true });
     check("게임이 뜬다 (첫 화면이 그려진다)", !r.gate && r.stage && r.entry > 0, `첫 화면 ${r.entry}자`);
+  }
+
+  /* [stated] 안전장치 (2026-10-21 "걸어놔 그럼") — 웹판 주소가 아니면 앱 표시가 없어도 안 막는다.
+     앱 안의 주소는 localhost 다. 앱 표시를 못 읽는 일이 생겨도 앱이 "앱에서만" 에 갇히지 않는다 */
+  console.log("\n②-2 안전장치: 앱 표시가 없어도 웹판 주소가 아니면 안 막는다");
+  for (const base of ["http://localhost:5961", "http://127.0.0.1:5961"]){
+    const r = await look(5961, { base });
+    check(`${base.replace(/:\d+$/, "")}: 게임이 뜬다`, !r.gate && r.stage && r.entry > 0);
   }
 
   console.log("\n③ 안내 페이지는 그대로");

@@ -22,11 +22,20 @@ export function isNativeApp(){
   return false;
 }
 
+/* [stated] **안전장치 — 웹판 주소(Vercel)일 때만 막는다** (2026-10-21 "걸어놔 그럼").
+   앱 안의 주소는 `localhost` 라서, 앱 표시(위 `isNativeApp`)를 혹시 못 읽는 일이 생겨도 **앱은 절대 안 막힌다**.
+   막을 주소만 적는다(허용 목록이 아니라). 나중에 웹판에 다른 주소(내 도메인 등)를 붙이면 여기에 더한다 */
+const WEB_HOSTS = /(^|\.)vercel\.app$/i;
+export function onWebHost(host){
+  try { return WEB_HOSTS.test(String(host != null ? host : (window.location && window.location.hostname) || "")); }
+  catch(e){ return false; }
+}
+
 export function webBlocked(){
   if (WEB_PLAY || isNativeApp()) return false;
   const env = import.meta.env || {};
   if (env.DEV || env.VITE_TEST_HOOKS) return false;
-  return true;
+  return onWebHost();
 }
 
 /* "앱에서만 할 수 있습니다" 화면. 게임 코드(main.js)는 아예 불러오지 않는다 —
