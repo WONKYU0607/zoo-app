@@ -173,6 +173,9 @@
 #table .slot--sel{transform:translateY(-20px)}
 #table .slot--sel .card{box-shadow:0 0 0 2px var(--gold-hi),0 10px 18px rgba(0,0,0,.6)}
 #table .slot--dead .card{filter:brightness(.44) saturate(.5)}
+/* 손패 두 줄(2·3인 방, 21장 넘을 때 — table.js renderHand). 뒷줄은 상자 맨 위에 붙어 있어
+   고른 카드를 20px 올리면 위 안내 줄 밑으로 들어간다 — 뒷줄만 덜 올린다 */
+#table .hand--two .slot--back.slot--sel{transform:translateY(-10px)}
 #table .acts{position:relative;z-index:2;display:flex;gap:9px}
 /* 판 화면 단추 셋. base.css 의 일괄 규칙(놋쇠·붉은 것 둘 다 !important)에서 빼고
    여기서 온전히 잡는다. 그 규칙에 묶여 있으면 여기서 크기를 못 바꾼다 —
@@ -235,9 +238,15 @@
 #table .emopick button:nth-child(5){animation-delay:.12s}
 #table .emopick button:active{transform:translateY(1px)}
 @keyframes emorise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-#table .emopick .emoimg{width:100%;min-width:55px;height:66px;background-repeat:no-repeat;
+/* 2026-10-22 사용자 요청으로 고르는 판·바닥에 뜨는 것 모두 **25% 키웠다** (전: 그림 55×66, 말풍선 41×31) */
+#table .emopick .emoimg{width:100%;min-width:69px;height:83px;background-repeat:no-repeat;
   background-position:bottom center;background-size:contain;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.7))}
+/* 좁은 폰(360px 폭)에서는 다섯 개가 한 줄에 안 들어간다(69×5 + 사이 10×4 = 385px) — 사이를 좁히고 조금만 줄인다 */
+@media (max-width:380px){
+  #table .emopick{gap:3px}
+  #table .emopick .emoimg{min-width:66px;height:79px}
+}
 
 /* 말풍선 — **주신 그림을 그대로** 쓴다.
    9칸으로 늘리지도, 몸통과 꼬리를 가르지도 않는다.
@@ -245,12 +254,12 @@
    대신 다섯 개를 **같은 크기**로 두어 늘어나는 일 자체를 없앤다.
    가로세로비 896:663, 아래 19% 는 꼬리라 글자를 그만큼 위로 올린다 */
 #table .emobub{display:flex;align-items:center;justify-content:center;
-  width:41px;height:31px;padding:0 3px 6px;box-sizing:border-box;
+  width:51px;height:39px;padding:0 4px 8px;box-sizing:border-box;
   background:url(/assets/emote_bubble.webp) no-repeat center/100% 100%;
-  font-family:"Gowun Batang",serif;font-weight:700;font-size:7.3px;line-height:1.1;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:9.1px;line-height:1.1;
   letter-spacing:-.03em;color:#3B2A12;text-align:center;white-space:nowrap}
 /* 영어는 글자가 길어 그대로 두면 넘친다 */
-html[lang="en"] #table .emobub{font-size:6.1px;letter-spacing:-.02em}
+html[lang="en"] #table .emobub{font-size:7.6px;letter-spacing:-.02em}
 
 /* 프로필 옆에 뜨는 것 */
 /* 프로필 **정가운데** 위로 올라온다 */
@@ -262,11 +271,11 @@ html[lang="en"] #table .emobub{font-size:6.1px;letter-spacing:-.02em}
 #table .seat__emo{position:absolute;z-index:1;transform:translateX(-50%);
   display:flex;flex-direction:column;align-items:center;
   pointer-events:none;animation:emopop .18s ease-out both}
-#table .seat__emo .emoimg{width:64px;height:64px;background-repeat:no-repeat;
+#table .seat__emo .emoimg{width:80px;height:80px;background-repeat:no-repeat;
   background-position:bottom center;background-size:contain;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.75))}
-#table .seat__emo .emobub{width:50px;height:37px;font-size:9px;padding:0 4px 7px;margin-bottom:1px}
-html[lang="en"] #table .seat__emo .emobub{font-size:7.5px}
+#table .seat__emo .emobub{width:63px;height:46px;font-size:11.3px;padding:0 5px 9px;margin-bottom:1px}
+html[lang="en"] #table .seat__emo .emobub{font-size:9.4px}
 @keyframes emopop{from{opacity:0;transform:translate(-50%,6px) scale(.86)}
   to{opacity:1;transform:translateX(-50%)}}
 

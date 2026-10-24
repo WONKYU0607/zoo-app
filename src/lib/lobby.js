@@ -48,13 +48,18 @@ async function token(){
   } catch(e){ return undefined; }
 }
 
+/* **small: 1 = "이 앱은 2·3인 판을 그릴 줄 안다"** (2026-10-23 — 손패가 21장 넘으면 두 줄로 편다).
+   서버는 이 표시가 없는 앱(1.0.7 까지)을 2·3인 방에 안 들인다 — 옛 앱은 40장을 한 줄로 펴서 못 누른다.
+   방에 앉는 세 길(만들기·번호·빠른참가)에 다 붙인다 */
+const SMALL = 1;
+
 /* 방 만들기 — 만든 사람이 0번 자리 */
 export const createRoom = async ({ numPlayers, name, rounds, tax, clear2, avatar, friends }) =>
-  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar, friends, token: await token() });
+  api("/zoo/rooms", { numPlayers, name, rounds, tax, clear2, avatar, friends, small: SMALL, token: await token() });
 
 /* 번호로 참가 — 빈자리 중 앞쪽에 앉는다 */
 export const joinRoom = async (code, name, avatar) =>
-  api(`/zoo/rooms/${code}/join`, { name, avatar, token: await token() });
+  api(`/zoo/rooms/${code}/join`, { name, avatar, small: SMALL, token: await token() });
 
 /* 방 들여다보기 — 참가자·자리비움·이탈·방장 자리.
    **열쇠(key)를 주면** 내 지금 자리·자리표도 같이 내려온다.
@@ -71,7 +76,7 @@ export const leaveRoom = (code, key) =>
 /* 빠른 참가 — 자리가 남은 방에 넣어 주고, 없으면 새로 만든다 */
 /* 이미 있는 방에만 들어간다. 들어갈 방이 없으면 { none: true } 가 온다 */
 export const quickJoin = async ({ name, avatar, numPlayers, rounds, tax, clear2 }) =>
-  api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2, token: await token() });
+  api("/zoo/quick", { name, avatar, numPlayers, rounds, tax, clear2, small: SMALL, token: await token() });
 
 /* 프로필 창의 전적 — { played, wins } (계정이 꺼진 서버면 null) */
 export const seatRecord = (code, seat) =>

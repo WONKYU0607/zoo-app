@@ -64,7 +64,8 @@ const WATCH = `(() => {
   window.__moD.observe(document.querySelector(SEL), { childList: true, subtree: true });
 })()`;
 await page.evaluate(WATCH.replace("SEL", '"#room #seats"'));
-for (let i = 0; i < 80; i++){
+/* 봇은 2~7초 간격으로 들쭉날쭉 들어온다(2026-10-22) — 8자리면 길게는 50초. 넉넉히 기다린다(차면 바로 넘어간다) */
+for (let i = 0; i < 200; i++){
   /* **자리를 다 채우고 시작한다.** 4명일 때 시작하면 뽑기 화면 자리가 4개뿐이라
      8자리에서만 나는 것을 못 본다 (실제로 4자리로만 재고 있었다) */
   if (await page.evaluate(() => (window.__opts && window.__opts.seated) || 0) >= (SRV ? 8 : 4)) break;

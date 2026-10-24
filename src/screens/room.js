@@ -4,6 +4,8 @@ import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import "../styles/room.css";
 import { tierOf, TIER_MAX } from "../lib/tier.js";
+/* 시작할 수 있는 최소 인원 — **2명** (2026-10-23 사용자 결정, 예전 4명). 서버(server.js MIN_START)·flow.js MIN_PLAYERS 와 같아야 한다 */
+const MIN_START = 2;
 
 export function mount(root){
 
@@ -34,11 +36,11 @@ export function mount(root){
   const L = {
     ko:{ title:"방 대기실", roomL:"방 번호", copy:"번호 복사", host:"방장", guest:"참가자",
          count:(j,c)=>j+" / "+c+"명",
-         needMore:"4명부터 시작할 수 있습니다",
+         needMore:"2명부터 시작할 수 있습니다",
          canStart:"지금 시작하거나 더 기다리셔도 됩니다",
          full:"자리가 다 찼습니다", empty:"빈 자리", hostTag:"방장", inviteHere:"초대하기",
-         capT:"방 인원", capD:"4명 \u2013 8명", capDG:"방장이 정합니다.",
-         rndT:"플레이 판 수 설정", rndD:"최소 3판부터 시작",
+         capT:"방 인원", capD:"2명 \u2013 8명", capDG:"방장이 정합니다.",
+         rndT:"플레이 판 수 설정", rndD:"1판부터 10판까지",
          rndDG:"방장이 정합니다.", rndU:n=>n+"판",
          taxT:"세금과 혁명",
          taxD:"등수에 따라 카드를 교환하고, 조커 두 장으로 순위를 뒤집는 규칙입니다.",
@@ -46,7 +48,7 @@ export function mount(root){
          clrD:"2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다.",
          on:"켜져 있습니다.", off:"꺼져 있습니다.",
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
-         copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"4명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 30분마다 한 장씩 채워집니다",
+         copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"2명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 30분마다 한 장씩 채워집니다",
          wait:"방장이 시작하기를 기다리는 중입니다",
          kickT:"내보내기", kickM:(n,k)=>n+"님을 내보낼까요? (남은 횟수 "+k+")", kickY:"내보내기",
          kickNoneT:"내보내기", kickNone:"이 방에서는 더 내보낼 수 없습니다 (한 방에 2번까지)", ok:"확인",
@@ -55,11 +57,11 @@ export function mount(root){
          pfTier:"티어", pfScore:"점수", pfPts:n=>n.toLocaleString("ko-KR")+"점" },
     en:{ title:"Waiting room", roomL:"ROOM NUMBER", copy:"Copy", host:"Host", guest:"Guest",
          count:(j,c)=>j+" of "+c,
-         needMore:"Four players are needed to start",
+         needMore:"Two players are needed to start",
          canStart:"Start now, or wait for more",
          full:"The table is full", empty:"Open seat", hostTag:"HOST", inviteHere:"Invite",
-         capT:"Table size", capD:"4 \u2013 8 players", capDG:"The host decides.",
-         rndT:"Number of rounds", rndD:"Three at least",
+         capT:"Table size", capD:"2 \u2013 8 players", capDG:"The host decides.",
+         rndT:"Number of rounds", rndD:"1 to 10",
          rndDG:"The host decides.", rndU:n=>n+"",
          taxT:"Tax and revolution",
          taxD:"Cards change hands by standing, and two jokers overturn it.",
@@ -67,7 +69,7 @@ export function mount(root){
          clrD:"Playing a 2 clears the pile and you lead again.",
          on:"On.", off:"Off.",
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
-         copied:"Copied", start:"Start", starting:"Dealing", needFour:"Four players are needed", noTicket:"No tickets left. One refills every 30 minutes",
+         copied:"Copied", start:"Start", starting:"Dealing", needFour:"Two players are needed", noTicket:"No tickets left. One refills every 30 minutes",
          wait:"Waiting for the host to start",
          kickT:"Remove player", kickM:(n,k)=>"Remove "+n+" from the room? ("+k+" left)", kickY:"Remove",
          kickNoneT:"Remove player", kickNone:"No more removals in this room (2 per room)", ok:"OK",
@@ -310,7 +312,7 @@ export function mount(root){
       ? asArray(R2.seats, R2.cap || cap).filter(s => s && !s.left).length : joined;
     document.getElementById("feltN").textContent = t.count(now, cap);
     document.getElementById("feltS").textContent =
-      now < 4 ? t.needMore : now < cap ? t.canStart : t.full;
+      now < MIN_START ? t.needMore : now < cap ? t.canStart : t.full;
   }
   
   /* ---------- 프로필 상자 · 강퇴 ----------
@@ -482,8 +484,9 @@ export function mount(root){
     const sm = document.getElementById("sum");
     sm.innerHTML =
       '<b>' + cap + '</b>' + t.sumP + ' \u00B7 <b>' + rounds + '</b>' + t.sumR +
-      ' \u00B7 ' + t.sumT + ' ' + (taxOn ? t.on2 : t.off2) +
-      ' \u00B7 ' + t.sumC + ' ' + (clear2 ? t.on2 : t.off2) +
+      /* 1판이면 세금·2번 컷이 없다 — 설정 줄에서도 뺀다 (2026-10-22). 4명 밑이면 세금만 뺀다 (2026-10-23) */
+      (rounds > 1 && cap >= 4 ? ' \u00B7 ' + t.sumT + ' ' + (taxOn ? t.on2 : t.off2) : '') +
+      (rounds > 1 ? ' \u00B7 ' + t.sumC + ' ' + (clear2 ? t.on2 : t.off2) : '') +
       (iamHost ? '  <span style="color:#E3C67C">' + t.edit + '</span>' : '');
     if (noteMsg && Date.now() < noteUntil) sm.textContent = noteMsg;
     sm.disabled = !iamHost;
@@ -492,9 +495,9 @@ export function mount(root){
       /* 남은 초가 있으면 같이 적는다. 다시 그려도 숫자가 안 사라진다 */
       const lf = window.__roomLeft;
       const lbl = starting ? t.starting
-                : now < 4 ? t.needFour
+                : now < MIN_START ? t.needFour
                 : t.start + (lf != null && lf > 0 ? " " + lf : "");
-      a.innerHTML = '<button class="btn-primary" ' + (now < 4 || starting ? "disabled" : "") + '>' +
+      a.innerHTML = '<button class="btn-primary" ' + (now < MIN_START || starting ? "disabled" : "") + '>' +
         lbl + '</button>';
     } else {
       a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
@@ -567,6 +570,8 @@ export function mount(root){
           if (window.__refreshAccount) window.__refreshAccount();
           return;
         }
+        /* 옛 앱 손님이 있어 4명 밑으로는 못 시작한다 (2026-10-23) — 고장이 아니니 창 대신 설정 줄에 안내만 */
+        if (err && err.why === "update"){ flashNote(err.message || ""); return; }
         alert(L[lang].startFail + " : " + (err && (err.message || err.code) || err));
         return;
       }

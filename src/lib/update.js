@@ -7,10 +7,21 @@
 import { appInfo, openExternal } from "./appinfo.js";
 import { serverUrl } from "./lobby.js";
 
+/* **단추 둘 — "앱 종료하기" · "업데이트"** (2026-10-23 사용자 지정: "버튼을 앱 종료하기, 업데이트 두 개로.
+   종료하면 앱 나가게 하면 되고"). 창 자체는 닫는 단추가 없다 — 업데이트하거나 앱을 끄거나 둘 중 하나다.
+   업데이트는 플레이스토어 앱을 연다(캐패시터가 우리 주소가 아닌 링크를 안드로이드에 넘기고, play.google.com 링크는 스토어 앱이 받는다) */
 const T = {
-  ko: { t: "업데이트가 필요합니다", m: "새 버전이 나왔습니다. 계속하려면 플레이스토어에서 업데이트해 주세요.", go: "업데이트" },
-  en: { t: "Update required", m: "A new version is out. Please update from Google Play to keep playing.", go: "Update" },
+  ko: { t: "업데이트가 필요합니다", m: "새 버전이 나왔습니다. 플레이스토어에서 업데이트해야 게임을 할 수 있습니다.", go: "업데이트", exit: "앱 종료하기" },
+  en: { t: "Update required", m: "A new version is out. Update from Google Play to keep playing.", go: "Update", exit: "Quit" },
 };
+
+/* 앱을 끈다 — 안드로이드는 Capacitor App.exitApp. 웹은 못 끈다(검사는 window.__exitHook 으로 가로챈다) */
+function exitApp(){
+  if (typeof window.__exitHook === "function"){ window.__exitHook(); return; }
+  const cap = window.Capacitor;
+  if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.exitApp){ cap.Plugins.App.exitApp(); return; }
+  try { window.close(); } catch(e){}
+}
 
 export function updateOpen(){ return Boolean(document.getElementById("updGate")); }
 
@@ -24,12 +35,14 @@ function showGate(store){
     '<div class="cfg__v"></div><div class="cfg__p">' +
     '<div class="cfg__h"><span id="updT"></span></div>' +
     '<div class="cfg__b"><p class="upd__m" id="updM"></p>' +
-    '<div class="cfg__row"><button id="updGo"></button></div></div></div>';
+    '<div class="cfg__row"><button id="updExit"></button><button id="updGo"></button></div></div></div>';
   (document.getElementById("stage") || document.body).appendChild(g);
   g.querySelector("#updT").textContent = t.t;
   g.querySelector("#updM").textContent = t.m;
   g.querySelector("#updGo").textContent = t.go;
+  g.querySelector("#updExit").textContent = t.exit;
   g.querySelector("#updGo").addEventListener("click", () => openExternal(store));
+  g.querySelector("#updExit").addEventListener("click", exitApp);
 }
 
 /* 돌려주는 값: true = 막았다 */

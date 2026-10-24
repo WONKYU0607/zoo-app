@@ -79,7 +79,7 @@ const botAvatar = () => Math.floor(Math.random() * 5);
 export function createRoom({ cap = 4, name = "나", avatar = 0 } = {}){
   return {
     code: newCode(),
-    cap: Math.min(8, Math.max(4, cap)),
+    cap: Math.min(8, Math.max(2, cap)),
     phase: "waiting",
     seats: [{ uid: ME, name: String(name || "나"), bot: false, avatar: Number(avatar) || 0 }],
   };
@@ -100,7 +100,7 @@ export function addBot(room){
 
 export function setCap(room, cap){
   if (!room) return;
-  room.cap = Math.min(8, Math.max(4, Number(cap) || room.cap));
+  room.cap = Math.min(8, Math.max(2, Number(cap) || room.cap));
   while (room.seats.length > room.cap) room.seats.pop();
 }
 

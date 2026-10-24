@@ -33,6 +33,8 @@ async function app({ build = null, server = srv.url, lang = "ko", w = 412, h = 7
     if (b != null){ window.__appBuildForTest = b; window.__appVersionForTest = "1.0." + b; }
     window.__opened = [];
     window.__openUrlHook = u => window.__opened.push(u);
+    window.__exited = 0;
+    window.__exitHook = () => { window.__exited++; };
   }, server, build, lang);
   await page.goto(env.appUrl, { waitUntil: "networkidle0" });
   const press = async sel => {
@@ -50,8 +52,13 @@ const gate = p => p.page.evaluate(() => {
   const g = document.getElementById("updGate");
   if (!g) return null;
   const r = g.querySelector(".cfg__p").getBoundingClientRect();
+  const ex = g.querySelector("#updExit");
+  const bg = g.querySelector("#updGo").getBoundingClientRect(), be = ex ? ex.getBoundingClientRect() : null;
   return { t: g.querySelector("#updT").textContent, m: g.querySelector("#updM").textContent,
-           go: g.querySelector("#updGo").textContent, shown: r.width > 0 && getComputedStyle(g).visibility === "visible" };
+           go: g.querySelector("#updGo").textContent, exit: ex ? ex.textContent : null,
+           row: Boolean(be && Math.abs(be.top - bg.top) < 2 && be.right <= bg.left + 1),
+           inPanel: Boolean(be && be.left >= r.left && bg.right <= r.right),
+           shown: r.width > 0 && getComputedStyle(g).visibility === "visible" };
 });
 
 /* ---------- A1 ---------- */
@@ -60,7 +67,9 @@ const old = await app({ build: 5 });
 await waitFor(async () => Boolean(await gate(old)), 5000, 150);
 let g = await gate(old);
 check("빌드 5 < 7 이면 안내창이 뜬다", Boolean(g && g.shown), JSON.stringify(g));
-check("글: 업데이트가 필요합니다 / 업데이트", Boolean(g) && g.t === "업데이트가 필요합니다" && g.go === "업데이트" && /플레이스토어/.test(g.m), JSON.stringify(g));
+check("글: 업데이트가 필요합니다 · 단추 \"앱 종료하기\" · \"업데이트\"", Boolean(g) && g.t === "업데이트가 필요합니다" && g.go === "업데이트" && g.exit === "앱 종료하기" && /업데이트해야 게임을 할 수 있습니다/.test(g.m), JSON.stringify(g));
+check("단추 둘이 한 줄로 나란히 (종료 왼쪽 · 업데이트 오른쪽) · 틀 안", g && g.row && g.inPanel, JSON.stringify(g));
+check("**'앱 종료하기' 를 누르면 앱이 꺼진다**", await old.press("#updExit") && await old.page.evaluate(() => window.__exited) === 1, "꺼짐 " + await old.page.evaluate(() => window.__exited));
 check("'업데이트' 단추가 손가락을 받는다", await old.press("#updGo"));
 await nap(200);
 check("누르면 플레이스토어를 연다", (await old.page.evaluate(() => window.__opened)).includes(

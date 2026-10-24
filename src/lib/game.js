@@ -233,12 +233,18 @@ export const ZooPresident = {
   setup: ({ ctx, random }, setupData) => {
     const n = ctx.numPlayers;
     const opts = Object.assign({ rounds: 3, tax: true, clear2: false }, setupData || {});
+    /* **1판짜리 게임** (2026-10-22 사용자 결정 — 3판이 부담스러운 사람을 위해 1판부터).
+       한 판으로 끝나니 세금·혁명이 없고, 2번 컷도 뺀다(방 만들기에서도 두 메뉴를 숨긴다).
+       예전 최소는 3판이었다. **최대는 10판** (같은 날 사용자 결정 "1~10판이 최대") */
+    const totalRounds = Math.min(10, Math.max(1, Math.floor(Number(opts.rounds)) || 3));
+    if (totalRounds === 1){ opts.tax = false; opts.clear2 = false; }
+    opts.rounds = totalRounds;
     const G = {
       hands: [], counts: new Array(n).fill(0), passed: new Array(n).fill(false),
       pile: null, table: [], finished: [], next: 0, trickNo: 0,
       moveNo: 0, lastMove: null, recent: [],
       score: new Array(n).fill(0),
-      roundNo: 1, totalRounds: Math.max(3, opts.rounds),
+      roundNo: 1, totalRounds,
       opts, lastOrder: null, taxOrder: null, seatOrder: null, revolution: null,
       revDeclared: false, revDecided: true, taxCancelled: false, taxOn: false,
       lastRound: null, shown: [],

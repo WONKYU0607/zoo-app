@@ -58,6 +58,13 @@ for (let i = 0; i < 60; i++){
   await nap(500);
 }
 console.log("  시작 직전 앉은 수: " + seated);
+/* **방장 화면도 4명을 볼 때까지** 기다린다. 서버는 방장 화면에 보이던 인원(seen)대로 시작하는데,
+   화면은 1.5초마다 따라잡아서 서버가 4명일 때 화면은 아직 3명일 수 있다. 2026-10-23 부터는 2명부터 시작되므로
+   그때 누르면 3인 판이 된다(예전엔 4명 밑의 seen 은 무시돼 4인이 됐다) — 맞는 동작이다. 이 검사는 4명 이상으로 본다 */
+for (let i = 0; i < 20; i++){
+  if (await page.evaluate(() => (window.__opts && window.__opts.seated) || 0) >= 4) break;
+  await nap(300);
+}
 
 /* 방장이 시작 */
 await page.evaluate(async () => { await window.__startRound(); });
@@ -91,7 +98,7 @@ const srvRoom = await api(`/zoo/rooms/${room}`);
    멀쩡한 동작을 실패로 잡았다. 볼 것은 둘이다 —
    8인으로 부풀지 않았는가, 방장 화면이 서버 판과 같은 인원인가 */
 const want = srvRoom.numPlayers;
-check("8인 방인데 앉은 수대로 시작했다", want >= 4 && want < 8, "서버 " + want + "인");
+check("8인 방인데 앉은 수대로 시작했다", want >= 2 && want < 8, "서버 " + want + "인");
 check("방장 화면도 같은 인원 판에 붙었다", seen.length > 0 && seen.every(n => n === want),
       "서버 " + want + "인 · 화면 자리 수 " + JSON.stringify(counts));
 

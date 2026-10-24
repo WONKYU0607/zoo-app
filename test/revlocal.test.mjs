@@ -33,8 +33,16 @@ const REC = `(() => {
       /* 세금을 끄면 결과 → 판으로 곧장 간다. 결과를 본 뒤 첫 판 화면이 2판이다 */
       if (s === "table" && (window.__taxAt || window.__resAt) && !window.__tableAt) window.__tableAt = Date.now();
     }
-    /* 2판 카드 내기가 열린 순간의 차례 = 2판 선 (판 화면이 설 때까지 멈춰 있어 놓치지 않는다) */
-    const st = window.__eng && window.__eng.client && window.__eng.client.store && window.__eng.client.store.getState();
+    /* 2판 카드 내기가 열린 순간의 차례 = 2판 선.
+       **엿보기(0.12초마다)만으로는 놓친다** — 이 검사는 봇을 0.15초로 돌려서, 세금 끔 판은 판 화면이 서자마자
+       1등 봇이 곧바로 두면 다음 사람 차례만 보였다(2026-10-23 "선 2 · 1등 1" — 엔진은 맞게 1등부터 돌았다).
+       엔진 상태가 바뀔 때마다 불리는 subscribe 로 첫 순간을 잡는다(판이 새로 서면 client 가 바뀌므로 그때마다 다시 붙인다) */
+    const cl = window.__eng && window.__eng.client;
+    if (cl && cl !== window.__subClient){
+      window.__subClient = cl;
+      try { cl.subscribe(x => { if (x && !window.__lead2 && x.ctx && x.ctx.phase === "play" && x.G && x.G.roundNo === 2) window.__lead2 = x.ctx.currentPlayer; }); } catch(e){}
+    }
+    const st = cl && cl.store && cl.store.getState();
     if (st && !window.__lead2 && st.ctx.phase === "play" && st.G.roundNo === 2) window.__lead2 = st.ctx.currentPlayer;
     /* 2판에 나눈 패 — 카멜레온 둘을 누가 쥐었는지 (이 기기 방이라 엔진이 다 보인다) */
     if (st && !window.__hands2 && st.G.roundNo === 2) window.__hands2 = st.G.hands.map(h => (h || []).filter(c => c >= 13).length);

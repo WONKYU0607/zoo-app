@@ -801,9 +801,19 @@ export function mount(root){
      칸은 장수가 바뀔 때만 새로 만들고, 그 뒤로는 있는 것을 고쳐 쓴다.
      누름 처리도 그때 한 번만 붙인다 — 칸이 살아 있으니 다시 붙일 일이 없다 */
   let handNodes = [];
+  /* **손패가 21장보다 많으면 두 줄로** (2026-10-23 — 2·3인 방. 82장을 다 나누면 1대1은 41장, 3인은 27~28장).
+     한 줄에 다 펴면 1대1은 카드 한 장이 7px 밖에 안 보여 숫자도 안 보이고 못 누른다(실측).
+     사용자 지정: "두 줄로 21장씩 · 3인도 2줄로 · 4인 기준 손패에서 안 깨지게" — 그래서 **손패 상자 크기(126px)는 그대로**
+     두고 카드를 줄여(60 → 44px) 두 줄을 겹쳐 앉힌다. 뒷줄은 위쪽(숫자 띠)만 보이고 앞줄이 그 아래를 덮는다.
+     한 줄 간격은 4인 판(20장 · 약 15px)과 비슷하게 나온다. 손패가 21장 이하로 줄면 원래 한 줄(60px)로 돌아간다 */
+  const HAND_ONE_ROW = 21, HAND_W = 60, HAND_W2 = 44;
   function renderHand(){
     const h = el("hand");
-    const w = 60, n = hand.length;
+    const n = hand.length;
+    const two = n > HAND_ONE_ROW;
+    const w = two ? HAND_W2 : HAND_W;
+    const back = two ? Math.ceil(n / 2) : n;          /* 뒷줄(위) 장수 — 앞쪽 카드(낮은 숫자)부터 */
+    h.classList.toggle("hand--two", two);
     if (handNodes.length !== n || handNodes.some(x => x.parentNode !== h)){
       h.innerHTML = "";
       handNodes = hand.map((c, i) => {
@@ -819,19 +829,28 @@ export function mount(root){
         return s;
       });
     }
-    const step = n > 1 ? Math.min(36, (h.clientWidth - w) / (n - 1)) : 0;
-    const total = w + step * (n - 1);
+    /* 줄마다 따로 편다. 뒷줄은 손패 상자 맨 위에 붙이고(위쪽 띠가 보이게), 앞줄은 바닥에 */
+    const cardH = w * 390 / 200;                       /* .card 의 aspect-ratio 200/390 */
+    const lift = two ? Math.max(0, h.clientHeight - cardH) : 0;
+    const rowOf = i => (two && i >= back ? 1 : 0);
+    const rowLen = r => (two ? (r === 0 ? back : n - back) : n);
+    const stepOf = r => { const k = rowLen(r); return k > 1 ? Math.min(36, (h.clientWidth - w) / (k - 1)) : 0; };
+    const steps = [stepOf(0), stepOf(1)];
     hand.forEach((c, i) => {
       const s = handNodes[i];
       s.__i = i;
-      const cls = "slot" + (sel.includes(i) ? " slot--sel" : "") +
+      const r = rowOf(i), j = r ? i - back : i, k = rowLen(r);
+      const cls = "slot" + (two && r === 0 ? " slot--back" : "") + (sel.includes(i) ? " slot--sel" : "") +
         (turn === 0 && !busy && !canPick(i) ? " slot--dead" : "");
       if (s.className !== cls) s.className = cls;
-      const left = ((h.clientWidth - total) / 2 + i * step) + "px";
+      const total = w + steps[r] * (k - 1);
+      const left = ((h.clientWidth - total) / 2 + j * steps[r]) + "px";
       if (s.style.left !== left) s.style.left = left;
+      const bottom = (r === 0 ? lift : 0) + "px";
+      if (s.style.bottom !== bottom) s.style.bottom = bottom;
       if (s.style.zIndex !== String(i)) s.style.zIndex = i;
-      /* 같은 카드면 손대지 않는다. 같은 그림을 다시 넣어도 한 번 번쩍인다 */
-      if (s.__card !== c){ s.innerHTML = cardHTML(c, w); s.__card = c; }
+      /* 같은 카드면 손대지 않는다. 같은 그림을 다시 넣어도 한 번 번쩍인다 (크기가 바뀌었을 때만 다시) */
+      if (s.__card !== c || s.__w !== w){ s.innerHTML = cardHTML(c, w); s.__card = c; s.__w = w; }
     });
     if (SEATS[0]) SEATS[0].c = hand.length;
   }

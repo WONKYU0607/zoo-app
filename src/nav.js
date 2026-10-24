@@ -127,14 +127,14 @@ export function initNav(){
   let optMode = "create";
   const OPT_T = {
     ko:{ create:"방 만들기", edit:"방 설정", goCreate:"방 만들기", goEdit:"확인",
-         cap:["방 인원","4명 \u2013 8명"],
-         rnd:["플레이 판 수 설정","최소 3판부터 시작"],
+         cap:["방 인원","2명 \u2013 8명"],
+         rnd:["플레이 판 수 설정","1판부터 10판까지"],
          tax:["세금과 혁명","등수에 따라 카드를 교환하고, 조커 두 장으로 순위를 뒤집는 규칙입니다."],
          cut:["2번 컷","2번 카드를 내면 바닥을 비우고 다시 선을 잡습니다."],
          friends:["친구들끼리 하기",""], unit:"판" },
     en:{ create:"Create a room", edit:"Room settings", goCreate:"Create room", goEdit:"Done",
-         cap:["Table size","4 \u2013 8 players"],
-         rnd:["Number of rounds","Three at least"],
+         cap:["Table size","2 \u2013 8 players"],
+         rnd:["Number of rounds","1 to 10"],
          tax:["Tax and revolution","Cards change hands by standing, and two jokers overturn it."],
          cut:["Two-cut","Playing a 2 clears the pile and you lead again."],
          friends:["Friends only",""], unit:"" }
@@ -155,13 +155,17 @@ export function initNav(){
   function optRender(){
     const t = OPT_T[window.__lang] || OPT_T.ko, o = window.__opts;
     const mk = optMode === "create";
+    /* 판 수는 1~10판 (2026-10-22). 예전 방(최대 99판)에서 넘어온 값이 10을 넘으면 10으로 보인다 */
+    o.rounds = Math.min(10, Math.max(1, Math.floor(Number(o.rounds)) || 3));
     document.getElementById("optT").textContent = mk ? t.create : t.edit;
     document.getElementById("optGo").textContent = mk ? t.goCreate : t.goEdit;
     document.getElementById("optBody").innerHTML =
-      optRow(t.cap, optStep("cap", o.cap, 4, 8)) +
-      optRow(t.rnd, optStep("rnd", o.rounds, 3, 99, t.unit)) +
-      optRow(t.tax, optSw("tax", o.tax)) +
-      optRow(t.cut, optSw("cut", o.clear2)) +
+      optRow(t.cap, optStep("cap", o.cap, 2, 8)) +
+      optRow(t.rnd, optStep("rnd", o.rounds, 1, 10, t.unit)) +
+      /* 1판이면 세금·혁명도 2번 컷도 없다 — 메뉴에서 뺀다(2026-10-22). 고른 값은 두었다가 판 수를 올리면 다시 보인다.
+         **4명 밑(2·3명)이면 세금·혁명만 뺀다** (2026-10-23) — 2번 컷은 그대로 고를 수 있다 */
+      (o.rounds > 1 && o.cap >= 4 ? optRow(t.tax, optSw("tax", o.tax)) : "") +
+      (o.rounds > 1 ? optRow(t.cut, optSw("cut", o.clear2)) : "") +
       optRow(t.friends, optSw("friends", o.friends));
   }
   function openOpts(mode){
@@ -172,10 +176,10 @@ export function initNav(){
     const k = e.target.closest("[data-opt]");
     if (k){
       const o = window.__opts, v = k.dataset.opt;
-      if (v === "cap-") o.cap = Math.max(4, o.cap - 1);
+      if (v === "cap-") o.cap = Math.max(2, o.cap - 1);
       if (v === "cap+") o.cap = Math.min(8, o.cap + 1);
-      if (v === "rnd-") o.rounds = Math.max(3, o.rounds - 1);
-      if (v === "rnd+") o.rounds = o.rounds + 1;
+      if (v === "rnd-") o.rounds = Math.max(1, o.rounds - 1);
+      if (v === "rnd+") o.rounds = Math.min(10, o.rounds + 1);
       if (v === "tax") o.tax = !o.tax;
       if (v === "cut") o.clear2 = !o.clear2;
       if (v === "friends") o.friends = !o.friends;
@@ -1003,7 +1007,16 @@ export function initNav(){
     if ((G.roundNo || 1) >= rounds) return;
     G.roundNo = (G.roundNo || 1) + 1;
     window.__roundNo = G.roundNo;
-    if (window.__opts && window.__opts.tax === false){
+    /* **세금이 있는지는 화면 스위치가 아니라 판(엔진)으로 본다** (2026-10-23).
+       2·3인 판은 세금이 없는데(엔진도 4명 밑이면 건너뜀), 방장 화면의 스위치는 켜 둔 값을 기억하고 있어서
+       예전 조건(`__opts.tax === false`)으로는 1대1 에서도 세금 화면으로 갔다(twoplayer.test 가 잡음).
+       4인 방을 3명으로 시작한 판도 마찬가지다. 엔진 규칙 그대로: 세금 켬 && 4명 이상 */
+    let taxNext = !(window.__opts && window.__opts.tax === false);
+    try {
+      const st = window.__eng && window.__eng.client && window.__eng.client.getState();
+      if (st && st.G && st.G.opts) taxNext = Boolean(st.G.opts.tax) && st.ctx.numPlayers >= 4;
+    } catch(e){}
+    if (!taxNext){
       window.__fresh = true;                   // 세금이 없으면 그냥 새로 나눈다
       go("table");
     } else {

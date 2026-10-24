@@ -52,6 +52,19 @@ function gameGone(info){
   call("__onGameGone", info || {});
 }
 let offView = null;        /* 엔진 상태 구독 해제 */
+/* 서버·엔진에 보내는 규칙 값. **1판짜리 게임에는 세금·혁명·2번 컷이 없다** (2026-10-22) —
+   서버와 엔진(game.js)도 똑같이 막는다. 화면의 스위치 값(__opts)은 그대로 두어서, 판 수를 다시 올리면 고른 대로 돌아온다.
+   판 수는 1~10판(같은 날 "1~10판이 최대") */
+/* 방 인원은 2~8명 (2026-10-23 — 예전 4~8명). **4명 밑이면 세금·혁명이 없다** — 세금은 1·2등과 꼴등·뒤에서 2등이
+   짝을 지어야 해서 엔진(game.js)도 4명 밑이면 건너뛴다. 2번 컷은 인원과 상관없이 고를 수 있다 */
+export const MIN_PLAYERS = 2;
+const MIN_START_FILL = 4;           /* 시작할 때 봇으로 채우는 최소 자리(방 인원이 그보다 작으면 방 인원까지) */
+function ruleOpts(o){
+  const rounds = Math.min(10, Math.max(1, Math.floor(Number(o && o.rounds)) || 3));
+  const one = rounds === 1;
+  const cap = Math.floor(Number(o && o.cap)) || 4;
+  return { rounds, tax: !one && cap >= 4 && o.tax !== false, clear2: !one && Boolean(o.clear2) };
+}
 
 const W = () => window;
 const D = () => window.document;
@@ -285,21 +298,24 @@ function startGame(){
   if (net) return startOnlineGame();
   botFillStop();
   stopRoomCount();
-  if (!(myRoom && myRoom.friends)) while (seatCount(myRoom) < 4) if (!addOneBot()) break;
+  /* **2명부터 시작한다** (2026-10-23 사용자 결정 "최소인원 2명으로. 1대1 하고 싶은 친구들도 있을 수 있으니까").
+     봇은 예전처럼 4자리까지 채우되, 방 인원이 2·3명이면 그만큼만 */
+  if (!(myRoom && myRoom.friends)) while (seatCount(myRoom) < Math.min(MIN_START_FILL, myRoom.cap || 4)) if (!addOneBot()) break;
   const n = seatCount(myRoom);
-  if (n < 4) throw new Error("4명이 모여야 시작합니다 (지금 " + n + "명)");
+  if (n < MIN_PLAYERS) throw new Error(MIN_PLAYERS + "명이 모여야 시작합니다 (지금 " + n + "명)");
 
   myRoom.phase = "playing";
   emitRoom();
   eng.setAuto(false);                      /* 새 게임은 자동치기 꺼진 채로 시작 */
 
   const o = W().__opts || {};
-  const rounds = Math.max(3, Number(o.rounds) || 3);
+  const ro = ruleOpts(Object.assign({}, o, { cap: n }));   /* 실제로 앉은 인원 기준 — 4명 밑이면 세금이 없다 */
+  const rounds = ro.rounds;
   eng.startLocal({
     numPlayers: n,
     myID: "0",
     names: myRoom.seats.map(seatLabel),
-    opts: { rounds, tax: o.tax !== false, clear2: Boolean(o.clear2) },
+    opts: ro,
   });
 
   /* 뽑기 화면을 보는 동안 봇들이 다 둬 버리면, 판에 들어서자마자 내 차례가 된다.
@@ -549,7 +565,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
     if (lobby.online()){
       const r = await lobby.createRoom({
         numPlayers: o.cap || 4, name: opt.myName(), avatar: myAvatar(),
-        rounds: o.rounds || 3, tax: o.tax !== false, clear2: Boolean(o.clear2),
+        ...ruleOpts(o),
         friends: Boolean(o.friends),
       });
       /* 서버가 참가자 목록을 보내오기 전까지 내 자리만이라도 채워 둔다 */
@@ -590,8 +606,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
        예전에는 먼저 비워서, 들어갈 방이 없으면 원래 방 자리만 잃었다 */
     const r = await lobby.quickJoin({
       name: opt.myName(), avatar: myAvatar(),
-      numPlayers: o.cap || 4, rounds: o.rounds || 3,
-      tax: o.tax !== false, clear2: Boolean(o.clear2),
+      numPlayers: o.cap || 4, ...ruleOpts(o),
     });
     /* 들어갈 방이 없다 — 새로 만들지 않는다. 화면이 "방이 없습니다" 를 띄운다 */
     W().__quickNone = Boolean(r && r.none);
@@ -672,7 +687,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       const cur = net.opts || {};
       const want = {
         numPlayers: o.cap || net.numPlayers,
-        rounds: o.rounds, tax: o.tax !== false, clear2: Boolean(o.clear2), friends: Boolean(o.friends),
+        ...ruleOpts(o), friends: Boolean(o.friends),
       };
       const same = want.numPlayers === net.numPlayers && want.rounds === cur.rounds &&
         want.tax === (cur.tax !== false) && want.clear2 === Boolean(cur.clear2) &&

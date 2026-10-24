@@ -122,24 +122,28 @@ console.log("\n[인원을 바꿔도 자리·봇이 그대로]");
 }
 
 /* ---------- 친구 방 ---------- */
-console.log("\n[친구 방 6자리에 4명이 시작]");
+console.log("\n[친구 방 6자리 — 혼자면 잠김, 셋이면 열림, 넷이서 시작]");
 {
   const { srv, env, H } = await setup(["원규", "민수", "지영", "철호"]);
   const code = await H[0].create({ cap: 6, friends: true });
-  for (let i = 1; i < 3; i++){ await nap(400); await H[i].join(code); }
-  /* 셋일 때 — 시작 단추가 잠기고 이유가 보인다. 기다려도 봇이 안 들어온다 (2026-10-11) */
-  await waitFor(async () => (await H[0].seated()) >= 3, 10000);
+  /* **혼자일 때** — 시작 단추가 잠기고 이유가 보인다. 기다려도 봇이 안 들어온다 (2026-10-11).
+     시작은 **2명부터** (2026-10-23 — 예전에는 4명이라 셋일 때 잠겼다) */
   await nap(2500);
-  const b3 = await H[0].startBtn();
-  const r3 = await roomOf(srv, code);
-  check("친구방 셋 — 시작 단추가 잠겨 있다", b3 && b3.disabled === true, JSON.stringify(b3));
-  const why3 = await H[0].page.evaluate(() => (document.querySelector("#room #action") || {}).textContent || "");
-  check("친구방 셋 — '4명' 이 모여야 한다는 이유가 보인다", /4명/.test(why3), why3.trim().slice(0, 60));
-  check("친구방 셋 — 기다려도 봇이 안 들어온다", !(r3.players || []).some(p => p.bot) && (r3.players || []).filter(p => p.name).length === 3,
-    JSON.stringify((r3.players || []).map(p => p.bot ? "봇" : p.name)));
+  const b1 = await H[0].startBtn();
+  const r1 = await roomOf(srv, code);
+  check("친구방 혼자 — 시작 단추가 잠겨 있다", b1 && b1.disabled === true, JSON.stringify(b1));
+  const why1 = await H[0].page.evaluate(() => (document.querySelector("#room #action") || {}).textContent || "");
+  check("친구방 혼자 — '2명' 이 모여야 한다는 이유가 보인다", /2명/.test(why1), why1.trim().slice(0, 60));
+  check("친구방 혼자 — 기다려도 봇이 안 들어온다", !(r1.players || []).some(p => p.bot) && (r1.players || []).filter(p => p.name).length === 1,
+    JSON.stringify((r1.players || []).map(p => p.bot ? "봇" : p.name)));
   await H[0].pressStart();
   await nap(800);
-  check("친구방 셋 — 눌러도 시작되지 않는다", (await H[0].screen()) === "room" && !(await roomOf(srv, code)).started, await H[0].screen());
+  check("친구방 혼자 — 눌러도 시작되지 않는다", (await H[0].screen()) === "room" && !(await roomOf(srv, code)).started, await H[0].screen());
+  for (let i = 1; i < 3; i++){ await nap(400); await H[i].join(code); }
+  await waitFor(async () => (await H[0].seated()) >= 3, 10000);
+  await nap(800);
+  const b3 = await H[0].startBtn();
+  check("**친구방 셋 — 이제 시작 단추가 열린다** (2명부터)", b3 && b3.disabled === false, JSON.stringify(b3));
   await H[3].join(code);
   await waitFor(async () => (await H[0].seated()) >= 4, 10000);
   await nap(600);

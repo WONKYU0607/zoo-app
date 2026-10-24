@@ -67,7 +67,8 @@ async function toTable(cap){
   await nap(900);
   /* 서버는 4명이 앉기 전에는 시작을 받지 않는다(방장 화면의 단추도 잠겨 있다).
      예전 서버는 이 확인이 빠져 있어서 봇이 덜 앉은 채로도 시작됐다 */
-  for (let k = 0; k < 80; k++){
+  /* 봇은 2~7초 간격(2026-10-22) — 셋이면 길게는 21초. 넉넉히 기다린다 */
+  for (let k = 0; k < 160; k++){
     if (await page.evaluate(() => ((window.__opts || {}).seated || 0) >= 4)) break;
     await nap(250);
   }
@@ -145,7 +146,7 @@ await page.evaluate(() => { window.__opts = { cap: 4, seated: 1, rounds: 3, tax:
 await page.evaluate(async () => { await window.__createRoom(); });
 await page.evaluate(() => window.__goto("room"));
 await nap(900);
-for (let k = 0; k < 80; k++){                   /* 4명이 앉을 때까지 (위 toTable 설명) */
+for (let k = 0; k < 160; k++){                  /* 4명이 앉을 때까지 (위 toTable 설명). 봇은 2~7초 간격 */
   if (await page.evaluate(() => ((window.__opts || {}).seated || 0) >= 4)) break;
   await nap(250);
 }
