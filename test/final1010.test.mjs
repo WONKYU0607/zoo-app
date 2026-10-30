@@ -190,6 +190,10 @@ r = await tryName("운영자");
 check("운영자 흉내는 안 된다", /운영자처럼 보이거나/.test(r.msg), r.msg);
 r = await tryName("게스트77");
 check("'게스트' 로 시작하는 이름은 안 된다", /'게스트'로 시작하는/.test(r.msg), r.msg);
+/* 2026-10-26: 처음 붙는 임시 이름(새사용자N)도 못 고른다 — 그대로 정하면 별명을 안 정한 것과 같다(mustname.test) */
+r = await tryName("새사용자5");
+/* 2026-10-29 사용자가 안내 글에서 '새사용자' 를 뺐다(1.0.8 문구로) — 막히는 것은 그대로, 안내는 운영자·게스트 문구 */
+check("'새사용자' 로 시작하는 이름도 안 된다", /운영자처럼 보이거나 '게스트'로 시작하는/.test(r.msg), r.msg);
 r = await tryName("사자왕");
 check("멀쩡한 이름은 거르기를 지나간다(로그인 전이라 그다음에서 멈춘다)", /로그인/.test(r.msg), r.msg);
 await P.evaluate(() => { window.__lang = "en"; });
@@ -201,7 +205,7 @@ await P.evaluate(() => { window.__lang = "ko"; document.getElementById("nkBox").
 console.log("\n[4. 설정 창 앱 버전]");
 await P.evaluate(() => { window.__appBuildForTest = 7; window.__appVersionForTest = "1.0.5"; window.__goto("lobby"); });
 await nap(300);
-check("설정 단추가 손가락을 받는다", await press("#lobby .top__cfg"));
+check("설정 단추가 손가락을 받는다", await press("#tbCfg"));
 await waitFor(() => P.evaluate(() => /1\.0\.5/.test((document.getElementById("cfgVer") || {}).textContent || "")), 3000, 50);
 const ver = () => P.evaluate(() => { const e = document.getElementById("cfgVer"); const b = e.getBoundingClientRect();
   const l = document.querySelector("#cfg .cfg__links").getBoundingClientRect();
@@ -238,7 +242,7 @@ check("한국어 화면 — 단추 이름에 영어(close·settings 등)가 안 
 check("한국어 화면 — '나가기'·'닫기'·'설정' 처럼 읽는다", L.some(x => x.endsWith("=나가기")) && L.some(x => x.endsWith("=닫기")) && L.some(x => x.endsWith("=설정")),
   L.slice(0, 8).join(", "));
 /* 영어로 — 설정 창 단추를 좌표로 */
-await press("#lobby .top__cfg");
+await press("#tbCfg");
 await waitFor(async () => { const a = await P.evaluate(() => document.querySelector('#cfg [data-l="en"]').getBoundingClientRect().top);
   await nap(120); return a === await P.evaluate(() => document.querySelector('#cfg [data-l="en"]').getBoundingClientRect().top); }, 3000, 50);
 await press('#cfg [data-l="en"]'); await nap(300);
@@ -256,7 +260,7 @@ check("소리 단추가 손가락을 받는다", await press("#btMute"));
 await nap(200);
 let m = await mute();
 check("영어 화면에서 끄면 'Unmute'", m.off && m.l === "Unmute", JSON.stringify(m));
-await press("#lobby .top__cfg");
+await press("#tbCfg");
 await waitFor(async () => { const a = await P.evaluate(() => document.querySelector('#cfg [data-l="ko"]').getBoundingClientRect().top);
   await nap(120); return a === await P.evaluate(() => document.querySelector('#cfg [data-l="ko"]').getBoundingClientRect().top); }, 3000, 50);
 await press('#cfg [data-l="ko"]'); await nap(300);

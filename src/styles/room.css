@@ -7,7 +7,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 #room, #room{height:100%}
 #room{
-  background:var(--ink) url(/assets/tablebg.webp) center -78px/cover no-repeat;
+  background:var(--ink) var(--skin-table,url(/assets/tablebg.webp)) center -78px/cover no-repeat;
   color:var(--parchment);
   font-family:"Gowun Dodum",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;overflow:hidden;
@@ -113,6 +113,8 @@
   width:100%;padding:13px;border:1px solid var(--gold-dim);border-radius:2px;
   text-align:center;font-size:14px;color:var(--parchment-dim);
 }
+/* 방장 연결이 끊김 안내 — 두 줄을 한 줄짜리와 **같은 높이(58px)** 에 넣는다. 나타나고 사라질 때 자리·설정 줄이 들썩이지 않게 (2026-10-28 실측) */
+#room .waiting.waiting--gone{font-size:12px;line-height:16px;padding-top:0 !important;padding-bottom:0 !important;word-break:keep-all;color:#E3C67C}
 #room .dots::after{content:"";animation:dots 1.4s steps(4,end) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 #room .lowfade{position:absolute;left:-20px;right:-20px;bottom:-20px;height:34%;z-index:2;pointer-events:none;
@@ -146,7 +148,7 @@
    방장이 아니면 눌러도 아무 일 없다 */
 #room .seat:not(.seat--empty) .seat__av{pointer-events:auto}
 #room .seat__inv{color:#C69A3C;opacity:.9}
-#room .seat--empty:active .seat__inv{opacity:1}
+#room .seat--empty:active .seat__inv,#room .seat--empty.is-press .seat__inv{opacity:1}
 
 /* ---------- 프로필 상자 (2026-10-01) ----------
    남의 얼굴을 누르면 그 자리 **바로 밑에** 붙는 작은 상자. 화면을 덮지 않는다(어둡게 깔지 않음).
@@ -169,7 +171,7 @@
   background:linear-gradient(180deg,#9B3424,#6E1F15) !important;
   color:#FBEFCE !important;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;
   text-shadow:0 1px 2px rgba(0,0,0,.7)}
-#room .pfpop__kick:active{transform:translateY(1px);filter:brightness(.9)}
+#room .pfpop__kick:active,#room .pfpop__kick.is-press{transform:translateY(1px);filter:brightness(.9)}
 #room .pfpop__kick[hidden]{display:none !important}
 /* 프로필 상자 티어 뱃지 (2026-10-06) — 랭킹 화면 .rk__t 와 같은 그림·숫자 */
 #room .pfpop__t{position:relative;display:inline-flex;align-items:center;justify-content:center;

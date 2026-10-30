@@ -2,6 +2,7 @@ import { scoped } from "../lib/scoped.js";
 import { avtFile } from "../lib/assets.js";
 import "../styles/result.css";
 import { noteGameDone } from "../lib/review.js";
+import { kstDay, COIN } from "../lib/shop.js";
 
 export function mount(root){
 
@@ -29,6 +30,7 @@ export function mount(root){
          subF:n=>'<b>'+n+'</b>님이 가장 높은 점수로 이겼습니다.',
          colP:"등수", colG:"이번 판", colT:"총점",
          next:"다음 판", quit:"나가기",
+         coin:"코인", daily:n=>"오늘 첫 게임 +"+n+" 포함",
          tie:"동점이면 1등을 더 많이 한 분, 그것도 같으면 마지막 판 등수가 높은 분이 앞섭니다." },
     en:{ kickR:n=>"Round "+n, kickF:"Final",
          titleR:"This round", titleF:"Winner",
@@ -37,6 +39,7 @@ export function mount(root){
          subF:n=>'<b>'+n+'</b> finishes with the highest score.',
          colP:"Place", colG:"Round", colT:"Total",
          next:"Next round", quit:"Leave",
+         coin:"Coins", daily:n=>"incl. first game today +"+n,
          tie:"Ties go to more 1st places, then the better finish in the last round." }
   };
   let lang = window.__lang || "ko";
@@ -86,6 +89,11 @@ export function mount(root){
     /* 마지막 판이면 계정에 한 번만 올린다 */
     if (last && !window.__scored){
       window.__scored = true;
+      /* 이번 게임으로 받은 코인 — **서버가 적은 값으로** 보인다(2026-10-26 상점).
+         지금(서버가 적은 것을 다시 읽기 전) 코인을 기억해 두고, 다시 읽어 늘어난 만큼을 띄운다.
+         앱이 등수로 계산해 띄우면 판 내내 안 둬서 0을 받은 사람에게도 +30 이 보인다 */
+      const A = window.ACCOUNT || {};
+      window.__coinBase = { coins: Math.floor(Number(A.coins) || 0), day: A.coinDay || "", on: Boolean(A.signedIn) };
       const myRank = rows.indexOf(0);
       const earned = score[0] || 0;
       if (window.reportGame) window.reportGame(myRank, names.length, earned, false);
@@ -115,7 +123,29 @@ export function mount(root){
     el("next").textContent = t.next;
     el("next").hidden = last;
     el("quit").textContent = t.quit;
+    paintCoins(last);
   }
+  function paintCoins(last){
+    const box = el("coinLine");
+    if (!box) return;
+    const base = window.__coinBase;
+    const A = window.ACCOUNT || {};
+    const got = last && base && base.on ? Math.floor(Number(A.coins) || 0) - base.coins : 0;
+    if (got <= 0){ box.hidden = true; box.innerHTML = ""; return; }
+    const t = T[lang];
+    /* 그날 첫 게임 보너스가 붙었는가 — 서버가 오늘 날짜를 새로 적었다 */
+    const today = kstDay(Date.now());
+    const daily = A.coinDay === today && base.day !== today;
+    const html = '<i class="coin-ic"></i>' + t.coin + ' <b>+' + got.toLocaleString() + '</b>' +
+      (daily ? '<span>(' + t.daily(COIN.daily) + ')</span>' : "");
+    if (box.innerHTML !== html){ box.innerHTML = html; }
+    box.hidden = false;
+  }
+  /* 서버가 적은 코인을 다시 읽으면(끝나고 1.5초·5초·12초) 그때 띄운다 */
+  window.addEventListener("accountchange", () => {
+    const sec = root && root.closest ? root.closest(".page") : null;
+    if (!sec || sec.classList.contains("is-on")) paintCoins(Boolean(window.__resultFinal));
+  });
   window.__bootResult = render;
   render();
   

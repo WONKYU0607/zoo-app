@@ -6,7 +6,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 #tax, #tax{height:100%}
-#tax{background:#0B140F url(/assets/tablebg.webp) center/cover no-repeat;
+#tax{background:#0B140F var(--skin-table,url(/assets/tablebg.webp)) center/cover no-repeat;
   color:var(--parchment);font-family:"Gowun Dodum",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;overflow:hidden}
 #tax button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -69,7 +69,7 @@
 #tax /* card */
 .card{--w:34px;width:var(--w);aspect-ratio:200/390;flex:none;
   border-radius:calc(var(--w) * .05);padding:calc(var(--w) * .042);
-  background:radial-gradient(38% 22% at 16% 12%,rgba(140,106,52,.16),transparent 70%),
+  background:radial-gradient(38% 22% at 16% 12%,var(--card-hl1,rgba(140,106,52,.16)),transparent 70%),
     linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
   box-shadow:0 2px 6px rgba(0,0,0,.55);display:flex;flex-direction:column}
 #tax .card__band{display:flex;align-items:center;justify-content:space-between;

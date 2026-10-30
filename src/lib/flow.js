@@ -108,6 +108,7 @@ function netRoomView(){
     /* 방장은 0번이 아니라 **서버가 알려 준 자리**다. 방장이 나가면 남은 사람에게 넘어간다.
        예전에는 손님 화면에서 이 값이 엉뚱한 글자("host")라 방장 표시도 안 떴다 */
     host: "s" + (Number.isInteger(net.host) ? net.host : 0),
+    hostDue: net.hostDue || null,      /* 방장 연결이 끊겼을 때 방장이 넘어가는 시각(이 기기 시계) */
     phase: net.started ? "playing" : "waiting",
     round: null,
     seats,
@@ -122,7 +123,8 @@ function netRoomView(){
    안 그러면 옛 판에 붙은 채로 남아 게임이 시작돼도 아무것도 안 보인다 */
 async function refreshNet(){
   if (!net) return null;
-  const r = await lobby.peekRoom(net.code, net.key);
+  const n = net;
+  const r = await lobby.peekRoom(n.code, n.key);
   /* **방장이 나를 내보냈다.** 자리도 하던 방 기록도 놓고 로비로 간다(알림은 화면이 띄운다).
      기다리는 동안 들어온 응답이라 net 이 이미 바뀌었을 수 있다 — 같은 방일 때만 */
   if (r && r.kicked && net && String(r.code) === String(net.code)){
@@ -134,10 +136,18 @@ async function refreshNet(){
     call("__onKicked");
     return null;
   }
+  /* 기다리는 사이 방을 나갔거나 다른 방에 들어갔다 — 옛 방 답을 지금 방에 적지 않는다(2026-10-28 __saveOpts 와 같은 일) */
+  if (net !== n) return null;
   net.players = r.players;
   if (Number.isInteger(r.kicks)) net.kicks = r.kicks;
   if (Number.isInteger(r.kickMax)) net.kickMax = r.kickMax;
   if (Number.isInteger(r.host)) net.host = r.host;
+  /* 방장 연결이 끊겼으면 방장이 넘어가기까지 남은 초 — 손님 화면 안내(2026-10-28). 옛 서버는 안 준다(null = 안내 없음) */
+  /* 서버는 초를 올림해서 준다(조회는 1.5초마다) — 받은 것 중 가장 이른 마감을 들고 있으면 화면이 1초씩 고르게 센다 */
+  if (Number.isInteger(r.hostWait)){
+    const due = Date.now() + r.hostWait * 1000;
+    net.hostDue = net.hostDue ? Math.min(net.hostDue, due) : due;
+  } else net.hostDue = null;
   net.started = r.started;
   if (r.numPlayers) net.numPlayers = r.numPlayers;
   if (r.matchID) net.matchID = r.matchID;
@@ -333,7 +343,11 @@ async function startOnlineGame(){
   stopRoomCount();
   /* 방장 화면에 보이던 인원을 같이 보낸다 — 누르는 찰나 봇이 들어와도 보인 대로 시작 */
   const seen = (W().__opts && W().__opts.seated) || null;
-  await lobby.startRoom(net.code, net.key, Number.isInteger(seen) ? seen : undefined);
+  const n = net;
+  /* 누르고 바로 나갔다 — 들어갈 판이 없다. 답이든 거절(나가기가 먼저 닿았다)이든 버린다(2026-10-28 __saveOpts 와 같은 일) */
+  try { await lobby.startRoom(n.code, n.key, Number.isInteger(seen) ? seen : undefined); }
+  catch(e){ if (net !== n) return; throw e; }
+  if (net !== n) return;
   /* 서버가 앉은 사람 전원의 티켓을 한 장씩 뺐다 — 화면 숫자를 맞춘다 */
   call("__refreshAccount");
   /* **판 번호·자리·자리표를 다시 받아 온다.**
@@ -342,6 +356,7 @@ async function startOnlineGame(){
      그대로 들고 붙었다 — 그래서 4인으로 뽑기에 들어갔다가 곧바로 8인이 됐다.
      다른 사람들은 `refreshNet()` 으로 들어가서 멀쩡했고 방장만 이랬다 */
   await refreshNet();
+  if (net !== n) return;
   net.started = true;
   emitRoom();
   enterOnlineGame();
@@ -659,7 +674,13 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   };
   W().__kickSeat = async seat => {
     if (!net || net.code == null) return null;
-    const r = await lobby.kickPlayer(net.code, net.key, Number(seat));
+    const n = net;
+    /* 그 사이 방을 나갔으면 답이든 거절("방장만 …" — 나가기가 먼저 닿았다)이든 버린다 — 로비에 실패 창이 뜨지 않게
+       (2026-10-28 __saveOpts 와 같은 일) */
+    let r;
+    try { r = await lobby.kickPlayer(n.code, n.key, Number(seat)); }
+    catch(e){ if (net !== n) return null; throw e; }
+    if (net !== n) return r;
     if (r && Number.isInteger(r.kicks)) net.kicks = r.kicks;
     try { await refreshNet(); } catch(e){ emitRoom(); }
     return r;
@@ -693,8 +714,12 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
         want.tax === (cur.tax !== false) && want.clear2 === Boolean(cur.clear2) &&
         want.friends === Boolean(net.friends);
       if (same) return;
+      /* **기다리는 사이 방을 나갈 수 있다**(설정을 바꾸고 바로 뒤로가기 — net 이 null 이 된다).
+         그때는 답을 버린다. 예전에는 null 에 적다가 오류로 멈췄다(2026-10-28 1.0.8 앱 오류 알림 — "reading 'numPlayers'") */
+      const n = net;
       try {
-        const r = await lobby.setRoomOpts(net.code, net.key, want);
+        const r = await lobby.setRoomOpts(n.code, n.key, want);
+        if (net !== n) return;
         net.numPlayers = r.numPlayers;
         if (r.matchID) net.matchID = r.matchID;
         if (r.opts) net.opts = r.opts;
@@ -704,6 +729,7 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
         stopRoomCount();          /* 인원이 바뀌었으니 초읽기는 15초부터 다시 */
         await refreshNet();       /* 새 자리·자리표는 열쇠로 받아 온다 */
       } catch(e){
+        if (net !== n) return;                  /* 그 사이 방을 나갔다 — 되돌릴 화면도 없다 */
         /* 못 바꿨으면 화면을 원래대로 되돌린다. 바뀐 척하면 안 된다 */
         W().__opts.cap = net.numPlayers;
         W().__opts.rounds = cur.rounds || W().__opts.rounds;
@@ -762,6 +788,9 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
       r = null;
       /* 앱을 끈 사이 서버 문제로 끝난 판 — 돌아갈 곳은 없고, 보상받았다고 알려 준다 */
       if (e && e.status === 404 && e.data && e.data.gone){ lobby.clearSeat(); call("__refreshAccount"); call("__onGameGone", e.data); return null; }
+      /* 404(정말 없는 방)가 아니면 — 연결 실패 · 서버가 막 켜져 방을 되살리는 중(503) — 기록은 **그대로 둔다**(2026-10-29 검토).
+         예전에는 그때도 지워서, 배포 직후 앱을 켜면 서버에는 자리가 있는데 이어하기를 영영 못 했다. 이번에는 묻지 않고 다음에 켤 때 다시 본다 */
+      if (!(e && e.status === 404)) return null;
     }
     /* 방이 없어졌거나 내가 그 자리에 없으면 돌아갈 곳이 아니다.
        내 자리는 서버가 새 판 기준으로 알려 준 번호(you)로 본다 —

@@ -61,6 +61,19 @@ try {
       b.className = "cfgbtn"; b.setAttribute("data-cfgopen", ""); b.innerHTML = B.GEAR;
       el.replaceWith(b);
     });
+    /* main.js 처럼 로비 상단바 밑 줄(광고 · 친구 · 규칙 보기 · 소리)을 세운다 — 규칙 보기 단추가 여기 있다(2026-10-29) */
+    if (id === "lobby"){
+      const bar = sec.querySelector(".bar");
+      if (bar && !sec.querySelector(".rankbar")){
+        const wrap = document.createElement("div"); wrap.className = "rankbar";
+        wrap.innerHTML = '<button class="bt-rank bt-ad" id="btAd"><span id="adLabel"></span></button>' +
+          '<button class="bt-mail" id="btMail" aria-label="우편함"><i class="bt-mail__ic"></i></button>' +
+          '<button class="bt-rank bt-friend" data-friendopen><span id="friendLabel"></span></button>' +
+          '<button class="bt-rank bt-rules" id="btRules"></button>' +
+          '<button class="bt-mute" id="btMute" aria-pressed="true"><i class="bt-mute__on"></i><i class="bt-mute__off"></i></button>';
+        bar.parentNode.insertBefore(wrap, bar.nextSibling);
+      }
+    }
     if (id === "lobby"){
       const gear = sec.querySelector("[data-cfgopen]");
       if (gear && !sec.querySelector("[data-rankopen]")){
@@ -71,7 +84,7 @@ try {
       }
     }
   });
-  stageEl.insertAdjacentHTML("beforeend", B.OPT_HTML + B.CFG_HTML);
+  stageEl.insertAdjacentHTML("beforeend", B.TAB_HTML + B.OPT_HTML + B.CFG_HTML);   /* 하단 고정 탭(2026-10-29) — main.js 와 같은 순서 */
   Object.entries(SCREENS).forEach(([id, mod]) => {
     if (mod.mount) mod.mount(document.getElementById(id));
   });
@@ -81,14 +94,14 @@ try {
 check("앱이 세워진다 (터지지 않는다)", boom === null, boom || "");
 await wait(120);
 
-check("로비에 랭킹 단추가 있다", Boolean(document.querySelector("#lobby [data-rankopen]")));
+check("하단 탭에 랭킹 단추가 있다", Boolean(document.querySelector("#tabbar [data-rankopen]")));
 check("랭킹 화면이 그려졌다", Boolean(document.querySelector("#rank #rkTabs")));
 const gb = (document.querySelector("#entry #testin") || {}).textContent || "";
 check("첫 화면에 게스트 단추가 있다",
       gb.includes("게스트") || gb.toLowerCase().includes("guest"), gb);
 
 /* 랭킹 단추를 누르면 그 화면이 켜진다 */
-document.querySelector("#lobby [data-rankopen]").click();
+document.querySelector("#tabbar [data-rankopen]").click();
 await wait(120);
 check("랭킹 단추를 누르면 열린다",
       document.getElementById("rank").classList.contains("is-on"));

@@ -58,6 +58,20 @@ async function run(gi){
     const sw = B.BAR_SWAP[id];
     if (sw) h = h.replace(sw[0], sw[1]);
     sec.innerHTML = h;
+    /* main.js 처럼 로비 상단바 밑 줄(광고 · 우편함 · 친구 · 규칙 보기 · 소리)을 세운다 — 규칙 보기 단추가 여기로 옮겨 왔다(2026-10-29).
+       안 세우면 lobby.js 가 #btRules 를 못 찾아 멈춘다(boot.test.mjs 와 같은 줄) */
+    if (id === "lobby"){
+      const bar = sec.querySelector(".bar");
+      if (bar && !sec.querySelector(".rankbar")){
+        const wrap = document.createElement("div"); wrap.className = "rankbar";
+        wrap.innerHTML = '<button class="bt-rank bt-ad" id="btAd"><span id="adLabel"></span></button>' +
+          '<button class="bt-mail" id="btMail" aria-label="우편함"><i class="bt-mail__ic"></i></button>' +
+          '<button class="bt-rank bt-friend" data-friendopen><span id="friendLabel"></span></button>' +
+          '<button class="bt-rank bt-rules" id="btRules"></button>' +
+          '<button class="bt-mute" id="btMute" aria-pressed="true"><i class="bt-mute__on"></i><i class="bt-mute__off"></i></button>';
+        bar.parentNode.insertBefore(wrap, bar.nextSibling);
+      }
+    }
   });
   document.getElementById("stage").insertAdjacentHTML("beforeend", B.OPT_HTML + B.CFG_HTML);
   SCREENS.forEach(id => {

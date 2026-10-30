@@ -39,4 +39,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 구글 플레이 결제 — 코인 묶음·광고 제거 (2026-10-26) -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 </manifest>

@@ -6,7 +6,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 #draw, #draw{height:100%}
-#draw{background:#0B140F url(/assets/tablebg.webp) center/cover no-repeat;
+#draw{background:#0B140F var(--skin-table,url(/assets/tablebg.webp)) center/cover no-repeat;
   color:var(--parchment);font-family:"Gowun Dodum",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;overflow:hidden}
 #draw button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -44,16 +44,25 @@
 .deck{pointer-events:auto;position:absolute;left:49%;top:44%;transform:translate(-50%,-50%);
   display:grid;grid-template-columns:repeat(var(--cols,4),var(--pw,44px));
   gap:9px;justify-content:center;z-index:5;--pw:34px}
-#draw .pk{width:var(--pw,34px);aspect-ratio:200/390;perspective:600px;cursor:pointer;
+/* **뒤집는 0.5초 동안만 입체(3D)로 그린다** (2026-10-27 "뽑기 카드 화질이 별로" 신고).
+   늘 입체로 두면 브라우저가 카드를 따로 떼어 그린 뒤 화면에 늘여 붙여서 그림이 뭉개졌다
+   (DPR 3 폰 재 보니 선명도 1/3). 평소에는 납작하게 두고 보일 면만 보인다.
+   높이는 --ph(정수 px) — 200:390 비율로 두면 72.14px 처럼 소수가 되어 둘째 줄이 반 픽셀에 걸린다 */
+#draw .pk{width:var(--pw,34px);height:var(--ph,auto);aspect-ratio:200/390;cursor:pointer;
   transition:transform .3s ease,opacity .35s ease}
-#draw .pk__in{position:relative;width:100%;height:100%;transform-style:preserve-3d;
-  transition:transform .5s cubic-bezier(.3,.8,.3,1)}
-#draw .pk.flip .pk__in{transform:rotateY(180deg)}
-#draw .pk__f{position:absolute;inset:0;backface-visibility:hidden;border-radius:4px;overflow:hidden;
+#draw .pk__in{position:relative;width:100%;height:100%}
+#draw .pk__f{position:absolute;inset:0;border-radius:4px;overflow:hidden;
   box-shadow:0 5px 14px rgba(0,0,0,.6)}
 #draw .pk__f--b{background:#1A1410;border:1px solid rgba(198,154,60,.5)}
 #draw .pk__f--b img{width:100%;height:100%;object-fit:cover;display:block}
-#draw .pk__f--a{transform:rotateY(180deg)}
+#draw .pk:not(.turning) .pk__f--a{visibility:hidden}
+#draw .pk.flip:not(.turning) .pk__f--a{visibility:visible}
+#draw .pk.flip:not(.turning) .pk__f--b{visibility:hidden}
+#draw .pk.turning{perspective:600px}
+#draw .pk.turning .pk__in{transform-style:preserve-3d;transition:transform .5s cubic-bezier(.3,.8,.3,1)}
+#draw .pk.turning.flip .pk__in{transform:rotateY(180deg)}
+#draw .pk.turning .pk__f{backface-visibility:hidden}
+#draw .pk.turning .pk__f--a{transform:rotateY(180deg)}
 /* **마우스가 있을 때만 들어올린다.**
    폰에는 마우스가 없어서, 손가락으로 처음 대면 브라우저가 이것을 `:hover` 로 쳐서
    카드가 6px 올라간 채 남는다. 그 순간 카드가 손가락 밑에서 움직여
@@ -61,13 +70,14 @@
 @media (hover: hover) and (pointer: fine){
   #draw .pk:not(.taken):hover{transform:translateY(-6px)}
 }
-#draw .pk.taken{cursor:default;opacity:.62}
+/* 집어간 카드는 앞면이 보이는 것으로 이미 구분된다. 예전 반투명(.62)은 판 무늬가 비쳐 앞면이 흐려 보였다 */
+#draw .pk.taken{cursor:default}
 #draw .pk.gone{opacity:0;transform:scale(.86)}
 /* --w 는 카드의 실제 폭이어야 한다. 52px 로 박아 두면 카드가 34px 일 때
    글씨만 52px 기준으로 커져서 띠 밖으로 밀려나고 오른쪽 숫자가 잘린다 */
 #draw .card{--w:var(--pw,34px);width:100%;height:100%;
   border-radius:4px;padding:calc(var(--w) * .042);
-  background:radial-gradient(38% 22% at 16% 12%,rgba(140,106,52,.16),transparent 70%),
+  background:radial-gradient(38% 22% at 16% 12%,var(--card-hl1,rgba(140,106,52,.16)),transparent 70%),
     linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
   display:flex;flex-direction:column}
 #draw .card__band{display:flex;align-items:center;justify-content:space-between;

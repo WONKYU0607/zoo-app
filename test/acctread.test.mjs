@@ -83,7 +83,9 @@ const { A, STORE, LOG } = B;
 const isGoogle = () => Boolean(B.auth.currentUser && B.auth.currentUser.providerData.some(p => p.providerId === "google.com"));
 const ownsName = n => typeof n === "string" && n.length > 0 && n.length <= 20 &&
   (STORE.get("names/" + n.toLowerCase()) || {}).uid === (B.auth.currentUser && B.auth.currentUser.uid);
-const avatarOk = (a, score) => Number.isInteger(a) && a >= 0 && a <= 14 && (a < 5 || score >= (a - 4) * 5000);
+/* 얼굴: 점수로 열렸거나 상점에서 샀다(owned — 서버만 적는다). 2026-10-26 */
+const avatarOk = (a, d) => Number.isInteger(a) && a >= 0 && a <= 99 &&
+  (a < 5 || (a <= 14 && ((d && d.score) || 0) >= (a - 4) * 5000) || ((d && d.owned) || []).includes("avt:" + a));
 const denials = [];
 globalThis.__fsFail = (path, op, data, prev) => {
   const m = /^users\/([^/]+)$/.exec(path);
@@ -109,13 +111,14 @@ globalThis.__fsFail = (path, op, data, prev) => {
   const bad = changed.filter(k => !allowed.includes(k));
   if (bad.length) return deny("앱이 못 고치는 칸 " + bad);
   if (changed.includes("name") && !ownsName(next.name)) return deny("안 잡은 이름");
-  if (changed.includes("avatar") && !avatarOk(next.avatar, (prev || {}).score || 0)) return deny("잠긴 얼굴");
+  if (changed.includes("avatar") && !avatarOk(next.avatar, prev || {})) return deny("잠긴 얼굴");
   if (changed.includes("needName") && typeof next.needName !== "boolean") return deny("모양");
   if (changed.includes("guest") && next.guest !== !isGoogle()) return deny("게스트 표시");
   return false;
 };
 const userWrites = uid => LOG.filter(([op, p]) => p === "users/" + uid && op !== "delete");
-const SERVER_ONLY = ["score", "games", "tickets", "ticketAt", "wk", "mo", "wkKey", "moKey", "aw", "adTx", "lastPlayed"];
+const SERVER_ONLY = ["score", "games", "tickets", "ticketAt", "wk", "mo", "wkKey", "moKey", "aw", "adTx", "lastPlayed",
+                     "coins", "owned", "deck", "bg", "coinDay", "buys", "noAds", "adDay", "adN", "freeDay", "freeN", "pays"];   /* 상점(2026-10-26) */
 
 /* ============ 1. 게스트 새 계정 ============ */
 console.log("\n[게스트 새 계정]");
@@ -189,6 +192,10 @@ STORE.set("users/" + uG3, Object.assign({}, STORE.get("users/" + uG3), { score: 
 A.account.score = 7300;
 check("점수로 열린 얼굴(5번, 5,000점)도 바꾼다", (await A.setAvatar(5)).ok && STORE.get("users/" + uG3).avatar === 5);
 check("잠긴 얼굴(6번, 10,000점)은 앱이 먼저 막는다", (await A.setAvatar(6)).ok === false && STORE.get("users/" + uG3).avatar === 5);
+/* 0~14번 얼굴은 점수로만 — 산 목록에 적혀 있어도 점수가 모자라면 안 된다(상점에서 안 판다) */
+STORE.set("users/" + uG3, Object.assign({}, STORE.get("users/" + uG3), { owned: ["avt:9"] }));
+A.account.owned = ["avt:9"];
+check("0~14번 얼굴은 산 목록에 있어도 점수가 모자라면 막는다", (await A.setAvatar(9)).ok === false && STORE.get("users/" + uG3).avatar === 5);
 check("규칙에 막힌 쓰기가 없다", denials.length === 0, denials.join(" | "));
 
 /* ============ 6. 구글 새 계정 · 별명 · 게스트에서 잇기 ============ */
@@ -225,6 +232,12 @@ let e3 = null; try { await updateDoc(doc({ fake: true }, "users", uL), { avatar:
 check("잠긴 얼굴을 직접 적으면 막힌다", e3 && e3.code === "permission-denied");
 let e4 = null; try { await updateDoc(doc({ fake: true }, "users", uL), { name: "남의이름" }); } catch(e){ e4 = e; }
 check("잡지 않은 이름으로 바꾸면 막힌다", e4 && e4.code === "permission-denied");
+/* 상점(2026-10-26) — 코인·산 것·카드 뒷면·판 배경은 서버만 적는다 */
+for (const [k, v] of [["coins", 99999], ["owned", ["avt:15", "deck:4"]], ["deck", 4], ["bg", 3], ["coinDay", "2099-01-01"],
+                      ["noAds", true], ["adN", 0], ["freeN", 0], ["pays", []]]){
+  let e = null; try { await updateDoc(doc({ fake: true }, "users", uL), { [k]: v }); } catch(x){ e = x; }
+  check("앱이 " + k + " 를 고치면 막힌다", e && e.code === "permission-denied");
+}
 
 /* 앱 코드 안에 점수·티켓을 적는 곳이 남아 있지 않은가 — 글자로 한 번 더 */
 const { readFileSync } = await import("node:fs");

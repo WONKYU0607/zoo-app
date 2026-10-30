@@ -31,13 +31,20 @@ export const AVT_FREE = 5;                       /* 처음부터 열려 있는 �
 export const avtFile = i => (AVATARS[i] || AVATARS[0]).f;
 export const avtOpen = (i, score) => (AVATARS[i] ? (score || 0) >= AVATARS[i].need : false);
 
-/* 감정표현 — 동물 5종, 말풍선, 단추 아이콘 */
+/* 감정표현 — 동물 5종 + 신화 5종(2026-10-29 사용자 추가 — 글은 사용자 그대로, 영어는 Claude 가 붙임), 말풍선, 단추 아이콘.
+   **k 는 바꾸지 말 것** — 판의 쪽지로 k 만 오간다. 옛 앱(1.0.8)은 모르는 k 를 받으면 빈 말풍선을 띄운다.
+   pack = 상점 이모티콘 묶음 번호(shop.js EMO_PRICE · "emote:1") — 그 묶음을 산 사람만 고르는 판에 보인다(받는 것은 누구나 보인다) */
 export const EMOTES = [
-  { k: "tiger",  img: "assets/emote_tiger.webp",  ko: "빨리빨리", en: "HURRY UP" },
-  { k: "rabbit", img: "assets/emote_rabbit.webp", ko: "감사",     en: "THANKS" },
-  { k: "bear",   img: "assets/emote_bear.webp",   ko: "ㅠㅠ",     en: "SO SAD" },
-  { k: "monkey", img: "assets/emote_monkey.webp", ko: "풉ㅋㅋ",   en: "LOL" },
-  { k: "lion",   img: "assets/emote_lion.webp",   ko: "아오..!",  en: "ARGH...!" },
+  { k: "tiger",    img: "assets/emote_tiger.webp",    ko: "빨리빨리", en: "HURRY UP" },
+  { k: "rabbit",   img: "assets/emote_rabbit.webp",   ko: "감사",     en: "THANKS" },
+  { k: "bear",     img: "assets/emote_bear.webp",     ko: "ㅠㅠ",     en: "SO SAD" },
+  { k: "monkey",   img: "assets/emote_monkey.webp",   ko: "풉ㅋㅋ",   en: "LOL" },
+  { k: "lion",     img: "assets/emote_lion.webp",     ko: "아오..!",  en: "ARGH...!" },
+  { k: "dragon",   img: "assets/emote_dragon.webp",   ko: "까불지 말어잉",   en: "BACK OFF", pack: 1 },
+  { k: "goblin",   img: "assets/emote_goblin.webp",   ko: "배꼽 빠져잇",     en: "LMAO", pack: 1 },
+  { k: "fox",      img: "assets/emote_fox.webp",      ko: "귀여워^^",        en: "SO CUTE^^", pack: 1 },
+  { k: "medusa",   img: "assets/emote_medusa.webp",   ko: "아 줴줴이야..",   en: "OH NO...", pack: 1 },
+  { k: "minotaur", img: "assets/emote_minotaur.webp", ko: "그만!!! 멈춰 !!!", en: "STOP!!!", pack: 1 },
 ];
 export const EMOTE_BUBBLE = "assets/emote_bubble.webp";
 export const EMOTE_BTN = "assets/emote_btn.webp";

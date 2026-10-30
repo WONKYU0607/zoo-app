@@ -40,7 +40,7 @@ const settled = () => waitFor(async () => {
 }, 3000, 50);
 /* ---------- 설정 창 ---------- */
 console.log("\n[설정 창]");
-check("설정 단추가 손가락을 받는다", await press("#lobby .top__cfg"));
+check("설정 단추가 손가락을 받는다", await press("#tbCfg"));
 await settled();
 const cfg = () => H.page.evaluate(() => {
   const b = [...document.querySelectorAll("#cfg [data-vib]")];
@@ -63,7 +63,7 @@ check("끔을 누르면 끔으로 바뀌고 기억한다", c.saved === "0" && c.
 check("이제 '끔' 이 또렷하다", c.dim[1] === 1 && c.dim[0] < 0.6, JSON.stringify(c.dim));
 await H.reload(); await H.drv({ on: false, think: [300, 600] });
 await H.page.evaluate(() => window.__goto("lobby")); await nap(300);
-await press("#lobby .top__cfg"); await settled();
+await press("#tbCfg"); await settled();
 c = await cfg();
 check("다시 켜도(새로고침) 끔 그대로", c.saved === "0" && c.btn[1].p === "true", JSON.stringify(c));
 await press('#cfg [data-vib="1"]'); await nap(200);

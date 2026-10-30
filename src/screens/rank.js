@@ -5,6 +5,7 @@
 
 import "../styles/lobby.css";
 import { account, topScores, myRank, periodKeys } from "../lib/account.js";
+import { WEEK_PRIZE } from "../lib/shop.js";
 
 /* 검사에서 가짜 자료를 끼울 수 있게 한 겹 둔다 */
 const fetchTop  = (...a) => (window.__topScores || topScores)(...a);
@@ -34,6 +35,8 @@ const T = {
     me: "내 순위",
     tier: t => t + "티어",
     err: "불러오지 못했습니다",
+    /* 주간 보상 안내 (2026-10-27) — 값은 shop.js WEEK_PRIZE */
+    prize: "매주 1~10등은 코인을 받습니다\n1등 " + WEEK_PRIZE[0] + "개 · 2등 " + WEEK_PRIZE[1] + "개 · 3등 " + WEEK_PRIZE[2] + "개 · 4~10등 " + WEEK_PRIZE[3] + "개",
   },
   en: {
     title: "Leaderboard",
@@ -45,6 +48,7 @@ const T = {
     me: "Your rank",
     tier: t => "Tier " + t,
     err: "Could not load",
+    prize: "Top 10 each week earn coins\n1st " + WEEK_PRIZE[0] + " · 2nd " + WEEK_PRIZE[1] + " · 3rd " + WEEK_PRIZE[2] + " · 4th–10th " + WEEK_PRIZE[3],
   },
 };
 
@@ -122,7 +126,7 @@ export function mount(root){
       meBox.innerHTML = '<div class="rk__cap">' + t.me + '</div><p class="hint">' + t.meOut + '</p>';
     }
 
-    el("rkNote").textContent = account.guest ? t.guest : "";
+    el("rkNote").textContent = account.guest ? t.guest : kind === "week" ? t.prize : "";
   }
 
   async function load(){

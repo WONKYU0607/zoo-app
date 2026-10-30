@@ -2,6 +2,7 @@ import { scoped } from "../lib/scoped.js";
 import { HERO as A_HERO } from "../lib/assets.js";
 import "../styles/entry.css";
 import { TERMS, PRIVACY } from "../lib/legal.js";
+import { wasIn } from "../lib/signedflag.js";
 
 export function mount(root){
   const document = scoped(root);
@@ -140,17 +141,27 @@ export function mount(root){
   
   /* ---------- 로그인 벽 ---------- */
   let busy = false;
+  /* **로그인 확인이 끝나기 전인데, 지난번에 로그인해 있었다** (2026-10-26 — signedflag.js 설명).
+     앱을 막 켜면 로그인 복원·계정 문서 받기에 잠깐 걸린다. 그사이 예전에는 "로그인 안 됨" 화면
+     (구글로 시작하기·게스트로 시작하기)을 그렸다가 바꿔서 깜빡였다. 이제 처음부터 게임 시작을 그린다 */
+  const pendingIn = () => !window.__authDone && !(window.ACCOUNT && window.ACCOUNT.signedIn) && wasIn();
+  let waitIn = false;       /* 확인 전에 게임 시작을 눌렀다 — 끝나면 들어간다 */
   function paintEntry(){
     const t = T[lang];
     const a = window.ACCOUNT;
     const b = document.getElementById("start");
     const hint = document.getElementById("hint");
     if (!b) return;
-    if (busy){ b.textContent = t.starting; b.disabled = true; hint.textContent = ""; return; }
+    if (busy || waitIn){ b.textContent = t.starting; b.disabled = true; hint.textContent = ""; return; }
     b.disabled = false;
+    const pend = pendingIn();
     if (a && a.signedIn){
       b.textContent = t.enter;
       hint.textContent = a.name || "";
+      hint.className = "hint";
+    } else if (pend){
+      b.textContent = t.enter;
+      hint.textContent = pend.name || "";
       hint.className = "hint";
     } else {
       b.textContent = t.start;
@@ -271,6 +282,9 @@ export function mount(root){
     const a = window.ACCOUNT;
     if (a && a.signedIn) return;              /* 이미 로그인했으면 통과 */
     e.stopImmediatePropagation();
+    /* 확인이 끝나기 전에 게임 시작을 눌렀다 — 로그인 창을 띄우지 않고, 확인이 끝나면 들어간다 */
+    if (pendingIn()){ waitIn = true; paintEntry(); return; }
+    if (waitIn) return;
     const hint = document.getElementById("hint");
     busy = true; paintEntry();
     try {
@@ -307,9 +321,25 @@ export function mount(root){
     if (!tb) return;
     const a = window.ACCOUNT;
     tb.textContent = T[lang].guest;
-    /* 동의 전에는 게스트 단추도 안 보인다 */
-    tb.hidden = Boolean(a && a.signedIn) || (window.__agreeNeeded && window.__agreeNeeded());
+    /* 동의 전에는 게스트 단추도 안 보인다. 지난번에 로그인해 있었으면 확인이 끝날 때까지 안 보인다 */
+    tb.hidden = Boolean(a && a.signedIn) || Boolean(pendingIn()) || Boolean(waitIn) ||
+                Boolean(window.__agreeNeeded && window.__agreeNeeded());
   }
+  /* 로그인 확인이 끝났다 — 기다리던 누름이 있으면 들어가거나(로그인됨) 로그인 화면으로(풀려 있음) */
+  function settleIn(){
+    if (!waitIn) return;
+    const a = window.ACCOUNT;
+    if (a && a.signedIn){
+      waitIn = false;
+      paintEntry();                           /* 기다리는 동안 꺼 둔 단추를 먼저 켠다 — 꺼진 단추는 click() 이 안 먹는다 */
+      const st = document.getElementById("start");
+      if (st) st.click();                     /* 이번엔 로그인돼 있으니 그대로 로비로 */
+    } else if (window.__authDone){
+      waitIn = false;                         /* 로그인이 풀려 있었다 — 로그인 단추를 다시 그린다 */
+    }
+  }
+  window.addEventListener("accountready", () => { settleIn(); paintEntry(); showTest(); });
+  window.addEventListener("accountchange", () => { if (window.ACCOUNT && window.ACCOUNT.signedIn) settleIn(); });
   window.addEventListener("accountready", showTest);
   window.addEventListener("accountchange", showTest);
   setTimeout(showTest, 300);

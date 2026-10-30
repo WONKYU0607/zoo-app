@@ -1,0 +1,187 @@
+/* ================= 상점 화면 (2026-10-26) =================
+   바탕은 사용자 그림(shopbg.webp — 사바나 장터). 위쪽 장터는 보이게 두고, 탭·칸은 흙마당(타원) 안에 —
+   마당 자리는 shop.js placeBg 가 재서 --ov-top · --ov-bot 로 준다. 칸은 랭킹과 같은 양피지 틀 */
+#shop{
+  height:100%;
+  background:#5A3A1C url(/assets/shopbg.webp) center/cover no-repeat;
+  color:#3A2A16;
+  font-family:"Gowun Dodum",system-ui,sans-serif;
+  overflow:hidden;
+}
+#shop .veil{display:none}
+#shop .screen{position:relative;height:100%;display:flex;flex-direction:column}
+/* 맨 위 하늘이 밝아 제목·뒤로가기가 안 보인다 — 위쪽만 살짝 어둡게 */
+#shop .screen::before{content:"";position:absolute;left:0;right:0;top:0;height:120px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(14,8,3,.72),rgba(14,8,3,.35) 55%,rgba(14,8,3,0))}
+#shop .bar{position:relative;z-index:1;min-height:74px;margin-top:-15px;display:flex;align-items:center;
+  gap:8px;padding:14px 12px 0}
+#shop .bar .navback{font-size:24px;line-height:1;color:#F6E7C2;background:none;border:none;text-shadow:0 1px 3px #000}
+#shop .bar__t{font-size:14px;letter-spacing:.1em;color:#F6E7C2;font-weight:700;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.6)}
+/* 가진 코인 — 오른쪽 위 */
+#shop .sp__wallet{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px 5px 9px;border-radius:999px;background:rgba(58,38,14,.82);
+  border:1px solid rgba(227,198,124,.65);color:#F4E2B2;font-size:15px;
+  box-shadow:0 2px 6px rgba(60,40,10,.25)}
+#shop .sp__wallet b{font-family:"Noto Serif KR",serif;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+/* 마당 안 — 탭은 위쪽 테두리 바로 안, 칸은 그 아래부터 아래쪽 테두리까지.
+   설명 줄은 없앴다(2026-10-27 사용자 "검정 배경에 설명문구 다 없애") */
+#shop .body{position:absolute;left:0;right:0;top:calc(var(--ov-top,36%) - 6px);
+  /* 하단 고정 탭(2026-10-29) 위에서 끝낸다 — 작은 폰은 마당 아래 끝이 탭 밑에 깔린다(칸은 위로 올라와 스크롤) */
+  bottom:max(calc(var(--ov-bot,10%) + 4px), calc(var(--sab) + var(--tabh,0px) + 6px));
+  display:flex;flex-direction:column;padding:0 14px}
+
+/* 탭이 늘면(그림이 들어와 얼굴·카드·판 배경 탭이 생기면) 옆으로 밀어 본다 — 폭을 쪼개 글자가 넘치지 않게 */
+#shop #spTabs{display:flex;gap:6px;margin:2px 0 10px;flex:none;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#shop #spTabs::-webkit-scrollbar{display:none}
+/* 탭 — **놋쇠 단추 판**(방 만들기 단추와 같은 그림 fr_btn) · 고른 탭은 붉은 판(fr_red)
+   (2026-10-29 사용자 결정 B안 — "상점 배경이랑 베이지색 배경이 전혀 안 어울린다". 예전: 양피지 틀 frame_row + 베이지 칠)
+   판 그림이 가운데까지 채운다(fill) — 흙바닥이 비치지 않아 따로 칠할 것이 없다 */
+#shop #spTabs button{flex:1 0 auto;min-width:72px;min-height:0;padding:4px 6px;font-size:12px;font-weight:700;
+  color:#D9C69C;background:none;border-radius:0;box-shadow:none;text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap;
+  border:12px solid transparent;border-image:var(--fr-btn) 33 fill / 12px stretch;
+  filter:drop-shadow(0 2px 3px rgba(20,10,2,.55))}
+#shop #spTabs button[aria-pressed="true"]{border-image:var(--fr-red) 46 fill / 12px stretch;color:#FBEFCE}
+
+
+
+/* 칸 — 얼굴·카드는 3줄, 판 배경은 2줄, 티켓은 하나 */
+#shop .sp__grid{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-content:start;padding:2px 1px 6px}
+#shop .sp__grid--bg{grid-template-columns:repeat(2,minmax(0,1fr))}
+#shop .sp__grid--ticket{grid-template-columns:minmax(0,1fr);max-width:240px;width:100%;margin:0 auto}
+#shop .sp__grid--deck{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* 두 줄 칸에서 홀수로 남은 마지막 칸은 가운데로 — 기본 칸을 빼서 카드·판 배경이 세 칸이 됐다(2026-10-29) */
+#shop :is(.sp__grid--deck,.sp__grid--bg) .sp__i:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc(50% - 4px)}
+#shop .sp__i{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;
+  padding:8px 4px 8px;background:none;color:#F4E6C4;
+  border:13px solid transparent;border-image:var(--fr-btn) 33 fill / 13px stretch;border-radius:0;
+  font:inherit;cursor:pointer;transition:filter .12s}
+#shop .sp__i.is-on{border-image:var(--fr-btn-down) 33 fill / 13px stretch}
+/* 장착 중 — 금빛 테두리로 또렷하게(놋쇠 판끼리는 눌린 판만으로는 구별이 잘 안 된다) */
+#shop .sp__i.is-on::after{content:"";position:absolute;inset:-6px;border:2px solid #F2C95A;border-radius:2px;
+  box-shadow:0 0 10px rgba(242,201,90,.55),inset 0 0 8px rgba(242,201,90,.35);pointer-events:none}
+#shop .sp__i.is-busy{filter:saturate(.6) brightness(.95)}
+/* 그림 */
+#shop .sp__pic{display:block;flex:none;background-size:cover;background-position:center;background-repeat:no-repeat}
+#shop .sp__pic--avt{width:64px;height:64px;border-radius:50%;border:2px solid #9C7A36;box-shadow:0 2px 6px rgba(40,25,5,.35)}
+#shop .sp__pic--back{width:46px;height:84px;border-radius:4px;border:1px solid rgba(120,86,30,.8);box-shadow:0 2px 6px rgba(40,25,5,.4)}
+/* 판 배경은 펠트가 보이게 가운데 위쪽(펠트 자리)을 잘라 보인다 */
+#shop .sp__pic--bg{width:100%;height:92px;border-radius:6px;background-size:118% auto;background-position:50% 44.6%;
+  border:1px solid rgba(120,86,30,.8);box-shadow:0 2px 6px rgba(40,25,5,.4)}
+#shop .sp__pic--tk{width:84px;height:50px;background:url(/assets/ic_ticket.webp) center/contain no-repeat;
+  filter:drop-shadow(0 2px 3px rgba(40,25,5,.35))}
+/* 카드 스킨 — 뒷면과 앞면 한 장을 겹쳐 보인다 */
+#shop .sp__pic--deck{position:relative;width:76px;height:84px}
+#shop .sp__pic--deck i{position:absolute;top:0;width:46px;height:84px;border-radius:4px;background-size:cover;background-position:center;
+  border:1px solid rgba(120,86,30,.8);box-shadow:0 2px 6px rgba(40,25,5,.4)}
+#shop .sp__pic--deck i:first-child{left:0;transform:rotate(-6deg)}
+#shop .sp__pic--deck i:last-child{right:0;transform:rotate(6deg)}
+/* 코인 묶음 — 큰 금화 */
+#shop .sp__pic--coins{display:flex;align-items:center;justify-content:center;width:64px;height:64px;font-size:42px}
+#shop .sp__grid--coins .sp__i:nth-child(2) .sp__pic--coins{font-size:48px}
+#shop .sp__grid--coins .sp__i:nth-child(3) .sp__pic--coins{font-size:54px}   /* 사자 금화 1.15em → 48·55·62px */
+/* 놋쇠 판 테두리(13px)가 양피지 틀(11px)보다 두꺼워 세 칸짜리 코인 줄의 이름이 좁은 폰에서 잘렸다(2026-10-29 실측: 320px "코인 12,000" 62/57px,
+   영어 "12,000 coins" 67/57px) — 칸 안 옆 여백을 빼고, 340px 이하는 글자를 조금 줄인다 */
+#shop .sp__grid--coins .sp__i{padding-left:0;padding-right:0}
+@media (max-width:340px){ #shop .sp__grid--coins .sp__nm{font-size:11.5px} }
+/* 광고 제거 — "AD" 에 빗금 */
+#shop .sp__pic--noads{width:64px;height:64px;background:no-repeat center/contain;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='27' fill='%23F1DDA8' stroke='%235A3D12' stroke-width='4'/%3E%3Cpath d='M17.5 41.5l6.2-19h4.6l6.2 19h-4.4l-1.3-4.2h-5.8l-1.3 4.2zm6.6-7.7h3.8l-1.9-6.3z' fill='%235A3D12'/%3E%3Cpath d='M36.5 22.5h5.6c5.5 0 8.6 3.6 8.6 9.5s-3.1 9.5-8.6 9.5h-5.6zm4.2 3.6v11.8h1.3c3 0 4.5-2.1 4.5-5.9s-1.5-5.9-4.5-5.9z' fill='%235A3D12'/%3E%3Cpath d='M14 50L50 14' stroke='%238A2A22' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E")}
+#shop .sp__grid--noads{grid-template-columns:minmax(0,1fr);max-width:300px;width:100%;margin:0 auto}
+/* 이모티콘 묶음 (2026-10-29) — 칸 하나에 다섯 그림을 나란히 */
+#shop .sp__grid--emote{grid-template-columns:minmax(0,1fr);max-width:320px;width:100%;margin:0 auto}
+#shop .sp__pic--emo{display:flex;align-items:flex-end;justify-content:center;gap:2px;width:100%;height:64px}
+#shop .sp__pic--emo i{flex:0 1 54px;min-width:0;height:100%;background:no-repeat bottom center/contain;
+  filter:drop-shadow(0 2px 3px rgba(40,25,5,.45))}
+#shop .sp__what{display:flex;flex-direction:column;gap:3px;margin:2px 0 4px;text-align:center}
+#shop .sp__what b{font-size:12px;font-weight:600;color:#EADBB8;line-height:1.35}
+#shop .sp__i--pay .sp__st--price{font-family:"Noto Serif KR",serif;font-size:14px}
+#shop .sp__nm{color:#F6E7C1;text-shadow:0 1px 2px rgba(0,0,0,.8);font-size:12.5px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#shop .sp__st{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:800;line-height:1.2;min-height:16px}
+#shop .sp__st--price{font-family:"Noto Serif KR",serif;color:#F0D58A;font-variant-numeric:tabular-nums}
+#shop .sp__i.is-poor .sp__st--price{color:#B9A57E}
+#shop .sp__st--have{color:#A9CF6E}
+#shop .sp__st--on{color:#F2C95A}
+#shop .sp__st--on::before{content:"";width:11px;height:11px;flex:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F2C95A' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E") center/contain no-repeat}
+#shop .sp__st--wait{color:#E3C67C;font-weight:700}
+#shop .sp__st--done{color:#B5E08A}
+#shop .sp__sub{font-size:10.5px;color:#D9C69C;line-height:1.2;text-align:center;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#shop .sp__i.is-full .sp__st--price{color:#B9A57E}
+#shop .hint{color:#F7EBCB;text-shadow:0 1px 2px #000;grid-column:1/-1;text-align:center;margin-top:20px}
+/* 칸 판이 흙바닥에서 떠 보이게 (판 그림이 가운데까지 채워 바닥이 안 비친다 — 예전 양피지 칠은 뺐다, 2026-10-29 B안) */
+#shop .sp__i{filter:drop-shadow(0 3px 5px rgba(20,10,2,.5))}
+/* 판 배경 칸 — 두 줄이 마당 안에 들어가게 그림을 조금 낮게(92 → 84px, 360x640·360x780·412x915 에서 재서 맞춤) */
+#shop .sp__grid--bg .sp__pic--bg{height:84px}
+#shop .sp__grid--bg .sp__i{padding:6px 4px 6px;gap:3px}
+#shop .sp__i.is-busy{filter:drop-shadow(0 3px 5px rgba(20,10,2,.5)) saturate(.6) brightness(.95)}
+#shop .sp__i:active,#shop .sp__i.is-press{filter:drop-shadow(0 3px 5px rgba(20,10,2,.5)) brightness(.88)}
+
+/* 로비의 상점 단추는 상단 줄(랭킹 왼쪽)에 랭킹과 같은 틀로 — lobby.css .bt-rank (2026-10-26) */
+
+/* ================= 결과 화면 — 이번 게임으로 받은 코인 ================= */
+#result .coinline{flex:none;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;
+  padding:9px 12px;border-radius:3px;border:1px solid rgba(227,198,124,.45);background:rgba(176,138,52,.12);
+  font-size:13.5px;color:var(--parchment);animation:coinIn .45s ease-out}
+#result .coinline b{font-family:"Noto Serif KR",serif;font-weight:900;font-size:16px;color:var(--gold-hi)}
+#result .coinline span{font-size:11.5px;color:var(--parchment-dim)}
+@keyframes coinIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#shop .sp__sub--cash{color:#E8D3A0;font-weight:700}
+/* 카드 탭은 현금 값 줄("또는 ₩4,900")이 붙어 360px 폰에서 둘째 줄 칸이 11px 넘쳤다(2026-10-27 실측) → 칸 안 간격만 줄인다 */
+#shop .sp__grid--deck .sp__i{gap:2px;padding-top:6px;padding-bottom:5px}
+
+/* ---------- 미리보기 창 (2026-10-27) — 카드 스킨 한 벌 · 판 배경 전체 ----------
+   확인창(#ask)과 같은 놋쇠 틀 네모 상자. 확인창(70)보다 아래(65) — 미리보기에서 "15,000코인" 을 누르면 그 위에 확인창이 뜬다.
+   카드 테두리 색은 스킨마다 base.css "카드 스킨 테두리" 가 .skin-dN .pc 에도 같은 값을 준다 */
+#shop .pv{z-index:65;display:flex;align-items:center;justify-content:center}
+#shop .pv .pv__p{border:26px solid transparent;border-image:var(--fr-panel) 105 stretch;border-image-width:26px;
+  /* 어두운 바탕을 틀 밑까지(바깥 7px 만 비움) — padding-box 로 자르면 틀과 바탕 사이가 비어 바깥 그림이 보였다(#ask 와 같은 셈) */
+  background:linear-gradient(180deg,rgba(20,14,9,.97),rgba(10,7,4,.99)) center/calc(100% - 14px) calc(100% - 14px) no-repeat border-box;border-radius:0;
+  width:94%;max-width:380px;max-height:calc(100% - 24px);margin:0;padding:2px 6px 8px;display:flex;flex-direction:column;
+  transform:scale(.94);opacity:0;transition:transform .18s ease-out,opacity .18s ease-out}
+#shop .pv.on .pv__p{transform:none;opacity:1}
+#shop .pv .cfg__h{padding:8px 4px 8px;border-bottom:1px solid #2E2417}
+#shop .pv__b{flex:1;min-height:0;overflow-y:auto;padding:12px 0 10px;display:flex;flex-direction:column;align-items:center;gap:10px}
+/* 기본 카드(양피지) 값 — 스킨 칸(.skin-d1~3)이 덮는다 */
+#shop .pv__b--deck{--p1:#D6C097;--p2:#C4AA7B;--p3:#AE9362;--card-ink:#3B2A12;--card-ink-2:#5A431C;--gold-dim:#7A5E24}
+#shop .pv__top{display:flex;gap:8px;align-items:flex-end;justify-content:center}
+#shop .pv__back{display:block;width:66px;aspect-ratio:200/390;border-radius:4px;background-size:cover;background-position:center;
+  border:1px solid rgba(198,154,60,.5);box-shadow:0 4px 10px rgba(0,0,0,.6)}
+#shop .pv__cards{display:grid;grid-template-columns:repeat(6,40px);gap:6px 5px;justify-content:center}
+/* 미리보기 카드 — 게임 화면 카드와 같은 그리기(양피지 그라데이션 · 위아래 숫자 띠 · 그림 칸) */
+#shop .pc{--w:40px;width:var(--w);aspect-ratio:200/390;display:flex;flex-direction:column;flex:none;
+  border-radius:calc(var(--w) * .05);padding:calc(var(--w) * .042);
+  background:radial-gradient(38% 22% at 16% 12%,var(--card-hl1,rgba(140,106,52,.16)),transparent 70%),
+    radial-gradient(44% 24% at 70% 92%,var(--card-hl2,rgba(112,82,38,.18)),transparent 74%),
+    linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
+  box-shadow:inset 0 0 calc(var(--w) * .09) var(--card-in,rgba(108,78,34,.34)),0 3px 8px rgba(0,0,0,.6)}
+#shop .pc__band{display:flex;align-items:center;justify-content:space-between;height:calc(var(--w) * .208);
+  padding:0 calc(var(--w) * .016);color:var(--card-ink);overflow:hidden}
+#shop .pc__band b{font-family:"Noto Serif KR",serif;font-weight:900;font-size:calc(var(--w) * .19);line-height:1;
+  min-width:calc(var(--w) * .17);text-align:center}
+#shop .pc__band i{font-style:normal;font-family:"Noto Serif KR",serif;font-weight:700;font-size:calc(var(--w) * .12);
+  color:var(--card-ink-2);white-space:nowrap;overflow:hidden}
+#shop .pc__art{flex:1;min-height:0;border:1px solid var(--gold-dim);background:#1A1410;overflow:hidden}
+#shop .pc__art img{width:100%;height:100%;object-fit:cover;display:block}
+/* 판 배경 — 그림 전체(860x1859 비율) */
+#shop .pv__table{display:block;height:min(56vh,430px);aspect-ratio:860/1859;border-radius:8px;background-size:cover;background-position:center;
+  border:1px solid rgba(198,154,60,.6);box-shadow:0 6px 16px rgba(0,0,0,.6)}
+/* 이모티콘 미리보기 — 판에서 뜨는 모습 그대로(말풍선 그림 + 동물 그림). 말풍선은 판과 같은 그림·비율(896:663, 아래 19% 꼬리) */
+#shop .pv__emos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:100%;padding:6px 0 2px}
+#shop .pv__emo{display:flex;flex-direction:column;align-items:center;min-width:0}
+#shop .pv__bub{display:flex;align-items:center;justify-content:center;width:58px;height:43px;padding:0 4px 8px;box-sizing:border-box;
+  background:url(/assets/emote_bubble.webp) no-repeat center/100% 100%;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:10px;line-height:1.1;letter-spacing:-.03em;color:#3B2A12;text-align:center;
+  white-space:normal;word-break:keep-all;overflow:hidden}
+html[lang="en"] #shop .pv__bub{font-size:8.4px;letter-spacing:-.02em}
+#shop .pv__eimg{display:block;width:100%;max-width:66px;height:80px;background:no-repeat bottom center/contain;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.7))}
+@media (max-width:340px){ #shop .pv__bub{width:52px;height:39px;font-size:9.2px} #shop .pv__eimg{height:70px} }
+/* 단추 — 확인창과 같은 놋쇠 틀(현금·장착 = 붉은 판) · 위아래로 한 줄씩 */
+#shop .pv__acts{display:flex;flex-direction:column;gap:8px;padding:4px 4px 2px}
+#shop .pv__btn{border:13px solid transparent;border-image:var(--fr-btn) 33 fill stretch;border-image-width:13px;background:none;
+  min-height:50px;padding:4px 10px;color:#E9D5AC;font:inherit;font-family:"Gowun Batang",serif;font-weight:700;font-size:15px;
+  text-shadow:0 1px 3px rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;cursor:pointer}
+#shop .pv__btn--main{border-image:var(--fr-red) 46 fill stretch;color:#FBEFCE}
+#shop .pv__btn:active:not(:disabled){transform:translateY(1px)}
+#shop .pv__btn:disabled{opacity:.6;cursor:default}

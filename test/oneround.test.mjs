@@ -12,6 +12,7 @@
      2. 1판으로 만든 방의 대기실 설정 줄: "4명 · 1판" — 세금·2번 컷 글자가 없다
      3. 그 방으로 게임: 엔진이 1판·세금 끔·2번 끔으로 돈다(켜 두고 내려도). 한 판 끝나면 세금 화면 없이
         곧바로 "최종 결과", 다음 판 단추 없음 → 나가기 → **전면 광고 한 번** → 로비
+        (2026-10-26 덧붙임: 최종 결과가 뜨는 순간 광고를 미리 받기 시작한다 — 판 사이 결과에서는 안 받는다)
      4. 같은 것을 **서버 대전**으로: 1판 방을 서버에 만들고 끝까지 → 최종 결과 → 나가기 → 광고 한 번 → 로비
 
    쓰는 법:  node test/oneround.test.mjs   (1~3 은 이 기기 방, 4 는 zoo-server 를 직접 띄운다. 서버 폴더가 없으면 4 만 건너뜀) */
@@ -113,6 +114,7 @@ check("**엔진이 1판·세금 끔·2번 컷 끔으로 돈다** (켜 둔 채 �
 /* 빨리 끝나게 — 봇·자동치기 생각 시간을 줄이고 내 자리는 자동치기 */
 await page.evaluate(() => { window.__eng.botMs = 40; window.__eng.autoMs = 40; });
 await page.evaluate(() => { const a = document.querySelector("#table #auto"); if (a) a.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+await page.evaluate(() => { globalThis.__preInter = 0; });
 let final = null;
 const kicks = new Set();
 for (let k = 0; k < 900; k++){
@@ -129,12 +131,29 @@ check("**한 판 끝나면 곧바로 \"최종 결과\"**", final && /최종 결�
 check("**세금 화면을 안 거쳤다**", !seen.has("tax"), [...seen].join(" → "));
 check("다음 판 단추가 없다", final && !final.next);
 check("\"1판 결과\" 를 따로 거치지 않고 바로 최종 결과다", [...kicks].every(k => /최종/.test(k)), JSON.stringify([...kicks]));
+/* 최종 결과가 뜨면 나갈 때 띄울 전면 광고를 미리 받아 둔다 — "나가기" 를 누르자마자 뜨게 (2026-10-26) */
+check("**최종 결과가 뜨자 전면 광고를 미리 받기 시작했다** (한 번)", await page.evaluate(() => globalThis.__preInter) === 1, "미리 받기 " + await page.evaluate(() => globalThis.__preInter) + "번");
 /* 전면 광고는 앱(안드로이드)에서만 진짜로 뜬다 — 검사에서는 부른 횟수만 센다(adticket.test 와 같은 통로) */
 await page.evaluate(() => { window.__interShown = 0; window.__adInterTest = async () => { window.__interShown++; return { ok: true }; }; });
 await tap("#result #quit");
 for (let i = 0; i < 30 && (await now()) !== "lobby"; i++) await nap(200);
 check("**나가기 → 로비**", (await now()) === "lobby", await now());
 check("**1판만 하고 나가도 전면 광고가 한 번 뜬다**", await page.evaluate(() => window.__interShown) === 1, "광고 " + await page.evaluate(() => window.__interShown) + "번");
+/* 판 사이 결과(남은 판이 있음)에서는 미리 받지 않는다 — 그때 나가면 광고가 없다 */
+{
+  const mid = await page.evaluate(async () => {
+    const keep = window.__opts.rounds;
+    globalThis.__preInter = 0;
+    window.__opts.rounds = 3; (window.GAME = window.GAME || {}).roundNo = 1;
+    window.__goto("result");
+    await new Promise(r => setTimeout(r, 200));
+    const out = { final: window.__resultFinal, pre: globalThis.__preInter, kick: (document.querySelector("#result #kicker") || {}).textContent || "" };
+    window.__goto("lobby");
+    window.__opts.rounds = keep;
+    return out;
+  });
+  check("판 사이 결과(1판 결과 · 3판 중)에서는 미리 받지 않는다", mid.final === false && mid.pre === 0 && /1판 결과/.test(mid.kick), JSON.stringify(mid));
+}
 /* ---------- 4. 서버 대전 1판 ---------- */
 console.log("\n--- 4. 서버 대전 ---");
 let gs = null;
@@ -175,6 +194,7 @@ else {
   const so = await page.evaluate(() => { const st = window.__eng.client.getState(); return st ? { total: st.G.totalRounds, tax: st.G.opts.tax, clear2: st.G.opts.clear2 } : null; });
   check("**서버 엔진도 1판·세금 끔·2번 컷 끔**", so && so.total === 1 && so.tax === false && so.clear2 === false, JSON.stringify(so));
   await page.evaluate(() => { const a = document.querySelector("#table #auto"); if (a) a.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+  await page.evaluate(() => { globalThis.__preInter = 0; });
   let fin = null;
   const kicks2 = new Set();
   for (let k = 0; k < 1600; k++){
@@ -190,6 +210,7 @@ else {
   check("**서버 대전도 한 판 끝나면 곧바로 \"최종 결과\"**", fin && /최종 결과/.test(fin.kick) && [...kicks2].every(k => /최종/.test(k)), JSON.stringify([...kicks2]));
   check("서버 대전도 세금 화면을 안 거쳤다", !seen2.has("tax"), [...seen2].join(" → "));
   check("서버 대전도 다음 판 단추가 없다", fin && !fin.next);
+  check("**서버 대전도 최종 결과가 뜨자 광고를 미리 받기 시작했다**", await page.evaluate(() => globalThis.__preInter) === 1, "미리 받기 " + await page.evaluate(() => globalThis.__preInter) + "번");
   await page.evaluate(() => { window.__interShown = 0; window.__adInterTest = async () => { window.__interShown++; return { ok: true }; }; });
   await tap("#result #quit");
   for (let i = 0; i < 30 && (await now()) !== "lobby"; i++) await nap(200);

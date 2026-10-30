@@ -282,7 +282,7 @@ check("판 종료 클릭 묶기가 남아 있지 않다", !/endRound/.test(nav))
 const base = readFileSync(join(ROOT, "src/styles/base.css"), "utf8");
 check("랭킹 탭이 어두운 버튼 틀에 덮이지 않는다", !/#rank #rkTabs button/.test(base));
 const tsrc = readFileSync(join(ROOT, "src/screens/table.js"), "utf8");
-check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
+check("12시 자리를 더 올리는 값이 있다", /s0? < -0\.85/.test(tsrc));   /* 7·8명 자리 휘기 뒤로는 휘기 전 각도(s0)로 본다 */
 
 /* ---------- 판 화면 단추 크기 (예전의 80%) ---------- */
 {
@@ -312,8 +312,9 @@ check("12시 자리를 더 올리는 값이 있다", /s < -0\.85/.test(tsrc));
   check("카드내기 단추가 붉은 일괄 규칙에 안 묶여 있다", !/#table #play,/.test(bc));
   check("카드내기 단추도 같은 크기 규칙을 받는다",
         /#table #play\{border-image:var\(--fr-red\)/.test(tc));
-  check("눌렀을 때 틀이 바뀐다", /#table #play:active\{border-image:var\(--fr-red-down\)/.test(tc)
-        && /#table \.bt-pass:active\{border-image:var\(--fr-btn-down\)/.test(tc));
+  /* 2026-10-26: 손이 닿는 순간 눌리게 :active 옆에 .is-press 짝이 붙었다(press.test) — 같은 규칙이다 */
+  check("눌렀을 때 틀이 바뀐다", /#table #play:active(,#table #play\.is-press)?\{border-image:var\(--fr-red-down\)/.test(tc)
+        && /#table \.bt-pass:active(,#table \.bt-pass\.is-press)?\{border-image:var\(--fr-btn-down\)/.test(tc));
 }
 
 /* ---------- 못 누르는 단추에는 "대기중" ---------- */
@@ -642,13 +643,23 @@ check("누군가 다 내고 완주했다", outSeen);
   check("자동 단추가 꺼짐 상태로 시작한다", el("auto").getAttribute("aria-pressed") === "false");
 
   const click = e => e.dispatchEvent(new W.MouseEvent("click", { bubbles: true }));
+  /* 상점 이모티콘 묶음을 안 샀으면 예전처럼 다섯 개 */
+  W.ACCOUNT = { owned: [] };
+  click(emoBtn);
+  check("**묶음을 안 샀으면 다섯 개** (기본)", pickBox.querySelectorAll("button").length === 5, String(pickBox.querySelectorAll("button").length));
+  click(emoBtn);                                   /* 닫고 */
+  W.ACCOUNT = { owned: ["emote:1"] };              /* 상점에서 산 사람 */
   click(emoBtn);
   const picks = [...pickBox.querySelectorAll("button")];
-  check("고르는 판에 다섯 개가 올라온다", picks.length === 5, String(picks.length));
-  const texts = picks.map(b => b.querySelector(".emobub").textContent);
-  check("말풍선 글자가 다 들어 있다",
-        JSON.stringify(texts) === JSON.stringify(["빨리빨리","감사","ㅠㅠ","풉ㅋㅋ","아오..!"]),
+  check("**묶음을 산 사람은 열 개** (2026-10-29 다섯 개 추가 · 상점 emote:1)", picks.length === 10, String(picks.length));
+  /* 느낌표 앞 띄어쓰기는 안 끊는 칸(\u00A0)으로 바꿔 그린다 — 글자로는 같다 */
+  const texts = picks.map(b => b.querySelector(".emobub").textContent.replace(/\u00A0/g, " "));
+  check("말풍선 글자가 다 들어 있다 (새 다섯 개는 사용자 글 그대로)",
+        JSON.stringify(texts) === JSON.stringify(["빨리빨리","감사","ㅠㅠ","풉ㅋㅋ","아오..!","까불지 말어잉","배꼽 빠져잇","귀여워^^","아 줴줴이야..","그만!!! 멈춰 !!!"]),
         JSON.stringify(texts));
+  check("\"그만!!! 멈춰 !!!\" 는 느낌표만 다음 줄로 떨어지지 않게 그린다", picks[9].querySelector(".emobub").textContent === "그만!!! 멈춰\u00A0!!!");
+  check("새 그림 다섯 개 (용·고블린·여우·메두사·미노타우로스)",
+        ["dragon","goblin","fox","medusa","minotaur"].every((k, i) => new RegExp("emote_" + k + "\\.webp").test(picks[5 + i].querySelector(".emoimg").getAttribute("style") || "")));
   check("각 그림이 붙어 있다",
         picks.every(b => /emote_\w+\.webp/.test(b.querySelector(".emoimg").getAttribute("style") || "")));
 

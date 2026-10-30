@@ -56,7 +56,7 @@
   background:rgba(176,138,52,.07);
 }
 #lobby body[data-lang="en"] .btn-primary, #lobby body[data-lang="en"] .btn-second{font-family:"Playfair Display",serif;letter-spacing:.08em}
-#lobby .btn-primary:active, #lobby .btn-second:active{transform:translateY(1px)}
+#lobby .btn-primary:active, #lobby .btn-second:active,#lobby .btn-primary.is-press,#lobby .btn-second.is-press{transform:translateY(1px)}
 #lobby .hint{font-size:12px;color:#B0A283;text-shadow:0 1px 4px rgba(0,0,0,.95);margin-top:8px;line-height:1.65}
 #lobby .join{display:flex;gap:9px}
 #lobby .join input{
@@ -210,7 +210,7 @@ body[data-lang="en"] #lobby .rule--joker .jk{width:calc((100% - 12px) / 4)}
   font-variant-numeric:tabular-nums;min-width:32px}
 #lobby .top__cfg{width:26px;height:26px;flex:none;margin-left:auto;padding:0;border:none;
   background:url(/assets/ic_settings.webp) center/contain no-repeat;cursor:pointer}
-#lobby .top__cfg:active{transform:translateY(1px)}
+#lobby .top__cfg:active,#lobby .top__cfg.is-press{transform:translateY(1px)}
 
 /* ================= 랭킹 화면 ================= */
 #rank{
@@ -327,3 +327,126 @@ body[data-lang="en"] #lobby .rule--joker .jk{width:calc((100% - 12px) / 4)}
 #lobby .q-open--zero{opacity:.55}
 /* 방이 없을 때 단추 밑 안내 줄 */
 #lobby .hint--warn{color:#E8B25A}
+
+/* ---------- 상단 줄에 상점이 들어와 다섯 개 (2026-10-26) ----------
+   틀(테두리)은 랭킹과 같은 그림·같은 두께. 틀 안 여백과 사이만 줄여 360px 폰에서 한 줄에 들어가게 한다.
+   줄이 모자라면 광고 단추 글자가 두 줄로 접힌다(예전 좁은 화면과 같음) — 화면 밖으로 밀려나지 않게 왼쪽부터 채운다 */
+#lobby .rankbar{gap:6px;justify-content:flex-start}
+#lobby .bt-rank{padding:0 6px !important;flex:none}
+#lobby .bt-rank.bt-ad{flex:0 1 auto;min-width:0}
+#lobby .bt-mute{width:38px}
+/* 아주 좁은 폰(345px 이하 — 폴드 겉화면 등)과, 글자가 긴 영어는 400px 까지 한 단계 더 줄인다 */
+@media (max-width:345px){
+  #lobby .rankbar{gap:4px}
+  #lobby .bt-rank{padding:0 4px !important;font-size:10px}
+  #lobby .bt-mute{width:34px}
+}
+@media (max-width:400px){
+  html[lang="en"] #lobby .rankbar{gap:4px}
+  html[lang="en"] #lobby .bt-rank{padding:0 4px !important;font-size:10px}
+  html[lang="en"] #lobby .bt-mute{width:34px}
+}
+#rank #rkNote{word-break:keep-all;white-space:pre-line}   /* 주간 보상 안내 — 값은 둘째 줄에 한 줄로 (2026-10-27) */
+
+/* ================= 하단 고정 탭 (2026-10-29 사용자 결정) =================
+   "하단은 고정시켜서 프로필, 랭킹, 상점, 설정" + 로비로 돌아올 홈(가운데). 로비·랭킹·상점에서만 보인다(nav.js go).
+   틀은 상단바와 같은 놋쇠 띠(fr_topbar). 폰 하단바(시스템 내비게이션) 위에 얹는다(--sab) */
+:root{--tabh:78px}
+/* 틀은 **놋쇠 테·끝 장식이 끝나는 자리에서 자른다**(2026-10-29 실측 — fr_topbar 1060×178 원본: 위 테 ~29 · 아래 테 142~ · 양끝 장식 86px).
+   예전처럼 26 으로 자르면 테 일부(아래 ~4px)와 장식 대부분이 가운데와 같이 늘어나 안쪽 칸을 먹었다 — 글자가 아래 테에 걸리고, 양끝 칸 그림이 칸 가운데에서 비껴 보였다.
+   0.4배로 그린다: 위 12 · 양옆 34 · 아래 14px. 이러면 안쪽 칸(content box) = 어두운 판 그대로, 다섯 칸이 장식 안쪽에서 똑같이 나뉜다 */
+/* 2026-10-29 사용자 "하단바 틀을 걍 일반틀로 · 배경이랑 크기 딱 맞게" — 단추와 같은 놋쇠 틀(fr_btn · 33 · 13px).
+   이 그림은 가장자리까지 꽉 차 있어(투명 여백 없음) 탭 자리 네모에 틀과 바탕이 딱 맞는다. 화면 폭 끝에서 끝까지 */
+.tabbar{position:absolute;left:0;right:0;bottom:var(--sab);z-index:30;height:var(--tabh);
+  display:none;align-items:stretch;padding:0;
+  border-style:solid;border-color:transparent;border-width:13px;
+  border-image:var(--fr-btn) 33 fill / 13px stretch}
+.tabbar.on{display:flex}
+/* 하단바 자리는 어둡게 — 탭 밑으로 화면 그림이 비치지 않게 */
+.tabbar::after{content:"";position:absolute;left:-13px;right:-13px;top:100%;margin-top:13px;height:var(--sab);background:#0A0705}
+.tab{flex:1 1 0;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:0;border:none;background:none;cursor:pointer;
+  font-family:"Noto Serif KR",serif;font-weight:700;font-size:10.5px;line-height:1;letter-spacing:.02em;white-space:nowrap;
+  color:#CDBF9E;text-shadow:0 1px 2px rgba(0,0,0,.9)}
+html[lang="en"] .tab{font-family:"Playfair Display",serif;letter-spacing:0}
+/* 칸 사이 장식 — 상단바와 같은 그림 */
+.tab + .tab::before{content:"";position:absolute;left:-4px;top:6px;bottom:6px;width:8px;
+  background:url(/assets/ic_divider.webp) center/contain no-repeat;opacity:.75;pointer-events:none}
+.tab__ic{width:28px;height:28px;flex:none;background-position:center;background-size:contain;background-repeat:no-repeat;
+  transition:transform .12s ease}
+/* 내 얼굴 — 테는 꽉 차게, 얼굴은 테 안쪽(72%) (자리 얼굴과 같은 두 겹) */
+.tab__ic--me{border-radius:50%;background-size:100% 100%,72% 72%;background-position:center,center;background-repeat:no-repeat,no-repeat}
+.tab__ic--rank{background-image:url(/assets/tier_09.webp)}
+.tab__ic--home{background-image:url(/assets/ic_profile.webp)}
+.tab__ic--shop{background-image:url(/assets/coin.webp)}
+.tab__ic--cfg{background-image:url(/assets/ic_settings.webp)}
+/* 지금 화면 */
+.tab.is-cur{color:#F6D98C}
+.tab.is-cur .tab__ic{transform:scale(1.1);filter:drop-shadow(0 0 5px rgba(246,217,140,.55))}
+.tab:active .tab__ic,.tab.is-press .tab__ic{transform:translateY(1px)}
+.tab:focus-visible{outline:2px solid var(--gold-hi);outline-offset:-4px}
+
+/* 탭 자리만큼 화면 아래를 비운다 — 단추·목록이 탭 밑으로 안 들어가게 */
+#lobby .screen{padding-bottom:calc(var(--sab) + var(--tabh) + 14px)}
+#rank .screen,#shop .screen{padding-bottom:calc(var(--sab) + var(--tabh))}
+/* 랭킹·상점은 탭으로 오간다 — 뒤로 단추는 숨긴다(폰 뒤로가기는 그대로 로비로) */
+#rank .navback,#shop .navback{display:none}
+/* 상단바 — 사자(프로필)·톱니(설정)가 탭으로 내려가 양 끝 여백만 맞춘다 */
+#lobby .top{padding:0 22px 0 22px}
+/* 아주 좁은 폰 + 영어는 글자를 한 단계 작게 — "Settings"·"Ranking" 이 칸 사이 장식에 붙지 않게 */
+@media (max-width:345px){ html[lang="en"] .tab{font-size:9.5px} }
+
+/* ---------- 상단바 차례 (2026-10-29 사용자: "랭킹점수는 티어 옆에 바로 붙이고, 그 옆에 닉네임, 그 옆에 보유코인, 그리고 티켓 · 이름칸 줄이고") ----------
+   티어 뱃지 · 점수(바로 붙임) · 별명(넓게 차지하지 않고 길면 … ) · | 코인 · | 티켓 · 남은 시간.
+   남는 폭은 별명 뒤에 둔다 — 코인·티켓은 오른쪽 끝에 모인다 */
+/* 양끝 장식(fr_topbar 원본 1060px 중 끝에서 86px — 26px 은 테두리 11px 로, 나머지 60px 은 가운데와 같이 늘어남) 안쪽에서 시작·끝.
+   장식 폭 = 11 + 60·(띠 폭 − 22)/1008 → 띠 폭 = 감싼 칸 폭 + 40 이라 안쪽 여백 = 5.95% + 4.5px(장식 + 3px − 테두리 11px) — 실측 2026-10-29 */
+/* 틀은 하단 탭과 같이 **테·장식이 끝나는 자리에서** 자른다(30 86 36). 띠가 얇아(42px) 0.3배 — 위 9 · 양옆 26 · 아래 11px.
+   장식이 늘어나지 않고, 안쪽 칸(content box) = 어두운 판. 티어 뱃지(26px)는 판(22px)보다 커서 위아래 테에 2px 씩 걸친다(예전과 같다) */
+#lobby .top{gap:6px;padding:0 6px;
+  border-style:solid;border-color:transparent;border-width:9px 26px 11px;
+  border-image:url(/assets/fr_topbar.webp) 30 86 36 fill / 9px 26px 11px stretch}
+#lobby .top__s{margin-left:-3px}
+#lobby .top__n{flex:0 1 auto;min-width:0;max-width:7.5em}
+#lobby .top__d--gap{margin-left:auto}
+#lobby .top__c{font-size:12px;color:#F4E2B2;display:inline-flex;align-items:center;gap:3px;flex:none;
+  font-family:"Noto Serif KR",serif;font-weight:700;font-variant-numeric:tabular-nums}
+#lobby .top__c::before{content:"";width:15px;height:15px;flex:none;
+  background:url(/assets/coin.webp) center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+#lobby .top__k{flex:none}
+#lobby .top__t:empty{display:none}
+#lobby .top__s,#lobby .top__k,#lobby .top__t{flex:none;font-variant-numeric:tabular-nums}
+/* 좁은 폰 — 사이를 줄이고 글자를 한 단계 작게 */
+@media (max-width:370px){
+  #lobby .top{gap:4px}
+  #lobby .top__s,#lobby .top__n,#lobby .top__c,#lobby .top__k{font-size:11px}
+  #lobby .top__t{font-size:9.5px;min-width:0}
+  #lobby .top__d{width:6px}
+}
+
+/* ---------- 우편함 단추 (2026-10-29 사용자: "광고시청 옆에 빈칸에 … 우편함") ----------
+   광고 시청 티켓 바로 오른쪽. 소리 단추와 같은 양피지 틀 · 같은 크기 · 같은 선 그림(봉투).
+   줄의 빈칸(오른쪽 단추들을 미는 자리)은 이제 이 단추 오른쪽에 둔다 */
+#lobby .bt-ad{margin-right:0}
+#lobby .bt-mail{flex:none;position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:31px;padding:0 !important;min-height:0 !important;margin-right:auto;cursor:pointer;
+  border:13px solid transparent !important;border-image:url(/assets/frame_row.webp) 110 fill stretch !important;
+  background:none !important;border-radius:0 !important;box-shadow:none !important}
+#lobby .bt-mail__ic{flex:none;width:19px;height:19px;background:no-repeat center/contain;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F4EEE0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5.5' width='18' height='13' rx='1.5'/%3E%3Cpath d='M3.6 6.6 12 13l8.4-6.4'/%3E%3C/svg%3E");
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
+/* 받을 우편 수 — 틀 오른쪽 위 모서리에 걸친 빨간 점 */
+#lobby .bt-mail__n{position:absolute;top:-17px;right:-17px;min-width:16px;height:16px;padding:0 4px;
+  border-radius:8px;background:#C8321E;border:1px solid #F2C46B;color:#FFF;
+  font:700 10px/14px "Noto Serif KR",serif;text-align:center;letter-spacing:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.7);pointer-events:none}
+#lobby .bt-mail__n[hidden]{display:none}
+/* 단추가 하나 늘어 줄이 빠듯하다 — 광고 단추 글자가 두 줄로 접히지 않게(실측 2026-10-29: 한국어 360px 에서 3px 모자랐다)
+   좁은 폰에서는 글자 단추의 틀 안 여백을 6 → 4px(345px 이하는 원래 4px), 320px 대는 사이·여백을 3px 로.
+   영어 광고 단추는 "Watch ad for ticket" → "Ad ticket" 으로 줄였다(2026-10-29 사용자: "영어 줄이고") */
+@media (max-width:380px){ #lobby .bt-rank{padding:0 4px !important} }
+@media (max-width:345px){ #lobby .bt-mail{width:34px} }
+@media (max-width:400px){ html[lang="en"] #lobby .bt-mail{width:34px} }
+@media (max-width:340px){ #lobby .rankbar{gap:3px} #lobby .bt-rank{padding:0 3px !important}
+  html[lang="en"] #lobby .rankbar{gap:3px}
+  html[lang="en"] #lobby .bt-rank{padding:0 3px !important;font-size:9.5px} }   /* 영어는 위 400px 규칙이 더 세서 따로 — 글자는 하단 탭(345px 이하)과 같은 9.5px */

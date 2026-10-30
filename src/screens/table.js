@@ -5,7 +5,10 @@ import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART as A_ART } from "../lib/assets.js";
+import { cardSrc, cardName } from "../lib/skin.js";
 import { EMOTES, EMOTE_BTN } from "../lib/assets.js";
+import { bubText, fitBub } from "../lib/emobub.js";
+import { owns } from "../lib/shop.js";
 import "../styles/table.css";
 import { buzz } from "../lib/haptic.js";
 
@@ -469,8 +472,8 @@ export function mount(root){
   let spread = false; // 바닥 펼침 여부
   
   const cur = () => trick.length ? trick[trick.length - 1] : null;
-  const label = n => isJ(n) ? T[lang].joker : (lang === "ko" ? KO_N : EN_N)[n-1];
-  const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
+  const label = n => cardName(n, lang);   /* 스킨마다 카드 이름이 다르다 (skin.js — 신화 왕국은 드래곤~고블린 · 프리스트) */
+  const art = n => cardSrc(n);   /* 상점 카드 스킨(앞면 그림) — 기본이면 예전 그림 그대로 (skin.js) */
   
   /* as = 카멜레온이 변신한 숫자. 같이 낸 카드가 있으면 그 숫자가 된다.
      혼자 낸 카멜레온(13번)은 as 가 없어 숫자를 안 적는다 */
@@ -482,13 +485,13 @@ export function mount(root){
                                            : '<span class="card__num as">' + as + '</span>';
       return '<div class="card is-joker" style="--w:' + w + 'px">' +
         '<div class="card__band">' + num +
-        '<span class="card__name">' + T[lang].joker + '</span>' + num + '</div>' +
+        '<span class="card__name">' + label(n) + '</span>' + num + '</div>' +
         '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
         '<div class="card__band">' + num + num + '</div></div>';
     }
     return '<div class="card" style="--w:' + w + 'px">' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
-      '<span class="card__name">' + label(n) + '</span>' +
+      '<span class="card__name' + (lang === "ko" && label(n).length >= 5 ? ' card__name--long' : '') + '">' + label(n) + '</span>' +
       '<span class="card__num">' + n + '</span></div>' +
       '<div class="card__art"><img src="' + art(n) + '" alt=""></div>' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
@@ -525,16 +528,28 @@ export function mount(root){
     if (ph){ ph.style.left = RING.cx + "%"; ph.style.top = RING.cy + "%"; }
   }
   
+  /* **7·8명은 좌우 끝 쪽 자리 사이를 넓힌다** (2026-10-26 사용자 "양쪽 끝에 캐릭터랑 카드랑 좀 겹치는데").
+     자리는 얼굴 밑에 이름·부채·장수가 달려 세로로 길다. 타원이 옆으로 넓적해서 좌우 끝 근처는 위아래 간격이 좁고
+     위·아래(12시·6시) 근처는 옆 간격이 남는다 → 같은 간격으로 놓으면 8명일 때 끝자리 얼굴에 옆 자리 부채가 얹혔다(360폭 10px).
+     각도를 a + w·sin(2a) 로 휜다: 좌우 끝(0·180°)과 위·아래(90·270°) 자리는 그대로, 그 사이 자리만 위·아래 쪽으로 당긴다.
+     그림(타원)은 그대로라 판 배경과 상관없다. 자리 모양 보정(nudge)은 휘기 전 각도로 정한다 — 휘어서 12시로 오인하지 않게 */
+  /* 라디안(약 7°). 0.28 → 0.18 → 0.22 → **0.12**(2026-10-27 사용자 "8명 자세히바바 좀더 옆으로 가야 대칭이 맞는거아녀?" → B안).
+     0.12 = 대각선 자리에서 6시·9시 자리까지 거리가 거의 같다(360폭 96 · 101px). 그 대신 자리가 촘촘해져
+     7·8명 판은 자리 모양을 줄인다(아래 seats--crowd · table.css): 패스 표를 얼굴 가운데로 · 남은 카드 부채 22 → 17px · 자리 안 간격 3 → 1px.
+     모든 자리에 패스 표가 떠도 360폭에서 8px 띄움(336폭은 2px 닿음) */
+  const SEAT_WARP = 0.12;
   function seatPos(i){
-    const a = (Math.PI / 2) + (i * 2 * Math.PI / SEATS.length);
-    const s = Math.sin(a);
+    const a0 = (Math.PI / 2) + (i * 2 * Math.PI / SEATS.length);
+    const w = SEATS.length >= 7 ? ((import.meta.env.VITE_TEST_HOOKS && globalThis.__seatWarp != null) ? globalThis.__seatWarp : SEAT_WARP) : 0;
+    const a = a0 + w * Math.sin(2 * a0);
+    const s0 = Math.sin(a0), s = Math.sin(a);
     /* 이름표가 아래로 달려서, 아래쪽 자리는 그만큼 더 바깥으로 빼야 위와 대칭이 된다 */
     const bias = 0;   /* 아래쪽만 밀어내면 원에서 떨어져 보인다 */
     /* 눈으로 본 미세 보정 */
-    const side = Math.abs(s) < 0.05;                    // 좌우 끝자리
+    const side = Math.abs(s0) < 0.05;                   // 좌우 끝자리
     /* 12시 자리는 바닥에 쌓인 카드가 프로필까지 덮는다. 그만큼 더 올린다 */
-    const top = s < -0.85;
-    const nudge = top ? 22 : (s > 0.9 ? 9 : (side ? 4 : (s > 0.25 ? 2 : 0)));
+    const top = s0 < -0.85;
+    const nudge = top ? 22 : (s0 > 0.9 ? 9 : (side ? 4 : (s0 > 0.25 ? 2 : 0)));
     const nudgeX = side ? (Math.cos(a) < 0 ? 2 : -2) : 0;   // 좌우 끝은 바깥으로
     return {x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias,
             nudge: nudge, nudgeX: nudgeX};
@@ -653,7 +668,8 @@ export function mount(root){
     if (box.style.display !== hide) box.style.display = hide;
     if (c < 0) return;
     const shown = Math.min(c, 7), step = 5;
-    box.style.width = shown ? (13 + (shown - 1) * step) + "px" : "";
+    const iw = SEATS.length >= 7 ? 10 : 13;      /* 7·8명은 부채 카드가 작다(table.css seats--crowd) */
+    box.style.width = shown ? (iw + (shown - 1) * step) + "px" : "";
     while (box.children.length > shown) box.removeChild(box.lastChild);
     while (box.children.length < shown){
       const i = document.createElement("i");
@@ -668,6 +684,7 @@ export function mount(root){
   function renderSeats(){
     syncRing();
     const box = el("seats");
+    box.classList.toggle("seats--crowd", SEATS.length >= 7);   /* 7·8명 — 자리 모양을 줄인다 */
     if (seatNodes.length !== SEATS.length || seatNodes.some(n => n.parentNode !== box)){
       box.innerHTML = "";
       seatNodes = SEATS.map(() => {
@@ -841,7 +858,7 @@ export function mount(root){
       s.__i = i;
       const r = rowOf(i), j = r ? i - back : i, k = rowLen(r);
       const cls = "slot" + (two && r === 0 ? " slot--back" : "") + (sel.includes(i) ? " slot--sel" : "") +
-        (turn === 0 && !busy && !canPick(i) ? " slot--dead" : "");
+        (turn === 0 && !busy && !canPick(i) ? " slot--dead" : "") + (j === k - 1 ? " slot--end" : "");   /* 줄 맨 끝(가려지지 않는 카드) */
       if (s.className !== cls) s.className = cls;
       const total = w + steps[r] * (k - 1);
       const left = ((h.clientWidth - total) / 2 + j * steps[r]) + "px";
@@ -1353,17 +1370,18 @@ const TURN_SEC = 15;
   el("auto").onclick = () => setAuto(!eng.engine.auto);
   
   /* ---------- 감정표현 ----------
-     단추를 누르면 다섯 개가 올라오고, 하나 고르면 내 프로필 옆에 2초 뜬다.
-     남이 보낸 것도 같은 자리에 뜬다. 연타는 2.5초 막는다 */
+     단추를 누르면 다섯 개가 올라오고 — 상점에서 이모티콘 묶음을 샀으면 열 개가 다섯씩 두 줄로(2026-10-29), 하나 고르면 내 프로필 옆에 1초 뜬다.
+     남이 보낸 것도 같은 자리에 뜬다. 연타는 1초 막는다(2026-10-29 사용자 결정 — 2.5초에서 줄임. 뜨는 시간과 같아 겹쳐 쌓이지 않는다) */
 
-  const EMO_SHOW = 1000, EMO_COOL = 2500;
+  const EMO_SHOW = 1000, EMO_COOL = 1000;
   let emoUntil = 0;                 /* 다음에 보낼 수 있는 시각 */
   const emoTimers = {};             /* 화면 자리 → 지우기 예약 */
 
   function emoText(k){
     const e = EMOTES.find(x => x.k === k);
-    return e ? (lang === "ko" ? e.ko : e.en) : "";
+    return e ? bubText(lang === "ko" ? e.ko : e.en) : "";
   }
+
   function emoImg(k){
     const e = EMOTES.find(x => x.k === k);
     return e ? e.img : "";
@@ -1371,16 +1389,23 @@ const TURN_SEC = 15;
   function esc(x){
     return String(x).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
   }
+  /* 고르는 판에 올릴 것 — 기본 다섯 개 + 산 이모티콘 묶음(pack — 상점 "emote:1"). 안 샀으면 예전처럼 한 줄 (2026-10-29 사용자 결정)
+     남이 보낸 것은 묶음을 안 샀어도 그대로 보인다(emoText·emoImg 는 전부에서 찾는다) */
+  function emoList(){
+    const a = window.ACCOUNT || {};
+    return EMOTES.filter(e => !e.pack || owns(a, "emote:" + e.pack));
+  }
 
   function emoPickOpen(on){
     const p = el("emopick");
     if (!on){ p.hidden = true; p.innerHTML = ""; return; }
-    p.innerHTML = EMOTES.map(e =>
+    p.innerHTML = emoList().map(e =>
       '<button type="button" data-k="' + esc(e.k) + '">' +
-        '<span class="emobub">' + esc(lang === "ko" ? e.ko : e.en) + '</span>' +
+        '<span class="emobub">' + esc(bubText(lang === "ko" ? e.ko : e.en)) + '</span>' +
         '<span class="emoimg" style="background-image:url(' + e.img + ')"></span>' +
       '</button>').join("");
     p.hidden = false;
+    p.querySelectorAll(".emobub").forEach(fitBub);
     /* 떠 있는 판이라 자리를 직접 잡아 준다 — 손패 바로 위 */
     const h = el("hand");
     if (h && p.offsetParent){
@@ -1442,6 +1467,7 @@ const TURN_SEC = 15;
     if (cur2.shown) box.style.animation = "none";
     else cur2.shown = true;
     layer.appendChild(box);
+    fitBub(box.querySelector(".emobub"));
     /* 프로필 자리를 재서 그 위에 얹는다. 판 바깥의 층이라 좌표를 직접 잡아야 한다 */
     const lb = layer.getBoundingClientRect(), ab = av.getBoundingClientRect();
     box.style.left = Math.round((ab.left + ab.right) / 2 - lb.left) + "px";

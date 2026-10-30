@@ -141,3 +141,19 @@ export function clearSeat(){ try { localStorage.removeItem(SEAT_KEY); } catch(e)
    안 알리면 등수·세금 화면을 보는 동안 봇이 다 둬 버린다 */
 export const sayReady = (code, key) =>
   api(`/zoo/rooms/${code}/ready`, { key }).catch(() => null);
+
+/* ---------- 상점 (2026-10-26) ----------
+   코인으로 사기 · 장착. **값·코인·가진 것은 서버가 정하고 적는다** — 여기서는 물건 번호와 요청 번호만 보낸다.
+   rid = 이 사기 한 번의 번호. 끊겨서 다시 보내도 서버가 같은 rid 는 한 번만 산다.
+   답: { ok, item, acct:{ coins, owned, avatar, back, bg, tickets, ticketAt } } 또는 { ok:false, why, need }
+   why: coins(모자람, need) · owned(이미 가짐) · full(티켓 가득) · locked(안 가진 것 장착) · item · account
+   로그인 표가 안 통하면(401 auth) · 계정 서버 문제(503 down) · 상점이 꺼진 서버(503 off) 는 던진다(e.why) */
+export const shopBuy = async (item, rid) => api("/zoo/shop/buy", { item, rid, token: await token() });
+export const shopEquip = async item => api("/zoo/shop/equip", { item, token: await token() });
+/* 광고 제거를 산 사람 — 광고 없이 티켓 한 장(하루 5장). why: noads · full · cap */
+export const freeTicket = async () => api("/zoo/ticket/free", { token: await token() });
+/* 우편함 받기 (2026-10-29) — mail = 우편 id 또는 "all". 답: { ok, got(받은 코인), n, dup, acct } */
+export const mailClaim = async mail => api("/zoo/mail/claim", { mail, token: await token() });
+/* 현금 결제(구글 플레이)를 서버에 넣는다 — 서버가 구글에 직접 확인하고 계정에 넣은 뒤 구글에 "받았다" 를 알린다.
+   why: item · bad(가짜) · pending(결제 대기) · canceled · other(남의 결제) · perm·down(서버·구글 문제 — 던진다) · off */
+export const payVerify = async (product, purchaseToken) => api("/zoo/pay/verify", { product, purchaseToken, token: await token() });

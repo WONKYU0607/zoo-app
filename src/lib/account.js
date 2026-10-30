@@ -22,6 +22,8 @@ import { doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction,
          collection, query, where, orderBy, limit, getDocs, getCountFromServer,
          serverTimestamp } from "firebase/firestore";
 import { wipeMine } from "./friends.js";
+import { owns, item as shopItem, todayCount, AD_TICKET_DAY, FREE_TICKET_DAY } from "./shop.js";
+import { online as serverOnline, shopBuy, shopEquip, freeTicket as apiFreeTicket, payVerify as apiPayVerify, mailClaim as apiMailClaim } from "./lobby.js";
 
 /* 티켓. account 보다 **먼저** 선언해야 한다 —
    const 는 선언 전에 못 쓰고, account 는 파일이 열리는 순간 만들어진다.
@@ -37,7 +39,15 @@ export const account = {
   loaded: false, signedIn: false,
   /* 게스트(익명)로 들어왔는가. 게임·점수는 같지만 랭킹에는 안 오른다 */
   guest: false,
+  /* 상점(2026-10-26) — 코인·가진 것·장착한 카드 스킨(deck)·판 배경·광고 제거·오늘 받은 티켓 수. **서버만 적는다** */
+  coins: 0, owned: [], deck: 0, bg: 0, coinDay: "", noAds: false, adDay: "", adN: 0, freeDay: "", freeN: 0,
+  /* 우편함(2026-10-29) — 서버가 넣은 보상 [{ id, kind, coins, at, key, place }]. 받기를 눌러야 코인이 된다 */
+  mail: [],
 };
+/* 계정을 새로 읽을 때 먼저 되돌려 둘 값 — 문서에 그 칸이 없으면(코인을 받은 적 없는 사람)
+   **앞서 들어왔던 계정의 값이 남지 않게** (다른 계정으로 바꿔 들어오면 그 사람 코인이 보였다) */
+const FRESH = () => ({ coins: 0, owned: [], deck: 0, bg: 0, coinDay: "", noAds: false, adDay: "", adN: 0, freeDay: "", freeN: 0,
+                       wk: 0, mo: 0, wkKey: "", moKey: "", mail: [] });
 
 /* 이번 주 / 이번 달 딱지. 주는 월요일 시작.
    **한국 시각(KST)으로 자른다** — 서버(accounts.js)가 같은 식으로 적는다.
@@ -57,6 +67,11 @@ export function periodKeys(at){
 }
 
 import { TIER_STEP, tierOf } from "./tier.js";     /* 기준은 tier.js 한 곳에 */
+import { rememberIn, forgetIn } from "./signedflag.js";
+/* 로그인해 있는 동안은 "로그인했었다 + 별명" 을 기기에 적어 둔다 — 다음에 켤 때 첫 화면이 곧바로
+   게임 시작을 그리게(signedflag.js). 별명을 바꿔도 따라 적힌다 (2026-10-26) */
+if (typeof window !== "undefined" && window && typeof window.addEventListener === "function")
+  window.addEventListener("accountchange", () => { if (account.signedIn) rememberIn(account.name); });
 import { badName } from "./badword.js";
 export { TIER_STEP, tierOf };
 export function winnersCount(n){ return Math.floor(n / 2); }
@@ -168,20 +183,148 @@ async function releaseName(old){
 }
 
 /* 별명 정하기. 이미 쓰는 이름이면 taken 을 돌려준다 */
-/* 프로필 얼굴. 앞 5개는 처음부터, 그 뒤는 5,000점마다 하나씩 */
+/* 프로필 얼굴. 0~14번: 앞 5개는 처음부터, 그 뒤는 5,000점마다 하나씩. 15번부터: 상점에서 코인으로 (2026-10-26) */
 export const AVT_NEED = i => (i < 5 ? 0 : (i - 4) * TIER_STEP);
-export function avatarOpen(i){ return (account.score || 0) >= AVT_NEED(i); }
+export function avatarOpen(i){ return owns(account, "avt:" + (Number(i) || 0)); }
 
+/* 얼굴 바꾸기 — **서버가 장착한다**(상점과 같은 길). 산 얼굴은 점수 규칙만 아는 옛 보안 규칙으로는 못 적기 때문이다.
+   화면은 먼저 바꾸고(누르자마자 보이게), 서버가 "안 가진 것" 이라고 하면 되돌린다.
+   게임 서버에 못 붙으면(꺼짐·끊김) 예전처럼 Firestore 에 직접 적는다 — 점수로 연 얼굴은 그 길로도 된다 */
 export async function setAvatar(i){
   i = Number(i) || 0;
   if (!avatarOpen(i)) return { ok: false, why: "locked", need: AVT_NEED(i) };
+  const prev = account.avatar;
   account.avatar = i;
+  try { localStorage.setItem("zk_avatar", String(i)); } catch(e){}
+  if (!account.signedIn && !account.uid) return { ok: true };        /* 로그인 전 — 이 기기에만 */
+  let r = null;
+  if (serverOnline() && account.signedIn){ try { r = await shopEquip("avt:" + i); } catch(e){ r = null; } }
+  if (r && r.ok){ applyWallet(r.acct); return { ok: true }; }
+  if (r && r.why === "locked"){
+    account.avatar = prev;
+    window.dispatchEvent(new Event("accountchange"));
+    return { ok: false, why: "locked" };
+  }
   if (ready && account.uid){
     try { await updateDoc(doc(db, "users", account.uid), { avatar: i }); } catch(e){}
   }
-  try { localStorage.setItem("zk_avatar", String(i)); } catch(e){}
   return { ok: true };
 }
+
+/* ---------- 상점 (2026-10-26) ----------
+   서버가 돌려준 지갑(acct)을 그대로 입힌다 — 다시 읽지 않아도 화면이 맞는다 */
+export function applyWallet(w){
+  if (!w || typeof w !== "object") return;
+  if (Number.isFinite(Number(w.coins))) account.coins = Number(w.coins);
+  if (Array.isArray(w.owned)) account.owned = w.owned.slice();
+  if (Array.isArray(w.mail)) account.mail = w.mail.slice();          /* 우편함 (2026-10-29) */
+  for (const k of ["avatar", "deck", "bg", "adN", "freeN"]) if (w[k] != null) account[k] = Number(w[k]) || 0;
+  for (const k of ["adDay", "freeDay"]) if (w[k] != null) account[k] = String(w[k]);
+  if (w.noAds != null) account.noAds = Boolean(w.noAds);
+  if (w.tickets != null){ const r = refill(w.tickets, w.ticketAt); account.tickets = r.tickets; account.ticketAt = r.at; }
+  window.dispatchEvent(new Event("accountchange"));
+}
+const ridOf = () => "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+const nap = ms => new Promise(r => setTimeout(r, ms));
+/* 사기. 끊겨서 답을 못 받으면 **같은 요청 번호로** 한 번 더 묻는다 — 서버에서는 됐는데 답만 잃은 경우
+   다시 눌러 두 번 사는 일이 없게(티켓은 여러 번 살 수 있는 물건이라 특히).
+   답: { ok } · { ok:false, why: coins(need)·owned·full·item·account·auth·down·off·net } */
+export async function buyItem(id){
+  if (!account.signedIn) return { ok: false, why: "auth" };
+  if (!shopItem(id)) return { ok: false, why: "item" };
+  if (!serverOnline()) return { ok: false, why: "off" };
+  const rid = ridOf();
+  for (let attempt = 0; attempt < 2; attempt++){
+    try {
+      const r = await shopBuy(id, rid);
+      if (r && r.ok){ applyWallet(r.acct); return { ok: true, item: r.item }; }
+      return { ok: false, why: (r && r.why) || "down", need: r && r.need };
+    } catch(e){
+      if (e && (e.why === "auth" || e.why === "off")) return { ok: false, why: e.why };
+      if (attempt === 0){ await nap(1200); continue; }
+      return { ok: false, why: e && e.why === "down" ? "down" : "net" };
+    }
+  }
+  return { ok: false, why: "net" };
+}
+/* 오늘 더 받을 수 있는 티켓 — 광고 보고(누구나) · 광고 없이(광고 제거를 산 사람). 하루는 한국 시각 */
+export const adLeft = () => Math.max(0, AD_TICKET_DAY - todayCount(account.adDay, account.adN, Date.now()));
+export const freeLeft = () => Math.max(0, FREE_TICKET_DAY - todayCount(account.freeDay, account.freeN, Date.now()));
+/* 광고 제거 — 광고 없이 티켓 한 장. 답: { ok } · { ok:false, why: noads·full·cap·auth·off·down·net } */
+export async function freeTicket(){
+  if (!account.signedIn) return { ok: false, why: "auth" };
+  if (!serverOnline()) return { ok: false, why: "off" };
+  try {
+    const r = await apiFreeTicket();
+    if (r && r.ok){ applyWallet(r.acct); return { ok: true }; }
+    return { ok: false, why: (r && r.why) || "down" };
+  } catch(e){
+    return { ok: false, why: e && (e.why === "auth" || e.why === "off" || e.why === "down") ? e.why : "net" };
+  }
+}
+/* ---------- 우편함 받기 (2026-10-29) ----------
+   id = 우편 하나 또는 "all". 끊겨서 답을 못 받으면 한 번 더 묻는다 — 서버가 이미 넣었으면 dup 으로 답하고
+   두 번 들어가지 않는다(받은 우편은 서버에서 빠진다). 답: { ok, got, n, dup } · { ok:false, why: auth·off·down·net·account } */
+/* 받은 우편 — 받기와 같은 때 시작한 계정 다시 읽기(refreshAccount)가 **받기 전 문서**를 늦게 가져와
+   받은 우편을 되살리지 않게 거른다. 우편 id 는 계정마다 같은 꼴("wk-2026-W44")이라 uid 를 붙인다 */
+const mailGone = new Set();
+const dropGone = () => { if (Array.isArray(account.mail)) account.mail = account.mail.filter(m => m && !mailGone.has(account.uid + "|" + m.id)); };
+export async function claimMail(id){
+  if (!account.signedIn) return { ok: false, why: "auth" };
+  if (!serverOnline()) return { ok: false, why: "off" };
+  const uid = account.uid;
+  const ids = (Array.isArray(account.mail) ? account.mail : []).filter(m => m && m.id && (id === "all" || m.id === id)).map(m => m.id);
+  for (let attempt = 0; attempt < 2; attempt++){
+    try {
+      const r = await apiMailClaim(String(id || ""));
+      if (r && r.ok && account.uid === uid) for (const x of ids) mailGone.add(uid + "|" + x);
+      /* again = 다시 물어본 답 — dup 이어도 첫 요청이 넣은 것일 수 있다(답만 잃음) */
+      if (r && r.ok){ applyWallet(r.acct); return { ok: true, got: Number(r.got) || 0, n: Number(r.n) || 0, dup: Boolean(r.dup), again: attempt > 0 }; }
+      return { ok: false, why: (r && r.why) || "down" };
+    } catch(e){
+      if (e && (e.why === "auth" || e.why === "off")) return { ok: false, why: e.why };
+      if (attempt === 0){ await nap(1200); continue; }
+      return { ok: false, why: e && e.why === "down" ? "down" : "net" };
+    }
+  }
+  return { ok: false, why: "net" };
+}
+/* 현금 결제를 서버에 넣는다(billing.js 가 부른다). 끊기면 같은 결제 표로 한 번 더 — 서버가 같은 결제는 한 번만 넣는다 */
+export async function payVerify(product, purchaseToken){
+  if (!account.signedIn) return { ok: false, why: "auth" };
+  if (!serverOnline()) return { ok: false, why: "off" };
+  for (let attempt = 0; attempt < 2; attempt++){
+    try {
+      const r = await apiPayVerify(product, purchaseToken);
+      if (r && r.ok){ applyWallet(r.acct); return { ok: true, dup: Boolean(r.dup), coins: r.coins || 0, told: r.told !== false }; }
+      return { ok: false, why: (r && r.why) || "down" };
+    } catch(e){
+      if (e && (e.why === "auth" || e.why === "off" || e.why === "perm")) return { ok: false, why: e.why };
+      if (attempt === 0){ await nap(1500); continue; }
+      return { ok: false, why: e && e.why === "down" ? "down" : "net" };
+    }
+  }
+  return { ok: false, why: "net" };
+}
+
+/* 장착 — 카드 스킨·판 배경·얼굴 */
+export async function equipItem(id){
+  if (!account.signedIn) return { ok: false, why: "auth" };
+  const it = shopItem(id);
+  if (!it || it.kind === "ticket") return { ok: false, why: "item" };
+  if (it.kind === "avatar") return setAvatar(it.n);
+  if (!serverOnline()) return { ok: false, why: "off" };
+  try {
+    const r = await shopEquip(id);
+    if (r && r.ok){ applyWallet(r.acct); return { ok: true }; }
+    return { ok: false, why: (r && r.why) || "down" };
+  } catch(e){
+    return { ok: false, why: e && (e.why === "auth" || e.why === "off" || e.why === "down") ? e.why : "net" };
+  }
+}
+
+/* 처음 들어온 구글 계정에 잠깐 붙이는 임시 이름 — claimName(uid, "새사용자") 이 "새사용자" · "새사용자2" … 를 만든다 */
+export const PLACEHOLDER = /^새사용자\d*$/;
 
 export async function setNickname(wanted){
   /* 글자 검사가 먼저 — 로그인 전이라도 왜 안 되는지는 알려 준다 */
@@ -436,10 +579,12 @@ async function loadProfile(user){
                     ticketAt: Date.now(), createdAt: serverTimestamp(),
                     guest, needName: !guest, avatar: 0 };
     await setDoc(ref, fresh);
-    Object.assign(account, fresh);
+    Object.assign(account, FRESH(), fresh);
   } else {
     const d = snap.data();
-    Object.assign(account, d);
+    Object.assign(account, FRESH(), d);
+    if (!Array.isArray(account.owned)) account.owned = [];
+    if (!Array.isArray(account.mail)) account.mail = [];
     account.needName = Boolean(d.needName);
     /* 지난 시간만큼 채운 티켓을 **화면에만** 보인다. 적지는 않는다 —
        티켓은 서버만 적는다. 서버도 쓸 때 같은 식으로 채워서 계산한다 */
@@ -453,8 +598,10 @@ async function loadProfile(user){
   if (!avatarOpen(account.avatar)) account.avatar = 0;
   /* 게스트인지는 로그인 상태가 진실이다. 문서 값은 따라온다 */
   account.guest = Boolean(user.isAnonymous);
-  /* 구글인데 아직 별명을 안 정했으면 물어봐야 한다 */
-  account.needName = !account.guest && Boolean(account.needName);
+  /* 구글인데 아직 별명을 안 정했으면 물어봐야 한다.
+     **임시 이름(새사용자N) 그대로인 사람도** — 예전에는 별명 창을 닫거나, 미리 채워 둔 "새사용자3" 을 그대로 "정하기" 하면
+     needName 이 꺼져서 랭킹·방에 "새사용자1·2…" 로 남았다(2026-10-26 사용자 신고). 이제는 다음에 켤 때 다시 정하게 한다 */
+  account.needName = !account.guest && (Boolean(account.needName) || PLACEHOLDER.test(String(account.name || "")));
   account.signedIn = true;
   account.loaded = true;
   window.dispatchEvent(new Event("accountchange"));
@@ -474,7 +621,8 @@ export async function signOutNow(){
   }
   await signOut(auth);
   Object.assign(account, { uid: null, name: "", photo: "", score: 0,
-                           tier: 0, tickets: TICKET_MAX, games: 0, signedIn: false });
+                           tier: 0, tickets: TICKET_MAX, games: 0, signedIn: false }, FRESH());
+  forgetIn();                                  /* 다음에 켤 때 로그인 화면부터 */
   window.dispatchEvent(new Event("accountchange"));
 }
 
@@ -548,6 +696,7 @@ export function watchAuth(){
         try { await loadProfile(user); } catch(e){ console.warn(e); }
       } else {
         account.loaded = true;
+        forgetIn();        /* 로그인이 풀려 있다 — 적어 둔 "로그인했었다" 는 틀린 것. (계정 문서를 못 받은 것과는 다르다 — 그때는 둔다) */
       }
       resolve(account);
     });
@@ -558,13 +707,16 @@ export function watchAuth(){
    점수·판 수·티켓은 서버가 적으므로, 적힐 만한 때(시작한 뒤·게임이 끝난 뒤·광고를 본 뒤)
    계정 문서를 다시 읽어 화면에 반영한다. 이름·얼굴은 앱이 바꾸는 값이라 여기서 덮지 않는다
    (고르는 도중에 옛 값으로 되돌아가면 안 된다) */
-const SERVER_FIELDS = ["score", "games", "tickets", "ticketAt", "wk", "mo", "wkKey", "moKey"];
+const SERVER_FIELDS = ["score", "games", "tickets", "ticketAt", "wk", "mo", "wkKey", "moKey",
+                       "coins", "owned", "coinDay", "deck", "bg", "noAds", "adDay", "adN", "freeDay", "freeN",   /* 상점(2026-10-26) — 서버만 적는 칸 */
+                       "mail"];                                                    /* 우편함 — 주간 랭킹 보상 등(2026-10-29) */
 export async function refreshAccount(){
   if (!ready || !account.uid) return account;
   const snap = await getDoc(doc(db, "users", account.uid));
   if (!snap.exists()) return account;
   const d = snap.data() || {};
   for (const k of SERVER_FIELDS) if (d[k] !== undefined) account[k] = d[k];
+  dropGone();
   const r = refill(d.tickets, d.ticketAt);
   account.tickets = r.tickets;
   account.ticketAt = r.at;

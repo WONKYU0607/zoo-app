@@ -9,6 +9,23 @@
    이걸 끄면 CSS 에 적은 크기가 폰에서도 그대로 나온다 */
 html{ -webkit-text-size-adjust:100%; text-size-adjust:100% }
 
+/* **네이티브처럼** (2026-10-26 사용자 "버튼 터치가 네이티브랑 다르게 부자연스럽다" → "네이티브처럼 하게 만들어 줘")
+   1. 웹 기본 터치 강조를 끈다 — 안드로이드는 누른 것 위에 파란 반투명 사각형(rgba(51,181,229,.4))을 덮는다.
+      붉은·놋쇠 버튼 위에 파란 상자가 덮여 한눈에 웹처럼 보였다(폰 흉내 크롬에서 캡처로 확인)
+   2. 버튼 글자를 길게 눌러도 글자 선택·복사 메뉴가 안 뜨게. 글을 쓰는 칸(이름·방 번호)은 그대로 고를 수 있다
+   3. 눌림 표시는 손이 닿는 순간(lib/press.js 가 .is-press 를 단다). 각 CSS 의 :active 규칙 옆에 .is-press 를 같이 적어
+      **원래 눌림 모양 그대로** 보인다. 자기 눌림 모양이 없던 단추(×, ‹, 랭킹·친구·광고, −/+, 스위치, 탭 등)와
+      1px 내려가기만 하던 단추는 살짝 어두워진다. 틀이 바뀌는(눌린 틀 그림) 단추는 어둡게 하지 않는다 — 원래 모양 그대로 */
+*{ -webkit-tap-highlight-color:transparent }
+body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
+input,textarea,[contenteditable="true"]{ -webkit-user-select:text; user-select:text; -webkit-touch-callout:default }
+:where(button,a[href],[role=button],[data-back]).is-press:not(:disabled){ filter:brightness(.8) }
+#lobby .btn-primary.is-press,#lobby .btn-second.is-press,#room .btn-primary.is-press,#draw .bt-main.is-press,
+#tax .bt-main.is-press,#tax .bt-ghost.is-press,#result .bt-main.is-press,#ask .cfg__row button.is-press,
+#updGate #updExit.is-press,#result .bt-ghost.is-press,#opts .opts__go.is-press,
+#entry #start.is-press,#lobby #btQuick.is-press,#room #action .btn-primary.is-press,#ask #askYes.is-press,#updGate #updGo.is-press,
+#table #play.is-press,#table .bt-pass.is-press{ filter:none }
+
 /* ================= 놋쇠 틀 ================= */
 :root{
   --fr-panel:url(/assets/fr_panel.webp); --fr-row:url(/assets/fr_row.webp);
@@ -42,7 +59,7 @@ html{ -webkit-text-size-adjust:100%; text-size-adjust:100% }
 #room .btn-primary:active,#draw .bt-main:active,#tax .bt-main:active,
 #tax .bt-ghost:active,#result .bt-main:active,#ask .cfg__row button:active,#updGate #updExit:active,
 #result .bt-ghost:active,#opts .opts__go:active,
-#lobby .__none_bt_rank_active{
+#lobby .__none_bt_rank_active,#lobby .btn-primary.is-press,#lobby .btn-second.is-press,#room .btn-primary.is-press,#draw .bt-main.is-press,#tax .bt-main.is-press,#tax .bt-ghost.is-press,#result .bt-main.is-press,#ask .cfg__row button.is-press,#updGate #updExit.is-press,#result .bt-ghost.is-press,#opts .opts__go.is-press{
   border-image:var(--fr-btn-down) 33 fill stretch !important;
   transform:translateY(1px);
 }
@@ -68,7 +85,7 @@ button:disabled{opacity:.42}
   color:#FBEFCE !important;
   text-shadow:0 1px 4px rgba(0,0,0,.9);
 }
-#entry #start:active,#lobby #btQuick:active,#room #action .btn-primary:active,#ask #askYes:active,#updGate #updGo:active{
+#entry #start:active,#lobby #btQuick:active,#room #action .btn-primary:active,#ask #askYes:active,#updGate #updGo:active,#entry #start.is-press,#lobby #btQuick.is-press,#room #action .btn-primary.is-press,#ask #askYes.is-press,#updGate #updGo.is-press{
   border-image:var(--fr-red-down) 46 fill stretch !important;
   transform:translateY(1px);
 }
@@ -145,7 +162,7 @@ button:disabled{opacity:.42}
   background:url(/assets/ic_settings.webp) center/contain no-repeat !important;
   color:transparent;cursor:pointer}
 .cfgbtn svg{display:none}
-.cfgbtn:active{transform:translateY(1px)}
+.cfgbtn:active,.cfgbtn.is-press{transform:translateY(1px)}
 #entry .cfgbtn{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:16px;z-index:20;
   backdrop-filter:blur(4px)}
 
@@ -192,6 +209,8 @@ button:disabled{opacity:.42}
 /* 확인창은 아래에서 올라오는 시트가 아니라 **화면 한가운데 네모 상자** */
 /* 업데이트 창도 같은 네모 상자 — 단추 둘(앱 종료하기 · 업데이트)짜리라 확인창과 같은 꼴로 (2026-10-23) */
 #ask,#updGate{display:flex;align-items:center;justify-content:center}
+/* 확인창은 다른 창(설정·계정·별명) 위에 뜬다 — 별명 창이 나중에 만들어져 같은 높이면 그 밑에 깔렸다 (2026-10-26) */
+#ask{z-index:70}
 /* 어두운 바탕이 **틀 밑까지** 깔려야 한다.
    padding-box 로 자르면 틀 그림이 놓인 테두리 자리가 비어 보인다.
    다만 테두리 칸(26px) 전체에 깔면 안 된다 — 틀 그림의 금색 무늬는
@@ -252,16 +271,21 @@ button:disabled{opacity:.42}
 /* 잠긴 것은 흐리게 + 자물쇠 + 필요한 점수. 안 보이게 하면 모으는 재미가 없다 */
 /* 흐리게 하는 것은 **그림에만**. filter 를 단추에 걸면 안의 글씨까지 같이 어두워져
    무슨 말인지 안 보인다. 어두운 막을 그림 위에 한 겹 덮고 글씨는 그 위에 올린다 */
-.avt__i--lock{filter:grayscale(1)}
-.avt__i--lock::before{content:"";position:absolute;inset:0;border-radius:50%;
+/* 흑백은 **그림에만** 건다(2026-10-26) — 단추에 걸면 자물쇠 밑 코인 값까지 회색이 돼 "코인으로 산다" 가 안 보인다.
+   그림을 한 겹(::after) 더 깔아 그것만 흑백으로, 그 위에 어두운 막(::before), 맨 위에 글씨 */
+.avt__i--lock{background-clip:padding-box}
+.avt__i--lock::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:0;
+  background-image:inherit;background-size:cover;background-position:center;filter:grayscale(1)}
+.avt__i--lock::before{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;
   background:rgba(5,7,5,.72)}
-.avt__i--lock .avt__lk,.avt__i--lock .avt__need{z-index:1}
+.avt__i--lock .avt__lk,.avt__i--lock .avt__need{z-index:2}
 /* 필요한 점수는 **눈에 들어오게**. 작게 적으면 안 보인다 */
 .avt__need{position:absolute;left:-8%;right:-8%;bottom:11%;text-align:center;
   font-family:"Gowun Batang",serif;line-height:1.2;letter-spacing:-.03em;
   text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.85);
   pointer-events:none}
-.avt__need b{display:block;font-weight:700;font-size:12px;color:#FFE9A8;white-space:nowrap}
+.avt__need b{display:flex;align-items:center;justify-content:center;gap:2px;font-weight:700;font-size:12px;color:#FFE9A8;white-space:nowrap}
+.avt__need b .coin-ic{display:inline-block;font-size:11px;width:1em;height:1em}
 .avt__need i{display:block;font-style:normal;font-size:8px;color:#D9C79A;white-space:nowrap}
 .avt__lk{position:absolute;left:50%;top:27%;transform:translate(-50%,-50%);
   width:30%;height:30%;background:no-repeat center/contain;
@@ -337,7 +361,7 @@ button:disabled{opacity:.42}
 #frBox .fr__row--off{opacity:.45}
 
 /* 확인창 본문의 줄바꿈을 그대로 보인다 (나가기 경고가 두 줄이다) */
-#ask #askM{ white-space: pre-line; }
+#ask #askM{ white-space: pre-line; word-break: keep-all; }   /* 한글이 낱말 가운데서 꺾이지 않게("받았 / 습니다" — 2026-10-27) */
 /* 설정 창 진동 켬/끔 — 놋쇠 틀이 눌린 모양(aria-pressed)을 덮어써서 어느 쪽이 골라졌는지 안 보였다.
    안 고른 쪽을 흐리게 한다 (2026-10-06) */
 #cfg [data-vib][aria-pressed="false"]{opacity:.42}
@@ -362,3 +386,195 @@ button:disabled{opacity:.42}
 #updGate .cfg__row{display:flex;gap:8px}
 #updGate .cfg__row button{flex:1;min-height:44px !important;font-size:14px}
 #updGate .upd__m{text-align:center}
+
+/* ---------- 코인 그림 (2026-10-26 상점 · 2026-10-27 사용자 그림으로 — 월계수 두른 사자 금화) ----------
+   글자 크기를 따라 커진다 — <i class="coin-ic"></i> 를 숫자 앞에 둔다. 상점·결과 화면·프로필 창이 같이 쓴다 */
+.coin-ic{display:inline-block;flex:none;width:1.15em;height:1.15em;vertical-align:-.22em;
+  background:url(/assets/coin.webp) center/contain no-repeat;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+
+/* ---------- 판 배경 위 글씨 (2026-10-26 상점 판 배경) ----------
+   기본 판은 어두워서 글씨가 그냥 읽혔다. 상점 판(황금 정원·얼음 성채·용암 동굴)은 밝고 화려해서
+   판 위에 바로 놓인 글씨가 묻힌다(뽑기 화면 안내 줄이 얼음 위에서 안 읽힘). 그림은 그대로 두고 글씨 쪽만 또렷하게 —
+   기본 판(0)에는 안 건다 */
+html[data-skin-bg]:not([data-skin-bg="0"]) :is(#draw, #tax, #room, #table) :is(.bar__t, .bar__r){
+  text-shadow:0 1px 3px #000,0 0 9px rgba(0,0,0,.85)}
+html[data-skin-bg]:not([data-skin-bg="0"]) :is(#draw, #tax, #table) :is(.seat__n, .seat__c){
+  text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.95);
+  background:rgba(7,9,8,.58);border-radius:7px;padding:0 5px}
+/* 패스한 사람은 반투명(.36)으로 흐려지는데, 새 판은 자리 밑 장식(사자 머리·발바닥)이 비쳐 보여 얼굴이 없어진 것처럼 보였다
+   → 산 판에서는 비치지 않게 어둡게만 */
+html[data-skin-bg]:not([data-skin-bg="0"]) #table .seat--pass .seat__av{opacity:1;filter:grayscale(.55) brightness(.72)}
+html[data-skin-bg]:not([data-skin-bg="0"]) #table .seat--pass .seat__n{opacity:.85}
+html[data-skin-bg]:not([data-skin-bg="0"]) #table .seat--pass.seat--out .seat__av{filter:grayscale(1) brightness(.6)}
+html[data-skin-bg]:not([data-skin-bg="0"]) :is(#draw, #tax) .bar__t{
+  background:rgba(7,9,8,.55);border-radius:8px;padding:2px 9px}
+html[data-skin-bg]:not([data-skin-bg="0"]) #draw .mid{
+  background:rgba(7,9,8,.66);border-radius:12px;padding:9px 12px 10px;box-shadow:0 0 22px 6px rgba(7,9,8,.4)}
+html[data-skin-bg]:not([data-skin-bg="0"]) :is(#draw .mid__h, #draw .mid__s, #tax .mid__h, #tax .mid__s, #tax .hint){
+  text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.8)}
+/* 세금 화면 손패 위 안내 줄 · 뽑기/세금의 잠긴 단추 — 밝은 판 위에서 반투명(.36)이면 거의 안 보인다 → 비치지 않는 어두운 바탕 */
+html[data-skin-bg]:not([data-skin-bg="0"]) #tax .hint:not(:empty){
+  width:fit-content;max-width:100%;margin-left:auto;margin-right:auto;
+  background:rgba(7,9,8,.66);border-radius:10px;padding:3px 11px}
+html[data-skin-bg]:not([data-skin-bg="0"]) :is(#draw, #tax) .acts button:disabled{
+  opacity:1;background:rgba(12,10,8,.82) !important;border-color:rgba(122,94,36,.7) !important;color:rgba(233,213,172,.5) !important}
+
+/* ---------- 카드 스킨 테두리 (2026-10-27 상점 카드 스킨 1 "얼음 왕국" — 사용자 B안) ----------
+   카드 스킨은 그림(앞면·뒷면)을 바꾸고, 테두리·숫자 띠는 코드가 그린다. 기본은 양피지색.
+   얼음 왕국은 테두리를 흰~하늘 그라데이션, 숫자를 남색으로 — 얼음 그림이 누런 테두리 안에 있으면 어색했다(미리보기 A·B 비교).
+   카드를 그리는 곳: 게임(#table) · 뽑기(#draw) · 세금(#tax). 표시는 skin.js 가 <html data-skin-deck> 에 단다 */
+html[data-skin-deck="1"] :is(#table, #draw, #tax) .card, #shop .skin-d1 .pc{
+  --p1:#F1F8FF; --p2:#D3E7F8; --p3:#A9CCEC; --card-ink:#12305A; --card-ink-2:#1E4677; --gold-dim:#7FB0DD;
+  --card-hl1:rgba(255,255,255,.6); --card-hl2:rgba(120,170,220,.25); --card-in:rgba(60,110,170,.35)}
+/* 색만 바꾼다(변수) — 배경·그림자를 여기서 통째로 덮으면 고른 카드의 금테(.slot--sel) 같은 상태 표시까지 덮인다 */
+html[data-skin-deck="1"] #table .card__num.as{color:#2F6DB0}
+/* 카드 스킨 2 "신화 왕국" (2026-10-27) — 뒷면(불꽃 · 금테)에 맞춘 짙은 적색 테두리 + 금색 숫자 (미리보기 B안).
+   숫자 띠만 밝게(기본 카드처럼 진한 갈색 숫자)도 만들어 봤는데 사용자가 "아까 적색이 더 이쁘다" 로 이것으로 확정 */
+html[data-skin-deck="2"] :is(#table, #draw, #tax) .card, #shop .skin-d2 .pc{
+  --p1:#9A2412; --p2:#62140A; --p3:#300805; --card-ink:#F6C85C; --card-ink-2:#F2D890; --gold-dim:#D9A441;
+  --card-hl1:rgba(255,150,60,.35); --card-hl2:rgba(255,90,20,.22); --card-in:rgba(255,130,40,.32)}
+html[data-skin-deck="2"] #table .card__num.as{color:#FFB347}
+/* 신화 왕국은 네 글자 이름(메갈로돈 · 프리스트)이 많아 이름이 숫자 바로 옆부터 시작한다 → 겹친 손패 띠에 첫 글자 조각이 보였다.
+   이 스킨은 손패 줄 맨 끝 카드에만 이름을 보인다(기본·얼음 왕국은 그대로) */
+html[data-skin-deck="2"] #table .hand .slot:not(.slot--end) .card__name{visibility:hidden}
+/* 카드 스킨 3 "조선 궁중" (2026-10-27) — 뒷면(쪽빛 바탕 · 금 장식 · 태극)에 맞춘 쪽빛 테두리 + 금색 숫자 */
+html[data-skin-deck="3"] :is(#table, #draw, #tax) .card, #shop .skin-d3 .pc{
+  --p1:#2C3F86; --p2:#1B2860; --p3:#0E1538; --card-ink:#F3CF6A; --card-ink-2:#F2DFA0; --gold-dim:#C9A24A;
+  --card-hl1:rgba(150,180,255,.30); --card-hl2:rgba(210,60,50,.18); --card-in:rgba(240,200,100,.28)}
+html[data-skin-deck="3"] #table .card__num.as{color:#FF9C8A}
+
+/* 확인창의 두 고르기(상점: "15,000코인" / "₩4,900", 2026-10-27) — 나란히 두면 단추 안쪽이 80px 남짓이라 "15,000코 / 인" 으로 꺾였다
+   → 위아래로 한 줄씩(위 = 현금, 아래 = 코인) */
+#ask.is-alt .cfg__row{flex-direction:column-reverse}
+#ask.is-alt .cfg__row button{white-space:nowrap;letter-spacing:0;width:100%}
+
+/* ---------- 우편함 창 (2026-10-29 — screens/mail.js) ----------
+   다시 만듦(2026-10-29 사용자: "좀 성의잇게좀 만들어라") — 화면 가운데 놋쇠 틀 상자(확인창과 같은 틀) ·
+   위에 붉은 이름판 · 오른쪽 위 둥근 닫기 · 우편마다 보상 칸 · 아래에 늘 [모두 받기]. 우편이 많으면 안에서 굴러간다 */
+#mailBox{justify-content:center;align-items:center}
+#mailBox .ml__p{position:relative;width:calc(100% - 22px);max-width:384px;max-height:calc(100% - 128px);
+  display:flex;flex-direction:column;margin:0;padding:24px 2px 0;
+  border:26px solid transparent;border-image:var(--fr-panel) 105 stretch;border-image-width:26px;
+  /* 어두운 바탕을 틀 밑까지(바깥 7px 만 비움 — #ask 와 같은 셈). 위쪽은 등불처럼 살짝 밝게 */
+  background:radial-gradient(130% 46% at 50% 0%,rgba(120,84,36,.34),transparent 70%),linear-gradient(180deg,rgba(24,17,10,.98),rgba(11,8,5,.99));
+  background-origin:border-box;background-clip:border-box;background-repeat:no-repeat;background-position:center;
+  background-size:calc(100% - 14px) calc(100% - 14px);
+  transform:scale(.9);opacity:0;transition:transform .22s cubic-bezier(.2,.9,.3,1.15),opacity .18s ease-out}
+#mailBox.on .ml__p{transform:none;opacity:1}
+/* 이름판 — 틀 윗줄에 걸친 붉은 판 */
+.ml__rib,.mg__rib{display:flex;align-items:center;justify-content:center;white-space:nowrap;
+  min-width:150px;height:46px;padding:0 22px;border:13px solid transparent;border-image:var(--fr-red) 46 fill stretch;border-image-width:13px;
+  font-family:"Gowun Batang",serif;font-weight:700;font-size:17px;letter-spacing:.08em;color:#FBEFCE;
+  text-shadow:0 0 10px rgba(255,190,120,.35),0 1px 3px rgba(0,0,0,.95);filter:drop-shadow(0 3px 4px rgba(0,0,0,.75))}
+#mailBox .ml__rib{position:absolute;top:-43px;left:50%;transform:translateX(-50%);z-index:2}
+/* 닫기 — 놋쇠 테 두른 둥근 붉은 단추 */
+.ml__x{position:absolute;top:-34px;right:-23px;z-index:3;width:38px;height:38px;padding:0;border-radius:50%;cursor:pointer;
+  border:2px solid #D9B465;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FBEFCE' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7 7 17'/%3E%3C/svg%3E") center/18px no-repeat,
+    radial-gradient(circle at 50% 32%,#A3392A,#5E150D 72%);
+  box-shadow:0 0 0 2px #3A2410,0 3px 6px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,226,170,.45)}
+.ml__x:active{transform:translateY(1px);filter:brightness(.85)}
+#mailBox .ml__list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:7px;padding:2px 0 4px}
+/* 아래에 더 있으면 끝을 흐리게 — 굴러간다는 표시 */
+#mailBox .ml__list--more{-webkit-mask:linear-gradient(180deg,#000 calc(100% - 44px),transparent);mask:linear-gradient(180deg,#000 calc(100% - 44px),transparent)}
+/* 우편 한 줄 — 가죽 빛 바탕 + 얇은 놋쇠 줄 틀 */
+.ml__row{position:relative;flex:none;display:flex;align-items:center;gap:10px;padding:5px 4px 5px 3px;
+  border:10px solid transparent;border-image:var(--fr-row) 33 stretch;border-image-width:10px;
+  background:linear-gradient(180deg,rgba(78,57,31,.94),rgba(36,26,14,.97));
+  background-origin:border-box;background-clip:border-box;background-repeat:no-repeat;background-position:center;
+  background-size:calc(100% - 5px) calc(100% - 5px);color:#E8DCC4;
+  transition:transform .24s ease-in,opacity .24s ease-in,height .2s ease-out,padding .2s ease-out,border-width .2s ease-out,margin .2s ease-out}
+.ml__row--out{transform:translateX(70%);opacity:0}
+.ml__row--gone{height:0 !important;padding-top:0;padding-bottom:0;border-top-width:0;border-bottom-width:0;margin-bottom:-7px;overflow:hidden}
+/* 보상 칸 — 코인 그림 + 오른쪽 아래 수량 (1~3등은 금·은·동 빛) */
+.ml__slot{position:relative;flex:none;width:52px;height:52px;border-radius:8px;
+  background:radial-gradient(circle at 50% 36%,#6E4C1F,#3A2810 58%,#1A1208);
+  border:1.5px solid #A47A33;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.55),inset 0 0 12px rgba(255,196,90,.16),0 2px 4px rgba(0,0,0,.6)}
+.ml__slot--p1{border-color:#F4CD5E;background:radial-gradient(circle at 50% 36%,#A87419,#55360A 58%,#231606);
+  box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.5),inset 0 0 14px rgba(255,214,110,.3),0 0 9px rgba(244,205,94,.45)}
+.ml__slot--p2{border-color:#D4DCE4;background:radial-gradient(circle at 50% 36%,#66717C,#333B43 58%,#161A1E);
+  box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.5),inset 0 0 14px rgba(220,232,244,.22),0 0 8px rgba(212,220,228,.3)}
+.ml__slot--p3{border-color:#D99160;background:radial-gradient(circle at 50% 36%,#83502A,#422614 58%,#1F1209);
+  box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.5),inset 0 0 14px rgba(240,160,100,.24),0 0 8px rgba(217,145,96,.32)}
+.ml__coin{position:absolute;inset:6px 7px 9px;background:url(/assets/coin.webp) center/contain no-repeat;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.65))}
+.ml__c{position:absolute;right:3px;bottom:2px;font:800 12px/1 "Noto Serif KR",serif;color:#FFF4D6;font-variant-numeric:tabular-nums;
+  text-shadow:-1px -1px 0 #1A0F04,1px -1px 0 #1A0F04,-1px 1px 0 #1A0F04,1px 1px 0 #1A0F04,0 2px 3px rgba(0,0,0,.8)}
+.ml__tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ml__tx b{font-family:"Gowun Batang",serif;font-size:14px;font-weight:700;line-height:1.3;color:#F6E7C1;
+  word-break:keep-all;text-shadow:0 1px 2px rgba(0,0,0,.85)}   /* 좁은 폰의 영어는 두 줄로 — 줄이면(…) 등수가 잘렸다 */
+.ml__tx span{font-size:11.5px;color:#C2B290;white-space:nowrap}
+.ml__tx em{font-style:normal;font-size:10.5px;color:#8F826A;white-space:nowrap}
+/* 받기 — 붉은 판 */
+.ml__get{flex:none;min-width:64px;height:42px;padding:0 8px;cursor:pointer;
+  border:11px solid transparent;border-image:var(--fr-red) 46 fill stretch;border-image-width:11px;background:none;
+  font:700 14px/1 "Gowun Batang",serif;color:#FBEFCE;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.ml__get:active:not(:disabled){border-image:var(--fr-red-down) 46 fill stretch;transform:translateY(1px)}
+.ml__get:disabled,.ml__all:disabled{opacity:.45;filter:grayscale(.5)}
+/* 비었을 때 — 봉투 그림이 천천히 떠 있다 */
+.ml__empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:16px 10px 18px}
+.ml__art{width:112px;height:86px;filter:drop-shadow(0 0 16px rgba(242,196,107,.2));animation:mlFloat 3.4s ease-in-out infinite}
+@keyframes mlFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.ml__empty b{margin-top:12px;font-family:"Gowun Batang",serif;font-size:15.5px;font-weight:700;color:#E9D5AC}
+.ml__empty small{display:block;margin-top:6px;font-size:11.5px;color:#8E8064;line-height:1.6;word-break:keep-all}
+.ml__note{margin:4px 6px 0;font-size:12px;line-height:18px;text-align:center;color:#E3C67C;word-break:keep-all}
+.ml__note:empty{display:none}
+.ml__note--bad{color:#E39A7C}
+/* 아래 — 금빛 가는 줄 위에 큰 [모두 받기] */
+.ml__foot{flex:none;padding:12px 0 2px;background:linear-gradient(90deg,transparent,rgba(198,154,60,.55),transparent) top/100% 1px no-repeat;margin-top:6px}
+.ml__all{display:block;width:100%;min-height:52px;padding:0 10px;cursor:pointer;
+  border:13px solid transparent;border-image:var(--fr-red) 46 fill stretch;border-image-width:13px;background:none;
+  font:700 16px/1 "Gowun Batang",serif;letter-spacing:.06em;color:#FBEFCE;
+  text-shadow:0 0 10px rgba(255,190,120,.3),0 1px 3px rgba(0,0,0,.95)}
+.ml__all:active:not(:disabled){border-image:var(--fr-red-down) 46 fill stretch;transform:translateY(1px)}
+/* 좁은 폰(320px 대) — 제목 "주간 랭킹 2등 보상" 이 두 줄로 꺾이지 않게 칸·단추를 줄인다 */
+@media (max-width:340px){
+  #mailBox .ml__p{width:calc(100% - 16px);border-width:22px;border-image-width:22px}
+  .ml__row{gap:7px;padding-left:2px;padding-right:3px}
+  .ml__slot{width:44px;height:44px}
+  .ml__c{font-size:11px}
+  .ml__tx b{font-size:13px}
+  .ml__get{min-width:50px;padding:0 6px;font-size:13px}
+  .ml__x{top:-31px;right:-19px}
+}
+
+/* ---------- "보상 획득" 창 (우편을 받은 뒤) — 붉은 이름판 · 뒤에서 도는 빛살 · 튀어나오는 코인 · 수량 · 확인 ---------- */
+#mailGot{z-index:66;justify-content:center;align-items:center}
+#mailGot .cfg__v{background:rgba(3,4,3,.9)}
+.mg__p{position:relative;display:flex;flex-direction:column;align-items:center;width:min(300px,86%);
+  transform:scale(.7);opacity:0;transition:transform .3s cubic-bezier(.2,1.45,.4,1),opacity .2s ease-out}
+#mailGot.on .mg__p{transform:none;opacity:1}
+.mg__rib{min-width:170px;font-size:18px;position:relative;z-index:2}
+.mg__fx{position:relative;width:220px;height:176px;margin-top:-10px;display:flex;align-items:center;justify-content:center}
+.mg__ray{position:absolute;left:50%;top:50%;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;
+  background:repeating-conic-gradient(rgba(255,212,120,.42) 0deg 8deg,transparent 8deg 22.5deg);
+  -webkit-mask:radial-gradient(circle,#000 16%,transparent 66%);mask:radial-gradient(circle,#000 16%,transparent 66%)}
+#mailGot.on .mg__ray{animation:mgSpin 12s linear infinite}
+@keyframes mgSpin{to{transform:rotate(360deg)}}
+.mg__glow{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,226,150,.6),rgba(255,180,60,.16) 52%,transparent 70%)}
+.mg__coin{position:relative;width:100px;height:100px;background:url(/assets/coin.webp) center/contain no-repeat;
+  filter:drop-shadow(0 6px 8px rgba(0,0,0,.65))}
+#mailGot.on .mg__coin{animation:mgPop .55s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes mgPop{0%{transform:scale(.2) rotate(-20deg);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+/* 반짝이 둘 */
+.mg__fx::before,.mg__fx::after{content:"";position:absolute;width:18px;height:18px;background:#FFF0C2;
+  clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px #FFD36E);opacity:0}
+.mg__fx::before{left:40px;top:34px}
+.mg__fx::after{right:44px;bottom:40px;width:13px;height:13px}
+#mailGot.on .mg__fx::before{animation:mgTw 1.6s .35s ease-in-out infinite}
+#mailGot.on .mg__fx::after{animation:mgTw 1.6s 1.05s ease-in-out infinite}
+@keyframes mgTw{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+.mg__n{margin-top:-8px;font:900 32px/1.1 "Noto Serif KR",serif;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#FFF3CC,#F2C14E 55%,#B5801F);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.85))}
+.mg__m{margin:8px 0 18px;font-size:13px;line-height:1.5;color:#E9D5AC;text-align:center;word-break:keep-all;text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.mg__ok{min-width:160px;min-height:50px;padding:0 14px;cursor:pointer;
+  border:13px solid transparent;border-image:var(--fr-btn) 33 fill stretch;border-image-width:13px;background:none;
+  font:700 16px/1 "Gowun Batang",serif;color:#FBEFCE;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.mg__ok:active{border-image:var(--fr-btn-down) 33 fill stretch;transform:translateY(1px)}
+/* 누르는 순간(press.js 의 .is-press) — 붉은·놋쇠 판은 눌린 판 그림으로(어둡게 하지 않음). × 는 공통 규칙대로 살짝 어두워진다 */
+.ml__get.is-press:not(:disabled),.ml__all.is-press:not(:disabled){border-image:var(--fr-red-down) 46 fill stretch;transform:translateY(1px);filter:none}
+.mg__ok.is-press:not(:disabled){border-image:var(--fr-btn-down) 33 fill stretch;transform:translateY(1px);filter:none}

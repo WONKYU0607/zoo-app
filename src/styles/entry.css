@@ -85,7 +85,7 @@ body[data-lang="en"] #entry .card__name{font-size:calc(var(--w) * .070);letter-s
   font-size:17px;letter-spacing:.08em;
   box-shadow:0 1px 0 rgba(240,209,140,.3) inset,0 8px 24px rgba(0,0,0,.66)}
 #entry body[data-lang="en"] .btn{font-family:"Playfair Display",serif}
-#entry .btn:active{transform:translateY(1px)}
+#entry .btn:active,#entry .btn.is-press{transform:translateY(1px)}
 #entry .fan .card{animation:deal .6s cubic-bezier(.2,.7,.3,1) both}
 #entry .fan .card[data-i="0"]{animation-delay:.5s}
 #entry .fan .card[data-i="4"]{animation-delay:.57s}

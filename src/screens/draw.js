@@ -4,6 +4,7 @@ import { avtFile } from "../lib/assets.js";
 import * as eng from "../lib/engine.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART_DECK as A_DECK } from "../lib/assets.js";
+import { myBack, cardSrc, cardName, jokerWord, josa } from "../lib/skin.js";
 import "../styles/draw.css";
 
 export function mount(root){
@@ -35,7 +36,7 @@ export function mount(root){
   const T = {
     ko:{ step:"첫 순서 정하기",
          h:"카드를 한 장 뽑으세요",
-         s:"숫자가 가장 낮은 분이 먼저 시작합니다. 차례는 거기서 시계 방향으로 돕니다. 카멜레온은 13으로 칩니다.",
+         s:()=>"숫자가 가장 낮은 분이 먼저 시작합니다. 차례는 거기서 시계 방향으로 돕니다. " + josa(jokerWord("ko"), "은", "는") + " 13으로 칩니다.",
          waitH:"뽑는 중",
          waitS:n=>'<b>'+n+'</b>님이 고르고 있습니다.', settling:"뽑은 카드를 맞춰 보는 중입니다.",
          doneH:"순서가 정해졌습니다", first:"선",
@@ -44,7 +45,7 @@ export function mount(root){
          goIn:n=>n+"초 뒤 시작합니다", picking:"고르는 중" },
     en:{ step:"Opening draw",
          h:"Draw one card",
-         s:"The lowest number leads. Turn order runs clockwise from that seat. A chameleon counts as 13.",
+         s:()=>"The lowest number leads. Turn order runs clockwise from that seat. A " + jokerWord("en") + " counts as 13.",
          waitH:"Drawing",
          waitS:n=>'<b>'+n+'</b> is choosing.', settling:"Comparing the draws.",
          doneH:"Turn order is set", first:"LEAD",
@@ -64,7 +65,7 @@ export function mount(root){
     const v = list && list[i];
     return (v == null || v === "") ? (lang === "ko" ? NAMES_KO : NAMES_EN)[i] : v;
   };
-  const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
+  const art = n => cardSrc(n);   /* 상점 카드 스킨(앞면 그림) — 기본이면 예전 그림 그대로 (skin.js) */
   const val = c => isJ(c) ? 13 : c;
   
   let drawn = Array(N).fill(null);   // 자리별로 뽑은 카드
@@ -99,21 +100,36 @@ export function mount(root){
     if (!sec) return;
     RING = placeTable(sec, null);
     const d = el("deck");
-    if (d){ d.style.left = RING.cx + "%"; d.style.top = RING.cy + "%"; }
+    if (d){ d.style.left = RING.cx + "%"; d.style.top = RING.cy + "%"; snapDeck(d); }
+  }
+  /* 바닥을 화면 점(기기 픽셀)에 딱 맞춘다. 가운데 맞춤(-50%)과 % 자리 때문에 92.5px 처럼
+     반 픽셀에 걸리면 카드 그림이 반 칸씩 번져 흐려 보였다 (2026-10-27) */
+  function snapDeck(d){
+    if (!d.offsetWidth) return;
+    const k = window.devicePixelRatio || 1;
+    const r = d.getBoundingClientRect();
+    const ox = Number(d.dataset.sx || 0), oy = Number(d.dataset.sy || 0);
+    const bx = r.left - ox, by = r.top - oy;
+    const nx = Math.round((Math.round(bx * k) / k - bx) * 1000) / 1000;
+    const ny = Math.round((Math.round(by * k) / k - by) * 1000) / 1000;
+    if (nx === ox && ny === oy) return;
+    d.dataset.sx = nx; d.dataset.sy = ny;
+    d.style.transform = "translate(calc(-50% + " + nx + "px),calc(-50% + " + ny + "px))";
   }
   
   function seatPos(i){
-    const a = (Math.PI / 2) + (i * 2 * Math.PI / N);
+    const a0 = (Math.PI / 2) + (i * 2 * Math.PI / N);
+    /* 7·8명은 판 화면(table.js seatPos)과 같게 좌우 끝 쪽 자리 사이를 넓힌다 — 화면이 바뀔 때 자리가 튀지 않게 (2026-10-26) */
+    const a = a0 + (N >= 7 ? 0.12 : 0) * Math.sin(2 * a0);
     const s = Math.sin(a);
     /* 이름표가 아래로 달려서, 아래쪽 자리는 그만큼 더 바깥으로 빼야 위와 대칭이 된다 */
-    const bias = s > 0.25 ? 3.4 * s : 0;
+    const bias = Math.sin(a0) > 0.25 ? 3.4 * s : 0;
     return {x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias};
   }
   function cardFace(c){
     if (c == null) return '<div class="card"></div>';   /* 아직 아무도 안 집은 카드 */
     const n = isJ(c) ? 13 : c;
-    const nm = isJ(c) ? (lang === "ko" ? "카멜레온" : "CHAMELEON")
-                      : (lang === "ko" ? KO_N : EN_N)[c - 1];
+    const nm = cardName(isJ(c) ? 13 : c, lang);   /* 스킨마다 다른 이름 (skin.js) */
     return '<div class="card">' +
       '<div class="card__band"><span class="card__num">' + n + '</span>' +
       '<span class="card__name">' + nm + '</span>' +
@@ -165,12 +181,13 @@ export function mount(root){
     const pw = Math.round(Math.max(26, Math.min(46, byW, byH)) * 0.8);
     deck.style.setProperty("--cols", cols);
     deck.style.setProperty("--pw", pw + "px");
+    deck.style.setProperty("--ph", Math.round(pw * 390 / 200) + "px");
     pool.forEach((c, k) => {
       const w = document.createElement("div");
       w.className = "pk";
       w.dataset.k = k;
       w.innerHTML = '<div class="pk__in">' +
-        '<div class="pk__f pk__f--b"><img src="' + ART.back + '" alt=""></div>' +
+        '<div class="pk__f pk__f--b"><img src="' + myBack() + '" data-skin-back alt=""></div>' +   /* 상점 카드 뒷면 */
         '<div class="pk__f pk__f--a">' + cardFace(c) + '</div></div>';
       deck.appendChild(w);
     });
@@ -264,6 +281,25 @@ export function mount(root){
     eng.takeCard(k);
   }
 
+  /* 뒤집기 — 도는 동안만 입체(turning), 다 돌면 납작하게 되돌려 선명하게 그린다(draw.css .pk 설명).
+     turning 을 먼저 붙이고 한 번 그리게 한 뒤 flip 을 붙여야 0°→180° 로 돈다 */
+  function turnCard(w){
+    w.classList.add("turning");
+    void w.offsetWidth;
+    w.classList.add("flip", "taken");
+    const inn = w.querySelector(".pk__in");
+    let done = false;
+    const end = () => {
+      if (done) return;
+      done = true;
+      w.classList.remove("turning");
+      if (inn) inn.removeEventListener("transitionend", onEnd);
+    };
+    const onEnd = e => { if (e.target === inn && e.propertyName === "transform") end(); };
+    if (inn) inn.addEventListener("transitionend", onEnd);
+    setTimeout(end, 650);   /* 화면이 가려져 전환이 안 돌면 transitionend 가 안 온다 */
+  }
+
   /* 엔진이 알려 준 대로 바닥을 맞춘다. 뒤집기는 처음 보일 때 한 번만 */
   function syncDeck(d){
     if (!d) return;
@@ -286,7 +322,7 @@ export function mount(root){
       }
       if (w.classList.contains("taken")) return;
       snd("card_play");     /* 카드 한 장 뒤집는 것이니 낼 때와 같은 소리 */
-      w.classList.add("flip", "taken");
+      turnCard(w);
       w.dataset.seat = seat;
       takenK.push(k);
       drawn[seat] = d.pool[k];
@@ -438,7 +474,7 @@ export function mount(root){
       /* 남은 시간은 제목 옆에 붙인다. 아래에 두면 긴 설명에 묻혀 안 보인다 */
       m.innerHTML = '<div class="mid__h">' + t.h +
         (pickLeft > 0 ? ' <b>(' + pickLeft + ')</b>' : '') + '</div>' +
-        '<div class="mid__s">' + t.s + '</div>';
+        '<div class="mid__s">' + t.s() + '</div>';
     } else {
       m.innerHTML = '<div class="mid__h">' + t.waitH + '</div><div class="mid__s">' +
         t.waitS(nameOf(waiting[0])) + '</div>';

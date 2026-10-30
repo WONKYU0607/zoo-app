@@ -53,6 +53,7 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.2",
     "@capacitor/haptics": "^8.0.2",
+    "@capgo/native-purchases": "8.9.5",
     "@fontsource/gowun-batang": "^5.3.0",
     "@fontsource/gowun-dodum": "^5.3.0",
     "@fontsource/noto-serif-kr": "^5.3.0",

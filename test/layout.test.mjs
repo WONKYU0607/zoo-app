@@ -101,18 +101,46 @@ const before = (await boxes(page, "#table .hand"))[0];
 await page.click("#table #emo");
 await new Promise(r => setTimeout(r, 250));
 const picks = await boxes(page, "#table .emopick button");
-check("감정표현 다섯 개가 올라온다", picks.length === 5, String(picks.length));
+check("이모티콘 묶음을 안 샀으면 다섯 개 · 한 줄 (예전 그대로)", picks.length === 5 && picks.every(p => Math.abs(p.t - picks[0].t) <= 4), String(picks.length));
+/* 상점에서 이모티콘 묶음(emote:1)을 산 사람 — 열 개 · 다섯씩 두 줄 (2026-10-29 사용자 결정) */
+await page.click("#table #emo"); await new Promise(r => setTimeout(r, 150));
+await page.evaluate(() => { window.ACCOUNT = window.ACCOUNT || {}; window.ACCOUNT.owned = ["emote:1"]; });
+await page.click("#table #emo");
+/* 올라오는 연출(.16초 + 늦춤 .17초)이 끝난 뒤에 줄을 잰다 */
+await new Promise(r => setTimeout(r, 450));
+const picks2 = await boxes(page, "#table .emopick button");
+check("**묶음을 산 사람은 열 개**", picks2.length === 10, String(picks2.length));
+const near = (a, b) => Math.abs(a - b) <= 4;
+check("다섯씩 두 줄", picks2.slice(0, 5).every(p => near(p.b, picks2[0].b)) && picks2.slice(5).every(p => near(p.b, picks2[5].b)) && picks2[5].t >= picks2[0].b - 2,
+      JSON.stringify(picks2.map(p => p.t + ".." + p.b)));
+check("양옆이 화면 안", picks2.every(p => p.l >= 0 && p.r <= 412), JSON.stringify(picks2.map(p => p.l + ".." + p.r)));
 const after = (await boxes(page, "#table .hand"))[0];
 check("감정표현을 열어도 손패가 안 밀린다",
       before && after && Math.abs(before.t - after.t) < 2,
       before && after ? before.t + " → " + after.t : "없음");
-check("감정표현 판이 화면 안에 있다",
-      picks.every(p => p.t >= 0 && p.b <= vh),
-      JSON.stringify(picks.map(p => p.t + ".." + p.b)));
-check("말풍선 글자가 안 잘린다",
+check("감정표현 판이 화면 안에 있다 (두 줄일 때도)",
+      picks2.every(p => p.t >= 0 && p.b <= vh),
+      JSON.stringify(picks2.map(p => p.t + ".." + p.b)));
+check("말풍선 글자가 안 잘린다 (가로·세로 — 긴 글은 두 줄)",
       await page.evaluate(() => [...document.querySelectorAll("#table .emopick .emobub")]
-        .every(b => b.scrollWidth <= b.clientWidth + 1)),
-      JSON.stringify(picks.map(p => p.txt)));
+        .every(b => b.scrollWidth <= b.clientWidth + 1 && b.scrollHeight <= b.clientHeight + 1)),
+      JSON.stringify(picks2.map(p => p.txt)));
+/* 이 검사 화면은 영어라 한국어 글을 그 풍선에 잠깐 넣어 잰다(글자 크기 규칙도 한국어로) — 그리는 길은 table.js bubText 와 같다 */
+const LN = await page.evaluate(() => {
+  const b = [...document.querySelectorAll("#table .emopick .emobub")][9];
+  const html = document.documentElement, lang0 = html.lang, t0 = b.textContent;
+  html.lang = "ko"; b.textContent = "그만!!! 멈춰\u00A0!!!";
+  const r = document.createRange(); r.selectNodeContents(b);
+  const lines = [...new Set([...r.getClientRects()].map(x => Math.round(x.top)))];
+  r.setStart(b.firstChild, 0); r.setEnd(b.firstChild, 5);
+  const first = Math.round(r.getClientRects()[0].top);
+  r.setStart(b.firstChild, 6); r.setEnd(b.firstChild, 7);
+  const second = Math.round(r.getClientRects()[0].top);
+  const res = { ok: lines.length === 2 && second > first, lines, first, second, t: b.textContent };
+  html.lang = lang0; b.textContent = t0;
+  return res;
+});
+check("\"그만!!! 멈춰 !!!\" 는 두 줄 · 첫 줄 \"그만!!!\"", LN.ok, JSON.stringify(LN));
 
 /* 등수·패스 표 — 상자가 글씨보다 작으면 안 된다.
    감싸개가 line-height:0 이라 그대로 물려받아 4px 짜리 상자가 나온 적이 있다 */

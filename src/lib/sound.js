@@ -97,10 +97,24 @@ export function stop(name){
   pool[src].list.forEach(a => { try { a.pause(); a.currentTime = 0; } catch(e){} });
 }
 
+/* **앱이 뒤에 있는 동안은 소리를 안 낸다** (2026-10-26 — 광고 정리하면서)
+   광고가 앱을 덮을 때도 앱은 뒤로 간다(pause). 그때 로비 배경음악이 계속 나오면 광고 소리와 겹친다.
+   화면을 끄거나 홈으로 나갔을 때도 마찬가지다. nav.js 가 apppause/appresume·화면 숨김에 맞춰 부른다.
+   돌아오면 배경음악은 하던 곳에서 이어서 나온다(그 화면이 배경음악을 트는 화면일 때만 — bgmEl 이 있을 때) */
+let away = false;
+export function setAway(on){
+  const was = away;
+  away = Boolean(on);
+  if (away === was) return;
+  if (away){ if (bgmEl){ try { bgmEl.pause(); } catch(e){} } }
+  else applyBgm();
+}
+
 /* 효과음 한 번 */
 export function play(name){
   const src = SFX[name];
   if (!src) return;                 /* 아직 파일이 없다 */
+  if (away) return;                 /* 앱이 뒤에 있다 */
   const g = sfxGain();
   if (g <= 0) return;
   try {
@@ -128,6 +142,7 @@ export function playBgm(name){
     bgmEl.volume = bgmGain();
     bgmName = name;
     try { window.__bgmOn = true; } catch(e){}
+    if (away) return;                /* 뒤에 있는 동안 바뀐 화면 — 돌아오면 applyBgm 이 튼다 */
     const p = bgmEl.play();
     if (p && p.catch) p.catch(() => {});
   } catch(e){}
@@ -143,6 +158,6 @@ function applyBgm(){
   if (!bgmEl) return;
   const g = bgmGain();
   bgmEl.volume = g;
-  if (g <= 0) { try { bgmEl.pause(); } catch(e){} }
+  if (g <= 0 || away) { try { bgmEl.pause(); } catch(e){} }
   else { const p = bgmEl.play(); if (p && p.catch) p.catch(() => {}); }
 }

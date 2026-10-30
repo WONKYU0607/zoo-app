@@ -101,7 +101,7 @@ console.log("\n[A2 설정 창 — 개인정보처리방침 · 이용약관 · �
 const P = await app({ build: 9, w: 360, h: 640 });
 await P.page.evaluate(() => window.__goto("lobby"));
 await nap(400);
-await P.press("#lobby .top__cfg");
+await P.press("#tbCfg");
 const settled = () => waitFor(async () => {
   const a = await P.page.evaluate(() => { const b = document.querySelector("#cfg [data-contact]"); return b ? b.getBoundingClientRect().top : null; });
   await nap(120);

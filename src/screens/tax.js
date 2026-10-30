@@ -3,6 +3,7 @@ import { play as snd } from "../lib/sound.js";
 import { avtFile } from "../lib/assets.js";
 import { RINGS as A_RINGS } from "../lib/assets.js";
 import { ART_DECK as A_DECK } from "../lib/assets.js";
+import { myBack, cardSrc, cardName as skinName, jokerWord } from "../lib/skin.js";
 import "../styles/tax.css";
 
 export function mount(root){
@@ -27,15 +28,15 @@ export function mount(root){
   const T = {
     ko:{
       steps:["등수 발표","패 나누기","혁명","세금","시작"],
-      dealH:"패 나누기", dealS:"80장을 골고루 나눕니다. 이 순간 카멜레온 두 장이 한 사람에게 몰리면 혁명이 열립니다.",
+      dealH:"패 나누기", dealS:"80장을 골고루 나눕니다. 이 순간 %J 두 장이 한 사람에게 몰리면 혁명이 열립니다.",
       rankH:"이번 판의 등수", rankS:"지난 판에서 손을 턴 순서가 그대로 이번 판 등수가 됩니다.",
-      revH:"혁명", revNone:"카멜레온 두 장을 모두 쥔 사람이 없습니다.",
-      revMine:"카멜레온 두 장이 모두 손에 들어왔습니다. 혁명을 선언하면 이번 판 세금이 사라집니다.",
-      revOther:n=>n+"님이 카멜레온 두 장을 쥐고 혁명을 선언했습니다. 이번 판 세금은 없습니다.",
+      revH:"혁명", revNone:"%J 두 장을 모두 쥔 사람이 없습니다.",
+      revMine:"%J 두 장이 모두 손에 들어왔습니다. 혁명을 선언하면 이번 판 세금이 사라집니다.",
+      revOther:n=>n+"님이 %J 두 장을 쥐고 혁명을 선언했습니다. 이번 판 세금은 없습니다.",
       revGreatOther:n=>n+"님이 꼴등으로 대혁명을 선언했습니다. 세금이 사라지고 등수가 통째로 뒤집힙니다.",
-      revGreatMine:"꼴등인데 카멜레온 두 장을 모두 쥐었습니다. 대혁명을 선언하면 세금이 사라지고 계급이 통째로 뒤집힙니다.",
+      revGreatMine:"꼴등인데 %J 두 장을 모두 쥐었습니다. 대혁명을 선언하면 세금이 사라지고 계급이 통째로 뒤집힙니다.",
       revGreatDone:"대혁명. 계급이 뒤집혔습니다.", revDone:"혁명. 이번 판 세금은 없습니다.",
-      revWait:n=>n+"님이 카멜레온 두 장을 쥐었습니다. 혁명을 선언할지 고르는 중입니다.",
+      revWait:n=>n+"님이 %J 두 장을 쥐었습니다. 혁명을 선언할지 고르는 중입니다.",
       revPassed:n=>n+"님이 혁명을 선언하지 않았습니다. 세금을 그대로 걷습니다.",
       revPassedMine:"혁명을 선언하지 않았습니다. 세금을 그대로 걷습니다.",
       taxH:"세금", taxSkip:"혁명으로 이번 판 세금은 걷지 않습니다.",
@@ -54,15 +55,15 @@ export function mount(root){
     },
     en:{
       steps:["Standings","Deal","Revolution","Tax","Start"],
-      dealH:"Dealing", dealS:"All 80 cards go out. If both chameleons land in one hand, a revolution opens up.",
+      dealH:"Dealing", dealS:"All 80 cards go out. If both %Js land in one hand, a revolution opens up.",
       rankH:"Standings for this round", rankS:"Last round's finishing order becomes this round's standing.",
-      revH:"Revolution", revNone:"Nobody holds both chameleons.",
-      revMine:"Both chameleons are in your hand. Declare a revolution and this round's tax is cancelled.",
-      revOther:n=>n+" holds both chameleons and declared a revolution. No tax this round.",
+      revH:"Revolution", revNone:"Nobody holds both %Js.",
+      revMine:"Both %Js are in your hand. Declare a revolution and this round's tax is cancelled.",
+      revOther:n=>n+" holds both %Js and declared a revolution. No tax this round.",
       revGreatOther:n=>n+" declared a great revolution from last place. Tax is cancelled and every standing reverses.",
-      revGreatMine:"You are last and hold both chameleons. A great revolution cancels tax and reverses every rank.",
+      revGreatMine:"You are last and hold both %Js. A great revolution cancels tax and reverses every rank.",
       revGreatDone:"Great revolution. Every rank is reversed.", revDone:"Revolution. No tax this round.",
-      revWait:n=>n+" holds both chameleons and is deciding whether to declare a revolution.",
+      revWait:n=>n+" holds both %Js and is deciding whether to declare a revolution.",
       revPassed:n=>n+" did not declare a revolution. Tax goes ahead.",
       revPassedMine:"You did not declare a revolution. Tax goes ahead.",
       taxH:"Tax", taxSkip:"The revolution cancels tax for this round.",
@@ -120,9 +121,10 @@ export function mount(root){
   const nameOf = i => ((lang === "ko" ? G().names : G().namesEn) || G().names || [])[i] || "";
   
   
-  const art = n => n === 13 ? ART.jokerA : n === 14 ? ART.jokerB : ART[String(n).padStart(2,"0")];
-  const cardName = n => isJ(n) ? (lang === "ko" ? "카멜레온" : "CHAMELEON")
-                               : (lang === "ko" ? KO_N : EN_N)[n - 1];
+  const art = n => cardSrc(n);   /* 상점 카드 스킨(앞면 그림) — 기본이면 예전 그림 그대로 (skin.js) */
+  const cardName = n => skinName(isJ(n) ? 13 : n, lang);   /* 스킨마다 다른 이름 (skin.js) */
+  /* 안내 글 속 조커 이름 자리표 — %Js 여러 장(영어) · %J 한 장. 스킨마다 카멜레온 · 프리스트 */
+  const J = x => String(x).replace(/%Js/g, jokerWord(lang, "many")).replace(/%J/g, jokerWord(lang));
   function cardHTML(n, w){
     /* 빈 숫자칸을 양쪽에 둬야 이름이 가운데로 온다 */
     if (isJ(n)) return '<div class="card" style="--w:' + w + 'px">' +
@@ -179,10 +181,12 @@ export function mount(root){
   }
   
   function seatPos(i){
-    const a = (Math.PI / 2) + (i * 2 * Math.PI / N);
+    const a0 = (Math.PI / 2) + (i * 2 * Math.PI / N);
+    /* 7·8명은 판 화면(table.js seatPos)과 같게 좌우 끝 쪽 자리 사이를 넓힌다 — 화면이 바뀔 때 자리가 튀지 않게 (2026-10-26) */
+    const a = a0 + (N >= 7 ? 0.12 : 0) * Math.sin(2 * a0);
     const s = Math.sin(a);
     /* 이름표가 아래로 달려서, 아래쪽 자리는 그만큼 더 바깥으로 빼야 위와 대칭이 된다 */
-    const bias = s > 0.25 ? 3.4 * s : 0;
+    const bias = Math.sin(a0) > 0.25 ? 3.4 * s : 0;
     return {x: RING.cx + Math.cos(a) * -RING.rx, y: RING.cy + s * RING.ry + bias};
   }
   
@@ -220,7 +224,7 @@ export function mount(root){
   }
   function backHTML(w){
     return '<div class="card" style="--w:' + w + 'px;padding:2px"><div class="card__art" style="border-width:1px">' +
-      '<img src="' + ART.back + '" alt=""></div></div>';
+      '<img src="' + myBack() + '" data-skin-back alt=""></div></div>';   /* 상점 카드 뒷면 */
   }
   function clearFx(){ el("fx").innerHTML = ""; }
   
@@ -446,17 +450,17 @@ export function mount(root){
       /* 제목만 가운데. 등수는 각자 프로필에 붙는다 */
       html = '<div class="mid__h">' + t.rankH + '</div>';
     } else if (step === 1){
-      html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + t.dealS + '</div>';
+      html = '<div class="mid__h">' + t.dealH + '</div><div class="mid__s">' + J(t.dealS) + '</div>';
     } else if (step === 2){
       const great = revSeat !== null && rankOf(revSeat) === n - 1;
       const passed = revPassedNow();
-      html = '<div class="mid__h">' + t.revH + '</div><div class="mid__s">' +
+      html = '<div class="mid__h">' + t.revH + '</div><div class="mid__s">' + J(
         (revSeat === null ? t.revNone
          : declared ? (wasGreat ? t.revGreatDone : t.revDone)
          : passed ? (revSeat === 0 ? t.revPassedMine : t.revPassed(nameOf(revSeat)))
          : revSeat === 0 ? (great ? t.revGreatMine : t.revMine)
          : online ? t.revWait(nameOf(revSeat))
-         : (great ? t.revGreatOther(nameOf(revSeat)) : t.revOther(nameOf(revSeat)))) + '</div>';
+         : (great ? t.revGreatOther(nameOf(revSeat)) : t.revOther(nameOf(revSeat))))) + '</div>';
       if (revSeat === 0 && !declared && !passed)
         html += '<div class="flow rev"><div class="frow"><span class="frow__c">' +
           cardHTML(13, 40) + cardHTML(14, 40) + '</span></div></div>';

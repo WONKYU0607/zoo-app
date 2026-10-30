@@ -7,8 +7,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 #table, #table{height:100%}
 #table{
-  --back:url(/assets/back.webp);
-  background:#0B140F url(/assets/tablebg.webp) center/cover no-repeat;
+  --back:var(--skin-back,url(/assets/back.webp));   /* 상점 카드 뒷면 (skin.js) */
+  background:#0B140F var(--skin-table,url(/assets/tablebg.webp)) center/cover no-repeat;
   color:var(--parchment);font-family:"Gowun Dodum",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;overflow:hidden;
 }
@@ -71,7 +71,8 @@
   0%,100%{filter:drop-shadow(0 0 3px rgba(255,90,74,.9)) drop-shadow(0 0 7px rgba(255,90,74,.5))}
   50%{filter:drop-shadow(0 0 8px rgba(255,90,74,1)) drop-shadow(0 0 18px rgba(255,90,74,.8))}
 }
-#table .seat--pass .seat__av, #table .seat--pass .seat__n{opacity:.36}
+/* 패스한 자리 — 흐리게. .36 은 너무 안 보여서 .62 (2026-10-26 사용자 "저거보단 좀 진하게") */
+#table .seat--pass .seat__av, #table .seat--pass .seat__n{opacity:.62}
 #table .seat--out .seat__av{border-style:dashed;filter:grayscale(1) brightness(.7)}
 #table .seat--me .seat__av{border-color:#E3C67C;width:calc(var(--av,44px) + 4px);height:calc(var(--av,44px) + 4px)}
 #table .seat__n{font-size:var(--fs,10.5px);text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1.2;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
@@ -85,6 +86,14 @@
   box-shadow:-1px 1px 3px rgba(0,0,0,.6);
 }
 #table .seat__avwrap{position:relative;display:block;line-height:0}
+/* ---------- 7·8명 판 — 자리가 촘촘하다 (2026-10-27 B안) ----------
+   대각선 자리를 옆으로 보내 간격을 고르게 맞추면(table.js SEAT_WARP 0.12) 끝자리 패스 표·부채가 옆 자리에 닿는다.
+   패스 표는 얼굴 오른쪽 위로 삐져나오지 않게 얼굴 가운데에 얹고(패스한 얼굴은 어두워서 글씨가 잘 보인다),
+   남은 카드 부채를 조금 작게, 자리 안 간격을 좁힌다. 6명 이하는 그대로 */
+#table .seats--crowd .seat{gap:1px}
+#table .seats--crowd .fan{height:17px;margin-top:0}
+#table .seats--crowd .fan i{width:10px;height:17px}
+#table .seats--crowd .seat__tag{left:50%;top:50%;transform:translate(-50%,-50%)}
 /* 프로필 원의 오른쪽 위. 원 위로 올라와야 가리지 않는다 */
 #table .seat__tag{position:absolute;z-index:3;top:calc(var(--av,44px) * -.12);
   left:calc(var(--av,44px) * .70);
@@ -116,10 +125,10 @@
 .card{--w:58px;width:var(--w);aspect-ratio:200/390;flex:none;
   border-radius:calc(var(--w) * .05);padding:calc(var(--w) * .042);
   background:
-    radial-gradient(38% 22% at 16% 12%,rgba(140,106,52,.16),transparent 70%),
-    radial-gradient(44% 24% at 70% 92%,rgba(112,82,38,.18),transparent 74%),
+    radial-gradient(38% 22% at 16% 12%,var(--card-hl1,rgba(140,106,52,.16)),transparent 70%),
+    radial-gradient(44% 24% at 70% 92%,var(--card-hl2,rgba(112,82,38,.18)),transparent 74%),
     linear-gradient(162deg,var(--p1),var(--p2) 52%,var(--p3));
-  box-shadow:inset 0 0 calc(var(--w) * .09) rgba(108,78,34,.34),0 4px 10px rgba(0,0,0,.6);
+  box-shadow:inset 0 0 calc(var(--w) * .09) var(--card-in,rgba(108,78,34,.34)),0 4px 10px rgba(0,0,0,.6);
   display:flex;flex-direction:column}
 #table .card__band{display:flex;align-items:center;justify-content:space-between;
   padding:0 calc(var(--w) * .016);height:calc(var(--w) * .208);color:var(--card-ink)}
@@ -193,8 +202,8 @@
 /* 카드내기는 붉은 틀. 크기는 위와 똑같아야 셋이 나란히 선다 */
 #table #play{border-image:var(--fr-red) 46 fill stretch;
   color:#FBEFCE;text-shadow:0 1px 4px rgba(0,0,0,.9)}
-#table #play:active{border-image:var(--fr-red-down) 46 fill stretch;transform:translateY(1px)}
-#table .bt-pass:active{border-image:var(--fr-btn-down) 33 fill stretch;transform:translateY(1px)}
+#table #play:active,#table #play.is-press{border-image:var(--fr-red-down) 46 fill stretch;transform:translateY(1px)}
+#table .bt-pass:active,#table .bt-pass.is-press{border-image:var(--fr-btn-down) 33 fill stretch;transform:translateY(1px)}
 #table .acts button:disabled{opacity:.36;box-shadow:none}
 #table /* 아바타: 바깥은 놋쇠 틀, #table 안쪽은 얼굴 (두 겹 배경) */
 .seat__av{
@@ -222,8 +231,9 @@
 
 /* 고르는 판. 손패 **위에 떠 있게** 한다 —
    흐름 안에 두면 열 때마다 위 내용이 통째로 밀려 올라간다 */
+/* 열 개 — 다섯씩 두 줄(2026-10-29 다섯 개 추가). 칸 크기는 예전 그대로 */
 #table .emopick{position:absolute;left:0;right:0;z-index:9;
-  display:flex;gap:10px;justify-content:center;align-items:flex-end;
+  display:grid;grid-template-columns:repeat(5,auto);gap:4px 10px;justify-content:center;align-items:end;
   padding:6px 4px 4px;pointer-events:none;
   /* 뒤에 깔린 안내 글씨와 섞이지 않게 살짝 어둡게 깐다 */
   background:linear-gradient(180deg,rgba(6,12,8,0),rgba(6,12,8,.72) 22%,rgba(6,12,8,.86))}
@@ -236,7 +246,12 @@
 #table .emopick button:nth-child(3){animation-delay:.06s}
 #table .emopick button:nth-child(4){animation-delay:.09s}
 #table .emopick button:nth-child(5){animation-delay:.12s}
-#table .emopick button:active{transform:translateY(1px)}
+#table .emopick button:nth-child(6){animation-delay:.05s}
+#table .emopick button:nth-child(7){animation-delay:.08s}
+#table .emopick button:nth-child(8){animation-delay:.11s}
+#table .emopick button:nth-child(9){animation-delay:.14s}
+#table .emopick button:nth-child(10){animation-delay:.17s}
+#table .emopick button:active,#table .emopick button.is-press{transform:translateY(1px)}
 @keyframes emorise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 /* 2026-10-22 사용자 요청으로 고르는 판·바닥에 뜨는 것 모두 **25% 키웠다** (전: 그림 55×66, 말풍선 41×31) */
 #table .emopick .emoimg{width:100%;min-width:69px;height:83px;background-repeat:no-repeat;
@@ -257,7 +272,9 @@
   width:51px;height:39px;padding:0 4px 8px;box-sizing:border-box;
   background:url(/assets/emote_bubble.webp) no-repeat center/100% 100%;
   font-family:"Gowun Batang",serif;font-weight:700;font-size:9.1px;line-height:1.1;
-  letter-spacing:-.03em;color:#3B2A12;text-align:center;white-space:nowrap}
+  letter-spacing:-.03em;color:#3B2A12;text-align:center;
+  /* 긴 글은 띄어쓰기에서 두 줄로(낱말 가운데서는 안 꺾는다). 그래도 넘치면 table.js fitBub 가 글자를 줄인다 */
+  white-space:normal;word-break:keep-all;overflow:hidden}
 /* 영어는 글자가 길어 그대로 두면 넘친다 */
 html[lang="en"] #table .emobub{font-size:7.6px;letter-spacing:-.02em}
 
@@ -329,6 +346,12 @@ html[lang="en"] #table .seat__emo .emobub{font-size:9.4px}
 #table .hand .card.is-joker .card__name{font-size:calc(var(--w) * .120)}
 body[data-lang="en"] #table .hand .card__name,
 body[data-lang="en"] #table .hand .card.is-joker .card__name{font-size:calc(var(--w) * .08833)}
+/* 다섯 글자 넘는 한글 이름(신화 왕국 "미노타우로스")은 7.2px 이면 양옆 숫자 사이(약 34px)에 안 들어가 잘린다(실측 42px)
+   → 영문과 같은 5.3px (2026-10-27) */
+#table .hand .card__name--long{font-size:calc(var(--w) * .08833)}
+/* 긴 이름은 글자가 작아 숫자 바로 옆부터 시작한다 → 겹친 카드의 좁은 띠에 이름 첫 글자 조각("8 ㅁ")이 보였다.
+   줄 맨 끝(다 보이는 카드)에만 보인다 (slot--end 는 table.js 손패 그리기가 단다) */
+#table .hand .slot:not(.slot--end) .card__name--long{visibility:hidden}
 
 /* **영문 손패는 띠의 좌우 여백을 없앤다.**
 

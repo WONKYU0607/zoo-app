@@ -80,8 +80,8 @@ export function badName(str){
   const v = String(str || "").toLowerCase();
   if (!v) return null;
 
-  /* 운영자·게스트 흉내 */
-  if (/^게스트/.test(v) || /^guest/.test(v) || /^gm([^a-z]|$)/.test(v)) return "official";
+  /* 운영자·게스트 흉내 · 처음 들어올 때 잠깐 붙는 임시 이름(새사용자N — 2026-10-26: 이걸 그대로 "정하기" 하면 별명을 안 정한 것과 같다) */
+  if (/^게스트/.test(v) || /^새사용자/.test(v) || /^guest/.test(v) || /^gm([^a-z]|$)/.test(v)) return "official";
   if (OFFICIAL_KO.some(w => v.includes(w)) || OFFICIAL_EN.some(w => leet(v, "i").includes(w))) return "official";
 
   /* 한국어 */

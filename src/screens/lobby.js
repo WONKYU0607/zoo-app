@@ -14,7 +14,7 @@ export function mount(root){
       lbQuick:"바로 시작하기", btQuick:"빠른 참가", open:n=>"(빈방 "+n+"개)", none:"지금 들어갈 방이 없습니다",
       hQuick:"",   /* 설명 글은 뺐다. 이 줄은 "들어갈 방이 없습니다" 안내에만 쓴다 */
       lbNew:"친구와 하기", btNew:"방 만들기",
-      hNew:"방을 만들면 4자리 번호가 나옵니다. 친구에게 번호를 알려 주세요. 4명부터 8명까지 함께할 수 있습니다.",
+      hNew:"방을 만들면 4자리 번호가 나옵니다. 친구에게 번호를 알려 주세요. 2명부터 8명까지 함께할 수 있습니다.",
       hNoTicket:"티켓이 없어 게임에 들어갈 수 없습니다. 30분마다 한 장씩 채워지고, 광고를 보면 바로 한 장 받습니다.",
       lbJoin:"번호로 들어가기", btJoin:"참가",
       mkTitle:"방 만들기", mkGo:"방 만들기",
@@ -40,7 +40,7 @@ export function mount(root){
       lbQuick:"PLAY NOW", btQuick:"Quick match", open:n=>"("+n+" open)", none:"No open room right now",
       hQuick:"",
       lbNew:"PLAY WITH FRIENDS", btNew:"Create room",
-      hNew:"You'll get a 4-digit number. Share it with your friends. 4 to 8 players.",
+      hNew:"You'll get a 4-digit number. Share it with your friends. 2 to 8 players.",
       hNoTicket:"You need a ticket to play. One refills every 30 minutes, or watch an ad for one now.",
       lbJoin:"JOIN BY NUMBER", btJoin:"Join",
       mkTitle:"Create a room", mkGo:"Create room",
@@ -172,6 +172,9 @@ export function mount(root){
       t.style.backgroundImage = "url(/assets/tier_" + String(n).padStart(2, "0") + ".webp)";
     }
     if (s) s.textContent = a.score.toLocaleString();
+    /* 보유 코인 (2026-10-29 사용자 — 상단바: 티어 · 점수 · 별명 · 코인 · 티켓) */
+    const c = document.getElementById("acctCoins");
+    if (c) c.textContent = Math.max(0, Math.floor(Number(a.coins) || 0)).toLocaleString();
     if (k) k.textContent = a.tickets;
     paintNew();
     paintTimer();

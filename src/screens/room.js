@@ -50,6 +50,8 @@ export function mount(root){
          sumP:"명", sumR:"판", sumT:"세금", sumC:"2번 컷", on2:"켬", off2:"끔", edit:"\u203A 변경",
          copied:"복사됨", start:"시작하기", starting:"카드를 나누는 중", needFour:"2명이 모여야 시작합니다", noTicket:"티켓이 없습니다. 30분마다 한 장씩 채워집니다",
          wait:"방장이 시작하기를 기다리는 중입니다",
+         /* 방장 연결이 끊김 — 서버가 남은 초를 준다(2026-10-28). 0 이면 다음 조회에서 넘어간다 */
+         hostGone:n=>"방장의 연결이 끊어졌습니다<br>"+Math.max(1,n)+"초 뒤 다른 사람에게 방장이 넘어갑니다",
          kickT:"내보내기", kickM:(n,k)=>n+"님을 내보낼까요? (남은 횟수 "+k+")", kickY:"내보내기",
          kickNoneT:"내보내기", kickNone:"이 방에서는 더 내보낼 수 없습니다 (한 방에 2번까지)", ok:"확인",
          kickFail:"내보내지 못했습니다", startFail:"시작하지 못했습니다",
@@ -71,6 +73,7 @@ export function mount(root){
          sumP:" players", sumR:" rounds", sumT:"Tax", sumC:"Two-cut", on2:"on", off2:"off", edit:"\u203A Change",
          copied:"Copied", start:"Start", starting:"Dealing", needFour:"Two players are needed", noTicket:"No tickets left. One refills every 30 minutes",
          wait:"Waiting for the host to start",
+         hostGone:n=>"The host has disconnected<br>Host passes to another player in "+Math.max(1,n)+"s",
          kickT:"Remove player", kickM:(n,k)=>"Remove "+n+" from the room? ("+k+" left)", kickY:"Remove",
          kickNoneT:"Remove player", kickNone:"No more removals in this room (2 per room)", ok:"OK",
          kickFail:"Could not remove the player", startFail:"Could not start",
@@ -85,6 +88,9 @@ export function mount(root){
   let rounds = 5;       // 몇 판까지
   let taxOn = true;     // 세금·혁명 사용
   let role = "host";
+  /* 방장 연결이 끊김 안내의 1초 셈 (2026-10-28) */
+  let goneTick = null;
+  const goneLeft = due => Math.max(0, Math.ceil((due - Date.now()) / 1000));
   
   
   /* 배경 그림 속 초록 타원.
@@ -263,9 +269,11 @@ export function mount(root){
     }
     const fs = (cap <= 6 ? 11 : 9.5) + "px";
     for (let i = 0; i < cap; i++){
-      const a = (Math.PI / 2) + (i * 2 * Math.PI / cap);   // 아래에서 시계 방향
+      const a0 = (Math.PI / 2) + (i * 2 * Math.PI / cap);   // 아래에서 시계 방향
+      /* 7·8명은 판 화면(table.js seatPos)과 같게 좌우 끝 쪽 자리 사이를 넓힌다 (2026-10-26) */
+      const a = a0 + (cap >= 7 ? 0.12 : 0) * Math.sin(2 * a0);
       const sy = Math.sin(a);
-      const bias = sy > 0.25 ? 3.4 * sy : 0;   /* 아래쪽은 이름표만큼 더 바깥으로 */
+      const bias = Math.sin(a0) > 0.25 ? 3.4 * sy : 0;   /* 아래쪽은 이름표만큼 더 바깥으로 */
       const left = RB.cx + Math.cos(a) * -RB.rx;
       const top  = RB.cy + sy * RB.ry + bias;
       const p = list[i] || null;
@@ -500,7 +508,18 @@ export function mount(root){
       a.innerHTML = '<button class="btn-primary" ' + (now < MIN_START || starting ? "disabled" : "") + '>' +
         lbl + '</button>';
     } else {
-      a.innerHTML = '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
+      /* 방장 연결이 끊겼으면 기다리라는 말 대신 곧 방장이 넘어온다고 알린다 — 앱을 꺼 버린 방장 방에 들어온 사람이
+         영영 못 시작하는 줄 알았다(2026-10-28 사용자) */
+      const due = R && R.hostDue;
+      a.innerHTML = due
+        ? '<div class="waiting waiting--gone">' + t.hostGone(goneLeft(due)) + '</div>'
+        : '<div class="waiting">' + t.wait + '<span class="dots"></span></div>';
+      /* 서버 조회(1.5초)를 기다리지 않고 1초씩 센다 — 안 그러면 9·8·6·5·3 처럼 건너뛴다 */
+      if (due && !goneTick) goneTick = setInterval(() => {
+        const R2 = window.__room, el = document.querySelector("#room .waiting--gone");
+        if (!R2 || !R2.hostDue || !el){ clearInterval(goneTick); goneTick = null; return; }
+        el.innerHTML = L[lang].hostGone(goneLeft(R2.hostDue));
+      }, 250);
     }
   }
   

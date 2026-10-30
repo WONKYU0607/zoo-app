@@ -32,8 +32,9 @@ await nap(500);
 /* ---- 자리 ---- */
 const pos = await page.evaluate(() => {
   const ad = document.querySelector("#lobby #btAd");
-  const me = document.querySelector("#lobby #acctProfile");
-  const rk = document.querySelector("#lobby [data-rankopen]");
+  /* 2026-10-29 하단 고정 탭 — 프로필·랭킹은 아래로. 광고 단추는 상단바 바로 밑 줄의 왼쪽 끝(친구 단추보다 왼쪽) */
+  const me = document.querySelector("#lobby .top");
+  const rk = document.querySelector("#lobby [data-friendopen]");
   if (!ad || !me || !rk) return null;
   const a = ad.getBoundingClientRect(), m = me.getBoundingClientRect(), k = rk.getBoundingClientRect();
   return { adTop: a.top, meBottom: m.bottom, adLeft: a.left, meLeft: m.left, rkLeft: k.left,
@@ -41,9 +42,9 @@ const pos = await page.evaluate(() => {
 });
 check("광고 단추가 있다", Boolean(pos), pos ? pos.label : "없음");
 if (pos){
-  check("프로필 밑에 있다", pos.adTop >= pos.meBottom - 2, "단추 위 " + Math.round(pos.adTop) + " · 프로필 아래 " + Math.round(pos.meBottom));
-  check("줄의 왼쪽 끝이다 (랭킹 단추보다 왼쪽)", pos.adLeft < pos.rkLeft,
-        "광고 " + Math.round(pos.adLeft) + " · 랭킹 " + Math.round(pos.rkLeft));
+  check("상단바 밑에 있다", pos.adTop >= pos.meBottom - 2, "단추 위 " + Math.round(pos.adTop) + " · 프로필 아래 " + Math.round(pos.meBottom));
+  check("줄의 왼쪽 끝이다 (친구 단추보다 왼쪽)", pos.adLeft < pos.rkLeft,
+        "광고 " + Math.round(pos.adLeft) + " · 친구 " + Math.round(pos.rkLeft));
   check("글자가 틀 안에 들어간다", pos.w > 40 && pos.h > 10, Math.round(pos.w) + "x" + Math.round(pos.h));
 }
 
@@ -84,6 +85,20 @@ await setTickets(1);
 await page.evaluate(() => document.querySelector("#lobby #btAd").click());
 await nap(300);
 check("중간에 닫으면 티켓을 안 준다", (await page.evaluate(() => window.__given)) === 0);
+/* 2026-10-26: 결과를 말없이 넘기지 않는다 — 중간에 닫음 / 못 불러옴 */
+const hq = () => page.evaluate(() => (document.querySelector("#lobby #hQuick") || {}).textContent || "");
+check("중간에 닫으면 \"끝까지 보면 티켓\" 안내", /끝까지 보면 티켓/.test(await hq()), await hq());
+await page.evaluate(() => { window.__adTest = async () => ({ ok: false, why: "load" }); });
+await nap(2700);                                   /* 앞 안내가 사라질 때까지 */
+await page.evaluate(() => document.querySelector("#lobby #btAd").click());
+await nap(300);
+check("못 불러오면 \"잠시 뒤 다시\" 안내 · 단추는 곧바로 다시 눌린다", /불러오지 못했습니다/.test(await hq()) && !(await disabled()), await hq());
+await page.evaluate(() => { window.__adTest = async () => ({ ok: false, why: "busy" }); });
+await nap(2700);
+const quiet = await hq();
+await page.evaluate(() => document.querySelector("#lobby #btAd").click());
+await nap(300);
+check("이미 떠 있는 광고(busy)면 아무 말도 안 한다", (await hq()) === quiet, await hq());
 
 /* ---- 3장이면 잠긴다 ---- */
 await setTickets(3);

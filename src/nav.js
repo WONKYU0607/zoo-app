@@ -1,8 +1,9 @@
 import "./styles/base.css";
 import { AVATARS, AVT_FREE } from "./lib/assets.js";
-import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm, warm } from "./lib/sound.js";
+import { owns, item as shopItem, AVT_SCORE } from "./lib/shop.js";
+import { sound, setBgm, setSfx, toggleMute, onSound, play as snd, playBgm, stopBgm, warm, setAway as soundAway } from "./lib/sound.js";
 import "./state.js";
-import { showInterstitial } from "./lib/ads.js";
+import { showInterstitial, preloadInterstitial } from "./lib/ads.js";
 import { vibOn, setVib } from "./lib/haptic.js";
 import { TERMS, PRIVACY, CONTACT } from "./lib/legal.js";
 import { appInfo, openExternal } from "./lib/appinfo.js";
@@ -34,6 +35,18 @@ export const ACCT_HTML =
   '<div class="cfg__row"><button id="acDel"></button></div>' +
   '</div></div></div>';
 
+/* ---------- 하단 고정 탭 (2026-10-29 사용자 결정: "하단은 고정시켜서 프로필, 랭킹, 상점, 설정" + 로비로 돌아올 홈) ----------
+   로비·랭킹·상점에서만 보인다(go — TAB_PAGES). 방·게임 화면에서는 숨는다.
+   단추는 예전 단추와 **같은 표시(data-…open)** 를 써서 여는 길이 그대로다 — 프로필·설정은 창, 랭킹·상점·홈은 화면.
+   그림: 프로필 = 내 얼굴(테 + 얼굴 두 겹) · 랭킹 = 왕관 뱃지 · 홈 = 사자 문장 · 상점 = 금화 · 설정 = 톱니 (모두 있던 그림) */
+export const TAB_HTML =
+  '<nav class="tabbar" id="tabbar" aria-label="menu">' +
+  '<button class="tab" id="tbProfile" data-acctopen data-tab="profile"><i class="tab__ic tab__ic--me" id="tbMeIc"></i><span id="tbMeL">프로필</span></button>' +
+  '<button class="tab" id="tbRank" data-rankopen data-tab="rank"><i class="tab__ic tab__ic--rank"></i><span id="rankLabel">랭킹</span></button>' +
+  '<button class="tab" id="tbHome" data-homeopen data-tab="lobby"><i class="tab__ic tab__ic--home"></i><span id="tbHomeL">홈</span></button>' +
+  '<button class="tab" id="tbShop" data-shopopen data-tab="shop"><i class="tab__ic tab__ic--shop"></i><span id="shopLabel">상점</span></button>' +
+  '<button class="tab" id="tbCfg" data-cfgopen data-tab="cfg"><i class="tab__ic tab__ic--cfg"></i><span id="tbCfgL">설정</span></button>' +
+  '</nav>';
 export const CFG_HTML =
   '<div class="cfg" id="cfg" role="dialog" aria-modal="true">' +
   '<div class="cfg__v" data-cfgclose></div><div class="cfg__p">' +
@@ -118,6 +131,8 @@ export function initNav(){
     const b = e.target.closest("[data-l]");
     if (b) window.setLang(b.dataset.l);
     if (e.target.closest("[data-rankopen]")) go("rank");
+    if (e.target.closest("[data-shopopen]")) go("shop");
+    if (e.target.closest("[data-homeopen]")) go("lobby");          /* 하단 탭의 홈 (2026-10-29) */
     if (e.target.closest("[data-cfgopen]")) openCfg();
     if (e.target.closest("[data-cfgclose]")) document.getElementById("cfg").classList.remove("on");
   });
@@ -495,6 +510,10 @@ export function initNav(){
   document.addEventListener("visibilitychange", () => { document.hidden ? presAway() : presBack(); });
   window.addEventListener("apppause", presAway);
   window.addEventListener("appresume", presBack);
+  /* 앱이 뒤에 있는 동안(광고가 덮음·화면 끔·홈) 소리를 멈춘다 — 광고 소리와 겹치지 않게 (2026-10-26, sound.js setAway) */
+  document.addEventListener("visibilitychange", () => soundAway(document.hidden));
+  window.addEventListener("apppause",  () => soundAway(true));
+  window.addEventListener("appresume", () => soundAway(false));
 
   let invSeen = {};
   let invRows = [], invStop = null, invUid = "";
@@ -547,18 +566,22 @@ export function initNav(){
     if (!wrap || !lab) return;
     const ko = (window.__lang || "ko") === "ko";
     const a = window.ACCOUNT || {};
-    const score = a.score || 0;
     const mine = Number(a.avatar) || 0;
     lab.textContent = ko ? "프로필 설정" : "Profile";
     wrap.innerHTML = AVATARS.map((v, i) => {
-      const open = score >= (i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000);
+      /* 열렸는가 — 0~14번은 점수로(예전 그대로), 15번부터는 상점에서 산 것 (2026-10-26) */
+      const open = owns(a, "avt:" + i);
       const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000;
-      /* 잠긴 것은 자물쇠 밑에 필요한 점수를 바로 적는다.
+      const it = shopItem("avt:" + i);
+      /* 잠긴 것은 자물쇠 밑에 필요한 점수(상점 얼굴은 코인 값)를 바로 적는다.
          눌러야 알려 주면 뭘 모으는 중인지 한눈에 안 보인다 */
-      const lock = open ? "" :
+      const lock = open ? "" : i < AVT_SCORE ?
         '<i class="avt__lk"></i><span class="avt__need">' +
         '<b>' + need.toLocaleString() + (ko ? "점" : "") + "</b>" +
-        '<i>' + (ko ? "달성 시 해제" : "to unlock") + "</i></span>";
+        '<i>' + (ko ? "달성 시 해제" : "to unlock") + "</i></span>" :
+        '<i class="avt__lk"></i><span class="avt__need">' +
+        '<b><i class="coin-ic"></i>' + (it ? it.price : 0).toLocaleString() + "</b>" +
+        '<i>' + (ko ? "상점" : "shop") + "</i></span>";
       return '<button class="avt__i' + (open ? "" : " avt__i--lock") +
         (i === mine ? " avt__i--on" : "") + '" data-avt="' + i + '"' +
         ' style="background-image:url(' + v.f + ')" aria-label="' + (ko ? v.ko : v.en) + '">' +
@@ -642,10 +665,20 @@ export function initNav(){
   window.__showLinkConflict = () => { openAcct(); showConflict(); };
 
   /* ---------- 별명 정하기 ----------
-     구글로 처음 들어오면 반드시 정하고 들어간다 */
+     구글로 처음 들어오면 반드시 정하고 들어간다.
+
+     **2026-10-26 고침 — "새사용자1 2 이런 식으로 이름이 뜨는데 구글 로그인하면 닉네임 설정 필수로 하게 안 되어 있나"**
+     창에 × 와 바깥 누르기·뒤로가기 닫기가 있었고, 칸에 임시 이름(새사용자3)을 미리 채워 둬서 그대로 "정하기" 를 누르면
+     그 이름으로 정해졌다. 그래서 반드시가 아니었다. 이제 **정해야 할 때(needName)** 는
+       - × 가 없고 바깥을 눌러도·뒤로가기로도 안 닫힌다(뒤로가기는 "게임 종료" 를 묻는다)
+       - 칸이 비어 있다(임시 이름을 안 채운다). 임시 이름(새사용자…)은 고를 수도 없다(badword.js)
+     계정 창에서 이름을 바꿀 때(이미 정한 사람)는 예전 그대로 닫을 수 있고 지금 이름이 채워져 있다 */
   let nameBox = null;
+  const nameRequired = () => Boolean(window.ACCOUNT && window.ACCOUNT.signedIn && window.ACCOUNT.needName && !window.ACCOUNT.guest);
+  const nameOpen = () => Boolean(nameBox && nameBox.classList.contains("on"));
   function openName(){
     const ko = (window.__lang || "ko") === "ko";
+    const must = nameRequired();
     if (!nameBox){
       nameBox = document.createElement("div");
       nameBox.className = "cfg";
@@ -653,23 +686,29 @@ export function initNav(){
       document.getElementById("stage").appendChild(nameBox);
     }
     nameBox.innerHTML =
-      '<div class="cfg__v" data-nkclose></div><div class="cfg__p">' +
+      '<div class="cfg__v"' + (must ? "" : " data-nkclose") + '></div><div class="cfg__p">' +
       '<div class="cfg__h"><span>' + (ko ? "별명 정하기" : "Choose a name") + '</span>' +
-      '<button class="cfg__x" data-nkclose aria-label="close">\u00D7</button></div>' +
+      (must ? "" : '<button class="cfg__x" data-nkclose aria-label="close">\u00D7</button>') + '</div>' +
       '<div class="cfg__b">' +
+      (must ? '<p class="cfg__n" id="nkMust">' + (ko ? "게임에 보이는 이름입니다. 정해야 시작할 수 있습니다."
+                                                    : "This is the name others see. Choose one to start playing.") + '</p>' : "") +
       '<p class="cfg__n">' +
       (ko ? "한글 6자 또는 영문·숫자 8자까지. 다른 사람과 겹칠 수 없습니다."
           : "Up to 6 Korean or 8 Latin characters. Must be unique.") + '</p>' +
-      '<input id="nkIn" maxlength="16" autocomplete="off" spellcheck="false" class="nk__in">' +
+      '<input id="nkIn" maxlength="16" autocomplete="off" spellcheck="false" class="nk__in"' +
+      (must ? ' placeholder="' + (ko ? "별명을 입력하세요" : "Enter a name") + '"' : "") + '>' +
       '<p class="hint" id="nkMsg"></p>' +
       '<div class="cfg__row"><button id="nkOk">' + (ko ? "정하기" : "Save") + '</button></div>' +
       '</div></div>';
+    nameBox.dataset.must = must ? "1" : "";
     const inp = nameBox.querySelector("#nkIn");
-    if (inp){ inp.value = (window.ACCOUNT && window.ACCOUNT.name) || ""; setTimeout(() => inp.focus(), 60); }
+    if (inp){ inp.value = must ? "" : ((window.ACCOUNT && window.ACCOUNT.name) || ""); setTimeout(() => inp.focus(), 60); }
     nameBox.classList.add("on");
   }
-  function closeName(){ if (nameBox) nameBox.classList.remove("on"); }
+  /* 정해야 하는데 아직 안 정했으면 안 닫는다 — 정하기에 성공하면 needName 이 꺼진 뒤 닫힌다 */
+  function closeName(){ if (nameBox && !nameRequired()) nameBox.classList.remove("on"); }
   window.__askName = openName;
+  window.__nameMust = () => nameOpen() && nameRequired();     /* 뒤로가기가 본다 */
 
   document.addEventListener("click", async e => {
     if (e.target.closest("[data-nkclose]")){ closeName(); return; }
@@ -788,12 +827,15 @@ export function initNav(){
         });
   });
 
-  /* 게스트 → 구글 잇기 */
-  document.addEventListener("click", async e => {
+  /* 게스트 → 구글 잇기. 계정 창의 단추와 상점(현금 결제는 구글 계정을 이은 사람만 — 2026-10-26 사용자 결정)이 같이 쓴다 */
+  document.addEventListener("click", e => {
     if (!e.target.closest("#acLink")) return;
+    linkFlow(document.getElementById("acLink"));
+  });
+  window.__linkFlow = () => linkFlow(document.getElementById("acLink"));
+  async function linkFlow(btn){
     const ko = (window.__lang || "ko") === "ko";
-    const btn = document.getElementById("acLink");
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     try {
       const r = window.linkGoogle ? await window.linkGoogle() : null;
       if (r && r.already){
@@ -801,6 +843,9 @@ export function initNav(){
       } else if (r && r.redirecting){
         /* 페이지가 넘어간다. 혹시 안 넘어가도 단추가 잠긴 채 남지 않게 둔다 */
       } else if (r && r.conflict){
+        /* 상점에서 왔으면 계정 창이 닫혀 있다 — 열고 거기서 고르게 한다 */
+        const box = document.getElementById("acctBox");
+        if (!box || !box.classList.contains("on")) openAcct();
         showConflict();
       }
     } catch(err){
@@ -809,9 +854,9 @@ export function initNav(){
       window.alert((ko ? "잇기에 실패했습니다\n" : "Linking failed\n") + code);
       console.warn(err);
     }
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
     paintAcct();
-  });
+  }
   window.addEventListener("langchange", () => {
     if (document.getElementById("cfg").classList.contains("on")) openCfg();
   });
@@ -823,6 +868,7 @@ export function initNav(){
      **`go()` 보다 먼저 선언해 둔다** — 아래에 두면 앱이 시작하며 `go()` 를 부를 때
      아직 없는 값이라 터진다(같은 실수로 앱이 안 뜬 적이 있다) */
   let interDone = false;
+  const TAB_PAGES = ["lobby", "rank", "shop"];
 
   function go(id){
     /* 새 게임이 시작되면(뽑기 화면) 전면 광고를 다시 한 번 띄울 수 있게 푼다.
@@ -845,7 +891,7 @@ export function initNav(){
     setTimeout(() => { watchInv(); checkInvites(); }, 0);   /* 판 중에 온 초대는 로비·대기실에 오면 */
     if (touched){
       /* 로비와 랭킹에서만 배경음악. 방 대기실부터는 끈다 */
-      if (id === "lobby" || id === "rank") playBgm("lobby");
+      if (id === "lobby" || id === "rank" || id === "shop") playBgm("lobby");
       else stopBgm();
     }
     /* 화면을 보이기 전에 먼저 세운다.
@@ -858,10 +904,19 @@ export function initNav(){
     }
     if (id === "tax"   && window.__bootTax)   window.__bootTax();
     if (id === "result" && window.__bootResult) window.__bootResult();
+    /* 최종 결과가 뜨면 나갈 때 띄울 전면 광고를 미리 받아 둔다 — "나가기" 를 누르자마자 뜨게 (2026-10-26) */
+    if (id === "result" && window.__resultFinal && !interDone && !(window.ACCOUNT && window.ACCOUNT.noAds)) preloadInterstitial();
     if (id === "rank"   && window.__bootRank)   window.__bootRank();
+    if (id === "shop"   && window.__bootShop)   window.__bootShop();
   
     document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));
     document.getElementById(id).classList.add("is-on");
+    /* 하단 고정 탭 — 로비·랭킹·상점에서만. 지금 화면의 탭을 밝힌다 (2026-10-29 사용자 결정 · 위 TAB_HTML) */
+    const tb = document.getElementById("tabbar");
+    if (tb){
+      tb.classList.toggle("on", TAB_PAGES.includes(id));
+      tb.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("is-cur", b.dataset.tab === id));
+    }
     window.scrollTo(0,0);
     /* 숨겨져 있는 동안은 폭이 0이라 손패 위치가 어긋난다. 보이는 순간 다시 그린다 */
     requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
@@ -1030,7 +1085,8 @@ export function initNav(){
   let leaving = false;
   document.querySelector("#result #quit").addEventListener("click", async () => {
     if (leaving) return;
-    const show = Boolean(window.__resultFinal) && !interDone;
+    /* 광고 제거를 산 사람은 안 띄운다 (2026-10-26) */
+    const show = Boolean(window.__resultFinal) && !interDone && !(window.ACCOUNT && window.ACCOUNT.noAds);
     if (!show){ go("lobby"); return; }
     leaving = true; interDone = true;
     try { await showInterstitial(); } catch (e){ /* 광고가 안 돼도 나간다 */ }
@@ -1088,9 +1144,11 @@ export function initNav(){
         () => { if (window.__dropResume) window.__dropResume(); });
   }
 
-  let askYes = null, askNoFn = null;
+  let askYes = null, askNoFn = null, askAlt = null;
   /* single = 알림만(확인 단추 하나). 강퇴 알림처럼 고를 것이 없을 때 */
-  function ask(title, msg, yesLabel, onYes, onNo, single){
+  /* alt = { label, fn } — 왼쪽 단추를 "아니요" 대신 두 번째 고르기로 쓴다(상점: 코인으로 / 현금으로, 2026-10-27).
+     그때도 X·바깥 누르기는 그냥 닫기(onNo) — 두 번째 고르기가 실수로 눌리지 않게 */
+  function ask(title, msg, yesLabel, onYes, onNo, single, alt){
     const t = ASK_T[window.__lang] || ASK_T.ko;
     /* 확인창을 안 심은 화면(검사 등)에서는 묻지 않고 바로 한다 */
     if (!document.getElementById("askT")){ if (onYes) onYes(); return; }
@@ -1098,10 +1156,12 @@ export function initNav(){
     document.getElementById("askM").textContent = msg;
     document.getElementById("askYes").textContent = yesLabel;
     const no = document.getElementById("askNo");
-    no.textContent = t.no;
+    no.textContent = alt ? alt.label : t.no;
     no.style.display = single ? "none" : "";
     askYes = onYes;
     askNoFn = onNo || null;
+    askAlt = alt && alt.fn ? alt.fn : null;
+    document.getElementById("ask").classList.toggle("is-alt", Boolean(askAlt));   /* 두 고르기 — 단추 글이 한 줄에 들게(base.css) */
     document.getElementById("ask").classList.add("on");
   }
   /* 방 대기실(room.js)이 강퇴 확인창을 여기서 띄운다 */
@@ -1145,10 +1205,8 @@ export function initNav(){
     const b = e.target.closest("[data-avt]");
     if (!b) return;
     const i = Number(b.dataset.avt);
-    const ko = (window.__lang || "ko") === "ko";
-    const need = i < AVT_FREE ? 0 : (i - AVT_FREE + 1) * 5000;
-    const score = (window.ACCOUNT || {}).score || 0;
-    if (score < need) return;      /* 필요한 점수는 자물쇠 밑에 이미 적혀 있다 */
+    /* 잠긴 얼굴 — 점수 얼굴(0~14)은 적힌 점수를 모으면 열린다. 상점 얼굴(15~)은 상점과 같은 길로 산다(값 확인 → 사면 바로 장착) */
+    if (!owns(window.ACCOUNT || {}, "avt:" + i)){ if (i >= AVT_SCORE && window.__shopTap) window.__shopTap("avt:" + i); return; }
     if (window.__setAvatar) await window.__setAvatar(i);
     paintAvatars();
   });
@@ -1157,9 +1215,11 @@ export function initNav(){
     document.getElementById("ask").classList.remove("on");
     askYes = null;
     askNoFn = null;
+    askAlt = null;
   }
   function askOpen(){ return document.getElementById("ask").classList.contains("on"); }
   document.addEventListener("click", e => {
+    if (askAlt && e.target.closest("#askNo")){ const a = askAlt; askClose(); a(); return; }
     if (e.target.closest("[data-askno]")){ const g = askNoFn; askClose(); if (g) g(); return; }
     if (e.target.closest("#askYes")){
       const f = askYes; askClose(); if (f) f();
@@ -1177,6 +1237,12 @@ export function initNav(){
     /* 업데이트 안내가 떠 있으면 그 창은 못 닫는다 — 뒤로가기는 앱 끄기 */
     if (updateOpen()){ quitApp(); return; }
     if (askOpen()){ askClose(); return; }
+    /* 별명을 꼭 정해야 하는 창은 뒤로가기로 안 닫힌다 — 첫 화면·로비처럼 "게임 종료" 를 묻는다 (2026-10-26) */
+    if (window.__nameMust && window.__nameMust()){
+      const tq = ASK_T[window.__lang] || ASK_T.ko;
+      ask(tq.quit, tq.quitM, tq.yes, quitApp);
+      return;
+    }
     /* **열린 창이 있으면 그것만 닫는다.**
        예전에는 `.cfg.on`(설정·계정·별명) 만 찾아서, 방 만들기(`#opts.on`)와
        규칙보기(`#sheet.is-open`)가 열려 있어도 못 알아보고 "게임을 나가시겠습니까" 로 넘어갔다.
@@ -1198,7 +1264,7 @@ export function initNav(){
       ask(t.quit, t.quitM, t.yes, quitApp);
       return;
     }
-    if (now === "rank"){ go("lobby"); return; }
+    if (now === "rank" || now === "shop"){ go("lobby"); return; }
     if (now === "room"){
       ask(t.room, t.roomM, t.roomY || t.leaveY, () => {
         /* 대기실은 아직 게임 전이다. `__quitGame`(완주 실패로 기록) 이 아니라

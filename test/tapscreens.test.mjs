@@ -75,7 +75,8 @@ const screen = () => page.evaluate(() => (document.querySelector(".page.is-on")|
   await page.evaluate(() => window.__goto && window.__goto("lobby"));
   await new Promise(r => setTimeout(r, 400));
   await page.evaluate(() => { window.__hit = 0; });
-  const ok = await finger("#lobby button");
+  /* 2026-10-29 하단 고정 탭 — 예전 첫 단추(상단바 사자 프로필)가 탭으로 내려갔다. 첫 단추는 이제 광고 시청 티켓(티켓이 차면 잠김) */
+  const ok = await finger("#tbProfile");
   if (ok){
     check("로비 단추에도 닿는다", (await page.evaluate(() => window.__hit)) > 0,
           "click 이 " + (await page.evaluate(() => window.__hit)) + "번");
