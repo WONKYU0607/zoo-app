@@ -17,6 +17,7 @@ let myRoom = null;
 let botTimer = null;
 /* 서버 대전 — 서버가 정한 자리와 자리표를 그대로 들고 있는다 */
 let net = null;            /* { code, matchID, playerID, credentials, numPlayers } */
+let bgNow = false, bgHooked = false;   /* 앱이 뒤에 있는가 — 서버 대전 판 중에 서버에 알린다 (2026-11-01) */
 let pollId = null;
 /* ---------- 서버 문제로 끝난 판 알아채기 (2026-10-17) ----------
    서버가 꺼졌다 켜지거나 대기 기계로 넘어가면 그 판은 **이어 하지 않고 끝난다**(서버가 보상한다).
@@ -365,6 +366,8 @@ async function startOnlineGame(){
 function enterOnlineGame(){
   if (!net || net.inGame) return;
   net.inGame = true;
+  /* 판이 시작될 때 이미 앱이 뒤에 있었으면(대기실에서 화면을 끄고 기다림) 지금 알린다 */
+  if (bgNow && net.key) lobby.sayBg(net.code, net.key, true);
   pollStop();
   watchStart();                         /* 서버 문제로 판이 끝나면 알아챈다 */
   /* 시작할 때 서버가 **앉은 사람 전원**의 티켓을 한 장씩 뺐다(2026-10-17) — 손님 화면 숫자도 맞춘다 */
@@ -766,7 +769,38 @@ export function install({ goto, myName = () => "나", botJoinMs = 3000 } = {}){
   /* **자동치기로 둔 수도 "여기 있다" 는 신호다.**
      예전에는 손으로 둔 수만 알려서, 한 번 자리를 비웠다 돌아와 자동으로 두면
      서버가 끝까지 자리비움으로 보고 판이 끝날 때 **이탈**로 적었다(2026-09-30 재현) */
-  eng.engine.onAutoMine = () => { if (net) lobby.keepAlive(net.code, net.key); };
+  /* 단, **앱이 뒤에 있는 동안**(화면 꺼짐) 저절로 둔 수는 "여기 있다" 가 아니다 — 서버가 대신 두는 중이므로 알리지 않는다.
+     알리면 서버가 자리비움을 풀고 다시 차례마다 20초를 기다린다(2026-11-01) */
+  eng.engine.onAutoMine = () => { if (net && !bgNow) lobby.keepAlive(net.code, net.key); };
+
+  /* ---------- 앱이 뒤로 갔다 / 돌아왔다 (2026-11-01 사용자 신고) ----------
+     "친구 3이서하다가 한명이 폰을 그냥 껏는데 계속 15초 기다려서 패스하고 그러던데"
+     서버 대전 판 중에 화면이 꺼지거나 다른 앱으로 가면 서버에 알린다 → 서버가 곧바로 봇처럼 대신 둔다.
+     돌아오면 알린다 → 손을 돌려준다(그 차례면 생각할 시간을 처음부터).
+     웹은 visibilitychange, 앱(안드로이드)은 Capacitor pause/resume(nav.js 가 apppause/appresume 로 바꿔 보낸다) — 둘 다 와도 한 번만 */
+  const setBg = on => {
+    if (on === bgNow) return;
+    bgNow = on;
+    if (net && net.inGame && net.key) lobby.sayBg(net.code, net.key, on);
+  };
+  /* **여기 있다** — 서버가 대신 두기 시작한 뒤(자리비움) 돌아온 사람에게 손을 돌려준다.
+     서버는 한 번 대신 두기 시작하면 그다음부터 봇 속도로 두므로(2026-11-01), 돌아와서 화면을 만지는 것만으로도 알려야
+     내 차례를 서버가 먼저 둬 버리지 않는다. 화면을 만질 때(4초에 한 번까지) · 자동 단추를 직접 눌렀을 때(곧바로).
+     서버 쪽은 "돌아왔다(bg off)" 와 같은 길 — 자리비움을 풀고, 그 사람 차례면 생각할 시간을 처음부터 준다 */
+  let hereAt = 0;
+  W().__iAmHere = (now) => {
+    if (!net || !net.inGame || !net.key || bgNow) return;
+    if (!now && Date.now() - hereAt < 4000) return;
+    hereAt = Date.now();
+    lobby.sayBg(net.code, net.key, false);
+  };
+  if (!bgHooked && typeof document !== "undefined"){
+    bgHooked = true;
+    document.addEventListener("visibilitychange", () => setBg(Boolean(document.hidden)));
+    W().addEventListener && W().addEventListener("apppause", () => setBg(true));
+    W().addEventListener && W().addEventListener("appresume", () => setBg(false));
+    document.addEventListener("pointerdown", () => { if (W().__iAmHere) W().__iAmHere(false); }, true);
+  }
 
   /* ---------- 하던 방으로 돌아가기 ----------
 

@@ -146,6 +146,28 @@ check("게스트는 막지 않는다 (× 있음)", Boolean(q("#nkBox .cfg__x")))
 click(q("#nkBox .cfg__x")); await wait(50);
 check("게스트는 닫힌다", !boxOn());
 
+/* 2026-11-01 — 게스트가 계정 창에서 구글을 이으면 별명 창이 **계정 창 위에** 떠야 한다.
+   둘 다 z 60 이라 DOM 에서 뒤에 있는 쪽이 위에 온다. 별명 창이 먼저 만들어져 있고 계정 창이 나중에 생기면 밑에 깔렸었다 */
+console.log("\n--- 5b. 구글을 이은 직후: 별명 창이 계정 창 위 ---");
+if (typeof window.__openAcct === "function") window.__openAcct();
+await wait(50);
+const acct = q("#acctBox");
+check("(준비) 계정 창이 별명 창보다 뒤에 만들어졌다", Boolean(acct) && Boolean(acct.compareDocumentPosition(q("#nkBox")) & 2),
+      acct ? "계정 창 있음" : "계정 창 없음");
+Object.assign(window.ACCOUNT, { guest: false, needName: true, name: "게스트12", signedIn: true });
+window.__askName(); await wait(50);
+const st = q("#nkBox").parentElement;
+check("**별명 창이 맨 뒤(가장 위)로 온다**", st && st.lastElementChild === q("#nkBox") && boxOn(),
+      st ? "맨 뒤: #" + (st.lastElementChild || {}).id : "");
+check("정해야 하므로 × 가 없다", !q("#nkBox .cfg__x"));
+q("#nkBox #nkIn").value = "게스트99";
+click(q("#nkBox #nkOk")); await wait(150);
+check("게스트N 모양으로는 못 정한다 — 창 그대로", boxOn() && window.ACCOUNT.needName === true);
+q("#nkBox #nkIn").value = "잇기왕";
+click(q("#nkBox #nkOk")); await wait(150);
+check("제대로 정하면 닫힌다", !boxOn() && window.ACCOUNT.name === "잇기왕", window.ACCOUNT.name);
+if (acct) acct.classList.remove("on");
+
 console.log("\n--- 6. 별명 규칙 ---");
 for (const n of ["새사용자", "새사용자3", "새사용자12"]) check(n + " 거부 (official)", B.checkName(n).why === "official", JSON.stringify(B.checkName(n)));
 for (const n of ["사용자", "새사람", "헌사용자", "사자왕"]) check(n + " 는 된다", B.checkName(n).ok, JSON.stringify(B.checkName(n)));

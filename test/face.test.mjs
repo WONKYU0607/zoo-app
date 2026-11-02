@@ -680,12 +680,15 @@ check("누군가 다 내고 완주했다", outSeen);
   check("쿨 동안에는 판이 안 열린다", pickBox.hidden);
   check("쿨 동안에는 단추가 꺼져 있다", emoBtn.disabled);
 
-  /* 2초 뒤 사라진다 */
-  await wait(2200);
-  check("1초 뒤 사라진다", !root.querySelector("#emolayer .seat__emo"));
+  /* 2초 떠 있다가 사라진다 (2026-11-02 1초 → 2초) · 연타 막기는 1초 그대로 */
+  await wait(1300);
+  check("1초 지나도 아직 떠 있다", Boolean(root.querySelector("#emolayer .seat__emo")));
+  check("연타 막기(1초)는 이미 풀렸다", !emoBtn.disabled);
+  await wait(900);
+  check("2초 뒤 사라진다", !root.querySelector("#emolayer .seat__emo"));
 
-  /* 2.5초 쿨이 끝나면 다시 열린다 */
-  await wait(500);
+  /* 쿨이 끝나면 다시 열린다 */
+  await wait(100);
   click(emoBtn);
   check("쿨이 끝나면 다시 열린다", !pickBox.hidden);
   emoPickClose(pickBox);

@@ -104,6 +104,20 @@ export const startRoom = (code, key, seen) =>
 export const keepAlive = (code, key) =>
   api(`/zoo/rooms/${code}/alive`, { key }).catch(() => null);
 
+/* 앱이 뒤로 갔다 / 돌아왔다 (2026-11-01 — 폰을 끈 친구 때문에 차례마다 20초씩 멈추던 것).
+   뒤로 가면 서버가 내 자리를 곧바로 봇처럼 대신 두고, 돌아오면 손을 돌려준다.
+   **뒤로 가는 순간은 앱이 곧 멈춰** 보통 요청은 끝까지 못 갈 수 있다 — sendBeacon 으로 보낸다.
+   (본문을 text/plain 으로 보내야 다른 주소로도 사전 확인(CORS preflight) 없이 나간다. 서버는 본문을 그대로 JSON 으로 읽는다) */
+export function sayBg(code, key, on){
+  const url = serverUrl() + `/zoo/rooms/${code}/bg`;
+  const body = JSON.stringify({ key, on: Boolean(on) });
+  try {
+    if (on && typeof navigator !== "undefined" && navigator.sendBeacon &&
+        navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }))) return Promise.resolve(true);
+  } catch(e){}
+  return api(`/zoo/rooms/${code}/bg`, { key, on: Boolean(on) }).catch(() => null);
+}
+
 /* ---------- 하던 방 적어 두기 ----------
 
    방 번호·자리·자리표는 **브라우저 메모리에만** 있었다.
@@ -154,6 +168,9 @@ export const shopEquip = async item => api("/zoo/shop/equip", { item, token: awa
 export const freeTicket = async () => api("/zoo/ticket/free", { token: await token() });
 /* 우편함 받기 (2026-10-29) — mail = 우편 id 또는 "all". 답: { ok, got(받은 코인), n, dup, acct } */
 export const mailClaim = async mail => api("/zoo/mail/claim", { mail, token: await token() });
+/* 랭킹판의 내 줄을 서버가 다시 읽게 한다 (2026-11-01) — 별명을 바꿨을 때 · 게스트가 구글을 이었을 때 · 계정을 지울 때.
+   서버는 내 계정 문서를 읽어 판(board/top)을 고친다. 앱이 보낸 값은 안 쓴다 */
+export const boardSync = async () => api("/zoo/board/sync", { token: await token() });
 /* 현금 결제(구글 플레이)를 서버에 넣는다 — 서버가 구글에 직접 확인하고 계정에 넣은 뒤 구글에 "받았다" 를 알린다.
    why: item · bad(가짜) · pending(결제 대기) · canceled · other(남의 결제) · perm·down(서버·구글 문제 — 던진다) · off */
 export const payVerify = async (product, purchaseToken) => api("/zoo/pay/verify", { product, purchaseToken, token: await token() });

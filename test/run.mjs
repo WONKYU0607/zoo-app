@@ -90,6 +90,10 @@ const FAST = [
   ["초대로옮김",   ["test/invmove.test.mjs"]],
   ["하단탭",     ["test/tabbar.test.mjs"]],
   ["우편함",     ["test/mail.test.mjs"]],
+  ["초대단추",    ["test/invitebtn.test.mjs"]],
+  ["랭킹판",     ["test/rankwatch.test.mjs"]],
+  ["폰꺼짐",     ["test/bgaway.test.mjs"]],
+  ["폰다시켬",    ["test/bgback.test.mjs"]],
 
   ["자동",     ["test/auto.test.mjs"]],
   ["카드얼굴", ["test/face.test.mjs"]],

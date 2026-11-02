@@ -361,7 +361,7 @@ export function initNav(){
           invite:"초대", del:"삭제", accept:"수락", no:"거절",
           req:"받은 신청", sent:"신청했습니다", already:"이미 친구입니다",
           notFound:"그런 별명이 없습니다", self:"자기 자신은 안 됩니다",
-          needRoom:"방에 있을 때만 부를 수 있습니다", invited:"불렀습니다",
+          needRoom:"방에 있을 때만 부를 수 있습니다", invited:"불렀습니다", sentBtn:"보냄", invFail:"못 불렀습니다. 다시 눌러 주세요",
           busy:"게임 중이라 못 부릅니다", pts:"점" },
     en: { title:"Friends", list:"List", add:"Add", rank:"Rank",
           find:"Find by name", search:"Find",
@@ -369,10 +369,11 @@ export function initNav(){
           invite:"Invite", del:"Remove", accept:"Accept", no:"Decline",
           req:"Requests", sent:"Request sent", already:"Already friends",
           notFound:"No such name", self:"That's you", needRoom:"Open a room first",
-          invited:"Invited", busy:"They're in a game", pts:"pts" },
+          invited:"Invited", sentBtn:"Sent", invFail:"Couldn't invite. Try again", busy:"They're in a game", pts:"pts" },
   };
   let frTab = "list";
-  let frInviteMode = false;     /* 빈자리에서 연 창인가 (줄을 누르면 곧 부르기) */
+  let frInviteMode = false;     /* 빈자리에서 연 창인가 (줄마다 초대 단추) */
+  const frSent = new Set();     /* 이번에 연 부르기 창에서 이미 부른 친구 — 단추를 "보냄" 으로 */
   const FR = () => window.__friends || {};
   const frT = () => FR_T[window.__lang] || FR_T.ko;
 
@@ -422,12 +423,18 @@ export function initNav(){
           const where = !r.online ? t.off : (r.state === "game" ? t.inGame : t.online);
           const dot = !r.online ? "off" : (r.state === "game" ? "game" : "on");
           if (frInviteMode){
-            const busy = r.online && r.state === "game";
-            return '<div class="fr__row' + (busy || !r.online ? " fr__row--off" : "") + '"' +
-              (busy || !r.online ? "" : ' data-frinv="' + r.uid + '"') + ">" +
+            /* 줄마다 오른쪽에 "초대" 단추 (2026-11-01 — 예전엔 단추 없이 줄 전체를 눌러야 해서 부르는 방법이 안 보였다).
+               접속 중이고 게임 중이 아닌 친구만 누를 수 있다. 부르면 "보냄" 으로 바뀌고 창은 그대로 — 여러 명을 이어서 부를 수 있게 */
+            const can = r.online && r.state !== "game";
+            const sent = frSent.has(r.uid);
+            return '<div class="fr__row' + (can ? "" : " fr__row--off") + '">' +
               '<i class="fr__dot fr__dot--' + dot + '"></i>' +
               '<span class="fr__n">' + esc(r.name || "") + "</span>" +
-              '<span class="fr__w">' + (busy ? t.busy : where) + "</span></div>";
+              '<span class="fr__w">' + (r.online && r.state === "game" ? t.busy : where) + "</span>" +
+              (can && !sent
+                ? '<button class="fr__b fr__inv" data-frinv="' + r.uid + '">' + t.invite + "</button>"
+                : '<button class="fr__b fr__b--off fr__inv" disabled>' + (sent ? t.sentBtn : t.invite) + "</button>") +
+              "</div>";
           }
           return '<div class="fr__row">' +
             '<i class="fr__dot fr__dot--' + dot + '"></i>' +
@@ -442,6 +449,7 @@ export function initNav(){
 
   window.__openFriends = (mode) => {
     frInviteMode = mode === "invite";
+    frSent.clear();
     frTab = "list"; frNote("");
     document.getElementById("frBox").classList.add("on");
     frPaint();
@@ -473,8 +481,14 @@ export function initNav(){
       const t = frT();
       const code = (window.__room || {}).code;
       if (!code){ frNote(t.needRoom); return; }
-      await FR().invite(inv.dataset.frinv, code);
-      if (frInviteMode){ document.getElementById("frBox").classList.remove("on"); return; }
+      const uid = inv.dataset.frinv;
+      inv.disabled = true;                   /* 두 번 눌러 두 번 보내지 않게 */
+      const okSent = await FR().invite(uid, code);
+      if (okSent === false){ inv.disabled = false; frNote(t.invFail); return; }
+      frSent.add(uid);
+      inv.textContent = t.sentBtn;
+      inv.classList.add("fr__b--off");
+      inv.removeAttribute("data-frinv");
       frNote(t.invited);
       return;
     }
@@ -683,8 +697,10 @@ export function initNav(){
       nameBox = document.createElement("div");
       nameBox.className = "cfg";
       nameBox.id = "nkBox";
-      document.getElementById("stage").appendChild(nameBox);
     }
+    /* 열 때마다 맨 뒤로 옮긴다 — 계정 창(acctBox)도 같은 높이(z 60)라 나중에 만들어진 쪽이 위에 온다.
+       구글 잇기는 계정 창 위에서 일어나므로, 안 옮기면 꼭 정해야 하는 별명 창이 계정 창 밑에 깔릴 수 있다 (2026-11-01) */
+    document.getElementById("stage").appendChild(nameBox);
     nameBox.innerHTML =
       '<div class="cfg__v"' + (must ? "" : " data-nkclose") + '></div><div class="cfg__p">' +
       '<div class="cfg__h"><span>' + (ko ? "별명 정하기" : "Choose a name") + '</span>' +
@@ -907,6 +923,7 @@ export function initNav(){
     /* 최종 결과가 뜨면 나갈 때 띄울 전면 광고를 미리 받아 둔다 — "나가기" 를 누르자마자 뜨게 (2026-10-26) */
     if (id === "result" && window.__resultFinal && !interDone && !(window.ACCOUNT && window.ACCOUNT.noAds)) preloadInterstitial();
     if (id === "rank"   && window.__bootRank)   window.__bootRank();
+    if (id !== "rank"   && window.__leaveRank)  window.__leaveRank();   /* 랭킹판 그만 보기 — 안 보는 동안은 안 읽는다 (2026-11-01) */
     if (id === "shop"   && window.__bootShop)   window.__bootShop();
   
     document.querySelectorAll(".page").forEach(p => p.classList.remove("is-on"));

@@ -20,10 +20,17 @@ import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInAnonymou
          reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction,
          collection, query, where, orderBy, limit, getDocs, getCountFromServer,
-         serverTimestamp } from "firebase/firestore";
+         serverTimestamp, onSnapshot } from "firebase/firestore";
 import { wipeMine } from "./friends.js";
 import { owns, item as shopItem, todayCount, AD_TICKET_DAY, FREE_TICKET_DAY } from "./shop.js";
-import { online as serverOnline, shopBuy, shopEquip, freeTicket as apiFreeTicket, payVerify as apiPayVerify, mailClaim as apiMailClaim } from "./lobby.js";
+import { online as serverOnline, shopBuy, shopEquip, freeTicket as apiFreeTicket, payVerify as apiPayVerify, mailClaim as apiMailClaim,
+         boardSync as apiBoardSync } from "./lobby.js";
+
+/* 랭킹판의 내 줄 고치기 — 실패해도 게임은 그대로(판이 조금 늦게 맞춰질 뿐). 서버 대전이 꺼진 빌드(검사)에서는 안 부른다 */
+async function boardSync(){
+  if (!serverOnline()) return;
+  try { await apiBoardSync(); } catch(e){ console.warn("[랭킹판] 내 줄을 못 고쳤습니다", (e && e.why) || e); }
+}
 
 /* 티켓. account 보다 **먼저** 선언해야 한다 —
    const 는 선언 전에 못 쓰고, account 는 파일이 열리는 순간 만들어진다.
@@ -325,6 +332,9 @@ export async function equipItem(id){
 
 /* 처음 들어온 구글 계정에 잠깐 붙이는 임시 이름 — claimName(uid, "새사용자") 이 "새사용자" · "새사용자2" … 를 만든다 */
 export const PLACEHOLDER = /^새사용자\d*$/;
+/* 게스트로 들어올 때 자동으로 붙는 이름(게스트168). 구글을 이은 뒤에도 이 이름이면 별명을 정하게 한다 (2026-11-01) —
+   예전에 이어서 이미 "게스트N" 으로 랭킹에 오른 사람도 다음에 켤 때 정하게 된다 */
+export const GUEST_NAME = /^게스트\d*$/;
 
 export async function setNickname(wanted){
   /* 글자 검사가 먼저 — 로그인 전이라도 왜 안 되는지는 알려 준다 */
@@ -352,6 +362,7 @@ export async function setNickname(wanted){
   if (old && key(old) !== key(want)){
     await releaseName(old);
   }
+  boardSync();                                 /* 랭킹판의 내 이름 (기다리지 않는다) */
   window.dispatchEvent(new Event("accountchange"));
   return { ok: true, name: want };
 }
@@ -414,6 +425,7 @@ export async function changeName(wanted){
   if (old && key(old) !== key(want)){
     await releaseName(old);
   }
+  boardSync();
   window.dispatchEvent(new Event("accountchange"));
   return want;
 }
@@ -459,9 +471,17 @@ async function markLinked(user){
      잇기 직후의 표는 옛것(게스트)일 수 있다 */
   try { await user.getIdToken(true); } catch(e){}
   try { await updateDoc(doc(db, "users", user.uid), { guest: false }); } catch(e){}
+  boardSync();                                 /* 이제 랭킹에 오른다 — 지금 점수로 판에 넣게 */
+  /* 2026-11-01 사용자 지시 — "게스트에서 구글잇기하면 당연히 닉네임을 정해야 겜할수 잇게 해야지".
+     구글로 처음 들어온 사람과 똑같이 별명 창을 띄우고, 정하기 전에는 못 닫는다.
+     문서에도 따로 적어 둔다 — 정하기 전에 앱을 꺼도 다음에 켤 때 다시 묻게.
+     (게스트 표시와 한 번에 적으면 그쪽이 규칙에 걸릴 때 이것까지 같이 안 적힌다) */
+  try { await updateDoc(doc(db, "users", user.uid), { needName: true }); } catch(e){}
   account.guest = false;
+  account.needName = true;
   if (user.photoURL) account.photo = user.photoURL;
   window.dispatchEvent(new Event("accountchange"));
+  if (typeof window !== "undefined" && window.__askName) window.__askName();
 }
 
 /* 게스트 → 구글 잇기.
@@ -601,7 +621,8 @@ async function loadProfile(user){
   /* 구글인데 아직 별명을 안 정했으면 물어봐야 한다.
      **임시 이름(새사용자N) 그대로인 사람도** — 예전에는 별명 창을 닫거나, 미리 채워 둔 "새사용자3" 을 그대로 "정하기" 하면
      needName 이 꺼져서 랭킹·방에 "새사용자1·2…" 로 남았다(2026-10-26 사용자 신고). 이제는 다음에 켤 때 다시 정하게 한다 */
-  account.needName = !account.guest && (Boolean(account.needName) || PLACEHOLDER.test(String(account.name || "")));
+  account.needName = !account.guest && (Boolean(account.needName) || PLACEHOLDER.test(String(account.name || ""))
+                                        || GUEST_NAME.test(String(account.name || "")));
   account.signedIn = true;
   account.loaded = true;
   window.dispatchEvent(new Event("accountchange"));
@@ -655,6 +676,8 @@ export async function deleteAccount(){
   const mine = await getDocs(query(collection(db, "names"), where("uid", "==", uid)));
   for (const d of mine.docs) await deleteDoc(d.ref);
   await deleteDoc(doc(db, "users", uid));
+  /* 랭킹판에서 빼게 한다 — 로그인 계정을 지우기 **전에**(표가 살아 있을 때). 서버가 안 받아도 3초만 기다리고 넘어간다 */
+  await Promise.race([boardSync(), new Promise(r => setTimeout(r, 3000))]);
 
   let authLeft = false;
   try { await deleteUser(user); }
@@ -768,6 +791,15 @@ export async function topScores(kind = "all", want = 100){
     out.push({ uid: d.id, name: v.name || "", score: sc, tier: tierOf(v.score || 0) });
   });
   return out.slice(0, want);
+}
+
+/* 랭킹판 한 장(board/top)을 지켜본다 (2026-11-01) — 서버가 순위가 바뀔 때만 고친다.
+   cb(판) · 판이 아직 없으면 cb(null) · 못 읽으면(규칙 미배포 등) cb(undefined, 오류). 돌려받은 함수로 그만 본다 */
+export function watchBoard(cb){
+  if (!ready) { cb(undefined, new Error("off")); return () => {}; }
+  return onSnapshot(doc(db, "board", "top"),
+    s => cb(s.exists() ? s.data() : null),
+    e => cb(undefined, e));
 }
 
 /* 내 순위 — 나보다 점수가 높은 사람 수 + 1 */

@@ -107,6 +107,34 @@ await A.signOutNow();
 await A.signInGuest();
 check("게스트는 묻지 않는다", A.account.guest && A.account.needName === false, A.account.name);
 
+/* 2026-11-01 — "게스트에서 구글잇기하면 당연히 닉네임을 정해야 겜할수 잇게 해야지" */
+console.log("\n[5. 게스트 → 구글 잇기]");
+let asked = 0;
+win.__askName = () => { asked++; };
+const guestName = A.account.name, guestUid = A.account.uid;
+check("(준비) 게스트 이름", /^게스트\d+$/.test(guestName), guestName);
+globalThis.__pick = { sub: "g-link", email: "link@test.com" };
+const lr = await A.linkGoogle();
+check("(준비) 이었다", lr && lr.linked === true, JSON.stringify(lr));
+check("같은 계정 그대로(점수·uid 유지)", A.account.uid === guestUid && A.account.guest === false);
+check("**이으면 별명을 정해야 함(needName)**", A.account.needName === true);
+check("**별명 창을 곧바로 띄운다**", asked === 1, asked + "번");
+check("문서에도 적힌다(정하기 전에 꺼도 다시 묻게)", STORE.get("users/" + guestUid).needName === true);
+await restart();
+check("**정하기 전에 껐다 켜도 다시 묻는다**", A.account.signedIn && A.account.uid === guestUid && A.account.needName === true, A.account.name);
+const r3 = await A.setNickname("게스트99");
+check("게스트 모양 이름으로는 못 정한다", r3 && r3.ok === false && r3.why === "official", JSON.stringify(r3));
+const r4 = await A.setNickname("잇기장군");
+check("(준비) 정했다", r4 && r4.ok, JSON.stringify(r4));
+await restart();
+check("**정하고 나면 다시 켜도 안 묻는다**", A.account.name === "잇기장군" && A.account.needName === false, A.account.name);
+
+console.log("\n[6. 예전에 이어서 '게스트N' 이름 그대로인 사람]");
+STORE.set("users/" + guestUid, Object.assign({}, STORE.get("users/" + guestUid), { name: "게스트3", needName: false }));
+STORE.set("names/게스트3", { uid: guestUid, name: "게스트3" });
+await restart();
+check("**문서에 꺼져 있어도 이름이 게스트N 이면 정하게 한다**", A.account.needName === true, A.account.name);
+
 console.log("\n=== " + (fail ? "통과 " + pass + " / 실패 " + fail : "전부 통과 (" + pass + ")") + " ===\n");
 stop();
 process.exit(fail ? 1 : 0);

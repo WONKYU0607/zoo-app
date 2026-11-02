@@ -356,8 +356,9 @@ button:disabled{opacity:.42}
 .fr__b--off{color:#A79E8C;background:rgba(90,86,78,.28) !important;
   border-color:rgba(160,150,130,.32) !important}
 
-/* 부르기 모드 — 줄 전체가 단추다 */
-#frBox .fr__row[data-frinv]{cursor:pointer}
+/* 부르기 모드 — 줄마다 오른쪽에 초대 단추 (2026-11-01). 폭을 고정해 "초대"↔"보냄" 이 바뀌어도 줄이 안 흔들린다 */
+#frBox .fr__inv{min-width:48px;text-align:center}
+#frBox .fr__inv:disabled{cursor:default}
 #frBox .fr__row--off{opacity:.45}
 
 /* 확인창 본문의 줄바꿈을 그대로 보인다 (나가기 경고가 두 줄이다) */
